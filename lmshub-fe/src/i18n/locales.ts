@@ -21,7 +21,7 @@ export interface LocaleDef {
   flag: string;
 }
 
-export const SUPPORTED_LOCALES = ['en', 'id', 'ar', 'hi'] as const;
+export const SUPPORTED_LOCALES = ['en', 'hi'] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
 export const DEFAULT_LOCALE: SupportedLocale = 'en';
@@ -35,26 +35,6 @@ export const LOCALES: Record<SupportedLocale, LocaleDef> = {
     intl: 'en-US',
     intlNumber: 'en-US',
     flag: '🇬🇧',
-  },
-  id: {
-    code: 'id',
-    native: 'Bahasa Indonesia',
-    english: 'Indonesian',
-    dir: 'ltr',
-    intl: 'id-ID',
-    intlNumber: 'id-ID',
-    flag: '🇮🇩',
-  },
-  ar: {
-    code: 'ar',
-    native: 'العربية',
-    english: 'Arabic',
-    dir: 'rtl',
-    intl: 'ar',
-    // `-u-nu-latn` menjaga digit tetap 0-9 (bukan ٠-٩) supaya harga & skor
-    // konsisten dengan data numerik dari BE.
-    intlNumber: 'ar-u-nu-latn',
-    flag: '🇸🇦',
   },
   hi: {
     code: 'hi',

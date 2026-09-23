@@ -1,0 +1,325 @@
+{
+  "assignment": {
+    "already_submitted": "تم تسليم هذا الواجب وهو بانتظار التقييم أو طلب تعديل",
+    "inactive": "هذا الواجب غير نشط",
+    "not_found": "لم يُعثر على الواجب"
+  },
+  "auth": {
+    "account_disabled": "هذا الحساب معطّل",
+    "account_inactive": "هذا الحساب غير نشط",
+    "account_without_email": "لا يوجد بريد إلكتروني لهذا الحساب",
+    "current_password_wrong": "كلمة المرور الحالية غير صحيحة",
+    "invalid_credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    "invalid_refresh_token": "تعذّر تجديد جلستك، يرجى تسجيل الدخول مجددًا",
+    "permission_required": "ليس لديك إذن للقيام بذلك",
+    "session_inactive": "لم تعد هذه الجلسة نشطة",
+    "token_invalid": "الرمز غير صالح أو منتهي الصلاحية",
+    "token_missing": "لم يتم تقديم رمز مصادقة",
+    "verification_token_invalid": "رابط التحقق غير صالح أو منتهي الصلاحية"
+  },
+  "badge": {
+    "already_awarded": "هذا المستخدم يملك تلك الشارة بالفعل",
+    "not_found": "لم يُعثر على الشارة"
+  },
+  "bank_account": {
+    "duplicate": "يوجد حساب بنفس البنك والرقم بالفعل",
+    "keep_one_active": "يجب إبقاء حساب بنكي واحد نشطًا على الأقل",
+    "not_found": "لم يُعثر على الحساب البنكي",
+    "primary_cannot_deactivate": "لا يمكن تعطيل الحساب الرئيسي. اجعل حسابًا آخر رئيسيًا أولًا"
+  },
+  "bookmark": {
+    "not_found": "لم يُعثر على العلامة المرجعية",
+    "not_owner": "هذه العلامة المرجعية ليست لك"
+  },
+  "category": {
+    "in_use": "هذه الفئة مستخدمة في دورات نشطة. عطّلها بدل حذفها",
+    "not_found": "لم يُعثر على الفئة",
+    "slug_taken": "معرّف الفئة مستخدم بالفعل"
+  },
+  "certificate": {
+    "already_issued": "تم إصدار هذه الشهادة بالفعل",
+    "eligibility_check_failed": "تعذّر تقييم أهلية الإكمال",
+    "not_eligible": "لا يمكن إصدار الشهادة إلا بعد استيفاء الطالب للشروط",
+    "not_found": "لم يُعثر على الشهادة",
+    "number_generation_failed": "تعذّر توليد رقم شهادة فريد، حاول مجددًا",
+    "only_issued_can_be_reissued": "يمكن إعادة إصدار الشهادات الصادرة فقط",
+    "override_requires_director": "الإصدار الاستثنائي يتطلب موافقة المدير",
+    "requirements_not_met": "لم يتم استيفاء متطلبات التخرج بعد"
+  },
+  "cohort": {
+    "already_member": "أنت عضو في هذه المجموعة بالفعل",
+    "closed": "هذه المجموعة لا تقبل تسجيلات جديدة",
+    "full_cannot_promote": "المجموعة ممتلئة، فلا يمكن ترقية أحد من قائمة الانتظار",
+    "member_not_waitlisted": "هذا العضو ليس على قائمة الانتظار",
+    "not_found": "لم يُعثر على المجموعة",
+    "target_full": "المجموعة الهدف ممتلئة",
+    "target_not_found": "لم يُعثر على المجموعة الهدف",
+    "waitlist_member_not_found": "لم يُعثر على عضو قائمة الانتظار"
+  },
+  "commission": {
+    "approve_requires_director": "يمكن للمدير فقط اعتماد العمولة",
+    "must_be_approved": "يجب اعتماد العمولة قبل صرفها",
+    "not_calculated": "لم تُحتسب هذه العمولة بعد",
+    "not_decidable": "لا يمكن اعتماد أو رفض هذه العمولة في حالتها الحالية",
+    "not_found": "لم يُعثر على العمولة",
+    "release_forbidden": "غير مسموح لك بصرف العمولات",
+    "submit_forbidden": "غير مسموح لك بتقديم العمولات"
+  },
+  "common": {
+    "slug_taken": "المعرّف مستخدم بالفعل"
+  },
+  "content": {
+    "not_found": "لم يُعثر على المحتوى"
+  },
+  "coupon": {
+    "below_minimum": "المجموع الفرعي أقل من الحد الأدنى لهذه القسيمة",
+    "expired": "انتهت صلاحية هذه القسيمة",
+    "invalid": "هذه القسيمة غير صالحة",
+    "not_yet_valid": "هذه القسيمة غير صالحة بعد",
+    "quota_exhausted": "تم استنفاد هذه القسيمة بالكامل"
+  },
+  "course": {
+    "access_expired": "انتهت صلاحية وصولك إلى هذه الدورة",
+    "action_requires_instructor_or_admin": "يمكن لمدرّب الدورة أو المسؤول فقط تنفيذ ذلك",
+    "already_archived": "هذه الدورة مؤرشفة بالفعل",
+    "cannot_delete_published": "لا يمكن حذف دورة تم إرسالها أو نشرها. أرشفها بدلًا من ذلك",
+    "no_active_access": "ليس لديك وصول نشط إلى هذه الدورة",
+    "not_found": "لم يُعثر على الدورة",
+    "not_owner": "يمكنك إدارة دوراتك أنت فقط",
+    "only_draft_can_be_submitted": "يمكن إرسال الدورات المسودة فقط للمراجعة",
+    "promo_video_not_found": "لم يُعثر على الفيديو الترويجي",
+    "publish_requires_admin": "يمكن لمسؤول العمليات أو المدير فقط نشر دورة",
+    "publish_wrong_status": "يجب أن تكون الدورة قيد المراجعة أو محدّثة قبل نشرها",
+    "slug_taken": "معرّف الدورة مستخدم بالفعل",
+    "thumbnail_not_found": "لم يُعثر على الصورة المصغّرة"
+  },
+  "curriculum": {
+    "not_owner": "يمكنك إدارة مناهج دوراتك أنت فقط"
+  },
+  "db": {
+    "foreign_key_violation": "السجل المرتبط مفقود أو ما زال مستخدمًا",
+    "unique_violation": "هذا السجل موجود بالفعل"
+  },
+  "discussion": {
+    "invalid_parent_post": "مرجع المنشور الأصلي غير صالح",
+    "members_only": "يمكن لأعضاء الدورة فقط، الطلاب المسجّلين والمدرّب، فتح هذه المناقشة",
+    "thread_locked": "هذا الموضوع مغلق ولا يقبل ردودًا",
+    "thread_not_found": "لم يُعثر على الموضوع"
+  },
+  "enrollment": {
+    "already_active": "هذا المستخدم مسجّل بالفعل في هذه الدورة",
+    "cancelled": "تم إلغاء هذا التسجيل",
+    "course_mismatch": "هذا التسجيل يخص دورة أخرى",
+    "not_enrolled": "أنت غير مسجّل في هذه الدورة",
+    "not_enrolled_course": "أنت غير مسجّل في هذه الدورة",
+    "not_found": "لم يُعثر على التسجيل",
+    "not_found_for_course": "لم يُعثر على تسجيل لهذه الدورة"
+  },
+  "finance": {
+    "category_not_found": "لم يُعثر على فئة المصروف",
+    "entry_type_mismatch": "نوع القيد لا يطابق الفئة المختارة"
+  },
+  "gamification": {
+    "event_config_not_found": "لم يُعثر على إعدادات الحدث",
+    "insufficient_points": "النقاط غير كافية لهذه العملية"
+  },
+  "grading": {
+    "already_released": "تم إعلان هذه الدرجة بالفعل",
+    "not_found": "لم يُعثر على الدرجة",
+    "not_released_use_grading": "لم تُعلن هذه الدرجة بعد — استخدم نقطة النهاية العادية للتقييم",
+    "released_use_adjust": "تم إعلان هذه الدرجة — استخدم نقطة نهاية التعديل"
+  },
+  "http": {
+    "internal": "حدث خطأ من جانبنا",
+    "route_not_found": "هذه الصفحة أو نقطة النهاية غير موجودة"
+  },
+  "instructor": {
+    "not_found": "لم يُعثر على المدرّب"
+  },
+  "learning_path": {
+    "not_found": "لم يتم العثور على المسار التعليمي",
+    "not_sold_as_bundle": "هذا المسار التعليمي لا يُباع كحزمة"
+  },
+  "lesson": {
+    "not_found": "لم يُعثر على الدرس"
+  },
+  "live": {
+    "cannot_cancel_started": "لا يمكن إلغاء جلسة بدأت أو انتهت",
+    "join_link_not_yet_active": "رابط الانضمام يعمل قبل الجلسة بقليل وأثناءها فقط",
+    "manage_requires_instructor_or_host": "يمكن لمدرّب الدورة أو مضيف الجلسة فقط إدارة هذه الجلسة",
+    "not_in_progress": "هذه الجلسة ليست جارية حاليًا",
+    "not_in_session_cohort": "أنت غير مسجّل في دورة أو مجموعة هذه الجلسة",
+    "not_scheduled": "هذه الجلسة ليست في حالة مجدولة",
+    "only_scheduled_editable": "يمكن تعديل الجلسات المجدولة فقط",
+    "recording_not_found": "لم يُعثر على التسجيل",
+    "session_not_found": "لم يُعثر على الجلسة المباشرة"
+  },
+  "marketing": {
+    "agent_not_found": "لم يُعثر على ملف الوكيل",
+    "agent_not_verified": "لم يتم توثيق ملف الوكيل بعد",
+    "already_an_agent": "أنت مسجّل بالفعل كوكيل تسويق",
+    "category_unknown": "فئة التسويق غير معروفة أو غير نشطة",
+    "lead_already_at_stage": "هذا العميل المحتمل في تلك المرحلة بالفعل",
+    "lead_not_found": "لم يُعثر على العميل المحتمل",
+    "list_all_forbidden": "غير مسموح لك بعرض جميع الوكلاء",
+    "not_an_agent": "أنت غير مسجّل كوكيل تسويق",
+    "pipeline_no_rollback": "لا يمكنك إرجاع العميل المحتمل إلى مرحلة سابقة",
+    "pipeline_no_skip": "لا يمكنك تخطي مرحلة في المسار",
+    "referral_code_generation_failed": "تعذّر توليد رمز إحالة فريد، حاول مجددًا",
+    "register_first": "سجّل كوكيل تسويق أولًا",
+    "target_requires_director": "يمكن للمدير فقط تغيير هدف الوكيل",
+    "verify_requires_admin": "يمكن للمسؤول أو المدير فقط توثيق وكيل"
+  },
+  "media": {
+    "in_use": "هذا الملف مستخدم في دورة أو درس ولا يمكن حذفه نهائيًا",
+    "not_found": "لم يُعثر على الملف",
+    "not_owner": "يمكنك إدارة ملفاتك أنت فقط",
+    "transcode_pending": "لا يزال هذا الفيديو قيد المعالجة",
+    "unknown_asset": "ملف غير معروف"
+  },
+  "message": {
+    "cannot_message_self": "لا يمكنك إرسال رسالة إلى نفسك",
+    "not_found": "لم يُعثر على الرسالة"
+  },
+  "moderation": {
+    "already_reported": "لقد أبلغت عن هذا المحتوى وما زال قيد المراجعة"
+  },
+  "note": {
+    "not_found": "لم يُعثر على الملاحظة",
+    "not_owner": "هذه الملاحظة ليست لك"
+  },
+  "notification": {
+    "not_found": "لم يُعثر على الإشعار"
+  },
+  "order": {
+    "already_paid": "تم دفع هذا الطلب بالفعل",
+    "cancelled": "تم إلغاء هذا الطلب",
+    "free_no_payment": "هذا الطلب مجاني ولا يحتاج إلى دفع",
+    "manual_requires_marketing": "يمكن للتسويق أو المسؤول فقط إنشاء طلب يدوي",
+    "not_found": "لم يُعثر على الطلب",
+    "referenced_not_found": "لم يُعثر على الطلب المشار إليه"
+  },
+  "page": {
+    "not_found": "لم يُعثر على الصفحة"
+  },
+  "payment": {
+    "already_decided": "تم التحقق من هذه الدفعة أو رفضها بالفعل",
+    "gateway_currency_unsupported": "بوابة الدفع هذه لا تدعم هذه العملة",
+    "gateway_not_configured": "بوابة الدفع هذه غير مُهيأة",
+    "gateway_unknown": "بوابة دفع غير معروفة",
+    "invalid_webhook_signature": "توقيع الويب هوك غير صالح",
+    "not_found": "لم يُعثر على الدفعة"
+  },
+  "payout": {
+    "approve_requires_director": "يمكن للمدير فقط اعتماد الصرف",
+    "not_approved": "يجب اعتماد هذه الدفعة قبل صرفها",
+    "not_found": "لم يُعثر على الدفعة",
+    "not_reprocessable": "لا يمكن معالجة هذه الدفعة مرة أخرى",
+    "nothing_to_withdraw": "لا يوجد رصيد متاح للسحب حاليًا",
+    "release_requires_director": "يمكن للمدير أو مسؤول العمليات فقط صرف الدفعة",
+    "request_requires_instructor": "يمكن للمدرّب فقط طلب الصرف"
+  },
+  "permission": {
+    "certificate_update_required": "تحتاج إلى صلاحية certificate.update",
+    "discussion_view_required": "تحتاج إلى صلاحية discussion.view",
+    "gamification_create_required": "تحتاج إلى صلاحية gamification.create"
+  },
+  "qa": {
+    "answer_not_found": "لم يُعثر على الإجابة",
+    "question_not_found": "لم يُعثر على السؤال",
+    "status_requires_asker_or_instructor": "يمكن لصاحب السؤال أو المدرّب فقط تغيير هذه الحالة"
+  },
+  "question": {
+    "needs_correct_option": "حدّد خيارًا واحدًا على الأقل كإجابة صحيحة",
+    "not_found": "لم يُعثر على السؤال",
+    "single_answer_only": "هذا النوع من الأسئلة يسمح بإجابة صحيحة واحدة فقط",
+    "true_false_needs_two_options": "سؤال صح/خطأ يجب أن يحتوي على خيارين بالضبط"
+  },
+  "question_bank": {
+    "create_cross_category_requires_admin": "يمكن للمسؤول فقط إنشاء بنك أسئلة يشمل عدة فئات",
+    "manage_cross_category_requires_admin": "يمكن للمسؤول فقط إدارة بنك أسئلة يشمل عدة فئات",
+    "not_found": "لم يُعثر على بنك الأسئلة"
+  },
+  "quiz": {
+    "answer_requires_owner": "يمكن لصاحب المحاولة فقط الإجابة",
+    "attempt_already_submitted": "تم تسليم هذه المحاولة بالفعل",
+    "attempt_limit_reached": "لقد بلغت الحد الأقصى لمحاولات هذا الاختبار",
+    "attempt_not_editable": "لا يمكن تعديل هذه المحاولة في حالتها الحالية",
+    "attempt_not_found": "لم يُعثر على المحاولة",
+    "inactive": "هذا الاختبار غير نشط",
+    "not_found": "لم يُعثر على الاختبار",
+    "submit_requires_owner": "يمكن لصاحب المحاولة فقط تسليمها"
+  },
+  "rbac": {
+    "base_roles_missing": "لم تُنشأ الأدوار الأساسية بعد",
+    "student_role_missing": "لم يُنشأ دور الطالب بعد",
+    "unknown_role": "دور غير معروف"
+  },
+  "refund": {
+    "approve_requires_director": "يمكن للمدير فقط اعتماد الاسترداد",
+    "exceeds_order_total": "مبلغ الاسترداد أكبر من إجمالي الطلب",
+    "order_not_eligible": "يمكن استرداد الطلبات المدفوعة ذات الوصول النشط فقط"
+  },
+  "reminder": {
+    "not_found": "لم يُعثر على التذكير"
+  },
+  "report": {
+    "not_found": "لم يُعثر على التقرير"
+  },
+  "review": {
+    "already_exists": "لقد قيّمت هذه الدورة بالفعل",
+    "enrollment_not_active": "يمكنك تقييم دورة تدرسها حاليًا أو أكملتها فقط",
+    "requires_enrollment_owner": "يمكن للطالب المسجّل فقط كتابة هذا التقييم"
+  },
+  "rubric": {
+    "weights_must_total_100": "يجب أن يبلغ مجموع أوزان معايير التقييم 100%"
+  },
+  "scope": {
+    "course_out_of_scope": "هذا خارج الدورات التي تديرها",
+    "out_of_scope": "هذا خارج نطاق صلاحياتك"
+  },
+  "section": {
+    "invalid_target": "هذا القسم لا ينتمي إلى هذه الدورة",
+    "not_found": "لم يُعثر على القسم"
+  },
+  "setting": {
+    "locked": "هذا الإعداد مقفل ولا يمكن تغييره",
+    "not_found": "لم يُعثر على الإعداد"
+  },
+  "site_content": {
+    "block_invalid": "كتلة المحتوى هذه غير صالحة",
+    "unknown_block": "كتلة محتوى غير معروفة"
+  },
+  "submission": {
+    "not_found": "لم يُعثر على التسليم"
+  },
+  "tag": {
+    "in_use": "هذا الوسم مستخدم في دورات. أزله منها أولًا",
+    "not_found": "لم يُعثر على الوسم",
+    "slug_taken": "معرّف الوسم مستخدم بالفعل"
+  },
+  "template": {
+    "not_found": "لم يُعثر على القالب"
+  },
+  "upload": {
+    "branding_dir_not_writable": "تعذّر حفظ الملف: المجلد uploads/branding غير قابل للكتابة",
+    "image_empty": "بيانات الصورة فارغة",
+    "image_invalid": "بيانات الصورة غير صالحة",
+    "max_2mb": "يجب ألا يتجاوز حجم الملف 2 ميغابايت",
+    "max_512kb": "يجب ألا يتجاوز حجم الملف 512 كيلوبايت",
+    "photo_max_2mb": "يجب ألا يتجاوز حجم الصورة 2 ميغابايت",
+    "site_dir_not_writable": "تعذّر حفظ الملف: المجلد uploads/site غير قابل للكتابة",
+    "unknown_asset_type": "نوع ملف غير معروف"
+  },
+  "user": {
+    "cannot_be_own_manager": "لا يمكن أن يكون المستخدم مديرًا لنفسه",
+    "cannot_delete_self": "لا يمكنك حذف حسابك الخاص",
+    "email_taken": "هذا البريد الإلكتروني مسجّل بالفعل",
+    "not_found": "لم يُعثر على المستخدم",
+    "permission_escalation": "لا يمكنك منح صلاحية لا تملكها أنت",
+    "phone_taken": "رقم الهاتف مسجّل بالفعل"
+  },
+  "validation": {
+    "failed": "فشل التحقق من البيانات"
+  }
+}

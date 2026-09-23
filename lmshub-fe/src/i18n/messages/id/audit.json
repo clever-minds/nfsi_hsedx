@@ -1,0 +1,20 @@
+{
+  "title": "Audit Log",
+  "subtitle": "Jejak aksi seluruh peran — bersifat baca-saja (append-only)",
+  "module": "Modul",
+  "modulePlaceholder": "mis. transaksi",
+  "fromDate": "Dari Tanggal",
+  "toDate": "Sampai Tanggal",
+  "applyFilter": "Terapkan Filter",
+  "colTime": "Waktu",
+  "colUser": "Pengguna",
+  "colModule": "Modul",
+  "colAction": "Aksi",
+  "empty": "Tidak ada entri audit log pada filter ini.",
+  "loadFailed": "Gagal memuat audit log",
+  "hide": "Sembunyikan",
+  "detail": "Detail",
+  "reason": "Alasan: {value}",
+  "oldValue": "Nilai Lama",
+  "newValue": "Nilai Baru"
+}

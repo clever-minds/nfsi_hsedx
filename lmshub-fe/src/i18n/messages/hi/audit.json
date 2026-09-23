@@ -1,0 +1,20 @@
+{
+  "title": "ऑडिट लॉग",
+  "subtitle": "सभी भूमिकाओं की कार्रवाई का रिकॉर्ड — केवल पढ़ने योग्य (append-only)",
+  "module": "मॉड्यूल",
+  "modulePlaceholder": "उदा. लेन-देन",
+  "fromDate": "तारीख़ से",
+  "toDate": "तारीख़ तक",
+  "applyFilter": "फ़िल्टर लागू करें",
+  "colTime": "समय",
+  "colUser": "उपयोगकर्ता",
+  "colModule": "मॉड्यूल",
+  "colAction": "कार्रवाई",
+  "empty": "इस फ़िल्टर पर कोई ऑडिट प्रविष्टि नहीं।",
+  "loadFailed": "ऑडिट लॉग लोड नहीं हो सका",
+  "hide": "छिपाएँ",
+  "detail": "विवरण",
+  "reason": "कारण: {value}",
+  "oldValue": "पुराना मान",
+  "newValue": "नया मान"
+}

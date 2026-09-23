@@ -1,0 +1,57 @@
+{
+  "center": {
+    "title": "Notifikasi",
+    "titleUnread": "Notifikasi ({n} belum dibaca)",
+    "subtitle": "Pusat notifikasi in-app kamu",
+    "markAllRead": "Tandai Semua Dibaca",
+    "preferences": "Preferensi",
+    "all": "Semua",
+    "unread": "Belum dibaca",
+    "read": "Sudah dibaca",
+    "loading": "Memuat notifikasi…",
+    "empty": "Tidak ada notifikasi.",
+    "loadFailed": "Gagal memuat notifikasi",
+    "markFailed": "Gagal menandai dibaca",
+    "markAllFailed": "Sebagian notifikasi gagal ditandai dibaca",
+    "monitor": "Monitor pengingat"
+  },
+  "prefs": {
+    "title": "Preferensi Notifikasi",
+    "subtitle": "Kanal pengiriman per jenis event",
+    "back": "Kembali",
+    "loading": "Memuat preferensi…",
+    "empty": "Belum ada jenis event yang dapat dikonfigurasi.",
+    "colEvent": "Jenis Event",
+    "alwaysOn": "Selalu Aktif",
+    "criticalHint": "Event kritikal selalu terkirim",
+    "save": "Simpan Preferensi",
+    "saved": "Tersimpan.",
+    "loadFailed": "Gagal memuat preferensi notifikasi",
+    "saveFailed": "Gagal menyimpan preferensi",
+    "channel": {
+      "in_app": "In-app",
+      "email": "Email",
+      "wa": "WhatsApp",
+      "push": "Push"
+    }
+  },
+  "reminders": {
+    "title": "Monitor Reminder",
+    "subtitle": "Status pengingat lintas pengguna: terkirim, dibaca, direspons, eskalasi",
+    "back": "Kembali",
+    "allStatus": "Semua status",
+    "empty": "Tidak ada reminder pada filter ini.",
+    "loadFailed": "Gagal memuat monitor reminder",
+    "colType": "Jenis",
+    "colRecipient": "Penerima",
+    "colStatus": "Status",
+    "colEscalatedTo": "Eskalasi Ke",
+    "colSentAt": "Dikirim",
+    "status": {
+      "terkirim": "Terkirim",
+      "dibaca": "Dibaca",
+      "direspons": "Direspons",
+      "eskalasi": "Eskalasi"
+    }
+  }
+}

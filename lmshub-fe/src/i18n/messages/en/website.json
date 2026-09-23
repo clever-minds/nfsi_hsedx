@@ -1,0 +1,116 @@
+{
+  "title": "Website",
+  "subtitle": "Change what visitors see on the public site — no code needed.",
+  "viewSite": "Open site",
+  "saved": "Saved",
+  "saveFailed": "Failed to save.",
+  "loadFailed": "Failed to load website content.",
+  "readOnly": "You can view this page but not change it.",
+  "editingLanguage": "Editing language",
+  "editingLanguageHint": "Applies to every text field on this page. Leave a field empty to use the built-in text.",
+  "defaultPlaceholder": "Leave empty to use the default text",
+  "active": "Active",
+  "show": "Show",
+  "moveUp": "Move up",
+  "moveDown": "Move down",
+  "group": {
+    "kontak": "Contact",
+    "sosial": "Social Media",
+    "menu": "Header Menu",
+    "hero": "Hero Section",
+    "sections": "Page Layout",
+    "footer": "Footer"
+  },
+  "kontak": {
+    "intro": "Shown in the dark bar above the header.",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
+    "showTopbar": "Show the top bar"
+  },
+  "sosial": {
+    "intro": "Appear in the top bar and the footer. Empty links are hidden.",
+    "add": "Add link",
+    "empty": "No social links yet."
+  },
+  "menu": {
+    "intro": "Replaces the built-in menu (Home / Courses / Instructors). Leave empty to keep the default.",
+    "label": "Label",
+    "url": "Link",
+    "add": "Add menu item",
+    "empty": "Using the default menu."
+  },
+  "hero": {
+    "intro": "The first thing a visitor sees.",
+    "badge": "Small label above the heading",
+    "titleHint": "The heading is split into three parts; the middle one is highlighted in brand color.",
+    "titlePre": "Before highlight",
+    "titleHighlight": "Highlighted",
+    "titlePost": "After highlight",
+    "subtitle": "Subheading",
+    "image": "Hero image",
+    "imageHint": "JPG, PNG, or WebP · max 2MB. Empty shows the gradient block.",
+    "noImage": "No image yet",
+    "replace": "Upload image",
+    "badFormat": "Format must be JPG, PNG, or WebP.",
+    "tooLarge": "File must be 2MB or smaller.",
+    "readFailed": "Could not read the file.",
+    "uploadFailed": "Upload failed.",
+    "ratingScore": "Rating score",
+    "ratingText": "Rating caption",
+    "showSearch": "Show the search box",
+    "showRating": "Show the rating line",
+    "showStudentCard": "Show the floating students card",
+    "showCourseCard": "Show the floating courses card"
+  },
+  "sections": {
+    "intro": "Reorder, hide, and retitle the blocks below the hero.",
+    "badge": "Badge",
+    "heading": "Heading",
+    "subheading": "Subheading"
+  },
+  "section": {
+    "kategori": {
+      "name": "Top Categories",
+      "desc": "Category grid linking to the catalog."
+    },
+    "benefit": {
+      "name": "Benefits",
+      "desc": "Three reasons to learn here, on a dark band."
+    },
+    "featured": {
+      "name": "Featured Courses",
+      "desc": "Eight courses with a link to the catalog."
+    },
+    "stats": {
+      "name": "Statistics",
+      "desc": "Students, courses, categories, and instructors."
+    },
+    "instruktur": {
+      "name": "Top Instructors",
+      "desc": "Instructor cards with rating and student count."
+    },
+    "cta": {
+      "name": "Sign-up Call to Action",
+      "desc": "Dark panel with the register and browse buttons."
+    }
+  },
+  "footer": {
+    "intro": "The dark area at the bottom of every public page.",
+    "blurb": "Short description",
+    "columns": "Link columns",
+    "columnsHint": "Up to 4 columns. Leave empty to keep the built-in Explore and Support columns.",
+    "columnsEmpty": "Using the built-in columns.",
+    "columnTitle": "Column title",
+    "addColumn": "Add column",
+    "linkLabel": "Label",
+    "linkUrl": "Link",
+    "addLink": "Add link",
+    "newsletterShow": "Show the newsletter box",
+    "newsletterTitle": "Newsletter title",
+    "newsletterText": "Newsletter text",
+    "showSocial": "Show social icons in the footer",
+    "copyright": "Copyright line",
+    "copyrightHint": "Use :year for the current year and :name for the app name."
+  }
+}

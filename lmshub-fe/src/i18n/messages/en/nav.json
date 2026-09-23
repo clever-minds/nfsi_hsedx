@@ -1,0 +1,64 @@
+{
+  "section": {
+    "home": "Home",
+    "learning": "Learning",
+    "teaching": "Teaching",
+    "management": "Management",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "item": {
+    "home": "Home",
+    "catalog": "Course Catalog",
+    "enrollment": "Enrollment",
+    "myLearning": "My Learning",
+    "assessments": "Assessments",
+    "liveClass": "Live Class",
+    "discussions": "Discussions",
+    "certificates": "Certificates",
+    "courses": "Courses",
+    "curriculum": "Curriculum & Content",
+    "grading": "Grading",
+    "users": "Users",
+    "transactions": "Transactions",
+    "marketing": "Marketing",
+    "reports": "Reports",
+    "notifications": "Notifications",
+    "auditLog": "Audit Log",
+    "settings": "Settings",
+    "currencies": "Currencies",
+    "bankAccounts": "Bank accounts",
+    "website": "Website",
+    "certificateTemplate": "Certificate Template"
+  },
+  "public": {
+    "home": "Home",
+    "courses": "Courses",
+    "instructors": "Instructors"
+  },
+  "header": {
+    "toggleMenu": "Toggle menu",
+    "menu": "Menu",
+    "searchPublic": "Search courses, instructors…",
+    "searchPublicShort": "Search courses…",
+    "searchDashboard": "Search courses, lessons, users…",
+    "newCourse": "Create New Course",
+    "goToDashboard": "Dashboard",
+    "switchRole": "Switch role",
+    "address": "Connaught Place, New Delhi"
+  },
+  "footer": {
+    "explore": "Explore",
+    "support": "Support",
+    "aboutUs": "About Us",
+    "helpCenter": "Help Center",
+    "privacyPolicy": "Privacy Policy",
+    "terms": "Terms & Conditions",
+    "registerFree": "Sign Up Free",
+    "newsletter": "Subscribe to Updates",
+    "newsletterHint": "Get course recommendations and promos straight to your inbox.",
+    "emailPlaceholder": "Email address",
+    "blurb": "An online course academy — learn new skills from experienced instructors, take assessments, and earn certificates.",
+    "copyright": "© {year} {name} · {tagline}"
+  }
+}

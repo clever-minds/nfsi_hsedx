@@ -1,0 +1,210 @@
+{
+  "title": "Settings",
+  "subtitle": "System & document key/value configuration",
+  "myProfile": "My Profile →",
+  "empty": "No settings saved yet.",
+  "readOnly": "You have view-only access; you cannot make changes.",
+  "docsTitle": "Document Settings",
+  "docsEmpty": "No document settings yet.",
+  "saved": "Saved",
+  "loadFailed": "Failed to load settings",
+  "saveFailed": "Failed to save the setting",
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Manage your account data & security",
+    "back": "← Settings",
+    "personalTitle": "Personal Data",
+    "saved": "Profile saved.",
+    "fullName": "Full Name",
+    "email": "Email",
+    "whatsapp": "WhatsApp No.",
+    "save": "Save Profile",
+    "saveFailed": "Failed to save the profile",
+    "passwordTitle": "Change Password",
+    "passwordChanged": "Your password was changed.",
+    "oldPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "change": "Change Password",
+    "required": "Current and new password are required.",
+    "mismatch": "The new password confirmation does not match.",
+    "tooShort": "The new password must be at least 8 characters.",
+    "changeFailed": "Failed to change the password"
+  },
+  "bankAccounts": "Bank accounts →",
+  "invalidJson": "{label} is not valid JSON — fix the value before saving.",
+  "group": {
+    "currency": "Currency",
+    "harga": "Pricing",
+    "checkout": "Checkout",
+    "komisi": "Commission",
+    "revenue_share": "Revenue share",
+    "sertifikat": "Certificates",
+    "kontak": "Contact",
+    "auth": "Google Sign-In (OAuth)",
+    "smtp": "SMTP (Email)",
+    "umum": "General",
+    "brand": "Brand identity",
+    "payment": "Payment methods",
+    "payment_stripe": "Stripe",
+    "payment_paypal": "PayPal",
+    "payment_razorpay": "Razorpay",
+    "payment_paystack": "Paystack",
+    "payment_flutterwave": "Flutterwave",
+    "payment_mollie": "Mollie",
+    "payment_midtrans": "Midtrans"
+  },
+  "unit": {
+    "persen": "%",
+    "menit": "minutes",
+    "bulan": "months",
+    "poin": "points"
+  },
+  "tier": {
+    "add": "Add tier",
+    "empty": "No tiers yet — marketing earns nothing until you add one.",
+    "categoryPlaceholder": "Category (e.g. student)"
+  },
+  "item": {
+    "currency_code": {
+      "label": "Currency",
+      "desc": "Applied to every price shown across the app. Changing it does not convert any stored amount."
+    },
+    "harga_default_kursus": {
+      "label": "Default course price",
+      "desc": "Pre-filled price for a newly created course"
+    },
+    "dp_persen_minimal": {
+      "label": "Minimum down payment",
+      "desc": "Smallest down payment accepted on an instalment plan"
+    },
+    "cicilan_tenor_maks_bulan": {
+      "label": "Maximum instalment term",
+      "desc": "Longest instalment plan a buyer may choose"
+    },
+    "checkout_timeout_menit": {
+      "label": "Checkout timeout",
+      "desc": "How long a gateway payment stays open before the order expires"
+    },
+    "komisi_tier_default": {
+      "label": "Default commission tiers",
+      "desc": "Commission rate per marketing category"
+    },
+    "revenue_share_instruktur_default": {
+      "label": "Default instructor share",
+      "desc": "Instructor's cut of course revenue"
+    },
+    "revenue_share_lembaga_default": {
+      "label": "Default institution share",
+      "desc": "Institution's cut of course revenue"
+    },
+    "sertifikat_syarat_progres_min_persen": {
+      "label": "Minimum progress to pass",
+      "desc": "Course completion required before a certificate is issued"
+    },
+    "sertifikat_syarat_passing_score_min": {
+      "label": "Minimum passing score",
+      "desc": "Assessment score required before a certificate is issued"
+    },
+    "sertifikat_syarat_kehadiran_min_persen": {
+      "label": "Minimum attendance",
+      "desc": "Live class attendance required (0 = not required)"
+    },
+    "kontak_nomor_wa_admin": {
+      "label": "Admin WhatsApp number",
+      "desc": "Shown to visitors who have not signed in yet"
+    },
+    "kontak_email_cs": {
+      "label": "Support email",
+      "desc": "Address customers are told to write to"
+    },
+    "smtp_host": {
+      "label": "SMTP host",
+      "desc": "Mail server hostname (e.g. smtp.gmail.com)"
+    },
+    "smtp_port": {
+      "label": "SMTP port",
+      "desc": "587 for STARTTLS, 465 for SSL"
+    },
+    "smtp_secure": {
+      "label": "Use SSL",
+      "desc": "Turn on for port 465 (direct SSL)"
+    },
+    "smtp_user": {
+      "label": "SMTP username",
+      "desc": "Username or email of the sending account"
+    },
+    "smtp_pass": {
+      "label": "SMTP password",
+      "desc": "Password or app password — stored hidden"
+    },
+    "smtp_from": {
+      "label": "Sender address",
+      "desc": "The From address on outgoing mail"
+    },
+    "google_client_id": {
+      "label": "Google Client ID",
+      "desc": "OAuth Client ID used for Google sign-in"
+    },
+    "brand_nama_aplikasi": {
+      "label": "Application name",
+      "desc": "Replaces the product name everywhere your users see it"
+    },
+    "brand_footer": {
+      "label": "Footer line",
+      "desc": ":year becomes the current year and :name becomes the application name, so the line never goes stale"
+    },
+    "brand_logo_url": {
+      "label": "Logo",
+      "desc": "Shown in the sidebar and on the sign-in screen"
+    },
+    "brand_icon_url": {
+      "label": "Icon",
+      "desc": "Square. Used as the browser tab icon — 64×64 or larger"
+    }
+  },
+  "brand": {
+    "intro": "What people see: the name in the sidebar and browser tab, the logo above it, and the line at the foot of the navigation.",
+    "footerPlaceholder": "© :year :name. All rights reserved.",
+    "preview": "Preview:",
+    "replace": "Replace",
+    "noLogo": "No logo uploaded — the default mark is used",
+    "noIcon": "No icon uploaded — the default is used",
+    "fileHint": "PNG, JPG, or WEBP up to 512 KB. SVG is not accepted.",
+    "nameRequired": "The application name cannot be empty.",
+    "badFormat": "The format must be PNG, JPG, or WEBP.",
+    "tooLarge": "The file must be at most 512 KB.",
+    "readFailed": "Failed to read the file",
+    "uploadFailed": "Failed to upload the file"
+  },
+  "payment": {
+    "webhookTitle": "Webhook endpoint",
+    "webhookHint": "Register this URL in the gateway dashboard. Without it a payment succeeds but the order is never marked paid.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "statusActive": "Offered at checkout",
+    "statusConfigured": "Keys saved, switched off",
+    "statusEmpty": "Not configured",
+    "manualNote": "Destination accounts are managed under Bank Accounts, not here."
+  },
+  "currencies": {
+    "title": "Currencies",
+    "subtitle": "Display currencies and their rates against {code}, the currency every amount is stored in.",
+    "add": "Add currency",
+    "pickCode": "Choose a currency…",
+    "baseBadge": "BASE",
+    "colCode": "Code",
+    "colName": "Name",
+    "colSymbol": "Symbol",
+    "colRate": "1 {code} =",
+    "colDecimals": "Decimals",
+    "colActive": "Offered",
+    "rateHint": "How many {code} equal one {base}.",
+    "note": "Prices are converted for display only. Orders are recorded and charged in {code}, so changing a rate never alters an order that already exists.",
+    "confirmDelete": "Remove {code} from the list?",
+    "loadFailed": "Could not load currencies",
+    "saveFailed": "Could not save",
+    "deleteFailed": "Could not remove",
+    "emptyForBase": "No currencies yet. Add one on the Currencies page first — the base currency has to be one you actually offer."
+  }
+}

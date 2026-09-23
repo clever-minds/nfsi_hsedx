@@ -1,0 +1,64 @@
+{
+  "section": {
+    "home": "Beranda",
+    "learning": "Pembelajaran",
+    "teaching": "Pengajaran",
+    "management": "Manajemen",
+    "reports": "Laporan",
+    "settings": "Pengaturan"
+  },
+  "item": {
+    "home": "Beranda",
+    "catalog": "Katalog Kursus",
+    "enrollment": "Enrollment",
+    "myLearning": "Belajar Saya",
+    "assessments": "Asesmen",
+    "liveClass": "Live Class",
+    "discussions": "Diskusi",
+    "certificates": "Sertifikat",
+    "courses": "Kursus",
+    "curriculum": "Kurikulum & Konten",
+    "grading": "Grading",
+    "users": "Pengguna",
+    "transactions": "Transaksi",
+    "marketing": "Marketing",
+    "reports": "Laporan",
+    "notifications": "Notifikasi",
+    "auditLog": "Audit Log",
+    "settings": "Pengaturan",
+    "currencies": "Mata Uang",
+    "bankAccounts": "Rekening Bank",
+    "website": "Website",
+    "certificateTemplate": "Template Sertifikat"
+  },
+  "public": {
+    "home": "Beranda",
+    "courses": "Kursus",
+    "instructors": "Instruktur"
+  },
+  "header": {
+    "toggleMenu": "Buka/tutup menu",
+    "menu": "Menu",
+    "searchPublic": "Cari kursus, instruktur…",
+    "searchPublicShort": "Cari kursus…",
+    "searchDashboard": "Cari kursus, materi, pengguna…",
+    "newCourse": "Buat Kursus Baru",
+    "goToDashboard": "Dashboard",
+    "switchRole": "Ganti peran",
+    "address": "Connaught Place, New Delhi"
+  },
+  "footer": {
+    "explore": "Jelajahi",
+    "support": "Dukungan",
+    "aboutUs": "Tentang Kami",
+    "helpCenter": "Pusat Bantuan",
+    "privacyPolicy": "Kebijakan Privasi",
+    "terms": "Syarat & Ketentuan",
+    "registerFree": "Daftar Gratis",
+    "newsletter": "Berlangganan Kabar",
+    "newsletterHint": "Dapatkan rekomendasi kursus & promo langsung di email kamu.",
+    "emailPlaceholder": "Alamat email",
+    "blurb": "Platform akademi kursus daring — belajar skill baru dari instruktur berpengalaman, kerjakan asesmen, dan raih sertifikat.",
+    "copyright": "© {year} {name} · {tagline}"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "center": {
+    "title": "Notifications",
+    "titleUnread": "Notifications ({n} unread)",
+    "subtitle": "Your in-app notification centre",
+    "markAllRead": "Mark All as Read",
+    "preferences": "Preferences",
+    "all": "All",
+    "unread": "Unread",
+    "read": "Read",
+    "loading": "Loading notifications…",
+    "empty": "No notifications.",
+    "loadFailed": "Failed to load notifications",
+    "markFailed": "Failed to mark as read",
+    "markAllFailed": "Some notifications could not be marked as read",
+    "monitor": "Reminder monitor"
+  },
+  "prefs": {
+    "title": "Notification Preferences",
+    "subtitle": "Delivery channels per event type",
+    "back": "Back",
+    "loading": "Loading preferences…",
+    "empty": "No event types are configurable yet.",
+    "colEvent": "Event Type",
+    "alwaysOn": "Always On",
+    "criticalHint": "Critical events are always delivered",
+    "save": "Save Preferences",
+    "saved": "Saved.",
+    "loadFailed": "Failed to load notification preferences",
+    "saveFailed": "Failed to save preferences",
+    "channel": {
+      "in_app": "In-app",
+      "email": "Email",
+      "wa": "WhatsApp",
+      "push": "Push"
+    }
+  },
+  "reminders": {
+    "title": "Reminder Monitor",
+    "subtitle": "Reminder status across users: sent, read, responded, escalated",
+    "back": "Back",
+    "allStatus": "All statuses",
+    "empty": "No reminders match this filter.",
+    "loadFailed": "Failed to load the reminder monitor",
+    "colType": "Type",
+    "colRecipient": "Recipient",
+    "colStatus": "Status",
+    "colEscalatedTo": "Escalated To",
+    "colSentAt": "Sent",
+    "status": {
+      "terkirim": "Sent",
+      "dibaca": "Read",
+      "direspons": "Responded",
+      "eskalasi": "Escalated"
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "list": {
+    "title": "Live Class",
+    "subtitle": "Synchronous session schedule & attendance",
+    "calendar": "Calendar",
+    "allStatus": "All statuses",
+    "loading": "Loading session schedule…",
+    "empty": "No live sessions scheduled yet.",
+    "loadFailed": "Failed to load the live class schedule",
+    "host": "Host: {name}",
+    "participants": "Participants: {joined} / {capacity}",
+    "join": "Join",
+    "notYet": "Not Yet Time",
+    "recording": "View Recording",
+    "ended": "Session Ended",
+    "attendance": "Attendance",
+    "scopeNote": "You only see sessions relevant to your role (taught / enrolled) — data is scoped automatically by the backend.",
+    "status": {
+      "dijadwalkan": "Scheduled",
+      "berlangsung": "In Progress",
+      "selesai": "Completed",
+      "rekaman_tersedia": "Recording Available"
+    },
+    "joinFailed": "Could not join the session. It may be outside the session time, or you are not enrolled in this course."
+  },
+  "attendance": {
+    "title": "Attendance Panel",
+    "subtitle": "Attendance status of live class participants",
+    "back": "Back",
+    "empty": "No participants registered for this session.",
+    "loadFailed": "Failed to load attendance data",
+    "markFailed": "Failed to mark attendance",
+    "colParticipant": "Participant",
+    "colStatus": "Status",
+    "colJoinTime": "Join Time",
+    "colDuration": "Attended For",
+    "minutes": "{n} min",
+    "notYet": "Not yet",
+    "status": {
+      "belum": "Not yet",
+      "hadir": "Present",
+      "terlambat": "Late",
+      "absen": "Absent"
+    }
+  },
+  "calendarPage": {
+    "title": "Unified Calendar",
+    "subtitle": "Live classes, assignment deadlines, and exam schedules across all courses",
+    "loading": "Loading the agenda…",
+    "empty": "No agenda items this month.",
+    "loadFailed": "Failed to load the unified calendar",
+    "legend": {
+      "live": "Live Class",
+      "tenggat": "Assignment Deadline",
+      "ujian": "Exam"
+    }
+  }
+}

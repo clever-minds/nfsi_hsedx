@@ -1,0 +1,20 @@
+{
+  "title": "Audit Log",
+  "subtitle": "Action trail across all roles — read-only (append-only)",
+  "module": "Module",
+  "modulePlaceholder": "e.g. transactions",
+  "fromDate": "From Date",
+  "toDate": "To Date",
+  "applyFilter": "Apply Filter",
+  "colTime": "Time",
+  "colUser": "User",
+  "colModule": "Module",
+  "colAction": "Action",
+  "empty": "No audit entries match this filter.",
+  "loadFailed": "Failed to load the audit log",
+  "hide": "Hide",
+  "detail": "Details",
+  "reason": "Reason: {value}",
+  "oldValue": "Previous Value",
+  "newValue": "New Value"
+}

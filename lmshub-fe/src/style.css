@@ -1,0 +1,192 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-surface text-slate-700 antialiased;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded px-4 py-2 text-sm font-medium transition;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-brand-500 text-white shadow-sm hover:bg-brand-600;
+  }
+  .btn-outline {
+    @apply btn border border-slate-300 bg-white text-slate-600 hover:border-brand-500 hover:text-brand-500;
+  }
+  /* Aksi di dalam baris tabel: ikon netral yang baru berwarna saat hover.
+     Sebelumnya tiap view memakai link teks `text-rose-600` sehingga daftar
+     berisi 20 baris tampil sebagai dinding merah — aksi rutin terbaca seperti
+     peringatan, dan aksi destruktif kehilangan bobotnya karena warnanya sama
+     dengan segalanya. Pola ini diambil dari CurrenciesView yang sudah benar. */
+  .row-action {
+    @apply grid h-8 w-8 shrink-0 place-items-center rounded text-slate-400 transition;
+    @apply hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .row-action-danger {
+    @apply hover:bg-rose-50 hover:text-rose-600;
+  }
+  /* Keadaan kosong. Sebelumnya ada lima bentuk untuk hal yang sama — padding
+     4/6/8/10, dan separuhnya rata kiri sementara separuh lain rata tengah —
+     sehingga "belum ada data" terlihat berbeda di tiap halaman.
+     `.empty-state` berdiri sendiri sebagai kartu; `.empty-inline` untuk yang
+     bersarang di dalam kartu, supaya tidak jadi kartu di dalam kartu. */
+  .empty-state {
+    @apply card p-8 text-center text-sm text-slate-400;
+  }
+  .empty-inline {
+    @apply rounded border border-dashed border-slate-200 p-4 text-center text-sm text-slate-400;
+  }
+  /* Umpan balik inline. Sebelumnya ada delapan varian struktural: dua radius
+     (rounded / rounded-lg), dua nuansa teks (rose-600 / rose-700), dan dua
+     wadah berbeda — strip berwarna vs kartu putih — untuk hal yang sama.
+     Radius disamakan dengan .card/.input/.btn agar satu halaman tidak memuat
+     dua bahasa bentuk. */
+  .alert {
+    @apply rounded px-3 py-2 text-sm;
+  }
+  .alert-error {
+    @apply alert bg-rose-50 text-rose-700;
+  }
+  .alert-success {
+    @apply alert bg-emerald-50 text-emerald-700;
+  }
+  .alert-warning {
+    @apply alert bg-amber-50 text-amber-700;
+  }
+  .alert-info {
+    @apply alert bg-sky-50 text-sky-700;
+  }
+  /* Aksi baris berlabel (Publish, Archive, Delete, …). Label dipertahankan
+     karena satu baris bisa punya tiga kata kerja berbeda — ikon saja bikin
+     user menebak. Yang dibuang cuma warnanya: netral sampai di-hover, supaya
+     daftar 20 baris tidak jadi dinding merah/hijau. Maknanya dibawa kata,
+     bukan warna. */
+  .row-link {
+    @apply text-xs font-medium text-slate-600 underline-offset-2 transition;
+    @apply hover:underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-40;
+  }
+  .row-link-danger {
+    @apply hover:text-rose-600;
+  }
+  .row-link-positive {
+    @apply hover:text-emerald-600;
+  }
+  .row-link-primary {
+    @apply hover:text-brand-600;
+  }
+  /* Jumlah baris di toolbar tabel. */
+  .table-count {
+    @apply text-sm text-slate-500;
+  }
+  /* Tombol kecil. Sebelumnya ada empat tinggi berbeda untuk peran yang sama
+     (py-0.5 / py-1 / py-1.5 / py-2 dengan text-xs), kadang dengan px-2 kadang
+     px-4 bawaan — dua tombol kecil bersebelahan tampak beda ukuran.
+     WAJIB didefinisikan setelah .btn-primary/.btn-outline: spesifisitasnya
+     sama, jadi yang menang adalah yang ditulis belakangan. */
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+  /* Tombol ikon persegi (hapus baris, geser urutan, dsb). */
+  .btn-icon {
+    @apply px-2 py-2;
+  }
+  .card {
+    @apply rounded border border-slate-200 bg-white shadow-card;
+  }
+  .input {
+    @apply w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-brand-400 focus:ring-1 focus:ring-brand-400;
+  }
+  /* Label sebaris untuk checkbox/radio. Dua nuansa dipakai untuk hal yang sama
+     (slate-600 dan slate-700); disamakan dengan .label. */
+  .label-inline {
+    @apply flex items-center gap-2 text-sm text-slate-700;
+  }
+  .label {
+    @apply mb-1 block text-sm font-medium text-slate-700;
+  }
+  /* Judul seksi ala Cursus: "Featured Courses  ·  See all" */
+  .section-title {
+    @apply text-lg font-medium text-slate-900;
+  }
+  /* Judul di dalam kartu/panel. Sebelumnya ada sepuluh varian untuk peran yang
+     sama — slate-800 vs slate-900, font-medium vs font-semibold vs font-bold —
+     yang membuat dua kartu bersebelahan tampak beda kelas padahal setingkat. */
+  .card-title {
+    @apply font-medium text-slate-900;
+  }
+  .section-link {
+    @apply text-sm text-slate-400 transition hover:text-brand-500;
+  }
+  /* Tab dalam halaman. Garis bawah transparan sudah ada sejak keadaan tidak
+     aktif: kalau hanya tab aktif yang punya border-b-2, tab itu jadi 2px lebih
+     tinggi dari tetangganya dan barisnya bergeser tiap kali pindah tab.
+     `.tab-item-active` harus ditulis setelah `.tab-item` — spesifisitasnya sama,
+     yang belakangan menang. */
+  .tab-bar {
+    @apply flex gap-2 border-b border-slate-200;
+  }
+  .tab-item {
+    @apply border-b-2 border-transparent px-3 py-2 text-sm font-medium text-slate-500 transition hover:text-slate-700;
+  }
+  .tab-item-active {
+    @apply border-brand-700 text-brand-800;
+  }
+  /* Item navigasi sidebar — border-s agar pindah ke kanan saat RTL */
+  .nav-item {
+    @apply flex items-center gap-3 border-s-2 border-transparent px-5 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-brand-500;
+  }
+  .nav-item-active {
+    @apply border-brand-500 bg-brand-50 font-medium text-brand-500;
+  }
+  /* Input dengan ikon di dalamnya (halaman auth ala Cursus) */
+  .input-icon-wrap {
+    @apply flex items-center gap-2.5 rounded border border-slate-300 bg-white px-3 py-2.5 text-slate-400 transition focus-within:border-brand-400 focus-within:text-brand-400 focus-within:ring-1 focus-within:ring-brand-400;
+  }
+  /* `select` ikut didukung: sebelumnya hanya `input`, sehingga pemilih dengan
+     ikon terpaksa ditulis sebagai ikon melayang di sebelah field. */
+  .input-icon-wrap input,
+  .input-icon-wrap select {
+    @apply w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400;
+  }
+  /* Tombol ikon header dengan badge angka */
+  .header-icon-btn {
+    @apply relative grid h-10 w-10 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700;
+  }
+  .header-badge {
+    @apply absolute -end-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-brand-500 px-1 text-[10px] font-bold leading-none text-white;
+  }
+}
+
+/* ── Dukungan RTL ─────────────────────────────────────────────────────────
+   Sebagian besar pembalikan ditangani Tailwind logical properties
+   (ps-/pe-/ms-/me-/start-/end-/border-s/text-start). Yang tersisa: ikon
+   berarah dan elemen yang memang punya sisi tetap. */
+[dir='rtl'] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* Progress bar & slider native tetap mengalir dari sisi awal teks. */
+[dir='rtl'] progress,
+[dir='rtl'] input[type='range'] {
+  direction: rtl;
+}
+
+/* Nilai numerik (harga, skor, nomor sertifikat) dibaca LTR walau di UI RTL. */
+.num {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Latar halaman auth: doodle edukasi halus ala Cursus */
+.auth-bg {
+  background-color: #f7f7f7;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='none' stroke='%23e7e7e7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='30' cy='30' r='12'/%3E%3Cpath d='M100 22l12 22h-24z'/%3E%3Crect x='108' y='108' width='22' height='22' rx='4'/%3E%3Cpath d='M22 112c10-10 20 10 30 0'/%3E%3Cpath d='M74 74h16M82 66v16'/%3E%3Cpath d='M140 60c-6 2-6 10 0 12'/%3E%3C/g%3E%3C/svg%3E");
+}

@@ -1,0 +1,72 @@
+{
+  "title": "Discussions & Community",
+  "subtitle": "Course forums and per-lesson Q&A",
+  "moderation": "Moderation",
+  "noEnrollment": "You are not enrolled in any course yet.",
+  "browseCatalog": "Browse the catalog →",
+  "tabForum": "Forum",
+  "tabQa": "Q&A",
+  "forum": {
+    "topics": "Discussion Topics",
+    "newTopic": "New Topic",
+    "titlePlaceholder": "Topic title",
+    "bodyPlaceholder": "Write the discussion body…",
+    "empty": "No discussions yet. Start the first topic!",
+    "pinned": "Pinned",
+    "pickThread": "Pick a topic on the left to read and reply.",
+    "noReplies": "No replies yet. Be the first to reply!",
+    "replyPlaceholder": "Write a reply…",
+    "reply": "Reply",
+    "loadFailed": "Failed to load discussions",
+    "threadFailed": "Failed to load the thread",
+    "createFailed": "Failed to create the discussion",
+    "replyFailed": "Failed to send the reply"
+  },
+  "qa": {
+    "noLessons": "No lessons",
+    "askPlaceholder": "Ask a question about this lesson…",
+    "ask": "Ask",
+    "loading": "Loading questions…",
+    "empty": "No questions on this lesson yet.",
+    "student": "Student",
+    "answered": "Answered",
+    "waiting": "Waiting",
+    "helpful": "▲ Helpful ({n})",
+    "instructor": "Instructor",
+    "answerPlaceholder": "Write an answer…",
+    "answer": "Answer",
+    "loadFailed": "Failed to load Q&A",
+    "askFailed": "Failed to submit the question",
+    "answerFailed": "Failed to send the answer"
+  },
+  "moderationPage": {
+    "title": "Discussion Moderation",
+    "subtitle": "Content report queue across courses",
+    "back": "Back",
+    "allStatus": "All statuses",
+    "empty": "No reports in this queue.",
+    "loadFailed": "Failed to load the report queue",
+    "colContent": "Content",
+    "colReporter": "Reporter",
+    "colReason": "Reason",
+    "colStatus": "Status",
+    "hide": "Hide",
+    "delete": "Delete",
+    "block": "Block User",
+    "promptReason": "A reason is required to {action}:",
+    "actionFailed": "Failed to process the moderation action",
+    "action": {
+      "sembunyikan": "hide this content",
+      "hapus": "delete this content",
+      "blokir": "block this user"
+    },
+    "status": {
+      "menunggu": "Pending",
+      "disembunyikan": "Hidden",
+      "dihapus": "Deleted",
+      "ditolak": "Rejected"
+    }
+  },
+  "courseLabel": "Course",
+  "lessonLabel": "Lesson"
+}

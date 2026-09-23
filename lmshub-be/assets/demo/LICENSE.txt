@@ -1,0 +1,13 @@
+Demo media bundled with LMS Hub
+================================
+
+flower.mp4, friday.mp4
+  Licence : CC0 1.0 Universal (Public Domain Dedication)
+  Source  : MDN Web Docs sample media (https://developer.mozilla.org)
+  Rights  : No attribution required. Free to use, modify, redistribute and
+            sell, including commercially.
+
+These clips exist only so the course player has something real to play in the
+demo data seeded by `npm run seed:demo`. They are not part of the product.
+Replace them with your own lesson recordings, or delete `uploads/demo/` once
+you have removed the demo courses.

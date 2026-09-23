@@ -1,0 +1,210 @@
+{
+  "card": {
+    "viewCourse": "View Course",
+    "discount": "{n}% off"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Leading Online Learning Platform",
+      "titlePre": "Online courses that are",
+      "titleHighlight": "Fun",
+      "titlePost": "& easy to access for everyone",
+      "subtitle": "Learn new skills from experienced instructors — structured videos, quizzes, live classes, and a completion certificate.",
+      "allCategories": "All Categories",
+      "searchPlaceholder": "Search courses, instructors…",
+      "searchBtn": "Search",
+      "ratingScore": "4.8/5.0",
+      "ratingSuffix": "from 1,200+ student reviews"
+    },
+    "float": {
+      "students": "Enrolled Students",
+      "coursesCount": "{n}+ Courses",
+      "readyToLearn": "Ready to Learn"
+    },
+    "categories": {
+      "badge": "Popular Courses",
+      "title": "Top Categories",
+      "subtitle": "The right course with an expert mentor gives you valuable insight and skills you can use right away",
+      "count": "{n} Courses"
+    },
+    "benefits": {
+      "badge": "Why Choose Us",
+      "title": "Master the skills that move your career forward",
+      "subtitle": "The right course, guided by expert mentors, gives you the practical insight and skills you need",
+      "expert": {
+        "title": "Learn From Expert Instructors",
+        "text": "Industry-experienced instructors guide you through every course — not just theory, but real practice."
+      },
+      "certificate": {
+        "title": "Earn an Official Certificate",
+        "text": "Finish the course, pass the assessment, and get a verifiable certificate for your CV and LinkedIn profile."
+      },
+      "pace": {
+        "title": "Learn at Your Own Pace",
+        "text": "Lifetime access, structured videos, quizzes, and live classes — learn whenever and wherever you are ready."
+      }
+    },
+    "featured": {
+      "badge": "Newest & Most Popular",
+      "title": "Featured Courses",
+      "subtitle": "Hand-picked courses curated to help you master the most in-demand skills",
+      "empty": "The course catalog will appear once courses are published.",
+      "seeAll": "See All Courses"
+    },
+    "stats": {
+      "title": "Reach your goals with LMS Hub",
+      "subtitle": "96% of our students report a skill improvement within the first six months.",
+      "students": "Enrolled Students",
+      "courses": "Courses on the Platform",
+      "categories": "Skill Categories",
+      "instructors": "Expert Instructors"
+    },
+    "instructors": {
+      "badge": "Featured Instructors",
+      "title": "Top-Class & Professional Instructors",
+      "subtitle": "Learn straight from practitioners who have proven their expertise in the industry",
+      "seeAll": "See all instructors →"
+    },
+    "cta": {
+      "title": "Unlock Access to Quality Education",
+      "subtitle": "Create a free account and get course recommendations, promos, and the latest live class news.",
+      "register": "Sign Up Now — Free",
+      "browse": "Browse the Catalog"
+    }
+  },
+  "list": {
+    "title": "Course Catalog",
+    "filter": "Filter",
+    "clear": "Clear",
+    "category": "Category",
+    "allCategories": "All Categories",
+    "level": "Level",
+    "allLevels": "All Levels",
+    "price": "Price",
+    "priceAll": "All",
+    "priceFree": "Free",
+    "pricePaid": "Paid",
+    "sortNewest": "Newest",
+    "sortPriceAsc": "Lowest Price",
+    "sortPriceDesc": "Highest Price",
+    "sortTitle": "Title A–Z",
+    "range": "Showing {from}–{to} of {total} results",
+    "noResults": "No results",
+    "emptyFilter": "No courses match your filters.",
+    "clearFilter": "Clear filters",
+    "prev": "‹ Previous",
+    "next": "Next ›"
+  },
+  "detail": {
+    "title": "Course Details",
+    "lessonsPlus": "{n}+ Lessons",
+    "studentsEnrolled": "{n} students enrolled",
+    "levelPrefix": "Level {level}",
+    "instructor": "Instructor",
+    "overview": "Overview",
+    "description": "Course Description",
+    "whatYouLearn": "What You Will Learn",
+    "requirements": "Requirements",
+    "suitableFor": "This Course Is For",
+    "courseContent": "Course Content",
+    "lessonsCount": "{n} lessons",
+    "preview": "Preview",
+    "minShort": "min",
+    "aboutInstructor": "About the Instructor",
+    "instructorCourses": "{n} Courses",
+    "instructorStudents": "{n} students",
+    "viewFullProfile": "View full profile",
+    "expertise": "Expertise:",
+    "defaultBio": "An experienced instructor in their field.",
+    "off": "{n}% off",
+    "wishlist": "Wishlist",
+    "startLearning": "▶ Start Learning",
+    "alreadyEnrolled": "You are already enrolled in this course ✓",
+    "enrollNow": "Enroll Now",
+    "processing": "Processing…",
+    "registerAndStart": "Sign Up & Start Learning",
+    "included": "What's Included",
+    "inc": {
+      "video": "{duration} of on-demand video",
+      "lessons": "{n} structured lessons",
+      "lifetime": "Lifetime access",
+      "devices": "Access on phone and laptop",
+      "quiz": "Quizzes & practice assignments",
+      "certificate": "Certificate of completion"
+    },
+    "features": "Course Features",
+    "feat": {
+      "enrolled": "Enrolled: {n} students",
+      "duration": "Duration: {value}",
+      "chapters": "Chapters: {n}",
+      "video": "Video: {n} lessons",
+      "level": "Level: {value}",
+      "language": "Language: {value}"
+    },
+    "notFound": "Course not found",
+    "linkCopied": "Link copied to clipboard",
+    "pay": {
+      "title": "Choose a Payment Method",
+      "payWith": "Pay with {gateway}",
+      "loadingMethods": "Loading payment methods…",
+      "transfer": "Manual Bank Transfer",
+      "transferTitle": "Manual Bank Transfer",
+      "success": "Order created. Complete the transfer to the account above, then wait for admin confirmation.",
+      "loadingBank": "Loading account details…",
+      "loadBankFailed": "Failed to load account details",
+      "bank": "Bank",
+      "accountNumber": "Account No.",
+      "accountName": "Account Name",
+      "hint": "Transfer {amount}, then fill in the note / sender name below so the admin can match it easily.",
+      "refLabel": "Sender name / transfer note",
+      "refPlaceholder": "e.g. Transfer from Rahul, SBI",
+      "createOrder": "Create Order",
+      "chooseAccount": "Choose destination account",
+      "branch": "Branch",
+      "noBankAccount": "No bank account is set up yet — contact the administrator."
+    }
+  },
+  "instructors": {
+    "title": "Our Instructors",
+    "subtitle": "Learn straight from practitioners who have proven their expertise in the industry",
+    "empty": "No instructors yet.",
+    "defaultRole": "Instructor",
+    "coursesCount": "{n} courses",
+    "studentsCount": "{n} students",
+    "reviewsCount": "{n} reviews",
+    "about": "About",
+    "expertise": "Expertise",
+    "coursesBy": "Courses by {name}",
+    "noCourses": "No published courses yet.",
+    "stats": "Instructor Stats",
+    "totalCourses": "Total Courses",
+    "enrolledStudents": "Enrolled Students",
+    "ratingFrom": "Rating from {n} reviews",
+    "browseAll": "Browse All Courses",
+    "notFound": "Instructor not found"
+  },
+  "reviews": {
+    "title": "Rating & Reviews",
+    "close": "Close",
+    "edit": "Edit My Review",
+    "write": "Write a Review",
+    "yourRating": "Your rating",
+    "reviewOptional": "Review (optional)",
+    "placeholder": "Share your learning experience in this course…",
+    "submit": "Submit Review",
+    "count": "{n} reviews",
+    "eligibleHint": "Only students enrolled in this course can leave a review.",
+    "empty": "No reviews yet. Be the first!",
+    "saveFailed": "Failed to save review"
+  },
+  "verify": {
+    "verifying": "Verifying certificate…",
+    "valid": "✓ Certificate Verified & Authentic",
+    "cancelled": "✕ Certificate Has Been Revoked",
+    "notFound": "✕ Certificate Not Found",
+    "number": "Number: {value}",
+    "print": "Print / Download",
+    "invalidBody": "This certificate number is not registered or is no longer valid in the LMS Hub system.",
+    "failed": "Verification failed"
+  }
+}

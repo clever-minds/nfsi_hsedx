@@ -1,0 +1,116 @@
+{
+  "title": "Website",
+  "subtitle": "Ubah tampilan halaman publik tanpa menyentuh kode.",
+  "viewSite": "Buka situs",
+  "saved": "Tersimpan",
+  "saveFailed": "Gagal menyimpan.",
+  "loadFailed": "Gagal memuat isi website.",
+  "readOnly": "Anda dapat melihat halaman ini, tetapi tidak dapat mengubahnya.",
+  "editingLanguage": "Bahasa yang disunting",
+  "editingLanguageHint": "Berlaku untuk semua field teks di halaman ini. Biarkan kosong untuk memakai teks bawaan.",
+  "defaultPlaceholder": "Kosongkan untuk memakai teks bawaan",
+  "active": "Aktif",
+  "show": "Tampil",
+  "moveUp": "Naikkan",
+  "moveDown": "Turunkan",
+  "group": {
+    "kontak": "Kontak",
+    "sosial": "Media Sosial",
+    "menu": "Menu Header",
+    "hero": "Seksi Hero",
+    "sections": "Susunan Halaman",
+    "footer": "Footer"
+  },
+  "kontak": {
+    "intro": "Tampil di bilah gelap di atas header.",
+    "address": "Alamat",
+    "phone": "Telepon",
+    "email": "Email",
+    "showTopbar": "Tampilkan bilah atas"
+  },
+  "sosial": {
+    "intro": "Muncul di bilah atas dan footer. Tautan kosong disembunyikan.",
+    "add": "Tambah tautan",
+    "empty": "Belum ada tautan sosial."
+  },
+  "menu": {
+    "intro": "Menggantikan menu bawaan (Beranda / Kursus / Instruktur). Kosongkan untuk memakai bawaan.",
+    "label": "Label",
+    "url": "Tautan",
+    "add": "Tambah menu",
+    "empty": "Memakai menu bawaan."
+  },
+  "hero": {
+    "intro": "Bagian pertama yang dilihat pengunjung.",
+    "badge": "Label kecil di atas judul",
+    "titleHint": "Judul dipecah tiga bagian; bagian tengah disorot dengan warna merek.",
+    "titlePre": "Sebelum sorotan",
+    "titleHighlight": "Bagian disorot",
+    "titlePost": "Setelah sorotan",
+    "subtitle": "Subjudul",
+    "image": "Gambar hero",
+    "imageHint": "JPG, PNG, atau WebP · maks 2MB. Kosong berarti memakai blok gradien.",
+    "noImage": "Belum ada gambar",
+    "replace": "Unggah gambar",
+    "badFormat": "Format harus JPG, PNG, atau WebP.",
+    "tooLarge": "Ukuran berkas maksimal 2MB.",
+    "readFailed": "Berkas tidak dapat dibaca.",
+    "uploadFailed": "Unggahan gagal.",
+    "ratingScore": "Skor rating",
+    "ratingText": "Keterangan rating",
+    "showSearch": "Tampilkan kotak pencarian",
+    "showRating": "Tampilkan baris rating",
+    "showStudentCard": "Tampilkan kartu siswa mengambang",
+    "showCourseCard": "Tampilkan kartu kursus mengambang"
+  },
+  "sections": {
+    "intro": "Urutkan, sembunyikan, dan ganti judul blok di bawah hero.",
+    "badge": "Badge",
+    "heading": "Judul",
+    "subheading": "Subjudul"
+  },
+  "section": {
+    "kategori": {
+      "name": "Kategori Teratas",
+      "desc": "Kisi kategori yang menuju katalog."
+    },
+    "benefit": {
+      "name": "Keunggulan",
+      "desc": "Tiga alasan belajar di sini, pada bidang gelap."
+    },
+    "featured": {
+      "name": "Kursus Unggulan",
+      "desc": "Delapan kursus beserta tautan ke katalog."
+    },
+    "stats": {
+      "name": "Statistik",
+      "desc": "Siswa, kursus, kategori, dan instruktur."
+    },
+    "instruktur": {
+      "name": "Instruktur Terbaik",
+      "desc": "Kartu instruktur dengan rating dan jumlah siswa."
+    },
+    "cta": {
+      "name": "Ajakan Daftar",
+      "desc": "Panel gelap berisi tombol daftar dan jelajah katalog."
+    }
+  },
+  "footer": {
+    "intro": "Bidang gelap di bagian bawah semua halaman publik.",
+    "blurb": "Deskripsi singkat",
+    "columns": "Kolom tautan",
+    "columnsHint": "Maksimal 4 kolom. Kosongkan untuk memakai kolom bawaan Jelajahi dan Bantuan.",
+    "columnsEmpty": "Memakai kolom bawaan.",
+    "columnTitle": "Judul kolom",
+    "addColumn": "Tambah kolom",
+    "linkLabel": "Label",
+    "linkUrl": "Tautan",
+    "addLink": "Tambah tautan",
+    "newsletterShow": "Tampilkan kotak newsletter",
+    "newsletterTitle": "Judul newsletter",
+    "newsletterText": "Teks newsletter",
+    "showSocial": "Tampilkan ikon sosial di footer",
+    "copyright": "Baris hak cipta",
+    "copyrightHint": "Gunakan :year untuk tahun berjalan dan :name untuk nama aplikasi."
+  }
+}

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Install LMS Hub</title>
+<style>
+  :root { --brand:#ed2a26; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --ok:#059669; --bad:#dc2626; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#f7f7f7; color:var(--ink);
+         font:15px/1.55 Roboto,'Segoe UI',system-ui,sans-serif; }
+  .wrap { max-width:640px; margin:0 auto; padding:40px 20px 80px; }
+  h1 { font-size:26px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 28px; }
+  .steps { display:flex; gap:6px; margin-bottom:22px; }
+  .steps i { flex:1; height:4px; border-radius:2px; background:var(--line); }
+  .steps i.on { background:var(--brand); }
+  .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px; }
+  h2 { font-size:17px; margin:0 0 3px; }
+  .hint { color:var(--muted); font-size:13px; margin:0 0 18px; }
+  label { display:block; font-size:13px; font-weight:600; margin:14px 0 5px; }
+  /* The hint inside a <label>. Without this rule it runs into the label's own
+     text ("PasswordAt least 10 characters") — .desc was never given a style. */
+  label .desc { display:block; font-weight:400; color:var(--muted); margin-top:3px; }
+  .desc { font-weight:400; color:var(--muted); font-size:12px; margin:0 0 5px; }
+  input { width:100%; padding:9px 11px; border:1px solid #cbd5e1; border-radius:8px;
+          font:inherit; font-size:14px; }
+  input:focus { outline:2px solid rgba(237,42,38,.25); border-color:var(--brand); }
+  .row { display:flex; gap:12px; } .row > div { flex:1; }
+  .check { display:flex; align-items:center; gap:8px; margin-top:14px; font-size:14px; }
+  .check input { width:auto; }
+  button { margin-top:22px; width:100%; padding:11px; border:0; border-radius:999px;
+           background:var(--brand); color:#fff; font:inherit; font-weight:700; cursor:pointer; }
+  button[disabled] { opacity:.55; cursor:not-allowed; }
+  .msg { margin-top:16px; padding:11px 13px; border-radius:9px; font-size:13.5px; white-space:pre-wrap; }
+  .msg.bad { background:#fef2f2; color:#991b1b; }
+  .msg.good { background:#ecfdf5; color:#065f46; }
+  .req { display:flex; gap:9px; padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:14px; }
+  .req:last-child { border:0; }
+  .req b { font-weight:600; }
+  .req span { color:var(--muted); font-size:12.5px; display:block; }
+  .tick { color:var(--ok); font-weight:700; } .cross { color:var(--bad); font-weight:700; }
+  code { background:#f1f5f9; padding:1px 6px; border-radius:5px; font-size:13px; }
+  .done h2 { color:var(--ok); }
+  ol { padding-left:20px; margin:14px 0 0; } ol li { margin-bottom:9px; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Install LMS Hub</h1>
+  <p class="sub">Four steps. Nothing here needs a terminal.</p>
+  <div class="steps"><i id="s1"></i><i id="s2"></i><i id="s3"></i><i id="s4"></i></div>
+  <div class="card" id="card">Loading…</div>
+</div>
+
+<script src="install.js"></script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+{
+  "card": {
+    "viewCourse": "Lihat Kursus",
+    "discount": "Diskon {n}%"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Platform Belajar Online Terdepan",
+      "titlePre": "Kursus Online yang",
+      "titleHighlight": "Seru",
+      "titlePost": "& Mudah Diakses untuk Semua",
+      "subtitle": "Belajar skill baru dari instruktur berpengalaman — video terstruktur, kuis, kelas langsung, dan sertifikat kelulusan.",
+      "allCategories": "Semua Kategori",
+      "searchPlaceholder": "Cari kursus, instruktur…",
+      "searchBtn": "Cari",
+      "ratingScore": "4,8/5,0",
+      "ratingSuffix": "dari 1.200+ ulasan siswa"
+    },
+    "float": {
+      "students": "Siswa Terdaftar",
+      "coursesCount": "{n}+ Kursus",
+      "readyToLearn": "Siap Dipelajari"
+    },
+    "categories": {
+      "badge": "Kursus Favorit",
+      "title": "Kategori Teratas",
+      "subtitle": "Kursus yang tepat dengan mentor ahli memberi wawasan berharga dan skill yang langsung terpakai",
+      "count": "{n} Kursus"
+    },
+    "benefits": {
+      "badge": "Keunggulan Kami",
+      "title": "Kuasai skill yang mendorong kariermu",
+      "subtitle": "Kursus yang tepat, dibimbing mentor ahli, memberi wawasan dan skill praktis yang kamu butuhkan",
+      "expert": {
+        "title": "Belajar Bersama Instruktur Ahli",
+        "text": "Instruktur berpengalaman industri membimbingmu di setiap kursus — bukan sekadar teori, tapi praktik nyata."
+      },
+      "certificate": {
+        "title": "Raih Sertifikat Resmi",
+        "text": "Selesaikan kursus, lulus asesmen, dan dapatkan sertifikat terverifikasi untuk melengkapi CV dan profil LinkedIn-mu."
+      },
+      "pace": {
+        "title": "Belajar Sesuai Ritmemu",
+        "text": "Akses seumur hidup, video terstruktur, kuis, dan kelas langsung — belajar kapan pun dan di mana pun kamu siap."
+      }
+    },
+    "featured": {
+      "badge": "Terbaru & Terpopuler",
+      "title": "Kursus Unggulan",
+      "subtitle": "Kursus pilihan yang dikurasi khusus untuk membantumu menguasai skill yang paling dicari",
+      "empty": "Katalog kursus akan tampil setelah kursus diterbitkan.",
+      "seeAll": "Lihat Semua Kursus"
+    },
+    "stats": {
+      "title": "Capai Tujuanmu bersama LMS Hub",
+      "subtitle": "96% siswa kami merasakan peningkatan skill dalam enam bulan pertama.",
+      "students": "Siswa Terdaftar",
+      "courses": "Kursus di Platform",
+      "categories": "Kategori Keahlian",
+      "instructors": "Instruktur Ahli"
+    },
+    "instructors": {
+      "badge": "Instruktur Pilihan",
+      "title": "Instruktur Kelas Atas & Profesional",
+      "subtitle": "Belajar langsung dari praktisi yang sudah membuktikan keahliannya di industri",
+      "seeAll": "Lihat semua instruktur →"
+    },
+    "cta": {
+      "title": "Buka Akses Pendidikan Berkualitas",
+      "subtitle": "Buat akun gratis dan dapatkan rekomendasi kursus, promo, serta kabar kelas langsung terbaru.",
+      "register": "Daftar Sekarang — Gratis",
+      "browse": "Jelajahi Katalog"
+    }
+  },
+  "list": {
+    "title": "Katalog Kursus",
+    "filter": "Filter",
+    "clear": "Bersihkan",
+    "category": "Kategori",
+    "allCategories": "Semua Kategori",
+    "level": "Level",
+    "allLevels": "Semua Level",
+    "price": "Harga",
+    "priceAll": "Semua",
+    "priceFree": "Gratis",
+    "pricePaid": "Berbayar",
+    "sortNewest": "Terbaru",
+    "sortPriceAsc": "Harga Terendah",
+    "sortPriceDesc": "Harga Tertinggi",
+    "sortTitle": "Judul A–Z",
+    "range": "Menampilkan {from}–{to} dari {total} hasil",
+    "noResults": "Tidak ada hasil",
+    "emptyFilter": "Tidak ada kursus yang cocok dengan filter.",
+    "clearFilter": "Bersihkan filter",
+    "prev": "‹ Sebelumnya",
+    "next": "Berikutnya ›"
+  },
+  "detail": {
+    "title": "Detail Kursus",
+    "lessonsPlus": "{n}+ Pelajaran",
+    "studentsEnrolled": "{n} siswa terdaftar",
+    "levelPrefix": "Level {level}",
+    "instructor": "Instruktur",
+    "overview": "Ringkasan",
+    "description": "Deskripsi Kursus",
+    "whatYouLearn": "Yang Akan Kamu Pelajari",
+    "requirements": "Persyaratan",
+    "suitableFor": "Kursus Ini Cocok Untuk",
+    "courseContent": "Konten Kursus",
+    "lessonsCount": "{n} pelajaran",
+    "preview": "Preview",
+    "minShort": "mnt",
+    "aboutInstructor": "Tentang Instruktur",
+    "instructorCourses": "{n} Kursus",
+    "instructorStudents": "{n} siswa",
+    "viewFullProfile": "Lihat profil lengkap",
+    "expertise": "Keahlian:",
+    "defaultBio": "Instruktur berpengalaman di bidangnya.",
+    "off": "diskon {n}%",
+    "wishlist": "Wishlist",
+    "startLearning": "▶ Mulai Belajar",
+    "alreadyEnrolled": "Kamu sudah terdaftar di kursus ini ✓",
+    "enrollNow": "Daftar Sekarang",
+    "processing": "Memproses…",
+    "registerAndStart": "Daftar & Mulai Belajar",
+    "included": "Sudah Termasuk",
+    "inc": {
+      "video": "{duration} video on-demand",
+      "lessons": "{n} pelajaran terstruktur",
+      "lifetime": "Akses seumur hidup",
+      "devices": "Akses via HP dan laptop",
+      "quiz": "Kuis & tugas praktik",
+      "certificate": "Sertifikat kelulusan"
+    },
+    "features": "Fitur Kursus",
+    "feat": {
+      "enrolled": "Terdaftar: {n} siswa",
+      "duration": "Durasi: {value}",
+      "chapters": "Bab: {n}",
+      "video": "Video: {n} pelajaran",
+      "level": "Level: {value}",
+      "language": "Bahasa: {value}"
+    },
+    "notFound": "Kursus tidak ditemukan",
+    "linkCopied": "Tautan disalin ke clipboard",
+    "pay": {
+      "title": "Pilih Metode Pembayaran",
+      "payWith": "Bayar dengan {gateway}",
+      "loadingMethods": "Memuat metode pembayaran…",
+      "transfer": "Transfer Bank Manual",
+      "transferTitle": "Transfer Bank Manual",
+      "success": "Pesanan dibuat. Selesaikan transfer ke rekening di atas, lalu tunggu konfirmasi admin.",
+      "loadingBank": "Memuat info rekening…",
+      "loadBankFailed": "Gagal memuat info rekening",
+      "bank": "Bank",
+      "accountNumber": "No. Rekening",
+      "accountName": "Atas Nama",
+      "hint": "Transfer sejumlah {amount}, lalu isi catatan/nama pengirim di bawah agar mudah dicocokkan admin.",
+      "refLabel": "Nama pengirim / catatan transfer",
+      "refPlaceholder": "mis. Transfer a.n. Rahul, SBI",
+      "createOrder": "Buat Pesanan",
+      "chooseAccount": "Pilih rekening tujuan",
+      "branch": "Cabang",
+      "noBankAccount": "Belum ada rekening bank yang disiapkan — hubungi administrator."
+    }
+  },
+  "instructors": {
+    "title": "Instruktur Kami",
+    "subtitle": "Belajar langsung dari praktisi yang sudah membuktikan keahliannya di industri",
+    "empty": "Belum ada instruktur.",
+    "defaultRole": "Instruktur",
+    "coursesCount": "{n} kursus",
+    "studentsCount": "{n} siswa",
+    "reviewsCount": "{n} ulasan",
+    "about": "Tentang",
+    "expertise": "Keahlian",
+    "coursesBy": "Kursus oleh {name}",
+    "noCourses": "Belum ada kursus terbit.",
+    "stats": "Statistik Instruktur",
+    "totalCourses": "Total Kursus",
+    "enrolledStudents": "Siswa Terdaftar",
+    "ratingFrom": "Rating dari {n} ulasan",
+    "browseAll": "Jelajahi Semua Kursus",
+    "notFound": "Instruktur tidak ditemukan"
+  },
+  "reviews": {
+    "title": "Rating & Ulasan",
+    "close": "Tutup",
+    "edit": "Ubah Ulasan Saya",
+    "write": "Beri Ulasan",
+    "yourRating": "Rating kamu",
+    "reviewOptional": "Ulasan (opsional)",
+    "placeholder": "Bagikan pengalaman belajarmu di kursus ini…",
+    "submit": "Kirim Ulasan",
+    "count": "{n} ulasan",
+    "eligibleHint": "Hanya siswa yang terdaftar di kursus ini yang dapat memberi ulasan.",
+    "empty": "Belum ada ulasan. Jadilah yang pertama!",
+    "saveFailed": "Gagal menyimpan ulasan"
+  },
+  "verify": {
+    "verifying": "Memverifikasi sertifikat…",
+    "valid": "✓ Sertifikat Terverifikasi & Asli",
+    "cancelled": "✕ Sertifikat Telah Dibatalkan",
+    "notFound": "✕ Sertifikat Tidak Ditemukan",
+    "number": "Nomor: {value}",
+    "print": "Cetak / Unduh",
+    "invalidBody": "Nomor sertifikat ini tidak terdaftar atau tidak lagi berlaku di sistem LMS Hub.",
+    "failed": "Gagal memverifikasi"
+  }
+}

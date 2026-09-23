@@ -1,0 +1,58 @@
+{
+  "list": {
+    "title": "Live Class",
+    "subtitle": "Jadwal sesi belajar sinkron & kehadiran",
+    "calendar": "Kalender",
+    "allStatus": "Semua status",
+    "loading": "Memuat jadwal sesi…",
+    "empty": "Belum ada sesi live class terjadwal.",
+    "loadFailed": "Gagal memuat jadwal live class",
+    "host": "Host: {name}",
+    "participants": "Peserta: {joined} / {capacity}",
+    "join": "Gabung",
+    "notYet": "Belum Waktunya",
+    "recording": "Lihat Rekaman",
+    "ended": "Sesi Berakhir",
+    "attendance": "Kehadiran",
+    "scopeNote": "Kamu hanya melihat sesi sesuai peran (diampu/diikuti) — data ter-scope otomatis oleh backend.",
+    "status": {
+      "dijadwalkan": "Dijadwalkan",
+      "berlangsung": "Berlangsung",
+      "selesai": "Selesai",
+      "rekaman_tersedia": "Rekaman Tersedia"
+    },
+    "joinFailed": "Tidak bisa bergabung. Mungkin di luar waktu sesi, atau kamu belum terdaftar di kursus ini."
+  },
+  "attendance": {
+    "title": "Panel Kehadiran",
+    "subtitle": "Status kehadiran peserta sesi live class",
+    "back": "Kembali",
+    "empty": "Belum ada peserta terdaftar pada sesi ini.",
+    "loadFailed": "Gagal memuat data kehadiran",
+    "markFailed": "Gagal menandai kehadiran",
+    "colParticipant": "Peserta",
+    "colStatus": "Status",
+    "colJoinTime": "Waktu Gabung",
+    "colDuration": "Durasi Hadir",
+    "minutes": "{n} menit",
+    "notYet": "Belum",
+    "status": {
+      "belum": "Belum",
+      "hadir": "Hadir",
+      "terlambat": "Terlambat",
+      "absen": "Absen"
+    }
+  },
+  "calendarPage": {
+    "title": "Kalender Terpadu",
+    "subtitle": "Live class, tenggat tugas, dan jadwal ujian dari seluruh kursus",
+    "loading": "Memuat agenda…",
+    "empty": "Tidak ada agenda pada bulan ini.",
+    "loadFailed": "Gagal memuat kalender terpadu",
+    "legend": {
+      "live": "Live Class",
+      "tenggat": "Tenggat Tugas",
+      "ujian": "Ujian"
+    }
+  }
+}

@@ -1,0 +1,325 @@
+{
+  "assignment": {
+    "already_submitted": "This assignment has been submitted and is awaiting grading or a revision request",
+    "inactive": "This assignment is not active",
+    "not_found": "Assignment not found"
+  },
+  "auth": {
+    "account_disabled": "This account is disabled",
+    "account_inactive": "This account is not active",
+    "account_without_email": "This account has no email address",
+    "current_password_wrong": "Your current password is incorrect",
+    "invalid_credentials": "Incorrect email or password",
+    "invalid_refresh_token": "Your session could not be refreshed, please sign in again",
+    "permission_required": "You do not have permission to do this",
+    "session_inactive": "This session is no longer active",
+    "token_invalid": "That token is invalid or has expired",
+    "token_missing": "No authentication token was provided",
+    "verification_token_invalid": "That verification link is invalid or has expired"
+  },
+  "badge": {
+    "already_awarded": "This user already has that badge",
+    "not_found": "Badge not found"
+  },
+  "bank_account": {
+    "duplicate": "An account with that bank and number already exists",
+    "keep_one_active": "At least one bank account must stay active",
+    "not_found": "Bank account not found",
+    "primary_cannot_deactivate": "The primary account cannot be deactivated. Make another account primary first"
+  },
+  "bookmark": {
+    "not_found": "Bookmark not found",
+    "not_owner": "This bookmark is not yours"
+  },
+  "category": {
+    "in_use": "This category is still used by active courses. Deactivate it instead of deleting it",
+    "not_found": "Category not found",
+    "slug_taken": "That category slug is already in use"
+  },
+  "certificate": {
+    "already_issued": "This certificate has already been issued",
+    "eligibility_check_failed": "Could not evaluate completion eligibility",
+    "not_eligible": "A certificate can only be issued once the student is eligible",
+    "not_found": "Certificate not found",
+    "number_generation_failed": "Could not generate a unique certificate number, please try again",
+    "only_issued_can_be_reissued": "Only an issued certificate can be reissued",
+    "override_requires_director": "Issuing by exception requires Director approval",
+    "requirements_not_met": "The graduation requirements have not been met yet"
+  },
+  "cohort": {
+    "already_member": "You are already a member of this cohort",
+    "closed": "This cohort is not accepting new enrolments",
+    "full_cannot_promote": "This cohort is full, so no one can be promoted from the waiting list",
+    "member_not_waitlisted": "This member is not on the waiting list",
+    "not_found": "Cohort not found",
+    "target_full": "The destination cohort is full",
+    "target_not_found": "Destination cohort not found",
+    "waitlist_member_not_found": "Waiting list member not found"
+  },
+  "commission": {
+    "approve_requires_director": "Only a Director can approve a commission",
+    "must_be_approved": "A commission must be approved before it can be paid out",
+    "not_calculated": "This commission has not been calculated yet",
+    "not_decidable": "This commission cannot be approved or rejected in its current state",
+    "not_found": "Commission not found",
+    "release_forbidden": "You are not allowed to release commissions",
+    "submit_forbidden": "You are not allowed to submit commissions"
+  },
+  "common": {
+    "slug_taken": "That slug is already in use"
+  },
+  "content": {
+    "not_found": "Content not found"
+  },
+  "coupon": {
+    "below_minimum": "Your subtotal is below the minimum for this coupon",
+    "expired": "This coupon has expired",
+    "invalid": "This coupon is not valid",
+    "not_yet_valid": "This coupon is not valid yet",
+    "quota_exhausted": "This coupon has been fully redeemed"
+  },
+  "course": {
+    "access_expired": "Your access to this course has expired",
+    "action_requires_instructor_or_admin": "Only the course instructor or an admin can do this",
+    "already_archived": "This course is already archived",
+    "cannot_delete_published": "A course that has been submitted or published cannot be deleted. Archive it instead",
+    "no_active_access": "You do not have active access to this course",
+    "not_found": "Course not found",
+    "not_owner": "You can only manage your own courses",
+    "only_draft_can_be_submitted": "Only a draft course can be submitted for review",
+    "promo_video_not_found": "Promotional video not found",
+    "publish_requires_admin": "Only an Operations Admin or Director can publish a course",
+    "publish_wrong_status": "A course must be in review or updated before it can be published",
+    "slug_taken": "That course slug is already in use",
+    "thumbnail_not_found": "Thumbnail image not found"
+  },
+  "curriculum": {
+    "not_owner": "You can only manage the curriculum of your own courses"
+  },
+  "db": {
+    "foreign_key_violation": "Related record is missing or still in use",
+    "unique_violation": "That record already exists"
+  },
+  "discussion": {
+    "invalid_parent_post": "The parent post reference is not valid",
+    "members_only": "Only course members — enrolled students and the instructor — can open this discussion",
+    "thread_locked": "This thread is locked and is not accepting replies",
+    "thread_not_found": "Thread not found"
+  },
+  "enrollment": {
+    "already_active": "This user is already actively enrolled in this course",
+    "cancelled": "This enrolment has been cancelled",
+    "course_mismatch": "That enrolment belongs to a different course",
+    "not_enrolled": "You are not enrolled in this course",
+    "not_enrolled_course": "You are not enrolled in this course",
+    "not_found": "Enrolment not found",
+    "not_found_for_course": "No enrolment found for this course"
+  },
+  "finance": {
+    "category_not_found": "Expense category not found",
+    "entry_type_mismatch": "The entry type does not match the selected category"
+  },
+  "gamification": {
+    "event_config_not_found": "Event configuration not found",
+    "insufficient_points": "Not enough points for this transaction"
+  },
+  "grading": {
+    "already_released": "This grade has already been released",
+    "not_found": "Grade not found",
+    "not_released_use_grading": "This grade has not been released yet — use the normal grading endpoint",
+    "released_use_adjust": "This grade has already been released — use the adjustment endpoint"
+  },
+  "http": {
+    "internal": "Something went wrong on our side",
+    "route_not_found": "That page or endpoint does not exist"
+  },
+  "instructor": {
+    "not_found": "Instructor not found"
+  },
+  "learning_path": {
+    "not_found": "Learning path not found",
+    "not_sold_as_bundle": "This learning path is not sold as a bundle"
+  },
+  "lesson": {
+    "not_found": "Lesson not found"
+  },
+  "live": {
+    "cannot_cancel_started": "A session that has started or finished cannot be cancelled",
+    "join_link_not_yet_active": "The join link only works shortly before and during the session",
+    "manage_requires_instructor_or_host": "Only the course instructor or the session host can manage this session",
+    "not_in_progress": "This session is not currently running",
+    "not_in_session_cohort": "You are not enrolled in the course or cohort for this session",
+    "not_scheduled": "This session is not in a scheduled state",
+    "only_scheduled_editable": "Only a scheduled session can be changed",
+    "recording_not_found": "Recording not found",
+    "session_not_found": "Live session not found"
+  },
+  "marketing": {
+    "agent_not_found": "Agent profile not found",
+    "agent_not_verified": "This agent profile has not been verified yet",
+    "already_an_agent": "You are already registered as a marketing agent",
+    "category_unknown": "That marketing category is unknown or inactive",
+    "lead_already_at_stage": "This lead is already at that stage",
+    "lead_not_found": "Lead not found",
+    "list_all_forbidden": "You are not allowed to view all agents",
+    "not_an_agent": "You are not registered as a marketing agent",
+    "pipeline_no_rollback": "You cannot move a lead back to an earlier stage",
+    "pipeline_no_skip": "You cannot skip a pipeline stage",
+    "referral_code_generation_failed": "Could not generate a unique referral code, please try again",
+    "register_first": "Register as a marketing agent first",
+    "target_requires_director": "Only a Director can change an agent's target",
+    "verify_requires_admin": "Only an Admin or Director can verify an agent"
+  },
+  "media": {
+    "in_use": "This media is still used by a course or lesson and cannot be permanently deleted",
+    "not_found": "Media asset not found",
+    "not_owner": "You can only manage your own media assets",
+    "transcode_pending": "This video is still being processed",
+    "unknown_asset": "Unknown asset"
+  },
+  "message": {
+    "cannot_message_self": "You cannot send a message to yourself",
+    "not_found": "Message not found"
+  },
+  "moderation": {
+    "already_reported": "You have already reported this content and it is still under review"
+  },
+  "note": {
+    "not_found": "Note not found",
+    "not_owner": "This note is not yours"
+  },
+  "notification": {
+    "not_found": "Notification not found"
+  },
+  "order": {
+    "already_paid": "This order is already paid",
+    "cancelled": "This order has been cancelled",
+    "free_no_payment": "This order is free and needs no payment",
+    "manual_requires_marketing": "Only Marketing or an Admin can create a manual order",
+    "not_found": "Order not found",
+    "referenced_not_found": "The referenced order was not found"
+  },
+  "page": {
+    "not_found": "Page not found"
+  },
+  "payment": {
+    "already_decided": "This payment has already been verified or rejected",
+    "gateway_currency_unsupported": "That payment gateway does not support this currency",
+    "gateway_not_configured": "That payment gateway is not configured",
+    "gateway_unknown": "Unknown payment gateway",
+    "invalid_webhook_signature": "Invalid webhook signature",
+    "not_found": "Payment not found"
+  },
+  "payout": {
+    "approve_requires_director": "Only a Director can approve a payout",
+    "not_approved": "This payout must be approved before it can be paid out",
+    "not_found": "Payout not found",
+    "not_reprocessable": "This payout can no longer be processed again",
+    "nothing_to_withdraw": "There is nothing available to withdraw right now",
+    "release_requires_director": "Only a Director or Operations Admin can release a payout",
+    "request_requires_instructor": "Only an instructor can request a payout"
+  },
+  "permission": {
+    "certificate_update_required": "You need the certificate.update permission",
+    "discussion_view_required": "You need the discussion.view permission",
+    "gamification_create_required": "You need the gamification.create permission"
+  },
+  "qa": {
+    "answer_not_found": "Answer not found",
+    "question_not_found": "Question not found",
+    "status_requires_asker_or_instructor": "Only the person who asked or the instructor can change this status"
+  },
+  "question": {
+    "needs_correct_option": "Mark at least one option as the correct answer",
+    "not_found": "Question not found",
+    "single_answer_only": "This question type allows only one correct answer",
+    "true_false_needs_two_options": "A true/false question must have exactly two options"
+  },
+  "question_bank": {
+    "create_cross_category_requires_admin": "Only an admin can create a question bank that spans categories",
+    "manage_cross_category_requires_admin": "Only an admin can manage a question bank that spans categories",
+    "not_found": "Question bank not found"
+  },
+  "quiz": {
+    "answer_requires_owner": "Only the person taking this attempt can answer",
+    "attempt_already_submitted": "This attempt has already been submitted",
+    "attempt_limit_reached": "You have reached the attempt limit for this quiz",
+    "attempt_not_editable": "This attempt cannot be changed in its current state",
+    "attempt_not_found": "Attempt not found",
+    "inactive": "This quiz is not active",
+    "not_found": "Quiz not found",
+    "submit_requires_owner": "Only the person taking this attempt can submit it"
+  },
+  "rbac": {
+    "base_roles_missing": "Base roles have not been seeded yet",
+    "student_role_missing": "The student role has not been seeded yet",
+    "unknown_role": "Unknown role"
+  },
+  "refund": {
+    "approve_requires_director": "Only a Director can approve a refund",
+    "exceeds_order_total": "The refund amount is larger than the order total",
+    "order_not_eligible": "Only a paid order with active access can be refunded"
+  },
+  "reminder": {
+    "not_found": "Reminder not found"
+  },
+  "report": {
+    "not_found": "Report not found"
+  },
+  "review": {
+    "already_exists": "You have already reviewed this course",
+    "enrollment_not_active": "You can only review a course you are actively taking or have completed",
+    "requires_enrollment_owner": "Only the enrolled student can write this review"
+  },
+  "rubric": {
+    "weights_must_total_100": "Rubric criteria weights must add up to 100%"
+  },
+  "scope": {
+    "course_out_of_scope": "This is outside the courses you manage",
+    "out_of_scope": "This is outside your scope"
+  },
+  "section": {
+    "invalid_target": "That section does not belong to this course",
+    "not_found": "Section not found"
+  },
+  "setting": {
+    "locked": "This setting is locked and cannot be changed",
+    "not_found": "Setting not found"
+  },
+  "site_content": {
+    "block_invalid": "That content block is not valid",
+    "unknown_block": "Unknown content block"
+  },
+  "submission": {
+    "not_found": "Submission not found"
+  },
+  "tag": {
+    "in_use": "This tag is still used by courses. Remove it from them first",
+    "not_found": "Tag not found",
+    "slug_taken": "That tag slug is already in use"
+  },
+  "template": {
+    "not_found": "Template not found"
+  },
+  "upload": {
+    "branding_dir_not_writable": "Could not save the file: the uploads/branding directory is not writable",
+    "image_empty": "The image data is empty",
+    "image_invalid": "The image data is not valid",
+    "max_2mb": "The file must be 2MB or smaller",
+    "max_512kb": "The file must be 512KB or smaller",
+    "photo_max_2mb": "The photo must be 2MB or smaller",
+    "site_dir_not_writable": "Could not save the file: the uploads/site directory is not writable",
+    "unknown_asset_type": "Unknown asset type"
+  },
+  "user": {
+    "cannot_be_own_manager": "A user cannot be their own manager",
+    "cannot_delete_self": "You cannot delete your own account",
+    "email_taken": "That email address is already registered",
+    "not_found": "User not found",
+    "permission_escalation": "You cannot grant a permission you do not hold yourself",
+    "phone_taken": "That phone number is already registered"
+  },
+  "validation": {
+    "failed": "Validation failed"
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "checkoutFailed": "Checkout failed",
+  "list": {
+    "titleCustomer": "Transaction History",
+    "titleStaff": "Transactions",
+    "subtitleCustomer": "Your course purchase history and payment status.",
+    "subtitleStaff": "Online orders & manual closings, payment verification and refunds",
+    "addManual": "+ Record Deposit",
+    "allChannels": "All channels",
+    "channelOnline": "Online",
+    "channelManual": "Manual",
+    "allStatus": "All statuses",
+    "searchPlaceholder": "Search buyer / course…",
+    "colOrder": "Order",
+    "colBuyer": "Buyer",
+    "colCourse": "Course",
+    "colChannel": "Channel",
+    "colStatus": "Status",
+    "colTotal": "Total",
+    "colDate": "Date",
+    "emptyCustomer": "You have no transactions yet.",
+    "emptyStaff": "No matching transactions yet.",
+    "loadFailed": "Failed to load the transaction list",
+    "verify": "Verify",
+    "reject": "Reject",
+    "refund": "Request Refund",
+    "confirmVerify": "Verify payment for order {code} of {amount}?",
+    "promptReject": "Reason for rejecting verification of order {code}?",
+    "promptRefund": "Request a refund for order {code} ({amount}). Refund reason?",
+    "verifyFailed": "Payment verification failed",
+    "refundFailed": "Refund request failed",
+    "status": {
+      "menunggu_pembayaran": "Awaiting Payment",
+      "dp_cicilan_berjalan": "Deposit / Instalment",
+      "lunas": "Paid",
+      "akses_aktif": "Access Active",
+      "batal": "Cancelled / Expired"
+    }
+  },
+  "manual": {
+    "title": "Record Deposit / Manual Invoice",
+    "subtitle": "Log an offline or corporate closing as an order",
+    "success": "The deposit was saved and sent to Ops Admin for verification.",
+    "viewList": "View Transaction List",
+    "again": "Record Another",
+    "buyer": "Buyer",
+    "buyerPlaceholder": "Buyer / company name",
+    "contact": "Buyer Contact (optional)",
+    "contactPlaceholder": "Email or WhatsApp number",
+    "course": "Course / Bundle",
+    "loadingCourses": "Loading courses…",
+    "pickCourse": "Choose a course",
+    "amount": "Amount",
+    "method": "Method",
+    "methodTransfer": "Bank Transfer",
+    "methodCash": "Cash",
+    "methodCard": "Card",
+    "methodOther": "Other",
+    "marketing": "Marketing",
+    "marketingHint": "Taken automatically from the signed-in account; cannot be changed.",
+    "proof": "Agreement Proof (optional)",
+    "notes": "Notes",
+    "notesPlaceholder": "e.g. corporate closing, 10 seats",
+    "submit": "Save & Send to Admin",
+    "footerHint": "A detailed notification is sent automatically to Ops Admin & the Director for verification.",
+    "incomplete": "Fill in the buyer, course, and amount (must be greater than 0).",
+    "saveFailed": "Failed to save the deposit"
+  },
+  "result": {
+    "checking": {
+      "title": "Confirming your payment…",
+      "body": "We are waiting for your payment provider to confirm. This usually takes a few seconds — please do not close this page."
+    },
+    "paid": {
+      "title": "Payment received",
+      "body": "Your enrolment is active. The course is now in My Learning."
+    },
+    "waiting": {
+      "title": "Payment is still being processed",
+      "body": "Your provider has not confirmed yet. This can take a few minutes. Your access opens automatically once it does — you do not need to pay again."
+    },
+    "cancelled": {
+      "title": "Payment cancelled",
+      "body": "Nothing was charged. You can pick another payment method whenever you are ready."
+    },
+    "startLearning": "Start Learning",
+    "viewTransactions": "View My Transactions",
+    "browseCourses": "Browse Courses"
+  }
+}

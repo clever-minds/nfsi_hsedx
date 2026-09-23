@@ -15,8 +15,6 @@
 /** Teks per bahasa. Kunci yang kosong/absen berarti jatuh ke teks bawaan. */
 export interface Localized {
   en?: string;
-  id?: string;
-  ar?: string;
   hi?: string;
 }
 
@@ -102,7 +100,7 @@ const seksi = (key: string): SectionItem => ({
 
 export const DEFAULT_SITE_CONTENT: SiteContent = {
   kontak: {
-    alamat: { en: 'National Fire Safety Institute, Shree C. K. Bhagat Patidar Chatralaya, Opp. Old Krishna Cinema, Nr. Jayratna Building, Siddhnath Road, Vadodara, Gujarat, India', id: 'National Fire Safety Institute, Shree C. K. Bhagat Patidar Chatralaya, Opp. Old Krishna Cinema, Nr. Jayratna Building, Siddhnath Road, Vadodara, Gujarat, India' },
+    alamat: { en: 'National Fire Safety Institute, Shree C. K. Bhagat Patidar Chatralaya, Opp. Old Krishna Cinema, Nr. Jayratna Building, Siddhnath Road, Vadodara, Gujarat, India' },
     telepon: '+91-95589-20016',
     email: 'hsedx@nfsi.in',
     tampilkan_topbar: true,

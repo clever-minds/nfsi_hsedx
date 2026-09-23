@@ -10,7 +10,7 @@ import { SECTION_KEYS } from './site-content.defaults';
  * lewat penggabungan.
  */
 
-const BAHASA = ['en', 'id', 'ar', 'hi'] as const;
+const BAHASA = ['en', 'hi'] as const;
 
 /** Teks per bahasa; bahasa yang kosong berarti jatuh ke teks bawaan aplikasi. */
 const localized = z

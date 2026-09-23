@@ -11,13 +11,11 @@ import { currentLocale } from '@/i18n';
 
 export interface Localized {
   en?: string;
-  id?: string;
-  ar?: string;
   hi?: string;
 }
 
 export type LocaleKey = keyof Localized;
-export const LOCALE_KEYS: LocaleKey[] = ['en', 'id', 'ar', 'hi'];
+export const LOCALE_KEYS: LocaleKey[] = ['en', 'hi'];
 
 export interface SosialItem {
   platform: string;

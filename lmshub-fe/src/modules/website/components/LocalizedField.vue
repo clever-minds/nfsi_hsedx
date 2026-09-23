@@ -38,7 +38,7 @@ const value = computed({
 
 /** Bahasa lain yang sudah terisi — penanda bahwa terjemahannya belum lengkap. */
 const terisiLain = computed(() => {
-  const all: LocaleKey[] = ['en', 'id', 'ar', 'hi'];
+  const all: LocaleKey[] = ['en', 'hi'];
   return all.filter((l) => l !== props.locale && (props.modelValue?.[l] ?? '').trim());
 });
 </script>

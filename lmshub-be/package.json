@@ -17,6 +17,7 @@
     "seed": "tsx src/scripts/seed.ts",
     "seed:demo": "tsx src/scripts/demo.ts",
     "seed:siswa-quiz": "tsx src/scripts/seed-siswa-quiz.ts",
+    "seed:categories": "tsx src/scripts/seed-categories.ts",
     "test:features": "node scripts/feature-test.cjs",
     "db:reset": "tsx src/scripts/reset-db.ts && npm run migrate:up && npm run seed && npm run seed:demo",
     "test": "vitest run",

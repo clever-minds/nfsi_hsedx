@@ -25,11 +25,11 @@ const props = defineProps<{
     durasi_total_menit?: number | null;
     meta?: { thumbnail_url?: string } | null;
   };
-  /** Basis tautan detail ('/kursus' publik, '/d/katalog' dashboard). */
+  /** Basis tautan detail ('/courses' publik, '/d/catalog' dashboard). */
   base?: string;
 }>();
 
-const to = computed(() => `${props.base ?? '/kursus'}/${props.course.slug}`);
+const to = computed(() => `${props.base ?? '/courses'}/${props.course.slug}`);
 const inisial = computed(() =>
   (props.course.instructor_nama ?? '?').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase(),
 );

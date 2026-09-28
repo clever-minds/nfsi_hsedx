@@ -29,7 +29,7 @@ export const navSections: NavSection[] = [
     titleKey: 'nav.section.home',
     items: [
       { labelKey: 'nav.item.home', to: '/d', icon: 'home' },
-      { labelKey: 'nav.item.catalog', to: '/d/katalog', icon: 'compass' },
+      { labelKey: 'nav.item.catalog', to: '/d/catalog', icon: 'compass' },
     ],
   },
   {
@@ -51,18 +51,18 @@ export const navSections: NavSection[] = [
       // kebagian halaman pribadi.
       {
         labelKey: 'nav.item.myLearning',
-        to: '/d/belajar',
+        to: '/d/learn',
         permission: 'enrollment.view',
         roles: ['siswa', 'sub_user', 'instruktur', 'asisten'],
         icon: 'play-circle',
       },
       { labelKey: 'nav.item.assessments', to: '/d/asesmen', permission: 'asesmen.view', icon: 'check-square' },
       { labelKey: 'nav.item.liveClass', to: '/d/live-class', permission: 'live_class.view', icon: 'video' },
-      { labelKey: 'nav.item.discussions', to: '/d/diskusi', permission: 'diskusi.view', icon: 'message-circle' },
+      { labelKey: 'nav.item.discussions', to: '/d/discussions', permission: 'diskusi.view', icon: 'message-circle' },
       // "Sertifikat Saya" juga swalayan — alasan yang sama seperti di atas.
       {
         labelKey: 'nav.item.certificates',
-        to: '/d/sertifikat',
+        to: '/d/certificates',
         permission: 'sertifikat.view',
         roles: ['siswa', 'sub_user', 'instruktur', 'asisten'],
         icon: 'award',
@@ -73,7 +73,7 @@ export const navSections: NavSection[] = [
     titleKey: 'nav.section.teaching',
     items: [
       // Manajemen kursus — khusus instruktur/admin (siswa punya kursus.view untuk katalog, bukan kelola).
-      { labelKey: 'nav.item.courses', to: '/d/kursus', permission: 'kursus.create', icon: 'book-open' },
+      { labelKey: 'nav.item.courses', to: '/d/courses', permission: 'kursus.create', icon: 'book-open' },
       // Master data kategori & tag. Berada di atas Kurikulum karena kursus tidak
       // bisa dibuat sebelum ada minimal satu kategori (`category_id` NOT NULL).
       // Gerbangnya `kategori.create` — `kategori.view` juga dimiliki siswa.
@@ -85,8 +85,8 @@ export const navSections: NavSection[] = [
   {
     titleKey: 'nav.section.management',
     items: [
-      { labelKey: 'nav.item.users', to: '/d/pengguna', permission: 'pengguna.view', icon: 'users' },
-      { labelKey: 'nav.item.transactions', to: '/d/transaksi', permission: 'transaksi.view', icon: 'credit-card' },
+      { labelKey: 'nav.item.users', to: '/d/users', permission: 'pengguna.view', icon: 'users' },
+      { labelKey: 'nav.item.transactions', to: '/d/orders', permission: 'transaksi.view', icon: 'credit-card' },
       { labelKey: 'nav.item.marketing', to: '/d/marketing', permission: 'marketing.view', icon: 'megaphone' },
       // Kode kupon checkout. Berdiri sendiri, bukan tab di Marketing, karena
       // yang mengurusnya sering admin penjualan dan bukan tim afiliasi.
@@ -96,15 +96,15 @@ export const navSections: NavSection[] = [
   {
     titleKey: 'nav.section.reports',
     items: [
-      { labelKey: 'nav.item.reports', to: '/d/laporan', permission: 'laporan.view', icon: 'bar-chart' },
-      { labelKey: 'nav.item.notifications', to: '/d/notifikasi', permission: 'notifikasi.view', icon: 'bell' },
+      { labelKey: 'nav.item.reports', to: '/d/reports', permission: 'laporan.view', icon: 'bar-chart' },
+      { labelKey: 'nav.item.notifications', to: '/d/notifications', permission: 'notifikasi.view', icon: 'bell' },
       { labelKey: 'nav.item.auditLog', to: '/d/audit', permission: 'audit.view', icon: 'file-text' },
     ],
   },
   {
     titleKey: 'nav.section.settings',
     items: [
-      { labelKey: 'nav.item.settings', to: '/d/pengaturan', permission: 'pengaturan.view', icon: 'settings' },
+      { labelKey: 'nav.item.settings', to: '/d/settings', permission: 'pengaturan.view', icon: 'settings' },
       // Editor template sertifikat sebelumnya tidak ditaut dari mana pun.
       // Gerbangnya `sertifikat.create`, BUKAN `sertifikat.view` — izin view juga
       // dimiliki siswa, jadi memakainya akan membuka halaman admin untuk mereka.

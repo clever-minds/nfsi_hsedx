@@ -63,7 +63,7 @@ onMounted(load);
   <div>
     <PageHeader :title="t('notifications.reminders.title')" :subtitle="t('notifications.reminders.subtitle')">
       <template #actions>
-        <RouterLink to="/d/notifikasi" class="btn-outline">{{ t('notifications.reminders.back') }}</RouterLink>
+        <RouterLink to="/d/notifications" class="btn-outline">{{ t('notifications.reminders.back') }}</RouterLink>
       </template>
     </PageHeader>
 

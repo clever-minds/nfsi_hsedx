@@ -198,7 +198,7 @@ async function submit() {
     if (id) {
       await apiPut(`/users/${id}/permissions`, { permissions: permissionPayload() });
     }
-    router.push('/d/pengguna');
+    router.push('/d/users');
   } catch (e) {
     error.value = errorMessage(e, t('users.form.saveFailed'));
   } finally {
@@ -302,7 +302,7 @@ async function submit() {
         <button class="btn-primary" type="submit" :disabled="saving">
           {{ saving ? t('common.state.saving') : t('common.action.save') }}
         </button>
-        <RouterLink to="/d/pengguna" class="btn-outline">{{ t('common.action.cancel') }}</RouterLink>
+        <RouterLink to="/d/users" class="btn-outline">{{ t('common.action.cancel') }}</RouterLink>
       </div>
     </form>
   </div>

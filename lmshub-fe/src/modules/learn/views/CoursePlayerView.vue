@@ -253,7 +253,7 @@ onMounted(load);
     <div v-if="loading" class="text-slate-400">{{ t('learn.player.loading') }}</div>
     <div v-else-if="error" class="card p-6 text-slate-500">
       {{ error }}
-      <RouterLink to="/d/belajar" class="mt-2 block font-medium text-brand-500">{{ t('learn.player.back') }}</RouterLink>
+      <RouterLink to="/d/learn" class="mt-2 block font-medium text-brand-500">{{ t('learn.player.back') }}</RouterLink>
     </div>
 
     <div v-else-if="course" class="grid gap-4 lg:grid-cols-[20rem,1fr]">
@@ -293,7 +293,7 @@ onMounted(load);
           </div>
           <div class="flex gap-2">
             <button class="btn-outline" @click="activeTab = 'ulasan'">{{ t('learn.player.writeReview') }}</button>
-            <RouterLink to="/d/sertifikat" class="btn-primary bg-accent-500 hover:bg-accent-600">
+            <RouterLink to="/d/certificates" class="btn-primary bg-accent-500 hover:bg-accent-600">
               {{ t('learn.player.viewCertificate') }}
             </RouterLink>
           </div>

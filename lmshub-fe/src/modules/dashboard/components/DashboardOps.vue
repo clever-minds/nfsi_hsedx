@@ -233,7 +233,7 @@ function badgeStatus(status: string): string {
       <section v-if="transaksiTerbaru.length">
         <div class="mb-4 flex items-center justify-between">
           <h2 class="section-title">{{ t('dashboard.ops.recentTransactions') }}</h2>
-          <RouterLink v-if="auth.can('transaksi.view')" to="/d/transaksi" class="section-link">
+          <RouterLink v-if="auth.can('transaksi.view')" to="/d/orders" class="section-link">
             {{ t('dashboard.student.seeAll') }}
           </RouterLink>
         </div>
@@ -278,7 +278,7 @@ function badgeStatus(status: string): string {
               <template #highlight><span class="font-bold">{{ t('dashboard.ops.topCoursesWord') }}</span></template>
             </i18n-t>
           </h2>
-          <RouterLink to="/d/laporan" class="section-link">{{ t('dashboard.ops.viewReport') }}</RouterLink>
+          <RouterLink to="/d/reports" class="section-link">{{ t('dashboard.ops.viewReport') }}</RouterLink>
         </div>
         <div class="card divide-y divide-slate-100">
           <div v-for="(c, i) in kursusPopuler" :key="c.id" class="flex items-center gap-4 p-4">
@@ -303,7 +303,7 @@ function badgeStatus(status: string): string {
       <section v-if="topInstruktur.length">
         <div class="mb-4 flex items-center justify-between">
           <h2 class="section-title">{{ t('dashboard.ops.topInstructors') }}</h2>
-          <RouterLink v-if="auth.can('pengguna.view')" to="/d/pengguna" class="section-link">
+          <RouterLink v-if="auth.can('pengguna.view')" to="/d/users" class="section-link">
             {{ t('dashboard.student.seeAll') }}
           </RouterLink>
         </div>
@@ -361,7 +361,7 @@ function badgeStatus(status: string): string {
             <span class="text-xs text-slate-400">{{ fmtRelatif(p.created_at) }}</span>
           </li>
         </ul>
-        <RouterLink to="/d/transaksi" class="section-link mt-3 block text-end">{{ t('dashboard.ops.process') }}</RouterLink>
+        <RouterLink to="/d/orders" class="section-link mt-3 block text-end">{{ t('dashboard.ops.process') }}</RouterLink>
       </div>
 
       <!-- Audit terbaru (pembina) -->
@@ -382,16 +382,16 @@ function badgeStatus(status: string): string {
       <div class="card p-5">
         <h3 class="mb-3 card-title">{{ t('dashboard.ops.quickActions') }}</h3>
         <div class="space-y-2">
-          <RouterLink v-if="auth.can('pengguna.view')" to="/d/pengguna" class="nav-item rounded border-0 px-3 py-2">
+          <RouterLink v-if="auth.can('pengguna.view')" to="/d/users" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="users" :size="16" /> {{ t('dashboard.ops.quickUsers') }}
           </RouterLink>
-          <RouterLink v-if="auth.can('kursus.create')" to="/d/kursus" class="nav-item rounded border-0 px-3 py-2">
+          <RouterLink v-if="auth.can('kursus.create')" to="/d/courses" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="book-open" :size="16" /> {{ t('dashboard.ops.quickCourses') }}
           </RouterLink>
-          <RouterLink v-if="auth.can('transaksi.view')" to="/d/transaksi" class="nav-item rounded border-0 px-3 py-2">
+          <RouterLink v-if="auth.can('transaksi.view')" to="/d/orders" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="credit-card" :size="16" /> {{ t('dashboard.ops.quickTransactions') }}
           </RouterLink>
-          <RouterLink v-if="auth.can('laporan.view')" to="/d/laporan" class="nav-item rounded border-0 px-3 py-2">
+          <RouterLink v-if="auth.can('laporan.view')" to="/d/reports" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="bar-chart" :size="16" /> {{ t('dashboard.ops.quickReports') }}
           </RouterLink>
         </div>

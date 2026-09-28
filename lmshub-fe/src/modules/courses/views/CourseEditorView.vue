@@ -254,7 +254,7 @@ async function transition(action: 'submit' | 'publish' | 'archive') {
             <button class="btn-primary" type="submit" :disabled="saving">
               {{ saving ? t('common.state.saving') : t('common.action.save') }}
             </button>
-            <RouterLink to="/d/kursus" class="btn-outline">{{ t('common.action.cancel') }}</RouterLink>
+            <RouterLink to="/d/courses" class="btn-outline">{{ t('common.action.cancel') }}</RouterLink>
           </div>
         </form>
 

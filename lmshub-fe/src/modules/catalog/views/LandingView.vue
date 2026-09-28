@@ -67,7 +67,7 @@ const totalSiswa = computed(() => instructors.value.reduce((a, i) => a + (i.tota
 
 function cari() {
   router.push({
-    path: '/kursus',
+    path: '/courses',
     query: { ...(q.value ? { q: q.value } : {}), ...(kategoriDipilih.value ? { kategori: kategoriDipilih.value } : {}) },
   });
 }
@@ -215,7 +215,7 @@ onMounted(async () => {
           <RouterLink
             v-for="k in categories"
             :key="k.id"
-            :to="{ path: '/kursus', query: { kategori: k.slug } }"
+            :to="{ path: '/courses', query: { kategori: k.slug } }"
             class="card group flex flex-col items-center gap-3 rounded-xl p-6 text-center transition hover:-translate-y-1 hover:shadow-lg"
           >
             <span class="grid h-14 w-14 place-items-center rounded-2xl bg-slate-50 text-2xl transition group-hover:bg-brand-50">{{ k.ikon || '📚' }}</span>
@@ -259,7 +259,7 @@ onMounted(async () => {
         </div>
         <p v-else class="mt-10 text-center text-slate-400">{{ t('catalog.landing.featured.empty') }}</p>
         <div class="mt-10 text-center">
-          <RouterLink to="/kursus" class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-7 py-3 text-sm font-medium text-white transition hover:bg-brand-500">
+          <RouterLink to="/courses" class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-7 py-3 text-sm font-medium text-white transition hover:bg-brand-500">
             {{ t('catalog.landing.featured.seeAll') }} <Icon name="arrow-right" :size="15" class="rtl-flip" />
           </RouterLink>
         </div>
@@ -335,7 +335,7 @@ onMounted(async () => {
           </RouterLink>
         </div>
         <div class="mt-8 text-center">
-          <RouterLink to="/instruktur" class="text-sm font-medium text-brand-500 hover:underline">
+          <RouterLink to="/instructors" class="text-sm font-medium text-brand-500 hover:underline">
             {{ t('catalog.landing.instructors.seeAll') }}
           </RouterLink>
         </div>
@@ -350,7 +350,7 @@ onMounted(async () => {
             <p class="mt-3 text-sm text-slate-400">{{ subjudulSeksi('cta', t('catalog.landing.cta.subtitle')) }}</p>
             <div class="mt-6 flex flex-wrap gap-3">
               <RouterLink to="/register" class="btn-primary rounded-full px-7 py-3">{{ t('catalog.landing.cta.register') }}</RouterLink>
-              <RouterLink to="/kursus" class="rounded-full border border-white/20 px-7 py-3 text-sm font-medium transition hover:border-brand-400 hover:text-brand-400">
+              <RouterLink to="/courses" class="rounded-full border border-white/20 px-7 py-3 text-sm font-medium transition hover:border-brand-400 hover:text-brand-400">
                 {{ t('catalog.landing.cta.browse') }}
               </RouterLink>
             </div>

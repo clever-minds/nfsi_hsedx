@@ -94,7 +94,7 @@ const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
               <template #n><b>{{ fmtAngka(payoutPending) }}</b></template>
             </i18n-t>
           </div>
-          <RouterLink to="/d/transaksi" class="text-sm font-medium text-amber-700 hover:underline">
+          <RouterLink to="/d/orders" class="text-sm font-medium text-amber-700 hover:underline">
             {{ t('dashboard.instructor.check') }}
           </RouterLink>
         </div>
@@ -108,7 +108,7 @@ const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
               <template #highlight><span class="font-bold">{{ t('dashboard.instructor.coursesWord') }}</span></template>
             </i18n-t>
           </h2>
-          <RouterLink to="/d/kursus" class="section-link">{{ t('dashboard.instructor.manageAll') }}</RouterLink>
+          <RouterLink to="/d/courses" class="section-link">{{ t('dashboard.instructor.manageAll') }}</RouterLink>
         </div>
         <div v-if="kursusSaya.length" class="space-y-3">
           <div v-for="(c, i) in kursusSaya" :key="c.id" class="card flex items-center gap-4 p-4 transition hover:shadow-md">
@@ -198,7 +198,7 @@ const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
           <RouterLink to="/d/grading" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="grid" :size="16" /> {{ t('dashboard.instructor.quickGrading') }}
           </RouterLink>
-          <RouterLink to="/d/diskusi" class="nav-item rounded border-0 px-3 py-2">
+          <RouterLink to="/d/discussions" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="message-circle" :size="16" /> {{ t('dashboard.instructor.quickDiscussion') }}
           </RouterLink>
         </div>

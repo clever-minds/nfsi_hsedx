@@ -85,13 +85,13 @@ const view = computed(() => {
       </p>
 
       <div class="mt-6 flex flex-col gap-2">
-        <RouterLink v-if="state === 'paid'" to="/d/belajar" class="btn-primary w-full rounded-full">
+        <RouterLink v-if="state === 'paid'" to="/d/learn" class="btn-primary w-full rounded-full">
           {{ t('orders.result.startLearning') }}
         </RouterLink>
-        <RouterLink v-else to="/d/transaksi" class="btn-primary w-full rounded-full">
+        <RouterLink v-else to="/d/orders" class="btn-primary w-full rounded-full">
           {{ t('orders.result.viewTransactions') }}
         </RouterLink>
-        <RouterLink to="/kursus" class="btn-outline w-full rounded-full">
+        <RouterLink to="/courses" class="btn-outline w-full rounded-full">
           {{ t('orders.result.browseCourses') }}
         </RouterLink>
       </div>

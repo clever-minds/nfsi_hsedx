@@ -20,15 +20,15 @@ const mobileOpen = ref(false);
 const q = ref('');
 
 function cari() {
-  router.push({ path: '/kursus', query: q.value ? { q: q.value } : {} });
+  router.push({ path: '/courses', query: q.value ? { q: q.value } : {} });
   mobileOpen.value = false;
 }
 
 /** Menu bawaan; dipakai selama admin belum menyusun menunya sendiri. */
 const NAV_BAWAAN = computed(() => [
   { label: t('nav.public.home'), to: '/' },
-  { label: t('nav.public.courses'), to: '/kursus' },
-  { label: t('nav.public.instructors'), to: '/instruktur' },
+  { label: t('nav.public.courses'), to: '/courses' },
+  { label: t('nav.public.instructors'), to: '/instructors' },
 ]);
 
 const NAV = computed(() =>
@@ -56,8 +56,8 @@ const KOLOM_BAWAAN = computed(() => [
   {
     judul: t('nav.footer.explore'),
     tautan: [
-      { label: t('nav.item.catalog'), url: '/kursus' },
-      { label: t('nav.public.instructors'), url: '/instruktur' },
+      { label: t('nav.item.catalog'), url: '/courses' },
+      { label: t('nav.public.instructors'), url: '/instructors' },
       { label: t('nav.footer.registerFree'), url: '/register' },
       { label: t('common.action.login'), url: '/login' },
     ],

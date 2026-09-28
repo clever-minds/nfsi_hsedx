@@ -274,7 +274,7 @@ onMounted(async () => {
 
     <div v-if="!courses.length" class="empty-state">
       {{ t('discussions.noEnrollment') }}
-      <RouterLink to="/d/katalog" class="mt-1 block font-medium text-brand-500">{{ t('discussions.browseCatalog') }}</RouterLink>
+      <RouterLink to="/d/catalog" class="mt-1 block font-medium text-brand-500">{{ t('discussions.browseCatalog') }}</RouterLink>
     </div>
 
     <!-- FORUM -->

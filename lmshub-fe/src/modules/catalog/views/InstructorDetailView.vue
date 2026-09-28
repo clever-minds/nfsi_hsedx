@@ -171,7 +171,7 @@ onMounted(async () => {
                   <div class="text-xs text-slate-400">{{ t('catalog.instructors.ratingFrom', { n: fmtAngka(instruktur.rating_count) }) }}</div>
                 </div>
               </div>
-              <RouterLink to="/kursus" class="btn-outline mt-2 w-full justify-center rounded-full py-2.5 text-sm">
+              <RouterLink to="/courses" class="btn-outline mt-2 w-full justify-center rounded-full py-2.5 text-sm">
                 {{ t('catalog.instructors.browseAll') }}
               </RouterLink>
             </div>

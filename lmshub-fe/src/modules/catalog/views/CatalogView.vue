@@ -30,7 +30,7 @@ interface Kategori { id: string; nama: string; slug: string; jumlah_kursus: numb
 const route = useRoute();
 // Komponen dipakai di dua tempat: katalog publik (/kursus) dan dalam dashboard (/d/katalog).
 const inDashboard = computed(() => route.path.startsWith('/d'));
-const detailBase = computed(() => (inDashboard.value ? '/d/katalog' : '/kursus'));
+const detailBase = computed(() => (inDashboard.value ? '/d/catalog' : '/courses'));
 
 const courses = ref<Course[]>([]);
 const categories = ref<Kategori[]>([]);

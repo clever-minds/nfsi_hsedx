@@ -88,7 +88,7 @@ onMounted(load);
   <div>
     <PageHeader :title="t('discussions.moderationPage.title')" :subtitle="t('discussions.moderationPage.subtitle')">
       <template #actions>
-        <RouterLink to="/d/diskusi" class="btn-outline">{{ t('discussions.moderationPage.back') }}</RouterLink>
+        <RouterLink to="/d/discussions" class="btn-outline">{{ t('discussions.moderationPage.back') }}</RouterLink>
       </template>
     </PageHeader>
 

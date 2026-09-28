@@ -64,7 +64,7 @@ const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
 const initials = computed(() => initialsOf(auth.user?.nama_lengkap));
 
 function searchCatalog() {
-  router.push({ path: '/d/katalog', query: searchQ.value ? { q: searchQ.value } : {} });
+  router.push({ path: '/d/catalog', query: searchQ.value ? { q: searchQ.value } : {} });
 }
 
 onMounted(async () => {
@@ -128,7 +128,7 @@ onMounted(async () => {
       <section>
         <div class="mb-4 flex items-center justify-between">
           <h2 class="section-title">{{ t('dashboard.student.continueLearning') }}</h2>
-          <RouterLink to="/d/belajar" class="section-link">{{ t('common.action.seeAll') }}</RouterLink>
+          <RouterLink to="/d/learn" class="section-link">{{ t('common.action.seeAll') }}</RouterLink>
         </div>
         <div v-if="myCourses.length" class="space-y-3">
           <div v-for="(c, i) in myCourses" :key="c.id" class="card flex items-center gap-4 p-4 transition hover:shadow-md">
@@ -161,7 +161,7 @@ onMounted(async () => {
         </div>
         <div v-else class="empty-state">
           {{ t('dashboard.student.noEnrollments') }}
-          <RouterLink to="/d/katalog" class="mt-1 block font-medium text-brand-500 hover:text-brand-600">
+          <RouterLink to="/d/catalog" class="mt-1 block font-medium text-brand-500 hover:text-brand-600">
             {{ t('dashboard.student.browseCatalog') }}
           </RouterLink>
         </div>
@@ -173,13 +173,13 @@ onMounted(async () => {
           <h2 class="section-title">
             {{ t('dashboard.student.explore') }} <span class="font-bold">{{ t('dashboard.student.categories') }}</span>
           </h2>
-          <RouterLink to="/d/katalog" class="section-link">{{ t('common.action.seeAll') }}</RouterLink>
+          <RouterLink to="/d/catalog" class="section-link">{{ t('common.action.seeAll') }}</RouterLink>
         </div>
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           <RouterLink
             v-for="(cat, i) in categories"
             :key="cat.id"
-            :to="{ path: '/d/katalog', query: { kategori: cat.slug } }"
+            :to="{ path: '/d/catalog', query: { kategori: cat.slug } }"
             class="rounded p-5 text-center transition hover:-translate-y-0.5 hover:shadow-md"
             :class="pastel(i)"
           >
@@ -198,7 +198,7 @@ onMounted(async () => {
           <h2 class="section-title">
             {{ t('dashboard.student.coursesWord') }} <span class="font-bold">{{ t('dashboard.student.popular') }}</span>
           </h2>
-          <RouterLink to="/d/katalog" class="section-link">{{ t('common.action.seeAll') }}</RouterLink>
+          <RouterLink to="/d/catalog" class="section-link">{{ t('common.action.seeAll') }}</RouterLink>
         </div>
         <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <RouterLink
@@ -241,7 +241,7 @@ onMounted(async () => {
         </div>
         <h3 class="mt-3 font-medium text-slate-900">{{ auth.user?.nama_lengkap }}</h3>
         <p class="text-xs text-slate-400">{{ roleLabel(auth.activeRole) }}</p>
-        <RouterLink to="/d/profil" class="btn-outline btn-sm mt-4 w-full">{{ t('dashboard.student.viewProfile') }}</RouterLink>
+        <RouterLink to="/d/profile" class="btn-outline btn-sm mt-4 w-full">{{ t('dashboard.student.viewProfile') }}</RouterLink>
       </div>
 
       <div class="card p-5">

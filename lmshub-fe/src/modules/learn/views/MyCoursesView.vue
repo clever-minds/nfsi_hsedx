@@ -110,7 +110,7 @@ onMounted(load);
 
     <div v-else-if="!courses.length" class="empty-state">
       {{ t('learn.my.empty') }}
-      <RouterLink to="/d/katalog" class="mt-2 block font-medium text-brand-700">{{ t('learn.my.browseCatalog') }}</RouterLink>
+      <RouterLink to="/d/catalog" class="mt-2 block font-medium text-brand-700">{{ t('learn.my.browseCatalog') }}</RouterLink>
     </div>
 
     <template v-else>
@@ -139,7 +139,7 @@ onMounted(load);
             <RouterLink :to="`/d/belajar/${c.course_id}`" class="btn-outline flex-1 justify-center">
               {{ t('learn.my.viewCourse') }}
             </RouterLink>
-            <RouterLink to="/d/sertifikat" class="btn-primary flex-1 justify-center bg-accent-500 hover:bg-accent-600">
+            <RouterLink to="/d/certificates" class="btn-primary flex-1 justify-center bg-accent-500 hover:bg-accent-600">
               {{ t('learn.my.certificate') }}
             </RouterLink>
           </div>

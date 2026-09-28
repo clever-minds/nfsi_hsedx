@@ -127,7 +127,7 @@ const tahun = new Date().getFullYear();
         <!-- Ikon aksi -->
         <RouterLink
           v-if="auth.can('diskusi.view')"
-          to="/d/diskusi"
+          to="/d/discussions"
           class="header-icon-btn"
           :title="t('nav.item.discussions')"
         >
@@ -135,7 +135,7 @@ const tahun = new Date().getFullYear();
         </RouterLink>
         <RouterLink
           v-if="auth.can('notifikasi.view')"
-          to="/d/notifikasi"
+          to="/d/notifications"
           class="header-icon-btn"
           :title="t('nav.item.notifications')"
         >
@@ -218,7 +218,7 @@ const tahun = new Date().getFullYear();
             </div>
 
             <RouterLink
-              to="/d/profil"
+              to="/d/profile"
               class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-slate-600 transition hover:bg-brand-50 hover:text-brand-500"
               @click="userMenuOpen = false"
             >
@@ -226,7 +226,7 @@ const tahun = new Date().getFullYear();
             </RouterLink>
             <RouterLink
               v-if="auth.can('pengaturan.view')"
-              to="/d/pengaturan"
+              to="/d/settings"
               class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-slate-600 transition hover:bg-brand-50 hover:text-brand-500"
               @click="userMenuOpen = false"
             >

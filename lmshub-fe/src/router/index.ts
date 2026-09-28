@@ -11,24 +11,24 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/layouts/PublicLayout.vue'),
     children: [
       { path: '', name: 'landing', component: () => import('@/modules/catalog/views/LandingView.vue') },
-      { path: 'kursus', name: 'catalog', component: () => import('@/modules/catalog/views/CatalogView.vue') },
+      { path: 'courses', name: 'catalog', component: () => import('@/modules/catalog/views/CatalogView.vue') },
       {
-        path: 'kursus/:slug',
+        path: 'courses/:slug',
         name: 'course-detail',
         component: () => import('@/modules/catalog/views/CourseDetailView.vue'),
       },
       {
-        path: 'instruktur',
+        path: 'instructors',
         name: 'instructor-list',
         component: () => import('@/modules/catalog/views/InstructorListView.vue'),
       },
       {
-        path: 'instruktur/:id',
+        path: 'instructors/:id',
         name: 'instructor-detail',
         component: () => import('@/modules/catalog/views/InstructorDetailView.vue'),
       },
       {
-        path: 'sertifikat/:nomor',
+        path: 'certificates/:nomor',
         name: 'verify-certificate',
         component: () => import('@/modules/catalog/views/PublicCertificateView.vue'),
       },
@@ -50,7 +50,7 @@ const routes: RouteRecordRaw[] = [
   },
   { path: '/login', name: 'login', component: () => import('@/modules/auth/views/LoginView.vue'), meta: { guestOnly: true } },
   { path: '/register', name: 'register', component: () => import('@/modules/auth/views/RegisterView.vue'), meta: { guestOnly: true } },
-  { path: '/verifikasi-email', name: 'verify-email', component: () => import('@/modules/auth/views/VerifyEmailView.vue') },
+  { path: '/verify-email', name: 'verify-email', component: () => import('@/modules/auth/views/VerifyEmailView.vue') },
 
   // ── Area terkunci (dashboard) ──
   {
@@ -60,9 +60,9 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: '', name: 'dashboard', component: () => import('@/modules/dashboard/views/DashboardHome.vue') },
       // Katalog di dalam dashboard (komponen sama dengan katalog publik, link menyesuaikan)
-      { path: 'katalog', name: 'dash-catalog', component: () => import('@/modules/catalog/views/CatalogView.vue') },
+      { path: 'catalog', name: 'dash-catalog', component: () => import('@/modules/catalog/views/CatalogView.vue') },
       {
-        path: 'katalog/:slug',
+        path: 'catalog/:slug',
         name: 'dash-course-detail',
         component: () => import('@/modules/catalog/views/CourseDetailView.vue'),
       },

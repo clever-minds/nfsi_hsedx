@@ -127,7 +127,7 @@ async function openMethodPanel() {
     const ok = await buy([{ item_tipe: 'kursus', course_id: course.value!.id }]);
     if (ok) {
       enrolled.value = true;
-      router.push('/d/belajar');
+      router.push('/d/learn');
     }
     return;
   }
@@ -158,7 +158,7 @@ async function bayarGateway(providerId: string) {
   // Gateway hosted mengalihkan browser; tidak ada yang perlu dilakukan di sini.
   if (ok && status.value === 'sukses') {
     showMethodPanel.value = false;
-    router.push('/d/belajar');
+    router.push('/d/learn');
   }
 }
 
@@ -237,7 +237,7 @@ const TERMASUK = computed(() => [
         <nav class="mt-3 flex items-center justify-center gap-2 text-sm text-slate-500">
           <RouterLink to="/" class="transition hover:text-brand-500">{{ t('nav.public.home') }}</RouterLink>
           <span class="h-1 w-4 rounded bg-brand-400"></span>
-          <RouterLink to="/kursus" class="transition hover:text-brand-500">{{ t('nav.public.courses') }}</RouterLink>
+          <RouterLink to="/courses" class="transition hover:text-brand-500">{{ t('nav.public.courses') }}</RouterLink>
           <span class="h-1 w-4 rounded bg-brand-400"></span>
           <span class="max-w-[14rem] truncate text-slate-700">{{ course?.judul || '…' }}</span>
         </nav>

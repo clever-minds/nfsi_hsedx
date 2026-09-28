@@ -2,7 +2,7 @@ import type { RouteRecordRaw } from 'vue-router';
 
 export const learnRoutes: RouteRecordRaw[] = [
   {
-    path: 'belajar',
+    path: 'learn',
     name: 'my-courses',
     component: () => import('@/modules/learn/views/MyCoursesView.vue'),
     meta: {
@@ -12,7 +12,7 @@ export const learnRoutes: RouteRecordRaw[] = [
     },
   },
   {
-    path: 'belajar/:courseId',
+    path: 'learn/:courseId',
     name: 'course-player',
     component: () => import('@/modules/learn/views/CoursePlayerView.vue'),
     meta: { permission: 'enrollment.view', title: 'Kursus' },

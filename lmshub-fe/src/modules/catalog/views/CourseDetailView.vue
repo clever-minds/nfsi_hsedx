@@ -460,7 +460,7 @@ const TERMASUK = computed(() => [
               </div>
 
               <template v-if="enrolled">
-                <RouterLink :to="`/d/belajar/${course.id}`" class="btn-primary mt-3 block w-full rounded-full py-3 text-center">
+                <RouterLink :to="`/d/learn/${course.id}`" class="btn-primary mt-3 block w-full rounded-full py-3 text-center">
                   {{ t('catalog.detail.startLearning') }}
                 </RouterLink>
                 <p class="mt-2 text-center text-xs text-emerald-600">{{ t('catalog.detail.alreadyEnrolled') }}</p>

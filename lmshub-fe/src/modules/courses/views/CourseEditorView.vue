@@ -292,8 +292,8 @@ async function transition(action: 'submit' | 'publish' | 'archive') {
       <div v-else-if="isEdit && courseId" class="card space-y-3 p-5">
         <p class="text-sm text-slate-500">{{ t('courses.editor.curriculumHint') }}</p>
         <div class="flex flex-wrap gap-2">
-          <RouterLink :to="`/d/konten?courseId=${courseId}`" class="btn-primary">{{ t('courses.editor.openBuilder') }}</RouterLink>
-          <RouterLink :to="`/d/konten/media?courseId=${courseId}`" class="btn-outline">{{ t('courses.editor.openMedia') }}</RouterLink>
+          <RouterLink :to="`/d/content?courseId=${courseId}`" class="btn-primary">{{ t('courses.editor.openBuilder') }}</RouterLink>
+          <RouterLink :to="`/d/content/media?courseId=${courseId}`" class="btn-outline">{{ t('courses.editor.openMedia') }}</RouterLink>
         </div>
       </div>
     </template>

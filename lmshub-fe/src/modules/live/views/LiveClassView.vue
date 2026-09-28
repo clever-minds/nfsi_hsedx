@@ -321,7 +321,7 @@ onMounted(load);
           </button>
           <RouterLink
             v-can="'live_class.view'"
-            :to="`/d/live-class/${s.id}/kehadiran`"
+            :to="`/d/live-class/${s.id}/attendance`"
             class="btn-outline flex-1 text-center"
           >
             {{ t('live.list.attendance') }}

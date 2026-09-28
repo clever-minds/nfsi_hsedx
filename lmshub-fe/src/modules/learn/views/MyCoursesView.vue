@@ -136,14 +136,14 @@ onMounted(load);
 
           <!-- 100%: tetap bisa buka course (review materi) + lihat sertifikat berdampingan -->
           <div v-if="(c.progress_percent ?? 0) >= 100" class="mt-2 flex gap-2">
-            <RouterLink :to="`/d/belajar/${c.course_id}`" class="btn-outline flex-1 justify-center">
+            <RouterLink :to="`/d/learn/${c.course_id}`" class="btn-outline flex-1 justify-center">
               {{ t('learn.my.viewCourse') }}
             </RouterLink>
             <RouterLink to="/d/certificates" class="btn-primary flex-1 justify-center bg-accent-500 hover:bg-accent-600">
               {{ t('learn.my.certificate') }}
             </RouterLink>
           </div>
-          <RouterLink v-else :to="`/d/belajar/${c.course_id}`" class="btn-primary mt-2 w-full justify-center">
+          <RouterLink v-else :to="`/d/learn/${c.course_id}`" class="btn-primary mt-2 w-full justify-center">
             {{ (c.progress_percent ?? 0) > 0 ? t('learn.my.continue') : t('learn.my.start') }}
           </RouterLink>
         </div>

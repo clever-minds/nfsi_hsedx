@@ -148,7 +148,7 @@ onMounted(async () => {
                 <span class="shrink-0 text-xs font-medium text-slate-500">{{ fmtPersen(c.progress_percent) }}</span>
               </div>
             </div>
-            <RouterLink :to="`/d/belajar/${c.course_id}`" class="btn-primary btn-sm shrink-0">
+            <RouterLink :to="`/d/learn/${c.course_id}`" class="btn-primary btn-sm shrink-0">
               {{
                 c.progress_percent >= 100
                   ? t('dashboard.student.review')
@@ -204,7 +204,7 @@ onMounted(async () => {
           <RouterLink
             v-for="(c, i) in popularCourses.slice(0, 6)"
             :key="c.id"
-            :to="`/d/katalog/${c.slug}`"
+            :to="`/d/catalog/${c.slug}`"
             class="card group overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <div class="relative grid h-32 place-items-center bg-gradient-to-br text-white/80" :class="thumbClass(i)">

@@ -118,7 +118,7 @@ onMounted(load);
             <div class="num text-xs text-slate-400">{{ c.nomor_sertifikat }}</div>
             <StatusChip status="terbit" />
           </div>
-            <RouterLink :to="`/d/sertifikat/lihat/${c.id}`" class="btn-primary mt-auto justify-center">
+            <RouterLink :to="`/d/certificates/view/${c.id}`" class="btn-primary mt-auto justify-center">
               {{ t('certificates.my.view') }}
             </RouterLink>
           </div>

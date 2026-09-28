@@ -56,7 +56,7 @@ export const navSections: NavSection[] = [
         roles: ['siswa', 'sub_user', 'instruktur', 'asisten'],
         icon: 'play-circle',
       },
-      { labelKey: 'nav.item.assessments', to: '/d/asesmen', permission: 'asesmen.view', icon: 'check-square' },
+      { labelKey: 'nav.item.assessments', to: '/d/assessments', permission: 'asesmen.view', icon: 'check-square' },
       { labelKey: 'nav.item.liveClass', to: '/d/live-class', permission: 'live_class.view', icon: 'video' },
       { labelKey: 'nav.item.discussions', to: '/d/discussions', permission: 'diskusi.view', icon: 'message-circle' },
       // "Sertifikat Saya" juga swalayan — alasan yang sama seperti di atas.
@@ -77,8 +77,8 @@ export const navSections: NavSection[] = [
       // Master data kategori & tag. Berada di atas Kurikulum karena kursus tidak
       // bisa dibuat sebelum ada minimal satu kategori (`category_id` NOT NULL).
       // Gerbangnya `kategori.create` — `kategori.view` juga dimiliki siswa.
-      { labelKey: 'nav.item.categories', to: '/d/kategori', permission: 'kategori.create', icon: 'tag' },
-      { labelKey: 'nav.item.curriculum', to: '/d/konten', permission: 'kurikulum.view', icon: 'layers' },
+      { labelKey: 'nav.item.categories', to: '/d/categories', permission: 'kategori.create', icon: 'tag' },
+      { labelKey: 'nav.item.curriculum', to: '/d/content', permission: 'kurikulum.view', icon: 'layers' },
       { labelKey: 'nav.item.grading', to: '/d/grading', permission: 'grading.view', icon: 'grid' },
     ],
   },
@@ -90,7 +90,7 @@ export const navSections: NavSection[] = [
       { labelKey: 'nav.item.marketing', to: '/d/marketing', permission: 'marketing.view', icon: 'megaphone' },
       // Kode kupon checkout. Berdiri sendiri, bukan tab di Marketing, karena
       // yang mengurusnya sering admin penjualan dan bukan tim afiliasi.
-      { labelKey: 'nav.item.coupons', to: '/d/marketing/kupon', permission: 'marketing.view', icon: 'tag' },
+      { labelKey: 'nav.item.coupons', to: '/d/marketing/coupons', permission: 'marketing.view', icon: 'tag' },
     ],
   },
   {
@@ -110,7 +110,7 @@ export const navSections: NavSection[] = [
       // dimiliki siswa, jadi memakainya akan membuka halaman admin untuk mereka.
       {
         labelKey: 'nav.item.certificateTemplate',
-        to: '/d/sertifikat/template',
+        to: '/d/certificates/template',
         permission: 'sertifikat.create',
         icon: 'award',
       },
@@ -120,14 +120,14 @@ export const navSections: NavSection[] = [
       // Master data mata uang tampilan + kurs terhadap mata uang basis.
       {
         labelKey: 'nav.item.currencies',
-        to: '/d/pengaturan/mata-uang',
+        to: '/d/settings/currencies',
         permission: 'pengaturan.view',
         icon: 'dollar-sign',
       },
       // Master data rekening transfer manual (sebelumnya tiga baris di Pengaturan).
       {
         labelKey: 'nav.item.bankAccounts',
-        to: '/d/pengaturan/rekening',
+        to: '/d/settings/bank-accounts',
         permission: 'pengaturan.view',
         icon: 'credit-card',
       },

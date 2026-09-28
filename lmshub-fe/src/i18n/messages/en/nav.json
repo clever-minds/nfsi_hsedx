@@ -17,11 +17,13 @@
     "discussions": "Discussions",
     "certificates": "Certificates",
     "courses": "Courses",
+    "categories": "Categories",
     "curriculum": "Curriculum & Content",
     "grading": "Grading",
     "users": "Users",
     "transactions": "Transactions",
     "marketing": "Marketing",
+    "coupons": "Coupons",
     "reports": "Reports",
     "notifications": "Notifications",
     "auditLog": "Audit Log",
@@ -45,7 +47,7 @@
     "newCourse": "Create New Course",
     "goToDashboard": "Dashboard",
     "switchRole": "Switch role",
-    "address": "Connaught Place, New Delhi"
+    "address": "42 Merdeka St., Jakarta"
   },
   "footer": {
     "explore": "Explore",

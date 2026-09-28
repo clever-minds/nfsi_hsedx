@@ -1,0 +1,86 @@
+{
+  "list": {
+    "title": "Live Class",
+    "subtitle": "Jadwal sesi belajar sinkron & kehadiran",
+    "calendar": "Kalender",
+    "allStatus": "Semua status",
+    "loading": "Memuat jadwal sesi…",
+    "empty": "Belum ada sesi live class terjadwal.",
+    "loadFailed": "Gagal memuat jadwal live class",
+    "host": "Host: {name}",
+    "participants": "Peserta: {joined} / {capacity}",
+    "join": "Gabung",
+    "notYet": "Belum Waktunya",
+    "recording": "Lihat Rekaman",
+    "ended": "Sesi Berakhir",
+    "attendance": "Kehadiran",
+    "scopeNote": "Kamu hanya melihat sesi sesuai peran (diampu/diikuti) — data ter-scope otomatis oleh backend.",
+    "status": {
+      "dijadwalkan": "Dijadwalkan",
+      "berlangsung": "Berlangsung",
+      "selesai": "Selesai",
+      "rekaman_tersedia": "Rekaman Tersedia"
+    },
+    "joinFailed": "Tidak bisa bergabung. Mungkin di luar waktu sesi, atau kamu belum terdaftar di kursus ini."
+  },
+  "attendance": {
+    "title": "Panel Kehadiran",
+    "subtitle": "Status kehadiran peserta sesi live class",
+    "back": "Kembali",
+    "empty": "Belum ada peserta terdaftar pada sesi ini.",
+    "loadFailed": "Gagal memuat data kehadiran",
+    "markFailed": "Gagal menandai kehadiran",
+    "colParticipant": "Peserta",
+    "colStatus": "Status",
+    "colJoinTime": "Waktu Gabung",
+    "colDuration": "Durasi Hadir",
+    "minutes": "{n} menit",
+    "notYet": "Belum",
+    "status": {
+      "belum": "Belum",
+      "hadir": "Hadir",
+      "terlambat": "Terlambat",
+      "absen": "Absen"
+    }
+  },
+  "calendarPage": {
+    "title": "Kalender Terpadu",
+    "subtitle": "Live class, tenggat tugas, dan jadwal ujian dari seluruh kursus",
+    "loading": "Memuat agenda…",
+    "empty": "Tidak ada agenda pada bulan ini.",
+    "loadFailed": "Gagal memuat kalender terpadu",
+    "legend": {
+      "live": "Live Class",
+      "tenggat": "Tenggat Tugas",
+      "ujian": "Ujian"
+    }
+  },
+  "form": {
+    "add": "+ Jadwalkan sesi",
+    "title": "Jadwalkan sesi live",
+    "course": "Kursus",
+    "sessionTitle": "Judul sesi",
+    "sessionTitlePlaceholder": "mis. Tanya Jawab Live: pekan 1",
+    "provider": "Platform",
+    "host": "Pembawa",
+    "link": "Tautan rapat",
+    "linkHint": "Buat dulu rapatnya di Zoom, Google Meet atau BigBlueButton, lalu tempel tautan gabungnya di sini. LMS Hub tidak menyelenggarakan panggilannya sendiri.",
+    "date": "Tanggal",
+    "start": "Mulai",
+    "end": "Selesai",
+    "capacity": "Kapasitas",
+    "capacityUnlimited": "Tanpa batas",
+    "lateTolerance": "Toleransi terlambat (menit)",
+    "lateToleranceHint": "Bergabung dalam rentang menit ini setelah mulai tetap dihitung hadir.",
+    "description": "Deskripsi",
+    "optional": "Opsional",
+    "schedule": "Jadwalkan",
+    "courseRequired": "Pilih kursus.",
+    "titleRequired": "Judul sesi wajib diisi.",
+    "linkRequired": "Tautan rapat wajib diisi.",
+    "hostRequired": "Pilih pembawa.",
+    "timeRequired": "Isi tanggal, jam mulai dan jam selesai.",
+    "timeOrder": "Jam selesai harus setelah jam mulai.",
+    "saveFailed": "Gagal menjadwalkan sesi"
+  }
+}

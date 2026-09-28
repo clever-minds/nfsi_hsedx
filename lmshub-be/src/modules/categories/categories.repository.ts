@@ -18,6 +18,17 @@ export interface CategoryFilters {
   is_aktif?: boolean;
 }
 
+/**
+ * Baris untuk layar kelola kategori. `jumlah_kursus` menghitung SEMUA kursus
+ * yang belum dihapus, bukan hanya yang terbit: yang menahan penghapusan
+ * kategori adalah foreign key `courses.category_id` (ON DELETE RESTRICT), dan
+ * kursus draf pun menahannya. Angka yang hanya menghitung kursus terbit akan
+ * menampilkan "0" pada kategori yang tetap menolak dihapus.
+ */
+export interface CategoryListRow extends CategoryRow {
+  jumlah_kursus: number;
+}
+
 /** Baris `tags`. */
 export interface TagRow {
   id: string;
@@ -31,7 +42,7 @@ export interface TagFilters {
 }
 
 // ── Categories ───────────────────────────────────────
-export async function list(p: PageParams, f: CategoryFilters): Promise<{ rows: CategoryRow[]; total: number }> {
+export async function list(p: PageParams, f: CategoryFilters): Promise<{ rows: CategoryListRow[]; total: number }> {
   const where: string[] = ['deleted_at IS NULL'];
   const params: unknown[] = [];
   const add = (clause: string, val: unknown) => {
@@ -44,8 +55,10 @@ export async function list(p: PageParams, f: CategoryFilters): Promise<{ rows: C
   const whereSql = where.join(' AND ');
   const sortCol = ['nama', 'urutan', 'created_at'].includes(p.sort ?? '') ? p.sort : 'urutan';
 
-  const rows = await query<CategoryRow>(
-    `SELECT id, nama, slug, deskripsi, ikon, urutan, is_aktif, created_at
+  const rows = await query<CategoryListRow>(
+    `SELECT id, nama, slug, deskripsi, ikon, urutan, is_aktif, created_at,
+            (SELECT COUNT(*)::int FROM courses c
+              WHERE c.category_id = categories.id AND c.deleted_at IS NULL) AS jumlah_kursus
        FROM categories
       WHERE ${whereSql}
       ORDER BY ${sortCol} ${p.order}

@@ -3,6 +3,24 @@ import { z } from 'zod';
 export const lessonTipeEnum = z.enum(['video', 'teks', 'pdf', 'kuis', 'tugas', 'live_class', 'scorm', 'embed']);
 export const kontenTipeEnum = z.enum(['video', 'teks', 'pdf', 'embed', 'scorm']);
 
+/**
+ * Alamat isi pelajaran: URL http(s) penuh, ATAU path relatif terhadap akar
+ * situs seperti `/uploads/pelajaran-1.mp4`.
+ *
+ * Bentuk relatif harus diterima karena memang sudah dipakai di dua tempat lain:
+ * pemutar melewatkannya ke `assetUrl()` yang menempelkan origin API, dan seeder
+ * demo menuliskannya langsung ke basis data. Hanya validasi inilah yang dulu
+ * menolaknya, sehingga berkas yang diunggah admin ke `uploads/` servernya
+ * sendiri tidak bisa dipasang lewat antarmuka — padahal berkas yang sama persis
+ * berfungsi bila dimasukkan lewat SQL.
+ */
+const contentUrl = z
+  .string()
+  .min(1)
+  .refine((v) => /^https?:\/\//i.test(v) || v.startsWith('/'), {
+    message: 'Must be a full http(s) address or a path beginning with /',
+  });
+
 // ── Sections ─────────────────────────────────────────
 export const createSectionSchema = z.object({
   judul: z.string().min(2).max(200),
@@ -60,8 +78,8 @@ export const createContentSchema = z.object({
   urutan: z.number().int().min(0).optional(),
   body: z.string().optional(),
   media_asset_id: z.string().uuid().optional(),
-  url: z.string().url().optional(),
-  scorm_manifest_url: z.string().url().optional(),
+  url: contentUrl.optional(),
+  scorm_manifest_url: contentUrl.optional(),
   durasi_detik: z.number().int().min(0).optional(),
 });
 
@@ -70,8 +88,8 @@ export const updateContentSchema = z.object({
   urutan: z.number().int().min(0).optional(),
   body: z.string().nullable().optional(),
   media_asset_id: z.string().uuid().nullable().optional(),
-  url: z.string().url().nullable().optional(),
-  scorm_manifest_url: z.string().url().nullable().optional(),
+  url: contentUrl.nullable().optional(),
+  scorm_manifest_url: contentUrl.nullable().optional(),
   durasi_detik: z.number().int().min(0).nullable().optional(),
 });
 

@@ -2,6 +2,7 @@ import type { RouteRecordRaw } from 'vue-router';
 
 // Rute modul dashboard (anak dari /d). Diagregasi dari tiap modul.
 import { usersRoutes } from '@/modules/users/users.routes';
+import { categoriesRoutes } from '@/modules/categories/categories.routes';
 import { coursesRoutes } from '@/modules/courses/courses.routes';
 import { contentRoutes } from '@/modules/content/content.routes';
 import { enrollmentRoutes } from '@/modules/enrollment/enrollment.routes';
@@ -21,6 +22,7 @@ import { notificationsRoutes } from '@/modules/notifications/notifications.route
 
 export const moduleRoutes: RouteRecordRaw[] = [
   ...usersRoutes,
+  ...categoriesRoutes,
   ...coursesRoutes,
   ...contentRoutes,
   ...enrollmentRoutes,

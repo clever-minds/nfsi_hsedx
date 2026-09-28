@@ -54,5 +54,33 @@
       "tenggat": "Assignment Deadline",
       "ujian": "Exam"
     }
+  },
+  "form": {
+    "add": "+ Schedule session",
+    "title": "Schedule a live session",
+    "course": "Course",
+    "sessionTitle": "Session title",
+    "sessionTitlePlaceholder": "e.g. Live Q&A: week 1",
+    "provider": "Platform",
+    "host": "Host",
+    "link": "Meeting link",
+    "linkHint": "Create the meeting in Zoom, Google Meet or BigBlueButton first, then paste its join link here. LMS Hub does not host the call itself.",
+    "date": "Date",
+    "start": "Starts",
+    "end": "Ends",
+    "capacity": "Capacity",
+    "capacityUnlimited": "Unlimited",
+    "lateTolerance": "Late tolerance (minutes)",
+    "lateToleranceHint": "Joining within this many minutes after the start still counts as present.",
+    "description": "Description",
+    "optional": "Optional",
+    "schedule": "Schedule",
+    "courseRequired": "Choose a course.",
+    "titleRequired": "The session title is required.",
+    "linkRequired": "The meeting link is required.",
+    "hostRequired": "Choose a host.",
+    "timeRequired": "Set the date, start and end time.",
+    "timeOrder": "The end time must be after the start time.",
+    "saveFailed": "Could not schedule the session"
   }
 }

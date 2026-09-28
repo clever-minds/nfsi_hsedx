@@ -74,6 +74,10 @@ export const navSections: NavSection[] = [
     items: [
       // Manajemen kursus — khusus instruktur/admin (siswa punya kursus.view untuk katalog, bukan kelola).
       { labelKey: 'nav.item.courses', to: '/d/kursus', permission: 'kursus.create', icon: 'book-open' },
+      // Master data kategori & tag. Berada di atas Kurikulum karena kursus tidak
+      // bisa dibuat sebelum ada minimal satu kategori (`category_id` NOT NULL).
+      // Gerbangnya `kategori.create` — `kategori.view` juga dimiliki siswa.
+      { labelKey: 'nav.item.categories', to: '/d/kategori', permission: 'kategori.create', icon: 'tag' },
       { labelKey: 'nav.item.curriculum', to: '/d/konten', permission: 'kurikulum.view', icon: 'layers' },
       { labelKey: 'nav.item.grading', to: '/d/grading', permission: 'grading.view', icon: 'grid' },
     ],
@@ -84,6 +88,9 @@ export const navSections: NavSection[] = [
       { labelKey: 'nav.item.users', to: '/d/pengguna', permission: 'pengguna.view', icon: 'users' },
       { labelKey: 'nav.item.transactions', to: '/d/transaksi', permission: 'transaksi.view', icon: 'credit-card' },
       { labelKey: 'nav.item.marketing', to: '/d/marketing', permission: 'marketing.view', icon: 'megaphone' },
+      // Kode kupon checkout. Berdiri sendiri, bukan tab di Marketing, karena
+      // yang mengurusnya sering admin penjualan dan bukan tim afiliasi.
+      { labelKey: 'nav.item.coupons', to: '/d/marketing/kupon', permission: 'marketing.view', icon: 'tag' },
     ],
   },
   {

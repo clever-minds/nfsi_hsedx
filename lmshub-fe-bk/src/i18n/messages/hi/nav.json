@@ -1,0 +1,64 @@
+{
+  "section": {
+    "home": "होम",
+    "learning": "अध्ययन",
+    "teaching": "शिक्षण",
+    "management": "प्रबंधन",
+    "reports": "रिपोर्ट",
+    "settings": "सेटिंग्स"
+  },
+  "item": {
+    "home": "होम",
+    "catalog": "कोर्स कैटलॉग",
+    "enrollment": "नामांकन",
+    "myLearning": "मेरी पढ़ाई",
+    "assessments": "मूल्यांकन",
+    "liveClass": "लाइव क्लास",
+    "discussions": "चर्चाएँ",
+    "certificates": "प्रमाणपत्र",
+    "courses": "कोर्स",
+    "curriculum": "पाठ्यक्रम एवं सामग्री",
+    "grading": "मूल्यांकन कार्य",
+    "users": "उपयोगकर्ता",
+    "transactions": "लेन-देन",
+    "marketing": "मार्केटिंग",
+    "reports": "रिपोर्ट",
+    "notifications": "सूचनाएँ",
+    "auditLog": "ऑडिट लॉग",
+    "settings": "सेटिंग्स",
+    "currencies": "मुद्राएँ",
+    "bankAccounts": "बैंक खाते",
+    "website": "वेबसाइट",
+    "certificateTemplate": "प्रमाणपत्र टेम्पलेट"
+  },
+  "public": {
+    "home": "होम",
+    "courses": "कोर्स",
+    "instructors": "प्रशिक्षक"
+  },
+  "header": {
+    "toggleMenu": "मेन्यू खोलें/बंद करें",
+    "menu": "मेन्यू",
+    "searchPublic": "कोर्स, प्रशिक्षक खोजें…",
+    "searchPublicShort": "कोर्स खोजें…",
+    "searchDashboard": "कोर्स, पाठ, उपयोगकर्ता खोजें…",
+    "newCourse": "नया कोर्स बनाएँ",
+    "goToDashboard": "डैशबोर्ड",
+    "switchRole": "भूमिका बदलें",
+    "address": "42 मर्देका स्ट्रीट, जकार्ता"
+  },
+  "footer": {
+    "explore": "एक्सप्लोर करें",
+    "support": "सहायता",
+    "aboutUs": "हमारे बारे में",
+    "helpCenter": "सहायता केंद्र",
+    "privacyPolicy": "गोपनीयता नीति",
+    "terms": "नियम एवं शर्तें",
+    "registerFree": "निःशुल्क साइन अप",
+    "newsletter": "अपडेट सब्सक्राइब करें",
+    "newsletterHint": "कोर्स सुझाव और ऑफ़र सीधे अपने ईमेल पर पाएँ।",
+    "emailPlaceholder": "ईमेल पता",
+    "blurb": "ऑनलाइन कोर्स अकादमी — अनुभवी प्रशिक्षकों से नए कौशल सीखें, मूल्यांकन दें और प्रमाणपत्र पाएँ।",
+    "copyright": "© {year} {name} · {tagline}"
+  }
+}

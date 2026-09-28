@@ -10,7 +10,7 @@ import { SECTION_KEYS } from './site-content.defaults';
  * lewat penggabungan.
  */
 
-const BAHASA = ['en', 'hi'] as const;
+const BAHASA = ['en', 'id', 'ar', 'hi'] as const;
 
 /** Teks per bahasa; bahasa yang kosong berarti jatuh ke teks bawaan aplikasi. */
 const localized = z
@@ -119,12 +119,10 @@ export const SITE_CONTENT_SCHEMA = {
 } as const;
 
 export const uploadSiteAssetSchema = z.object({
-  body: z.object({
-    /** Saat ini hanya gambar hero; enum agar penambahan aset baru eksplisit. */
-    jenis: z.enum(['hero']),
-    data_base64: z.string().min(1),
-    mime_type: z.enum(['image/jpeg', 'image/png', 'image/webp']),
-  }),
+  /** Saat ini hanya gambar hero; enum agar penambahan aset baru eksplisit. */
+  jenis: z.enum(['hero']),
+  data_base64: z.string().min(1),
+  mime_type: z.enum(['image/jpeg', 'image/png', 'image/webp']),
 });
 
-export type UploadSiteAssetInput = z.infer<typeof uploadSiteAssetSchema>['body'];
+export type UploadSiteAssetInput = z.infer<typeof uploadSiteAssetSchema>;

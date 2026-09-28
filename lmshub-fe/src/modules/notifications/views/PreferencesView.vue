@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { te } from '@/i18n';
 import { apiGetFull, apiPut, errorMessage } from '@/lib/api';
 import PageHeader from '@/components/ui/PageHeader.vue';
 
@@ -23,6 +24,22 @@ const CHANNEL_TO_KANAL: Record<'in_app' | 'email' | 'wa' | 'push', string> = {
 };
 
 const { t } = useI18n();
+
+/**
+ * Nama event datang dari backend (`notification_event_config.nama`), yang
+ * menyimpannya dalam satu bahasa (Indonesia) — jadi kolom Event Type tetap
+ * berbahasa Indonesia walau antarmuka diset ke bahasa lain. Sama seperti layar
+ * Pengaturan, tiap `jenis_event` dipetakan ke kunci i18n dan nama dari backend
+ * dipakai sebagai cadangan, supaya event baru yang belum diterjemahkan tetap
+ * tampil alih-alih hilang.
+ *
+ * Titik pada `jenis_event` diganti garis bawah: titik adalah pemisah path di
+ * vue-i18n, jadi 'siswa.mendaftar' akan dibaca sebagai dua tingkat objek.
+ */
+function eventLabel(row: { jenis_event: string; label: string }): string {
+  const k = `notifications.prefs.event.${row.jenis_event.replace(/\./g, '_')}`;
+  return te(k) ? t(k) : row.label;
+}
 
 const CHANNEL_KEYS = ['in_app', 'email', 'wa', 'push'] as const;
 const channels = computed(() =>
@@ -113,7 +130,7 @@ onMounted(load);
           <tbody class="divide-y divide-slate-100">
             <tr v-for="row in matrix" :key="row.jenis_event">
               <td class="px-4 py-3 text-slate-700">
-                {{ row.label }}
+                {{ eventLabel(row) }}
                 <span v-if="row.kritikal" class="ms-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
                   {{ t('notifications.prefs.alwaysOn') }}
                 </span>
@@ -135,7 +152,7 @@ onMounted(load);
       <div class="space-y-3 sm:hidden">
         <div v-for="row in matrix" :key="row.jenis_event" class="card p-3">
           <div class="mb-2 flex items-center justify-between">
-            <span class="font-medium text-slate-800">{{ row.label }}</span>
+            <span class="font-medium text-slate-800">{{ eventLabel(row) }}</span>
             <span v-if="row.kritikal" class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
               {{ t('notifications.prefs.alwaysOn') }}
             </span>

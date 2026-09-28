@@ -7,4 +7,12 @@ export const marketingRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/marketing/views/MarketingDashboardView.vue'),
     meta: { permission: 'marketing.view', title: 'Marketing' },
   },
+  {
+    // Kode kupon. Penukarannya sudah jalan di checkout sejak awal; layar ini
+    // yang membuatnya bisa dibuat tanpa menyentuh basis data.
+    path: 'marketing/kupon',
+    name: 'marketing-kupon',
+    component: () => import('@/modules/marketing/views/CouponsView.vue'),
+    meta: { permission: 'marketing.view', title: 'Kupon' },
+  },
 ];

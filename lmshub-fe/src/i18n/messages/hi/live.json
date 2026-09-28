@@ -54,5 +54,33 @@
       "tenggat": "असाइनमेंट समय-सीमा",
       "ujian": "परीक्षा"
     }
+  },
+  "form": {
+    "add": "+ सत्र शेड्यूल करें",
+    "title": "लाइव सत्र शेड्यूल करें",
+    "course": "कोर्स",
+    "sessionTitle": "सत्र का शीर्षक",
+    "sessionTitlePlaceholder": "जैसे लाइव प्रश्नोत्तर: सप्ताह 1",
+    "provider": "प्लेटफ़ॉर्म",
+    "host": "होस्ट",
+    "link": "मीटिंग लिंक",
+    "linkHint": "पहले Zoom, Google Meet या BigBlueButton में मीटिंग बनाएँ, फिर उसका जॉइन लिंक यहाँ चिपकाएँ। LMS Hub स्वयं कॉल होस्ट नहीं करता।",
+    "date": "तारीख़",
+    "start": "शुरू",
+    "end": "समाप्त",
+    "capacity": "क्षमता",
+    "capacityUnlimited": "असीमित",
+    "lateTolerance": "विलंब छूट (मिनट)",
+    "lateToleranceHint": "शुरू होने के इतने मिनट भीतर जुड़ना उपस्थित ही गिना जाता है।",
+    "description": "विवरण",
+    "optional": "वैकल्पिक",
+    "schedule": "शेड्यूल करें",
+    "courseRequired": "कोर्स चुनें।",
+    "titleRequired": "सत्र का शीर्षक आवश्यक है।",
+    "linkRequired": "मीटिंग लिंक आवश्यक है।",
+    "hostRequired": "होस्ट चुनें।",
+    "timeRequired": "तारीख़, आरंभ और समाप्ति समय भरें।",
+    "timeOrder": "समाप्ति समय आरंभ के बाद होना चाहिए।",
+    "saveFailed": "सत्र शेड्यूल नहीं हो सका"
   }
 }

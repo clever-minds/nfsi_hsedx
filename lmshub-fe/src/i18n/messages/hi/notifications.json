@@ -33,6 +33,19 @@
       "email": "ईमेल",
       "wa": "व्हाट्सऐप",
       "push": "पुश"
+    },
+    "event": {
+      "siswa_mendaftar": "नया छात्र नामांकित",
+      "order_manual_masuk": "मैन्युअल ऑर्डर प्राप्त",
+      "pembayaran_terverifikasi": "भुगतान सत्यापित",
+      "tugas_dikumpulkan": "असाइनमेंट जमा",
+      "nilai_dirilis": "अंक जारी",
+      "sertifikat_terbit": "प्रमाणपत्र जारी",
+      "komisi_cair": "कमीशन भुगतान",
+      "refund_diajukan": "रिफंड अनुरोध",
+      "live_session_h1": "लाइव सेशन रिमाइंडर (1 दिन पहले)",
+      "tagihan_jatuh_tempo": "चालान देय",
+      "kelas_tidak_dilanjutkan": "कक्षा बंद"
     }
   },
   "reminders": {

@@ -3,6 +3,8 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { apiGet, apiGetFull, apiPost, apiPut, errorMessage } from '@/lib/api';
+import { useAuthStore } from '@/stores/auth';
+import { useCurrencyStore } from '@/stores/currency';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import StatusChip from '@/components/ui/StatusChip.vue';
 
@@ -50,12 +52,23 @@ const form = reactive({
 const currentStatus = ref('draf');
 const instructorNama = ref('');
 const categories = ref<Category[]>([]);
+const canManageCategories = useAuthStore().can('kategori.create');
+// Harga disimpan dalam mata uang basis, bukan Rupiah. Labelnya dulu menuliskan
+// "(IDR)" secara harfiah di keempat berkas terjemahan, jadi pemasangan yang
+// memakai mata uang lain melihat kolom harga yang salah namanya.
+const currency = useCurrencyStore();
 const loading = ref(true);
 const saving = ref(false);
 const busy = ref(false);
 const error = ref('');
 const notice = ref('');
 
+/**
+ * Kegagalan di sini sengaja tidak membatalkan pemuatan halaman — editor tetap
+ * berguna untuk menyunting kursus yang sudah ada. Tapi daftar yang kosong
+ * berarti `category_id` (wajib) tidak bisa diisi, jadi templatenya menjelaskan
+ * hal itu di bawah dropdown alih-alih membiarkannya kosong tanpa sebab.
+ */
 async function loadCategories() {
   try {
     categories.value = await apiGetFull<Category[]>('/categories', { limit: 100 }).then((r) => r.data ?? []);
@@ -193,6 +206,17 @@ async function transition(action: 'submit' | 'publish' | 'archive') {
             <select v-model="form.category_id" class="input" required>
               <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.nama }}</option>
             </select>
+            <!-- Tautan hanya untuk yang boleh membuat kategori; sisanya diarahkan
+                 ke admin, bukan ke halaman yang akan menolak mereka. -->
+            <p v-if="!loading && !categories.length" class="mt-1 text-xs text-amber-600">
+              <template v-if="canManageCategories">
+                {{ t('courses.editor.noCategory') }}
+                <RouterLink :to="{ name: 'kategori' }" class="underline">
+                  {{ t('courses.editor.noCategoryLink') }}
+                </RouterLink>
+              </template>
+              <template v-else>{{ t('courses.editor.noCategoryAskAdmin') }}</template>
+            </p>
           </div>
           <div>
             <label class="label">{{ t('courses.editor.fieldLevel') }}</label>
@@ -207,7 +231,7 @@ async function transition(action: 'submit' | 'publish' | 'archive') {
             <input v-model="form.bahasa" class="input" maxlength="10" />
           </div>
           <div>
-            <label class="label">{{ t('courses.editor.fieldPrice') }}</label>
+            <label class="label">{{ t('courses.editor.fieldPrice', { currency: currency.base }) }}</label>
             <input v-model.number="form.harga" class="input" type="number" min="0" />
           </div>
           <div>

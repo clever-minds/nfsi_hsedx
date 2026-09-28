@@ -30,6 +30,35 @@ interface Lesson {
   gratis_preview: boolean;
 }
 
+/**
+ * Tipe isi pelajaran. Lebih sempit dari tipe pelajaran: 'kuis', 'tugas' dan
+ * 'live_class' tidak punya baris isi — masing-masing dirakit di layar Asesmen
+ * dan Live Class, lalu ditautkan ke pelajaran lewat tipe pelajarannya.
+ */
+type ContentType = 'video' | 'teks' | 'pdf' | 'embed' | 'scorm';
+const CONTENT_TYPES: ContentType[] = ['video', 'teks', 'pdf', 'embed', 'scorm'];
+/** Tipe yang isinya berupa berkas/tautan, bukan teks atau paket SCORM. */
+const LINK_TYPES: ContentType[] = ['video', 'pdf', 'embed'];
+
+interface LessonContent {
+  id: string;
+  lesson_id: string;
+  tipe: ContentType;
+  urutan: number;
+  body: string | null;
+  media_asset_id: string | null;
+  url: string | null;
+  scorm_manifest_url: string | null;
+  durasi_detik: number | null;
+}
+
+interface MediaAsset {
+  id: string;
+  nama_file: string;
+  tipe_file: 'video' | 'gambar' | 'dokumen' | 'audio';
+  status_transcode: string;
+}
+
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
@@ -52,6 +81,206 @@ const newLessonTitle = ref<Record<string, string>>({});
 const newLessonType = ref<Record<string, LessonType>>({});
 
 const hasCourse = computed(() => !!selectedCourseId.value);
+
+// ── Isi pelajaran ─────────────────────────────────────────────────────────
+// Backend sudah lama menyediakan CRUD `lesson_contents`, tapi tidak ada layar
+// yang memanggilnya: kurikulum bisa dirangkai namun pelajarannya tetap kosong,
+// dan video pada data demo masuk lewat seeder SQL. Panel di bawah ini yang
+// menutup celah itu.
+
+const openLessonId = ref<string | null>(null);
+const contents = ref<Record<string, LessonContent[]>>({});
+const contentLoading = ref(false);
+const contentError = ref('');
+const editingContentId = ref<string | null>(null);
+const mediaAssets = ref<MediaAsset[]>([]);
+
+/** 'link' = alamat web, 'media' = aset yang sudah terdaftar di Pustaka Media. */
+const contentSource = ref<'link' | 'media'>('link');
+
+const contentForm = ref({
+  tipe: 'video' as ContentType,
+  url: '',
+  body: '',
+  media_asset_id: '',
+  scorm_manifest_url: '',
+  durasi_menit: 0,
+});
+
+const contentTypeLabel = (tipe: ContentType) => t(`content.lessonType.${tipe}`);
+const isLinkType = computed(() => LINK_TYPES.includes(contentForm.value.tipe));
+
+/** Aset yang masuk akal untuk tipe isi yang sedang dipilih. */
+const mediaChoices = computed(() => {
+  const want = contentForm.value.tipe === 'video' ? 'video' : 'dokumen';
+  return mediaAssets.value.filter((m) => m.tipe_file === want);
+});
+
+function resetContentForm() {
+  editingContentId.value = null;
+  contentSource.value = 'link';
+  contentForm.value = { tipe: 'video', url: '', body: '', media_asset_id: '', scorm_manifest_url: '', durasi_menit: 0 };
+}
+
+async function loadMediaAssets() {
+  if (mediaAssets.value.length) return;
+  try {
+    const res = await apiGetFull<MediaAsset[]>('/media', { limit: 100 });
+    mediaAssets.value = res.data ?? [];
+  } catch {
+    // Pustaka Media memakai izin 'konten.view'. Bila pengguna tidak punya, panel
+    // tetap berguna lewat alamat web — jadi kegagalan di sini tidak ditampilkan.
+    mediaAssets.value = [];
+  }
+}
+
+async function loadContents(lessonId: string) {
+  contentLoading.value = true;
+  contentError.value = '';
+  try {
+    const res = await apiGetFull<LessonContent[]>(`/lessons/${lessonId}/contents`);
+    contents.value[lessonId] = (res.data ?? []).slice().sort((a, b) => a.urutan - b.urutan);
+  } catch (e) {
+    contentError.value = errorMessage(e, t('content.contents.loadFailed'));
+    contents.value[lessonId] = [];
+  } finally {
+    contentLoading.value = false;
+  }
+}
+
+async function toggleContents(lesson: Lesson) {
+  if (openLessonId.value === lesson.id) {
+    openLessonId.value = null;
+    return;
+  }
+  openLessonId.value = lesson.id;
+  resetContentForm();
+  // Tipe isi mengikuti tipe pelajaran bila keduanya sepadan.
+  if (CONTENT_TYPES.includes(lesson.tipe as ContentType)) {
+    contentForm.value.tipe = lesson.tipe as ContentType;
+  }
+  await Promise.all([loadContents(lesson.id), loadMediaAssets()]);
+}
+
+/** Ringkasan satu baris untuk daftar isi yang sudah tersimpan. */
+function contentSummary(c: LessonContent): string {
+  if (c.tipe === 'teks') {
+    const plain = (c.body ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    return plain.length > 90 ? `${plain.slice(0, 90)}…` : plain || t('content.contents.emptyBody');
+  }
+  if (c.tipe === 'scorm') return c.scorm_manifest_url ?? '—';
+  if (c.url) return c.url;
+  if (c.media_asset_id) {
+    const m = mediaAssets.value.find((a) => a.id === c.media_asset_id);
+    return m ? m.nama_file : t('content.contents.fromLibrary');
+  }
+  return '—';
+}
+
+async function submitContent(lessonId: string) {
+  const f = contentForm.value;
+  const payload: Record<string, unknown> = { tipe: f.tipe };
+
+  if (f.tipe === 'teks') {
+    if (!f.body.trim()) {
+      contentError.value = t('content.contents.bodyRequired');
+      return;
+    }
+    payload.body = f.body;
+  } else if (f.tipe === 'scorm') {
+    if (!f.scorm_manifest_url.trim()) {
+      contentError.value = t('content.contents.manifestRequired');
+      return;
+    }
+    payload.scorm_manifest_url = f.scorm_manifest_url.trim();
+  } else if (contentSource.value === 'media') {
+    if (!f.media_asset_id) {
+      contentError.value = t('content.contents.assetRequired');
+      return;
+    }
+    payload.media_asset_id = f.media_asset_id;
+  } else {
+    // Dicegat di sini dengan pesan yang menjelaskan bentuk yang diterima, alih-alih
+    // 'Validation failed' dari backend yang tidak menolong. Path berawalan '/'
+    // ikut diterima: itu berkas di server ini sendiri, di bawah `uploads/`.
+    const url = f.url.trim();
+    if (!/^https?:\/\//i.test(url) && !url.startsWith('/')) {
+      contentError.value = t('content.contents.urlAbsolute');
+      return;
+    }
+    payload.url = url;
+  }
+
+  if (f.tipe === 'video' && f.durasi_menit > 0) payload.durasi_detik = Math.round(f.durasi_menit * 60);
+
+  busy.value = true;
+  contentError.value = '';
+  try {
+    if (editingContentId.value) {
+      await apiPut(`/contents/${editingContentId.value}`, payload);
+    } else {
+      payload.urutan = (contents.value[lessonId] || []).length;
+      await apiPost(`/lessons/${lessonId}/contents`, payload);
+    }
+    resetContentForm();
+    await loadContents(lessonId);
+  } catch (e) {
+    contentError.value = errorMessage(e, t('content.contents.saveFailed'));
+  } finally {
+    busy.value = false;
+  }
+}
+
+function editContent(c: LessonContent) {
+  editingContentId.value = c.id;
+  contentSource.value = c.media_asset_id ? 'media' : 'link';
+  contentForm.value = {
+    tipe: c.tipe,
+    url: c.url ?? '',
+    body: c.body ?? '',
+    media_asset_id: c.media_asset_id ?? '',
+    scorm_manifest_url: c.scorm_manifest_url ?? '',
+    durasi_menit: c.durasi_detik ? Math.round(c.durasi_detik / 60) : 0,
+  };
+  contentError.value = '';
+}
+
+async function removeContent(lessonId: string, id: string) {
+  if (!window.confirm(t('content.contents.confirmDelete'))) return;
+  busy.value = true;
+  contentError.value = '';
+  try {
+    await apiDelete(`/contents/${id}`);
+    if (editingContentId.value === id) resetContentForm();
+    await loadContents(lessonId);
+  } catch (e) {
+    contentError.value = errorMessage(e, t('content.contents.deleteFailed'));
+  } finally {
+    busy.value = false;
+  }
+}
+
+/**
+ * Tidak ada endpoint reorder khusus untuk isi pelajaran, jadi urutan ditukar
+ * lewat dua kali PUT — cukup karena satu pelajaran jarang punya banyak isi.
+ */
+async function moveContent(lessonId: string, id: string, dir: -1 | 1) {
+  const list = contents.value[lessonId] || [];
+  const idx = list.findIndex((c) => c.id === id);
+  const swapIdx = idx + dir;
+  if (idx < 0 || swapIdx < 0 || swapIdx >= list.length) return;
+  busy.value = true;
+  contentError.value = '';
+  try {
+    await apiPut(`/contents/${list[idx].id}`, { urutan: swapIdx });
+    await apiPut(`/contents/${list[swapIdx].id}`, { urutan: idx });
+    await loadContents(lessonId);
+  } catch (e) {
+    contentError.value = errorMessage(e, t('content.contents.reorderFailed'));
+  } finally {
+    busy.value = false;
+  }
+}
 
 async function loadCourses() {
   loadingCourses.value = true;
@@ -267,11 +496,8 @@ onMounted(async () => {
         </div>
 
         <ul class="space-y-1.5">
-          <li
-            v-for="(l, li) in lessonsBySection[s.id] || []"
-            :key="l.id"
-            class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm"
-          >
+          <li v-for="(l, li) in lessonsBySection[s.id] || []" :key="l.id" class="rounded-lg bg-slate-50">
+          <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
             <div class="flex items-center gap-2">
               <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-medium text-brand-800">{{ lessonTypeLabel(l.tipe) }}</span>
               <span class="text-slate-700">{{ l.judul }}</span>
@@ -294,10 +520,133 @@ onMounted(async () => {
               <button class="btn-outline btn-sm" :disabled="busy" @click="toggleFreePreview(l)">
                 {{ l.gratis_preview ? t('content.builder.cancelPreview') : t('content.builder.freePreview') }}
               </button>
+              <!-- Tanpa tombol ini pelajaran hanya berupa judul: video, teks dan
+                   PDF-nya tidak punya tempat untuk diisi. -->
+              <button
+                v-can="'konten.view'"
+                class="btn-outline btn-sm"
+                :class="openLessonId === l.id ? 'border-brand-400 text-brand-600' : ''"
+                :disabled="busy"
+                @click="toggleContents(l)"
+              >
+                {{ t('content.contents.manage') }}
+              </button>
               <button v-can="'kurikulum.delete'" class="btn-outline px-2 py-0.5 text-xs text-rose-600" :disabled="busy" @click="removeLesson(l.id)">
                 {{ t('common.action.delete') }}
               </button>
             </div>
+          </div>
+
+          <!-- Panel isi pelajaran -->
+          <div v-if="openLessonId === l.id" class="border-t border-slate-200 px-3 py-3">
+            <p v-if="contentError" class="mb-3 alert-error">{{ contentError }}</p>
+            <p v-if="contentLoading" class="text-xs text-slate-400">{{ t('common.state.loading') }}</p>
+
+            <ul v-else-if="(contents[l.id] || []).length" class="mb-3 space-y-1.5">
+              <li
+                v-for="(c, ci) in contents[l.id]"
+                :key="c.id"
+                class="flex flex-wrap items-center justify-between gap-2 rounded border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
+              >
+                <div class="flex min-w-0 items-center gap-2">
+                  <span class="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                    {{ contentTypeLabel(c.tipe) }}
+                  </span>
+                  <span class="truncate text-slate-600">{{ contentSummary(c) }}</span>
+                </div>
+                <div class="flex shrink-0 items-center gap-1">
+                  <button class="btn-outline btn-sm" :disabled="busy || ci === 0" @click="moveContent(l.id, c.id, -1)">↑</button>
+                  <button
+                    class="btn-outline btn-sm"
+                    :disabled="busy || ci === (contents[l.id] || []).length - 1"
+                    @click="moveContent(l.id, c.id, 1)"
+                  >
+                    ↓
+                  </button>
+                  <button v-can="'konten.update'" class="btn-outline btn-sm" :disabled="busy" @click="editContent(c)">
+                    {{ t('common.action.edit') }}
+                  </button>
+                  <button
+                    v-can="'konten.delete'"
+                    class="btn-outline px-2 py-0.5 text-[11px] text-rose-600"
+                    :disabled="busy"
+                    @click="removeContent(l.id, c.id)"
+                  >
+                    {{ t('common.action.delete') }}
+                  </button>
+                </div>
+              </li>
+            </ul>
+            <p v-else class="mb-3 text-xs text-slate-400">{{ t('content.contents.empty') }}</p>
+
+            <!-- Formulir tambah / ubah isi -->
+            <div v-can="'konten.create'" class="rounded border border-slate-200 bg-white p-3">
+              <p class="mb-2 text-xs font-medium text-slate-600">
+                {{ editingContentId ? t('content.contents.formEdit') : t('content.contents.formNew') }}
+              </p>
+
+              <div class="grid gap-2 sm:grid-cols-2">
+                <div>
+                  <label class="label">{{ t('content.contents.type') }}</label>
+                  <select v-model="contentForm.tipe" class="input">
+                    <option v-for="ct in CONTENT_TYPES" :key="ct" :value="ct">{{ contentTypeLabel(ct) }}</option>
+                  </select>
+                </div>
+
+                <div v-if="isLinkType">
+                  <label class="label">{{ t('content.contents.source') }}</label>
+                  <select v-model="contentSource" class="input">
+                    <option value="link">{{ t('content.contents.sourceLink') }}</option>
+                    <option value="media">{{ t('content.contents.sourceMedia') }}</option>
+                  </select>
+                </div>
+
+                <div v-if="isLinkType && contentSource === 'link'" class="sm:col-span-2">
+                  <label class="label">{{ t('content.contents.url') }}</label>
+                  <input v-model="contentForm.url" class="input" placeholder="https://…" />
+                  <p class="mt-1 text-xs text-slate-400">{{ t('content.contents.urlHint') }}</p>
+                </div>
+
+                <div v-if="isLinkType && contentSource === 'media'" class="sm:col-span-2">
+                  <label class="label">{{ t('content.contents.asset') }}</label>
+                  <select v-model="contentForm.media_asset_id" class="input">
+                    <option value="">{{ t('common.action.choose') }}</option>
+                    <option v-for="m in mediaChoices" :key="m.id" :value="m.id">
+                      {{ m.nama_file }}<template v-if="m.tipe_file === 'video' && m.status_transcode !== 'selesai'">
+                        — {{ t('content.contents.notReady') }}
+</template>
+                    </option>
+                  </select>
+                  <p class="mt-1 text-xs text-slate-400">{{ t('content.contents.assetHint') }}</p>
+                </div>
+
+                <div v-if="contentForm.tipe === 'teks'" class="sm:col-span-2">
+                  <label class="label">{{ t('content.contents.body') }}</label>
+                  <textarea v-model="contentForm.body" rows="5" class="input" :placeholder="t('content.contents.bodyPlaceholder')"></textarea>
+                  <p class="mt-1 text-xs text-slate-400">{{ t('content.contents.bodyHint') }}</p>
+                </div>
+
+                <div v-if="contentForm.tipe === 'scorm'" class="sm:col-span-2">
+                  <label class="label">{{ t('content.contents.manifest') }}</label>
+                  <input v-model="contentForm.scorm_manifest_url" class="input" placeholder="https://…/imsmanifest.xml" />
+                </div>
+
+                <div v-if="contentForm.tipe === 'video'">
+                  <label class="label">{{ t('content.contents.duration') }}</label>
+                  <input v-model.number="contentForm.durasi_menit" type="number" min="0" class="input" />
+                </div>
+              </div>
+
+              <div class="mt-3 flex justify-end gap-2">
+                <button v-if="editingContentId" class="btn-outline btn-sm" @click="resetContentForm">
+                  {{ t('common.action.cancel') }}
+                </button>
+                <button class="btn-primary btn-sm" :disabled="busy" @click="submitContent(l.id)">
+                  {{ busy ? t('common.state.saving') : t('common.action.save') }}
+                </button>
+              </div>
+            </div>
+          </div>
           </li>
           <li v-if="!(lessonsBySection[s.id] || []).length" class="px-3 py-2 text-xs text-slate-400">
             {{ t('content.builder.noLessons') }}

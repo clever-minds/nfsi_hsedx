@@ -117,7 +117,7 @@ const tahun = new Date().getFullYear();
 
       <div class="ms-auto flex items-center gap-1 pe-4 sm:gap-2">
         <!-- CTA buat kursus (hanya instruktur/admin yang punya izin membuat) -->
-        <RouterLink v-if="auth.can('kursus.create')" to="/d/kursus/tambah" class="btn-primary hidden py-2 lg:inline-flex">
+        <RouterLink v-if="auth.can('kursus.create')" to="/d/courses/add" class="btn-primary hidden py-2 lg:inline-flex">
           {{ t('nav.header.newCourse') }}
         </RouterLink>
 

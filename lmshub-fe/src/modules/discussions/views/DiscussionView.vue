@@ -220,7 +220,7 @@ onMounted(async () => {
   <div>
     <PageHeader :title="t('discussions.title')" :subtitle="t('discussions.subtitle')">
       <template #actions>
-        <RouterLink v-can="'diskusi.delete'" to="/d/diskusi/moderasi" class="btn-outline">
+        <RouterLink v-can="'diskusi.delete'" to="/d/discussions/moderation" class="btn-outline">
           {{ t('discussions.moderation') }}
         </RouterLink>
         <button

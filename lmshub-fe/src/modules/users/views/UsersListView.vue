@@ -108,7 +108,7 @@ onMounted(() => {
   <div>
     <PageHeader :title="t('users.list.title')" :subtitle="t('users.list.subtitle')">
       <template #actions>
-        <RouterLink v-can="'pengguna.create'" to="/d/pengguna/tambah" class="btn-primary">{{ t('users.list.add') }}</RouterLink>
+        <RouterLink v-can="'pengguna.create'" to="/d/users/add" class="btn-primary">{{ t('users.list.add') }}</RouterLink>
       </template>
     </PageHeader>
 
@@ -161,7 +161,7 @@ onMounted(() => {
           </template>
           <RouterLink
             v-can="'pengguna.update'"
-            :to="`/d/pengguna/${(row as unknown as UserRow).id}/ubah`"
+            :to="`/d/users/${(row as unknown as UserRow).id}/edit`"
             class="row-link row-link-primary"
           >
             {{ t('users.list.edit') }}

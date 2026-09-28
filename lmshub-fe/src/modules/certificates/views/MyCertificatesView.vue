@@ -100,7 +100,7 @@ onMounted(load);
   <div>
     <PageHeader :title="t('certificates.my.title')" :subtitle="t('certificates.my.subtitle')">
       <template #actions>
-        <RouterLink to="/d/sertifikat/badge" class="btn-outline">{{ t('certificates.my.badges') }}</RouterLink>
+        <RouterLink to="/d/certificates/badges" class="btn-outline">{{ t('certificates.my.badges') }}</RouterLink>
       </template>
     </PageHeader>
 

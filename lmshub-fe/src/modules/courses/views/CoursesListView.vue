@@ -140,7 +140,7 @@ onMounted(() => {
   <div>
     <PageHeader :title="t('courses.list.title')" :subtitle="t('courses.list.subtitle')">
       <template #actions>
-        <RouterLink v-can="'kursus.create'" to="/d/kursus/tambah" class="btn-primary">{{ t('courses.list.add') }}</RouterLink>
+        <RouterLink v-can="'kursus.create'" to="/d/courses/add" class="btn-primary">{{ t('courses.list.add') }}</RouterLink>
       </template>
     </PageHeader>
 
@@ -201,7 +201,7 @@ onMounted(() => {
           >
             {{ t('courses.list.archive') }}
           </button>
-          <RouterLink :to="`/d/kursus/${(row as unknown as CourseRow).id}`" class="row-link">
+          <RouterLink :to="`/d/courses/${(row as unknown as CourseRow).id}`" class="row-link">
             {{ t('courses.list.edit') }}
           </RouterLink>
         </div>

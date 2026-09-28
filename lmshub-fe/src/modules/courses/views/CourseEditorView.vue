@@ -126,7 +126,7 @@ async function submit() {
       notice.value = t('courses.editor.saved');
     } else {
       const created = await apiPost<{ id: string }>('/courses', payload);
-      router.push(`/d/kursus/${created.id}`);
+      router.push(`/d/courses/${created.id}`);
       return;
     }
   } catch (e) {

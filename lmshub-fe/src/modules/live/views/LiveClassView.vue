@@ -203,7 +203,7 @@ onMounted(load);
   <div>
     <PageHeader :title="t('live.list.title')" :subtitle="t('live.list.subtitle')">
       <template #actions>
-        <RouterLink to="/d/live-class/kalender" class="btn-outline">{{ t('live.list.calendar') }}</RouterLink>
+        <RouterLink to="/d/live-class/calendar" class="btn-outline">{{ t('live.list.calendar') }}</RouterLink>
         <button v-if="canCreate" class="btn-primary" @click="openForm">{{ t('live.form.add') }}</button>
       </template>
     </PageHeader>

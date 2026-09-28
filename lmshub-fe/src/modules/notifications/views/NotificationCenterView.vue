@@ -77,10 +77,10 @@ onMounted(load);
         <button class="btn-outline" :disabled="!unreadCount" @click="markAllRead">
           {{ t('notifications.center.markAllRead') }}
         </button>
-        <RouterLink to="/d/notifikasi/preferensi" class="btn-outline">{{ t('notifications.center.preferences') }}</RouterLink>
+        <RouterLink to="/d/notifications/preferences" class="btn-outline">{{ t('notifications.center.preferences') }}</RouterLink>
         <!-- Halaman monitor sudah punya tombol "kembali" ke sini, tapi tidak ada
              satu pun jalan masuk — hanya bisa dibuka dengan mengetik URL. -->
-        <RouterLink v-can="'notifikasi.update'" to="/d/notifikasi/monitor" class="btn-outline">
+        <RouterLink v-can="'notifikasi.update'" to="/d/notifications/monitor" class="btn-outline">
           {{ t('notifications.center.monitor') }}
         </RouterLink>
       </template>

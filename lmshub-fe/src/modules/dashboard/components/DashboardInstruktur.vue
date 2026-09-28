@@ -75,7 +75,7 @@ const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
               </i18n-t>
             </p>
           </div>
-          <RouterLink to="/d/kursus/tambah" class="btn-primary shrink-0">
+          <RouterLink to="/d/courses/add" class="btn-primary shrink-0">
             <Icon name="plus" :size="16" /> {{ t('nav.header.newCourse') }}
           </RouterLink>
         </div>
@@ -131,14 +131,14 @@ const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
                 <span>{{ fmtHarga(c.harga) }}</span>
               </div>
             </div>
-            <RouterLink :to="`/d/kursus/${c.id}`" class="btn-outline btn-sm shrink-0">
+            <RouterLink :to="`/d/courses/${c.id}`" class="btn-outline btn-sm shrink-0">
               {{ t('dashboard.instructor.manage') }}
             </RouterLink>
           </div>
         </div>
         <div v-else class="empty-state">
           {{ t('dashboard.instructor.noCourses') }}
-          <RouterLink to="/d/kursus/tambah" class="mt-1 block font-medium text-brand-500 hover:text-brand-600">
+          <RouterLink to="/d/courses/add" class="mt-1 block font-medium text-brand-500 hover:text-brand-600">
             {{ t('dashboard.instructor.createFirst') }}
           </RouterLink>
         </div>
@@ -189,10 +189,10 @@ const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
       <div class="card p-5">
         <h3 class="mb-3 card-title">{{ t('dashboard.instructor.quickActions') }}</h3>
         <div class="space-y-2">
-          <RouterLink to="/d/konten" class="nav-item rounded border-0 px-3 py-2">
+          <RouterLink to="/d/content" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="layers" :size="16" /> {{ t('dashboard.instructor.quickCurriculum') }}
           </RouterLink>
-          <RouterLink to="/d/asesmen" class="nav-item rounded border-0 px-3 py-2">
+          <RouterLink to="/d/assessments" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="check-square" :size="16" /> {{ t('dashboard.instructor.quickQuiz') }}
           </RouterLink>
           <RouterLink to="/d/grading" class="nav-item rounded border-0 px-3 py-2">

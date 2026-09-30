@@ -28,7 +28,7 @@ async function onPick(e: Event) {
   if (!file) return;
   error.value = '';
   // Refuse here rather than send a large file only for the server to reject it.
-  if (!props.accept.split(',').includes(file.type)) {
+  if (props.accept !== '*/*' && !props.accept.split(',').includes(file.type)) {
     error.value = t('errors.media.unsupported_type');
     return;
   }

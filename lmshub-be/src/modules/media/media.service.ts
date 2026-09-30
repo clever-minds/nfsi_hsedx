@@ -164,14 +164,11 @@ export const acceptedMimeTypes = Object.keys(ACCEPTED);
  * Streaming also needs no extra dependency on the buyer's server.
  */
 export async function upload(actor: AuthContext, req: Request) {
-  const mime = (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
-  const kind = ACCEPTED[mime];
+  const mime = (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase() || 'application/octet-stream';
+  let kind = ACCEPTED[mime];
   if (!kind) {
-    throw AppError.badRequest(
-      'Unsupported file type. Upload MP4 or WebM video, MP3/M4A/WAV audio, JPG/PNG/WebP images or PDF.',
-      'media.unsupported_type',
-      { accepted: acceptedMimeTypes },
-    );
+    const fallbackExt = mime.includes('/') ? mime.split('/')[1].replace(/[^a-zA-Z0-9]/g, '') : 'bin';
+    kind = { tipe: 'dokumen', ext: fallbackExt || 'bin' };
   }
 
   const maxBytes = env.MEDIA_MAX_UPLOAD_MB * 1024 * 1024;

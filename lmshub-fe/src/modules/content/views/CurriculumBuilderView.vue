@@ -122,9 +122,7 @@ const mediaChoices = computed(() => {
 });
 
 /** File types the inline upload offers for the content type being edited. */
-const uploadAccept = computed(() =>
-  contentForm.value.tipe === 'video' ? 'video/mp4,video/webm,video/ogg' : 'application/pdf',
-);
+const uploadAccept = computed(() => '*/*');
 
 /** A file uploaded from inside the lesson form is selected straight away. */
 function onAssetUploaded(asset: { id: string }) {

@@ -10,7 +10,7 @@ import { apiUpload, errorMessage } from '@/lib/api';
  * instructor attaching a video to a lesson never has to leave the lesson.
  */
 const props = withDefaults(defineProps<{ accept?: string; label?: string }>(), {
-  accept: 'video/mp4,video/webm,video/ogg,audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/ogg,image/jpeg,image/png,image/webp,application/pdf',
+  accept: '*/*',
   label: '',
 });
 

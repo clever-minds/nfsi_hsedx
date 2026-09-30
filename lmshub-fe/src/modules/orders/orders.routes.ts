@@ -2,15 +2,15 @@ import type { RouteRecordRaw } from 'vue-router';
 
 export const ordersRoutes: RouteRecordRaw[] = [
   {
-    path: 'orders',
-    name: 'transaksi',
+    path: 'transactions',
+    name: 'transactions',
     component: () => import('@/modules/orders/views/TransaksiListView.vue'),
-    meta: { permission: 'transaksi.view', title: 'Transaksi' },
+    meta: { permission: 'transaksi.view', title: 'Transactions' },
   },
   {
-    path: 'orders/booking',
-    name: 'transaksi-tanda-jadi',
+    path: 'transactions/manual-payment',
+    name: 'manual-payment',
     component: () => import('@/modules/orders/views/TandaJadiFormView.vue'),
-    meta: { permission: 'transaksi.create', title: 'Input Tanda Jadi' },
+    meta: { permission: 'transaksi.create', title: 'Record Manual Payment' },
   },
 ];

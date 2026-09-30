@@ -85,7 +85,7 @@ async function terbitkan(enr: Enrollment) {
   claimMsg.value[enr.id] = '';
   try {
     const cert = await apiPost<{ id: string }>(`/enrollments/${enr.id}/certificate/claim`, {});
-    router.push(`/d/sertifikat/lihat/${cert.id}`);
+    router.push(`/d/certificates/view/${cert.id}`);
   } catch (e) {
     claimMsg.value[enr.id] = errorMessage(e, t('certificates.my.claimFailed'));
   } finally {

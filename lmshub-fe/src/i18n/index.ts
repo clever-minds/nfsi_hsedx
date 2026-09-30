@@ -3,7 +3,6 @@ import {
   DEFAULT_LOCALE,
   LOCALES,
   SUPPORTED_LOCALES,
-  detectBrowserLocale,
   isSupportedLocale,
   type SupportedLocale,
 } from './locales';
@@ -35,11 +34,18 @@ for (const [path, mod] of Object.entries(files)) {
   messages[locale][namespace] = mod.default;
 }
 
-/** Bahasa awal: pilihan tersimpan → deteksi browser → default (Inggris). */
+/**
+ * Starting language: the visitor's own earlier choice, otherwise English.
+ *
+ * The browser's language is deliberately not consulted. It used to be, and a
+ * visitor whose browser preferred Hindi, Arabic or Indonesian landed in that
+ * language with no idea why — site owners read it as the product not being in
+ * English. Other languages stay one click away in the language switcher.
+ */
 function initialLocale(): SupportedLocale {
   const saved = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
   if (isSupportedLocale(saved)) return saved;
-  return detectBrowserLocale();
+  return DEFAULT_LOCALE;
 }
 
 export const i18n = createI18n({

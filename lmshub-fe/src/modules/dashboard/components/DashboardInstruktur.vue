@@ -75,7 +75,7 @@ const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
               </i18n-t>
             </p>
           </div>
-          <RouterLink to="/d/courses/add" class="btn-primary shrink-0">
+          <RouterLink to="/d/courses/new" class="btn-primary shrink-0">
             <Icon name="plus" :size="16" /> {{ t('nav.header.newCourse') }}
           </RouterLink>
         </div>
@@ -94,7 +94,7 @@ const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
               <template #n><b>{{ fmtAngka(payoutPending) }}</b></template>
             </i18n-t>
           </div>
-          <RouterLink to="/d/orders" class="text-sm font-medium text-amber-700 hover:underline">
+          <RouterLink to="/d/transactions" class="text-sm font-medium text-amber-700 hover:underline">
             {{ t('dashboard.instructor.check') }}
           </RouterLink>
         </div>
@@ -138,7 +138,7 @@ const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
         </div>
         <div v-else class="empty-state">
           {{ t('dashboard.instructor.noCourses') }}
-          <RouterLink to="/d/courses/add" class="mt-1 block font-medium text-brand-500 hover:text-brand-600">
+          <RouterLink to="/d/courses/new" class="mt-1 block font-medium text-brand-500 hover:text-brand-600">
             {{ t('dashboard.instructor.createFirst') }}
           </RouterLink>
         </div>
@@ -189,7 +189,7 @@ const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
       <div class="card p-5">
         <h3 class="mb-3 card-title">{{ t('dashboard.instructor.quickActions') }}</h3>
         <div class="space-y-2">
-          <RouterLink to="/d/content" class="nav-item rounded border-0 px-3 py-2">
+          <RouterLink to="/d/curriculum" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="layers" :size="16" /> {{ t('dashboard.instructor.quickCurriculum') }}
           </RouterLink>
           <RouterLink to="/d/assessments" class="nav-item rounded border-0 px-3 py-2">

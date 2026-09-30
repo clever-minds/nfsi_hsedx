@@ -31,7 +31,8 @@
     "currencies": "العملات",
     "bankAccounts": "الحسابات البنكية",
     "website": "الموقع",
-    "certificateTemplate": "قالب الشهادة"
+    "certificateTemplate": "قالب الشهادة",
+    "mediaLibrary": "مكتبة الوسائط"
   },
   "public": {
     "home": "الرئيسية",

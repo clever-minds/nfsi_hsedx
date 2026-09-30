@@ -10,14 +10,14 @@ export const liveRoutes: RouteRecordRaw[] = [
   },
   {
     path: 'live-class/calendar',
-    name: 'live-class-kalender',
+    name: 'live-class-calendar',
     component: () => import('@/modules/live/views/KalenderView.vue'),
-    meta: { permission: 'live_class.view', title: 'Kalender' },
+    meta: { permission: 'live_class.view', title: 'Calendar' },
   },
   {
     path: 'live-class/:id/attendance',
     name: 'live-class-attendance',
     component: () => import('@/modules/live/views/AttendanceView.vue'),
-    meta: { permission: 'live_class.view', title: 'Kehadiran Sesi' },
+    meta: { permission: 'live_class.view', title: 'Session Attendance' },
   },
 ];

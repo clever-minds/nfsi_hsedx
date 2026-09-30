@@ -100,7 +100,7 @@ onMounted(load);
   <div>
     <PageHeader :title="t('reports.financial.title')" :subtitle="t('reports.financial.subtitle')">
       <template #actions>
-        <RouterLink v-can="'laporan.view'" class="btn-outline" :to="{ name: 'laporan-payout' }">
+        <RouterLink v-can="'laporan.view'" class="btn-outline" :to="{ name: 'payouts' }">
           {{ t('reports.financial.payoutQueue') }}
         </RouterLink>
       </template>

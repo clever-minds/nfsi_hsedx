@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { apiGet, apiGetFull, apiPost, apiPut, errorMessage } from '@/lib/api';
 import { fmtAngka } from '@/lib/format';
-import { moduleLabel } from '@/lib/labels';
+import { moduleLabel, roleOptionLabel } from '@/lib/labels';
 import { useAuthStore } from '@/stores/auth';
 import PageHeader from '@/components/ui/PageHeader.vue';
 
@@ -226,7 +226,7 @@ async function submit() {
         <div>
           <label class="label">{{ t('users.form.role') }}</label>
           <select v-model="form.role_kode" class="input" required>
-            <option v-for="r in roleOptions" :key="r.id" :value="r.kode">{{ r.nama }}</option>
+            <option v-for="r in roleOptions" :key="r.id" :value="r.kode">{{ roleOptionLabel(r.kode) }}</option>
           </select>
         </div>
         <div>

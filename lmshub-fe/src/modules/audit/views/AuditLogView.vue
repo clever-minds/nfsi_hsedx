@@ -6,6 +6,8 @@ import { fmtTanggal } from '@/lib/format';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import DataTable from '@/components/ui/DataTable.vue';
 import TablePagination from '@/components/ui/TablePagination.vue';
+import { moduleLabel } from '@/lib/labels';
+import enCommon from '@/i18n/messages/en/common.json';
 
 type AuditRow = Record<string, unknown> & {
   id: string;
@@ -33,6 +35,11 @@ const error = ref('');
 const expandedId = ref<string | null>(null);
 
 const filters = reactive({ module: '', dari: '', sampai: '' });
+
+/** Every RBAC module code, sorted by its label in the current language. */
+const moduleOptions = computed(() =>
+  Object.keys(enCommon.module).sort((x, y) => moduleLabel(x).localeCompare(moduleLabel(y))),
+);
 const page = ref(1);
 const limit = 25;
 const total = ref(0);
@@ -90,7 +97,12 @@ onMounted(load);
       <template #toolbar>
         <div>
           <label class="label">{{ t('audit.module') }}</label>
-          <input v-model="filters.module" class="input w-40" :placeholder="t('audit.modulePlaceholder')" @keyup.enter="search" />
+          <!-- A list, not free text: the filter matches stored module codes
+               (`transaksi`), which a person reading English labels cannot guess. -->
+          <select v-model="filters.module" class="input w-auto" @change="search">
+            <option value="">{{ t('audit.allModules') }}</option>
+            <option v-for="m in moduleOptions" :key="m" :value="m">{{ moduleLabel(m) }}</option>
+          </select>
         </div>
         <div>
           <label class="label">{{ t('audit.fromDate') }}</label>
@@ -103,7 +115,7 @@ onMounted(load);
         <button class="btn-outline" @click="search">{{ t('audit.applyFilter') }}</button>
       </template>
       <template #cell:waktu="{ value }">{{ value ? fmtTanggal(String(value)) : '—' }}</template>
-      <template #cell:module="{ value }"><span class="capitalize">{{ value || '—' }}</span></template>
+      <template #cell:module="{ value }">{{ value ? moduleLabel(String(value)) : '—' }}</template>
       <template #actions="{ row }">
         <button class="btn-outline btn-sm" @click="toggle(row as AuditRow)">
           {{ expandedId === (row as AuditRow).id ? t('audit.hide') : t('audit.detail') }}

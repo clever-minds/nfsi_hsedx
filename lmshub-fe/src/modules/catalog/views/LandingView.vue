@@ -68,7 +68,7 @@ const totalSiswa = computed(() => instructors.value.reduce((a, i) => a + (i.tota
 function cari() {
   router.push({
     path: '/courses',
-    query: { ...(q.value ? { q: q.value } : {}), ...(kategoriDipilih.value ? { kategori: kategoriDipilih.value } : {}) },
+    query: { ...(q.value ? { q: q.value } : {}), ...(kategoriDipilih.value ? { category: kategoriDipilih.value } : {}) },
   });
 }
 
@@ -215,7 +215,7 @@ onMounted(async () => {
           <RouterLink
             v-for="k in categories"
             :key="k.id"
-            :to="{ path: '/courses', query: { kategori: k.slug } }"
+            :to="{ path: '/courses', query: { category: k.slug } }"
             class="card group flex flex-col items-center gap-3 rounded-xl p-6 text-center transition hover:-translate-y-1 hover:shadow-lg"
           >
             <span class="grid h-14 w-14 place-items-center rounded-2xl bg-slate-50 text-2xl transition group-hover:bg-brand-50">{{ k.ikon || '📚' }}</span>
@@ -307,7 +307,7 @@ onMounted(async () => {
           <RouterLink
             v-for="ins in instructors"
             :key="ins.id"
-            :to="`/instruktur/${ins.id}`"
+            :to="`/instructors/${ins.id}`"
             class="card group flex flex-col items-center rounded-xl p-6 text-center transition hover:-translate-y-1 hover:shadow-lg"
           >
             <span class="relative">

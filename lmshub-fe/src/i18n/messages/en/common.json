@@ -275,5 +275,8 @@
     "label": "Currency",
     "followLanguage": "Follow language",
     "billedIn": "Prices are converted for display. Payment is taken in {code}."
+  },
+  "roleOption": {
+    "sub_user": "Student (sub-account)"
   }
 }

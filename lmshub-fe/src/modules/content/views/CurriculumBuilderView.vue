@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { apiDelete, apiGetFull, apiPost, apiPut, errorMessage } from '@/lib/api';
 import { fmtAngka } from '@/lib/format';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
 
 type LessonType = 'video' | 'teks' | 'pdf' | 'kuis' | 'tugas' | 'live_class' | 'embed' | 'scorm';
 const LESSON_TYPES: LessonType[] = ['video', 'teks', 'pdf', 'kuis', 'tugas', 'live_class', 'embed', 'scorm'];
@@ -95,8 +96,12 @@ const contentError = ref('');
 const editingContentId = ref<string | null>(null);
 const mediaAssets = ref<MediaAsset[]>([]);
 
-/** 'link' = alamat web, 'media' = aset yang sudah terdaftar di Pustaka Media. */
-const contentSource = ref<'link' | 'media'>('link');
+/**
+ * 'media' = an asset in the Media Library (uploaded to this server), 'link' = a
+ * web address. Media comes first: self-hosted video is the common case, and an
+ * external URL is the fallback, not the default.
+ */
+const contentSource = ref<'link' | 'media'>('media');
 
 const contentForm = ref({
   tipe: 'video' as ContentType,
@@ -116,9 +121,20 @@ const mediaChoices = computed(() => {
   return mediaAssets.value.filter((m) => m.tipe_file === want);
 });
 
+/** File types the inline upload offers for the content type being edited. */
+const uploadAccept = computed(() =>
+  contentForm.value.tipe === 'video' ? 'video/mp4,video/webm,video/ogg' : 'application/pdf',
+);
+
+/** A file uploaded from inside the lesson form is selected straight away. */
+function onAssetUploaded(asset: { id: string }) {
+  mediaAssets.value = [asset as MediaAsset, ...mediaAssets.value.filter((m) => m.id !== asset.id)];
+  contentForm.value.media_asset_id = asset.id;
+}
+
 function resetContentForm() {
   editingContentId.value = null;
-  contentSource.value = 'link';
+  contentSource.value = 'media';
   contentForm.value = { tipe: 'video', url: '', body: '', media_asset_id: '', scorm_manifest_url: '', durasi_menit: 0 };
 }
 
@@ -199,6 +215,10 @@ async function submitContent(lessonId: string) {
       return;
     }
     payload.media_asset_id = f.media_asset_id;
+    // Switching an existing lesson from a web address to a library file must
+    // clear the address: the player prefers `url` when both are set, so the
+    // old link would keep playing. (Create rejects null, so edit only.)
+    if (editingContentId.value) payload.url = null;
   } else {
     // Dicegat di sini dengan pesan yang menjelaskan bentuk yang diterima, alih-alih
     // 'Validation failed' dari backend yang tidak menolong. Path berawalan '/'
@@ -209,6 +229,7 @@ async function submitContent(lessonId: string) {
       return;
     }
     payload.url = url;
+    if (editingContentId.value) payload.media_asset_id = null;
   }
 
   if (f.tipe === 'video' && f.durasi_menit > 0) payload.durasi_detik = Math.round(f.durasi_menit * 60);
@@ -596,8 +617,8 @@ onMounted(async () => {
                 <div v-if="isLinkType">
                   <label class="label">{{ t('content.contents.source') }}</label>
                   <select v-model="contentSource" class="input">
-                    <option value="link">{{ t('content.contents.sourceLink') }}</option>
                     <option value="media">{{ t('content.contents.sourceMedia') }}</option>
+                    <option value="link">{{ t('content.contents.sourceLink') }}</option>
                   </select>
                 </div>
 
@@ -618,6 +639,10 @@ onMounted(async () => {
                     </option>
                   </select>
                   <p class="mt-1 text-xs text-slate-400">{{ t('content.contents.assetHint') }}</p>
+                  <div v-can="'konten.create'" class="mt-2 flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-slate-500">{{ t('content.contents.orUpload') }}</span>
+                    <MediaUploadButton :accept="uploadAccept" :label="t('content.contents.uploadNew')" @uploaded="onAssetUploaded" />
+                  </div>
                 </div>
 
                 <div v-if="contentForm.tipe === 'teks'" class="sm:col-span-2">

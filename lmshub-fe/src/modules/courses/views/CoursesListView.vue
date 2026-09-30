@@ -140,7 +140,7 @@ onMounted(() => {
   <div>
     <PageHeader :title="t('courses.list.title')" :subtitle="t('courses.list.subtitle')">
       <template #actions>
-        <RouterLink v-can="'kursus.create'" to="/d/courses/add" class="btn-primary">{{ t('courses.list.add') }}</RouterLink>
+        <RouterLink v-can="'kursus.create'" to="/d/courses/new" class="btn-primary">{{ t('courses.list.add') }}</RouterLink>
       </template>
     </PageHeader>
 

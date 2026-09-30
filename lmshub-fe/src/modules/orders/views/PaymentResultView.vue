@@ -88,7 +88,7 @@ const view = computed(() => {
         <RouterLink v-if="state === 'paid'" to="/d/learn" class="btn-primary w-full rounded-full">
           {{ t('orders.result.startLearning') }}
         </RouterLink>
-        <RouterLink v-else to="/d/orders" class="btn-primary w-full rounded-full">
+        <RouterLink v-else to="/d/transactions" class="btn-primary w-full rounded-full">
           {{ t('orders.result.viewTransactions') }}
         </RouterLink>
         <RouterLink to="/courses" class="btn-outline w-full rounded-full">

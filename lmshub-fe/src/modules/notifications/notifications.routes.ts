@@ -4,20 +4,20 @@ import type { RouteRecordRaw } from 'vue-router';
 export const notificationsRoutes: RouteRecordRaw[] = [
   {
     path: 'notifications',
-    name: 'notifikasi',
+    name: 'notifications',
     component: () => import('@/modules/notifications/views/NotificationCenterView.vue'),
-    meta: { title: 'Notifikasi' },
+    meta: { title: 'Notifications' },
   },
   {
     path: 'notifications/preferences',
-    name: 'notifikasi-preferensi',
+    name: 'notification-preferences',
     component: () => import('@/modules/notifications/views/PreferencesView.vue'),
-    meta: { title: 'Preferensi Notifikasi' },
+    meta: { title: 'Notification Preferences' },
   },
   {
     path: 'notifications/monitor',
-    name: 'notifikasi-monitor',
+    name: 'notification-monitor',
     component: () => import('@/modules/notifications/views/ReminderMonitorView.vue'),
-    meta: { permission: 'notifikasi.view', title: 'Monitor Reminder' },
+    meta: { permission: 'notifikasi.view', title: 'Reminder Monitor' },
   },
 ];

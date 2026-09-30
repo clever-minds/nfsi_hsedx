@@ -233,7 +233,7 @@ function badgeStatus(status: string): string {
       <section v-if="transaksiTerbaru.length">
         <div class="mb-4 flex items-center justify-between">
           <h2 class="section-title">{{ t('dashboard.ops.recentTransactions') }}</h2>
-          <RouterLink v-if="auth.can('transaksi.view')" to="/d/orders" class="section-link">
+          <RouterLink v-if="auth.can('transaksi.view')" to="/d/transactions" class="section-link">
             {{ t('dashboard.student.seeAll') }}
           </RouterLink>
         </div>
@@ -361,7 +361,7 @@ function badgeStatus(status: string): string {
             <span class="text-xs text-slate-400">{{ fmtRelatif(p.created_at) }}</span>
           </li>
         </ul>
-        <RouterLink to="/d/orders" class="section-link mt-3 block text-end">{{ t('dashboard.ops.process') }}</RouterLink>
+        <RouterLink to="/d/transactions" class="section-link mt-3 block text-end">{{ t('dashboard.ops.process') }}</RouterLink>
       </div>
 
       <!-- Audit terbaru (pembina) -->
@@ -388,7 +388,7 @@ function badgeStatus(status: string): string {
           <RouterLink v-if="auth.can('kursus.create')" to="/d/courses" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="book-open" :size="16" /> {{ t('dashboard.ops.quickCourses') }}
           </RouterLink>
-          <RouterLink v-if="auth.can('transaksi.view')" to="/d/orders" class="nav-item rounded border-0 px-3 py-2">
+          <RouterLink v-if="auth.can('transaksi.view')" to="/d/transactions" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="credit-card" :size="16" /> {{ t('dashboard.ops.quickTransactions') }}
           </RouterLink>
           <RouterLink v-if="auth.can('laporan.view')" to="/d/reports" class="nav-item rounded border-0 px-3 py-2">

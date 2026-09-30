@@ -39,8 +39,16 @@ const columns = computed(() => [
   { key: 'aktif', label: t('certificates.template.colStatus') },
 ]);
 
-/** Token placeholder ditulis literal agar tidak diinterpolasi vue-i18n. */
-const PLACEHOLDER_TOKENS = '{{nama}}, {{nomor}}, {{tanggal}}';
+/**
+ * Placeholder tokens, written literally so vue-i18n does not interpolate them.
+ * The tokens themselves are fixed (saved templates use them); each is followed
+ * by its meaning in the reader's language.
+ */
+const PLACEHOLDER_TOKENS = computed(() =>
+  (['nama', 'nomor', 'tanggal'] as const)
+    .map((k) => `{{${k}}} (${t(`certificates.template.token.${k}`)})`)
+    .join(', '),
+);
 
 async function load() {
   loading.value = true;

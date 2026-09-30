@@ -1,3 +1,10 @@
+import { createWriteStream } from 'fs';
+import { mkdir, unlink } from 'fs/promises';
+import path from 'path';
+import { Transform } from 'stream';
+import { pipeline } from 'stream/promises';
+import { randomUUID } from 'crypto';
+import type { Request } from 'express';
 import { AppError } from '../../core/http/AppError';
 import { recordAudit } from '../../core/audit/audit';
 import { AuthContext } from '../../core/rbac/types';
@@ -74,6 +81,11 @@ export async function remove(actor: AuthContext, id: string) {
     throw AppError.conflict('This media is still used by a course or lesson and cannot be permanently deleted', 'media.in_use');
   }
   await repo.softDelete(id);
+  // Files uploaded through the library are ours to clean up; a registered
+  // external path or URL is not.
+  if (asset.path_object_storage.startsWith(`${UPLOAD_URL_PREFIX}/`)) {
+    await unlink(path.join(UPLOAD_DIR, path.basename(asset.path_object_storage))).catch(() => {});
+  }
   await recordAudit({ userId: actor.userId, module: 'konten', action: 'delete', entity: 'media_assets', entityId: id });
   return asset;
 }
@@ -114,4 +126,119 @@ export async function signedUrl(actor: AuthContext, id: string) {
     expiring: false,
     expires_at: null,
   };
+}
+
+// ── Direct upload ─────────────────────────────────────────────────────────
+
+const UPLOAD_DIR = path.resolve(process.cwd(), 'uploads', 'media');
+const UPLOAD_URL_PREFIX = '/uploads/media';
+
+/**
+ * Formats a browser plays natively. There is no transcode worker, so anything
+ * accepted here must already be playable as uploaded — which is why a
+ * QuickTime/MKV/AVI file is refused rather than stored and left unplayable.
+ */
+const ACCEPTED: Record<string, { tipe: 'video' | 'gambar' | 'dokumen' | 'audio'; ext: string }> = {
+  'video/mp4': { tipe: 'video', ext: 'mp4' },
+  'video/webm': { tipe: 'video', ext: 'webm' },
+  'video/ogg': { tipe: 'video', ext: 'ogv' },
+  'audio/mpeg': { tipe: 'audio', ext: 'mp3' },
+  'audio/mp4': { tipe: 'audio', ext: 'm4a' },
+  'audio/x-m4a': { tipe: 'audio', ext: 'm4a' },
+  'audio/wav': { tipe: 'audio', ext: 'wav' },
+  'audio/ogg': { tipe: 'audio', ext: 'ogg' },
+  'image/jpeg': { tipe: 'gambar', ext: 'jpg' },
+  'image/png': { tipe: 'gambar', ext: 'png' },
+  'image/webp': { tipe: 'gambar', ext: 'webp' },
+  'application/pdf': { tipe: 'dokumen', ext: 'pdf' },
+};
+
+export const acceptedMimeTypes = Object.keys(ACCEPTED);
+
+/**
+ * Stream the request body straight to disk and register it in the library.
+ *
+ * The body is the raw file (`Content-Type` = the file's own type), not JSON or
+ * multipart: a lesson video is routinely hundreds of megabytes, and buffering
+ * it — as the base64 photo/logo uploads do — would hold all of it in memory.
+ * Streaming also needs no extra dependency on the buyer's server.
+ */
+export async function upload(actor: AuthContext, req: Request) {
+  const mime = (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+  const kind = ACCEPTED[mime];
+  if (!kind) {
+    throw AppError.badRequest(
+      'Unsupported file type. Upload MP4 or WebM video, MP3/M4A/WAV audio, JPG/PNG/WebP images or PDF.',
+      'media.unsupported_type',
+      { accepted: acceptedMimeTypes },
+    );
+  }
+
+  const maxBytes = env.MEDIA_MAX_UPLOAD_MB * 1024 * 1024;
+  const declared = Number(req.headers['content-length'] ?? 0);
+  if (declared > maxBytes) {
+    throw AppError.badRequest(`The file is larger than ${env.MEDIA_MAX_UPLOAD_MB} MB`, 'media.too_large', {
+      max_mb: env.MEDIA_MAX_UPLOAD_MB,
+    });
+  }
+
+  const rawName = String(req.headers['x-file-name'] ?? '');
+  let originalName = '';
+  try {
+    originalName = decodeURIComponent(rawName);
+  } catch {
+    originalName = rawName;
+  }
+  originalName = path.basename(originalName).slice(0, 255) || `upload.${kind.ext}`;
+
+  await mkdir(UPLOAD_DIR, { recursive: true });
+  const filename = `${randomUUID()}.${kind.ext}`;
+  const target = path.join(UPLOAD_DIR, filename);
+
+  let size = 0;
+  const limiter = new Transform({
+    transform(chunk: Buffer, _enc, cb) {
+      size += chunk.length;
+      if (size > maxBytes) {
+        cb(AppError.badRequest(`The file is larger than ${env.MEDIA_MAX_UPLOAD_MB} MB`, 'media.too_large', {
+          max_mb: env.MEDIA_MAX_UPLOAD_MB,
+        }));
+        return;
+      }
+      cb(null, chunk);
+    },
+  });
+
+  try {
+    await pipeline(req, limiter, createWriteStream(target));
+  } catch (e) {
+    await unlink(target).catch(() => {});
+    if (e instanceof AppError) throw e;
+    throw AppError.badRequest('The upload was interrupted. Please try again.', 'media.upload_interrupted');
+  }
+  if (size === 0) {
+    await unlink(target).catch(() => {});
+    throw AppError.badRequest('The file is empty', 'media.empty');
+  }
+
+  const { id } = await repo.insert({
+    uploader_id: actor.userId,
+    tipe_file: kind.tipe,
+    nama_file: originalName,
+    path_object_storage: `${UPLOAD_URL_PREFIX}/${filename}`,
+    mime_type: mime,
+    ukuran_bytes: size,
+    checksum: null,
+    meta: { source: 'upload' },
+    status_transcode: 'selesai',
+  });
+  await recordAudit({
+    userId: actor.userId,
+    module: 'konten',
+    action: 'upload',
+    entity: 'media_assets',
+    entityId: id,
+    after: { tipe_file: kind.tipe, nama_file: originalName, ukuran_bytes: size },
+  });
+  return repo.detail(id);
 }

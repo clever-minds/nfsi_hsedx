@@ -63,7 +63,12 @@
     "save": "Save Changes",
     "create": "Create Template",
     "loadFailed": "Failed to load certificate templates",
-    "saveFailed": "Failed to save the template"
+    "saveFailed": "Failed to save the template",
+    "token": {
+      "nama": "student name",
+      "nomor": "certificate number",
+      "tanggal": "issue date"
+    }
   },
   "doc": {
     "eyebrow": "CERTIFICATE OF COMPLETION",

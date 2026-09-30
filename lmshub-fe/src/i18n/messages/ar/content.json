@@ -39,12 +39,12 @@
   "media": {
     "title": "مكتبة الوسائط",
     "subtitle": "مكتبة أصول الفيديو والصور والمستندات والصوت",
-    "add": "+ إضافة وسائط",
+    "add": "إضافة عبر رابط",
     "fieldType": "نوع الملف",
     "fieldName": "اسم الملف",
     "fieldNamePlaceholder": "مثال: intro-module-1.mp4",
-    "fieldPath": "مسار التخزين",
-    "fieldPathPlaceholder": "مثال: media/2026/abc.mp4",
+    "fieldPath": "مسار الملف أو الرابط",
+    "fieldPathPlaceholder": "مثال: /uploads/intro.mp4 أو https://cdn.example.com/intro.mp4",
     "saveAsset": "حفظ الأصل",
     "searchPlaceholder": "ابحث باسم الملف…",
     "allTypes": "جميع الأنواع",
@@ -58,7 +58,12 @@
     "loadFailed": "تعذّر تحميل مكتبة الوسائط",
     "createFailed": "تعذّرت إضافة أصل الوسائط",
     "statusFailed": "تعذّر تغيير حالة التحويل",
-    "deleteFailed": "تعذّر حذف الأصل. قد يكون مستخدماً في أحد الدروس."
+    "deleteFailed": "تعذّر حذف الأصل. قد يكون مستخدماً في أحد الدروس.",
+    "upload": "رفع ملف",
+    "uploading": "جارٍ الرفع… {n}%",
+    "uploaded": "تم رفع \"{name}\". يمكنك الآن إرفاقه بدرس.",
+    "uploadFailed": "فشل الرفع. يُرجى المحاولة مرة أخرى.",
+    "uploadHint": "ارفع فيديو MP4 أو WebM، أو صوت MP3/M4A/WAV، أو صور JPG/PNG/WebP، أو PDF. تُحفظ الملفات على خادمك وتُشغَّل مباشرة داخل الدروس دون استضافة فيديو خارجية."
   },
   "mediaType": {
     "video": "فيديو",
@@ -84,7 +89,7 @@
     "url": "العنوان",
     "urlHint": "عنوان كامل يبدأ بـ https://، أو مسار على هذا الخادم يبدأ بـ / — مثل /uploads/lesson-1.mp4",
     "asset": "أصل وسائط",
-    "assetHint": "تُسجَّل الأصول في مكتبة الوسائط. لا يُشغَّل الفيديو إلا بعد أن تصبح حالة التحويل «تم».",
+    "assetHint": "اختر ملفًا من مكتبة الوسائط، أو ارفع ملفًا جديدًا أدناه.",
     "notReady": "غير جاهز",
     "fromLibrary": "من مكتبة الوسائط",
     "body": "النص",
@@ -101,6 +106,8 @@
     "loadFailed": "تعذّر تحميل محتوى الدرس",
     "saveFailed": "تعذّر حفظ المحتوى",
     "deleteFailed": "تعذّر إزالة المحتوى",
-    "reorderFailed": "تعذّر إعادة ترتيب المحتوى"
+    "reorderFailed": "تعذّر إعادة ترتيب المحتوى",
+    "orUpload": "ليس في المكتبة بعد؟",
+    "uploadNew": "رفع من الحاسوب"
   }
 }

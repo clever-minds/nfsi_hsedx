@@ -16,5 +16,6 @@
   "detail": "Details",
   "reason": "Reason: {value}",
   "oldValue": "Previous Value",
-  "newValue": "New Value"
+  "newValue": "New Value",
+  "allModules": "All modules"
 }

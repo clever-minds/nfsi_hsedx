@@ -8,13 +8,13 @@ export const learnRoutes: RouteRecordRaw[] = [
     meta: {
       permission: 'enrollment.view',
       hideForRoles: ['direktur', 'ketua', 'pembina', 'admin_ops', 'marketing'],
-      title: 'Belajar Saya',
+      title: 'My Learning',
     },
   },
   {
     path: 'learn/:courseId',
     name: 'course-player',
     component: () => import('@/modules/learn/views/CoursePlayerView.vue'),
-    meta: { permission: 'enrollment.view', title: 'Kursus' },
+    meta: { permission: 'enrollment.view', title: 'Courses' },
   },
 ];

@@ -211,7 +211,7 @@ async function transition(action: 'submit' | 'publish' | 'archive') {
             <p v-if="!loading && !categories.length" class="mt-1 text-xs text-amber-600">
               <template v-if="canManageCategories">
                 {{ t('courses.editor.noCategory') }}
-                <RouterLink :to="{ name: 'kategori' }" class="underline">
+                <RouterLink :to="{ name: 'categories' }" class="underline">
                   {{ t('courses.editor.noCategoryLink') }}
                 </RouterLink>
               </template>
@@ -292,8 +292,8 @@ async function transition(action: 'submit' | 'publish' | 'archive') {
       <div v-else-if="isEdit && courseId" class="card space-y-3 p-5">
         <p class="text-sm text-slate-500">{{ t('courses.editor.curriculumHint') }}</p>
         <div class="flex flex-wrap gap-2">
-          <RouterLink :to="`/d/content?courseId=${courseId}`" class="btn-primary">{{ t('courses.editor.openBuilder') }}</RouterLink>
-          <RouterLink :to="`/d/content/media?courseId=${courseId}`" class="btn-outline">{{ t('courses.editor.openMedia') }}</RouterLink>
+          <RouterLink :to="`/d/curriculum?courseId=${courseId}`" class="btn-primary">{{ t('courses.editor.openBuilder') }}</RouterLink>
+          <RouterLink :to="`/d/media?courseId=${courseId}`" class="btn-outline">{{ t('courses.editor.openMedia') }}</RouterLink>
         </div>
       </div>
     </template>

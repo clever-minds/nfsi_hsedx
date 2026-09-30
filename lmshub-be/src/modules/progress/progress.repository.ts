@@ -108,8 +108,13 @@ export async function learnLessons(courseId: string): Promise<LearnLessonRow[]> 
        FROM lessons l
        JOIN sections s ON s.id = l.section_id
        LEFT JOIN LATERAL (
-         SELECT lc.body, lc.url
+         -- A lesson may point at a Media Library asset instead of a URL; the
+         -- player only knows URLs, so resolve the asset's stored path here.
+         -- Unfinished or deleted assets resolve to nothing rather than a dead link.
+         SELECT lc.body, COALESCE(lc.url, ma.path_object_storage) AS url
            FROM lesson_contents lc
+           LEFT JOIN media_assets ma
+             ON ma.id = lc.media_asset_id AND ma.deleted_at IS NULL AND ma.status_transcode = 'selesai'
           WHERE lc.lesson_id = l.id AND lc.deleted_at IS NULL
           ORDER BY lc.urutan ASC LIMIT 1
        ) c ON true

@@ -4,14 +4,14 @@ import type { RouteRecordRaw } from 'vue-router';
 export const discussionsRoutes: RouteRecordRaw[] = [
   {
     path: 'discussions',
-    name: 'diskusi',
+    name: 'discussions',
     component: () => import('@/modules/discussions/views/DiscussionView.vue'),
-    meta: { permission: 'diskusi.view', title: 'Diskusi' },
+    meta: { permission: 'diskusi.view', title: 'Discussions' },
   },
   {
     path: 'discussions/moderation',
-    name: 'diskusi-moderasi',
+    name: 'discussion-moderation',
     component: () => import('@/modules/discussions/views/ModerationView.vue'),
-    meta: { permission: 'diskusi.delete', title: 'Moderasi Diskusi' },
+    meta: { permission: 'diskusi.delete', title: 'Discussion Moderation' },
   },
 ];

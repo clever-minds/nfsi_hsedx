@@ -117,7 +117,7 @@ onMounted(async () => {
     <div v-if="success" class="card space-y-4 p-6">
       <div class="alert-success">{{ t('orders.manual.success') }}</div>
       <div class="flex gap-2">
-        <RouterLink class="btn-primary" :to="{ name: 'transaksi' }">{{ t('orders.manual.viewList') }}</RouterLink>
+        <RouterLink class="btn-primary" :to="{ name: 'transactions' }">{{ t('orders.manual.viewList') }}</RouterLink>
         <button class="btn-outline" @click="resetForm">{{ t('orders.manual.again') }}</button>
       </div>
     </div>

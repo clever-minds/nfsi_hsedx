@@ -6,6 +6,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import DataTable from '@/components/ui/DataTable.vue';
 import TablePagination from '@/components/ui/TablePagination.vue';
 import StatusChip from '@/components/ui/StatusChip.vue';
+import { roleOptionLabel } from '@/lib/labels';
 
 interface UserRow extends Record<string, unknown> {
   id: string;
@@ -108,7 +109,7 @@ onMounted(() => {
   <div>
     <PageHeader :title="t('users.list.title')" :subtitle="t('users.list.subtitle')">
       <template #actions>
-        <RouterLink v-can="'pengguna.create'" to="/d/users/add" class="btn-primary">{{ t('users.list.add') }}</RouterLink>
+        <RouterLink v-can="'pengguna.create'" to="/d/users/new" class="btn-primary">{{ t('users.list.add') }}</RouterLink>
       </template>
     </PageHeader>
 
@@ -119,7 +120,7 @@ onMounted(() => {
         <input v-model="q" class="input max-w-xs" :placeholder="t('users.list.searchPlaceholder')" @keyup.enter="search" />
         <select v-model="roleFilter" class="input w-auto" @change="search">
           <option value="">{{ t('users.list.allRoles') }}</option>
-          <option v-for="r in roleOptions" :key="r.id" :value="r.kode">{{ r.nama }}</option>
+          <option v-for="r in roleOptions" :key="r.id" :value="r.kode">{{ roleOptionLabel(r.kode) }}</option>
         </select>
         <select v-model="statusFilter" class="input w-auto" @change="search">
           <option value="">{{ t('users.list.allStatus') }}</option>
@@ -133,6 +134,7 @@ onMounted(() => {
         <div class="font-medium text-slate-800">{{ (row as unknown as UserRow).nama_lengkap }}</div>
         <div class="text-xs text-slate-400">{{ (row as unknown as UserRow).email || (row as unknown as UserRow).nomor_wa || '—' }}</div>
       </template>
+      <template #cell:role_nama="{ row }">{{ roleOptionLabel((row as UserRow).role_kode) }}</template>
       <template #cell:created_by_nama="{ value }">
         {{ value || t('users.list.selfRegistered') }}
       </template>

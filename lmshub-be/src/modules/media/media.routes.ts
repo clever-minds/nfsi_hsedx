@@ -11,13 +11,9 @@ export const mediaRouter = Router();
 mediaRouter.use(requireAuth());
 
 mediaRouter.get('/', requirePermission('konten', 'view'), asyncHandler(ctrl.list));
-mediaRouter.post(
-  '/upload',
-  requirePermission('konten', 'create'),
-  ctrl.uploadMiddleware.single('file'),
-  asyncHandler(ctrl.uploadFile)
-);
 mediaRouter.post('/', requirePermission('konten', 'create'), validate(createMediaSchema), asyncHandler(ctrl.create));
+// Raw file body, streamed to disk — see media.service `upload`.
+mediaRouter.post('/upload', requirePermission('konten', 'create'), asyncHandler(ctrl.upload));
 mediaRouter.get('/:id', requirePermission('konten', 'view'), asyncHandler(ctrl.detail));
 mediaRouter.get('/:id/signed-url', requirePermission('konten', 'view'), asyncHandler(ctrl.signedUrl));
 mediaRouter.patch(

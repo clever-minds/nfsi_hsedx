@@ -75,17 +75,21 @@ export async function sendMail(input: MailInput): Promise<{ sent: boolean }> {
   }
 }
 
-/** Email verifikasi akun berisi tautan ke halaman FE. */
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
+/** Account verification email, linking to the frontend's verify page. Signed with the site's own name. */
 export async function sendVerificationEmail(to: string, nama: string, token: string): Promise<{ sent: boolean }> {
-  const link = `${env.PUBLIC_WEB_URL.replace(/\/$/, '')}/verifikasi-email?token=${encodeURIComponent(token)}`;
+  const link = `${env.PUBLIC_WEB_URL.replace(/\/$/, '')}/verify-email?token=${encodeURIComponent(token)}`;
+  const site = escapeHtml((await getSetting('brand.nama_aplikasi', '')).trim() || 'LMS Hub');
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto">
-      <h2 style="color:#164031">Verifikasi Email — LMS Hub</h2>
-      <p>Halo ${nama},</p>
-      <p>Terima kasih telah mendaftar. Klik tombol di bawah untuk memverifikasi email Anda:</p>
-      <p><a href="${link}" style="background:#164031;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Verifikasi Email</a></p>
-      <p style="color:#6a7a70;font-size:13px">Atau buka tautan ini: <br>${link}</p>
-      <p style="color:#9aa9a1;font-size:12px">Abaikan email ini bila Anda tidak mendaftar.</p>
+      <h2 style="color:#164031">Verify your email — ${site}</h2>
+      <p>Hi ${escapeHtml(nama)},</p>
+      <p>Thanks for signing up. Click the button below to verify your email address:</p>
+      <p><a href="${link}" style="background:#164031;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Verify email</a></p>
+      <p style="color:#6a7a70;font-size:13px">Or open this link: <br>${link}</p>
+      <p style="color:#9aa9a1;font-size:12px">If you didn't create an account, you can ignore this email.</p>
     </div>`;
-  return sendMail({ to, subject: 'Verifikasi Email — LMS Hub', html });
+  return sendMail({ to, subject: `Verify your email — ${site}`, html });
 }

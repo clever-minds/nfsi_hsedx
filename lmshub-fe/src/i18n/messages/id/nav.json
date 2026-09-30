@@ -31,7 +31,8 @@
     "currencies": "Mata Uang",
     "bankAccounts": "Rekening Bank",
     "website": "Website",
-    "certificateTemplate": "Template Sertifikat"
+    "certificateTemplate": "Template Sertifikat",
+    "mediaLibrary": "Pustaka Media"
   },
   "public": {
     "home": "Beranda",

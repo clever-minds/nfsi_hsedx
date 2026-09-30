@@ -89,6 +89,9 @@ const schema = z.object({
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
   // URL FE publik (untuk QR verifikasi sertifikat, link verifikasi email)
   PUBLIC_WEB_URL: z.string().default('http://localhost:5173'),
+  // Largest file the Media Library accepts in one upload, in megabytes. The
+  // reverse proxy must allow at least this much (Nginx `client_max_body_size`).
+  MEDIA_MAX_UPLOAD_MB: z.coerce.number().int().positive().default(2048),
 
   // Email / SMTP (fallback env — konfigurasi utama via tabel settings, diatur super admin)
   EMAIL_FROM: z.string().default('LMS Hub <no-reply@lmshub.test>'),

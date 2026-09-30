@@ -300,7 +300,7 @@ onMounted(loadAll);
                     v-if="stage.key === 'closing'"
                     v-can="'transaksi.create'"
                     class="btn-primary btn-sm"
-                    :to="{ name: 'transaksi-tanda-jadi', query: { lead_id: lead.id } }"
+                    :to="{ name: 'manual-payment', query: { lead_id: lead.id } }"
                   >
                     {{ t('marketing.recordDeposit') }}
                   </RouterLink>

@@ -7,8 +7,8 @@ export const categoriesRoutes: RouteRecordRaw[] = [
     // dimiliki siswa (dipakai katalog publik), jadi memakainya akan membuka
     // layar master data untuk mereka. Pola yang sama dipakai halaman Kursus.
     path: 'categories',
-    name: 'kategori',
+    name: 'categories',
     component: () => import('@/modules/categories/views/CategoriesView.vue'),
-    meta: { permission: 'kategori.create', title: 'Kategori Kursus' },
+    meta: { permission: 'kategori.create', title: 'Course Categories' },
   },
 ];

@@ -11,8 +11,8 @@ export const marketingRoutes: RouteRecordRaw[] = [
     // Kode kupon. Penukarannya sudah jalan di checkout sejak awal; layar ini
     // yang membuatnya bisa dibuat tanpa menyentuh basis data.
     path: 'marketing/coupons',
-    name: 'marketing-kupon',
+    name: 'marketing-coupons',
     component: () => import('@/modules/marketing/views/CouponsView.vue'),
-    meta: { permission: 'marketing.view', title: 'Kupon' },
+    meta: { permission: 'marketing.view', title: 'Coupons' },
   },
 ];

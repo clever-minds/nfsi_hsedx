@@ -7,6 +7,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import DataTable from '@/components/ui/DataTable.vue';
 import TablePagination from '@/components/ui/TablePagination.vue';
 import StatusChip from '@/components/ui/StatusChip.vue';
+import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
 
 type TipeFile = 'video' | 'gambar' | 'dokumen' | 'audio';
 type StatusTranscode = 'menunggu' | 'memproses' | 'selesai' | 'gagal';
@@ -43,9 +44,9 @@ const statusFilter = ref('');
 const loading = ref(true);
 const error = ref('');
 const busyId = ref<string | null>(null);
+const notice = ref('');
 const showForm = ref(false);
 const saving = ref(false);
-const fileToUpload = ref<File | null>(null);
 
 const form = reactive({
   tipe_file: 'video' as TipeFile,
@@ -92,44 +93,18 @@ function search() {
   load();
 }
 
-function handleFileChange(event: Event) {
-  const target = event.target as HTMLInputElement;
-  if (target.files && target.files.length > 0) {
-    fileToUpload.value = target.files[0];
-    if (!form.nama_file) {
-      form.nama_file = target.files[0].name;
-    }
-  } else {
-    fileToUpload.value = null;
-  }
-}
-
 async function createAsset() {
-  if (!form.nama_file.trim()) return;
-  if (!fileToUpload.value && !form.path_object_storage.trim()) return;
-
+  if (!form.nama_file.trim() || !form.path_object_storage.trim()) return;
   saving.value = true;
   error.value = '';
   try {
-    let storagePath = form.path_object_storage.trim();
-    if (fileToUpload.value) {
-      const formData = new FormData();
-      formData.append('file', fileToUpload.value);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res = await apiPost<any>('/media/upload', formData);
-      storagePath = res.path_object_storage;
-    }
-
     await apiPost('/media', {
       tipe_file: form.tipe_file,
       nama_file: form.nama_file.trim(),
-      path_object_storage: storagePath,
+      path_object_storage: form.path_object_storage.trim(),
     });
     form.nama_file = '';
     form.path_object_storage = '';
-    fileToUpload.value = null;
-    const fileInput = document.getElementById('fileUploadInput') as HTMLInputElement;
-    if (fileInput) fileInput.value = '';
     showForm.value = false;
     await load();
   } catch (e) {
@@ -163,6 +138,12 @@ async function removeAsset(id: string) {
   }
 }
 
+async function onUploaded(asset: { nama_file: string }) {
+  notice.value = t('content.media.uploaded', { name: asset.nama_file });
+  page.value = 1;
+  await load();
+}
+
 watch(page, load);
 onMounted(load);
 </script>
@@ -171,9 +152,12 @@ onMounted(load);
   <div>
     <PageHeader :title="t('content.media.title')" :subtitle="t('content.media.subtitle')">
       <template #actions>
-        <button v-can="'konten.create'" class="btn-primary" @click="showForm = !showForm">
-          {{ showForm ? t('common.action.cancel') : t('content.media.add') }}
-        </button>
+        <div v-can="'konten.create'" class="flex flex-wrap items-start gap-2">
+          <MediaUploadButton @uploaded="onUploaded" />
+          <button class="btn-outline" @click="showForm = !showForm">
+            {{ showForm ? t('common.action.cancel') : t('content.media.add') }}
+          </button>
+        </div>
       </template>
     </PageHeader>
 
@@ -189,11 +173,7 @@ onMounted(load);
         <input v-model="form.nama_file" class="input" :placeholder="t('content.media.fieldNamePlaceholder')" />
       </div>
       <div>
-        <label class="label">Upload File</label>
-        <input type="file" id="fileUploadInput" @change="handleFileChange" class="input p-1" />
-      </div>
-      <div>
-        <label class="label">{{ t('content.media.fieldPath') }} (Optional)</label>
+        <label class="label">{{ t('content.media.fieldPath') }}</label>
         <input v-model="form.path_object_storage" class="input" :placeholder="t('content.media.fieldPathPlaceholder')" />
       </div>
       <div class="sm:col-span-3">
@@ -203,6 +183,8 @@ onMounted(load);
       </div>
     </div>
 
+    <p class="mb-4 text-sm text-slate-500">{{ t('content.media.uploadHint') }}</p>
+    <p v-if="notice" class="mb-4 text-sm text-emerald-600">{{ notice }}</p>
     <p v-if="error" class="mb-4 alert-error">{{ error }}</p>
 
     <DataTable :columns="columns" :rows="rows" :loading="loading" :empty="t('content.media.empty')">

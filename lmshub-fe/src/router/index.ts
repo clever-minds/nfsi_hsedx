@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { translateLegacyPath } from './legacyPaths';
 
 // Rute pra-login (publik) + dashboard. Modul tambahan didaftarkan lewat moduleRoutes.
 import { moduleRoutes } from './modules';
@@ -76,6 +77,13 @@ const routes: RouteRecordRaw[] = [
 export const router = createRouter({ history: createWebHistory(), routes });
 
 router.beforeEach(async (to) => {
+  // A pre-English URL (bookmark, old email, certificate QR code) lands on
+  // not-found; send it to the page it used to mean.
+  if (to.name === 'not-found') {
+    const english = translateLegacyPath(to.path);
+    if (english !== to.path) return { path: english, query: to.query, hash: to.hash, replace: true };
+  }
+
   const auth = useAuthStore();
   if (!auth.ready) await auth.bootstrap();
 

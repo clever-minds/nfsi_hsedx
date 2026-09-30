@@ -179,7 +179,7 @@ onMounted(async () => {
           <RouterLink
             v-for="(cat, i) in categories"
             :key="cat.id"
-            :to="{ path: '/d/catalog', query: { kategori: cat.slug } }"
+            :to="{ path: '/d/catalog', query: { category: cat.slug } }"
             class="rounded p-5 text-center transition hover:-translate-y-0.5 hover:shadow-md"
             :class="pastel(i)"
           >

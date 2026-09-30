@@ -2,13 +2,13 @@ import type { RouteRecordRaw } from 'vue-router';
 
 export const contentRoutes: RouteRecordRaw[] = [
   {
-    path: 'content',
+    path: 'curriculum',
     name: 'content-curriculum',
     component: () => import('@/modules/content/views/CurriculumBuilderView.vue'),
-    meta: { permission: 'kurikulum.view', title: 'Kurikulum & Konten' },
+    meta: { permission: 'kurikulum.view', title: 'Curriculum & Content' },
   },
   {
-    path: 'content/media',
+    path: 'media',
     name: 'content-media',
     component: () => import('@/modules/content/views/MediaLibraryView.vue'),
     meta: { permission: 'konten.view', title: 'Media Library' },

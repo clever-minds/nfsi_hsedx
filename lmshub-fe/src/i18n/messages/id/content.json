@@ -39,12 +39,12 @@
   "media": {
     "title": "Media Library",
     "subtitle": "Pustaka aset video, gambar, dokumen & audio",
-    "add": "+ Tambah Media",
+    "add": "Tambah via tautan",
     "fieldType": "Tipe File",
     "fieldName": "Nama File",
     "fieldNamePlaceholder": "mis. intro-modul-1.mp4",
-    "fieldPath": "Path Object Storage",
-    "fieldPathPlaceholder": "mis. media/2026/abc.mp4",
+    "fieldPath": "Path berkas atau URL",
+    "fieldPathPlaceholder": "mis. /uploads/intro.mp4 atau https://cdn.contoh.com/intro.mp4",
     "saveAsset": "Simpan Aset",
     "searchPlaceholder": "Cari nama file…",
     "allTypes": "Semua Tipe",
@@ -58,7 +58,12 @@
     "loadFailed": "Gagal memuat media library",
     "createFailed": "Gagal menambah aset media",
     "statusFailed": "Gagal mengubah status transcode",
-    "deleteFailed": "Gagal menghapus aset. Aset mungkin masih dipakai di pelajaran."
+    "deleteFailed": "Gagal menghapus aset. Aset mungkin masih dipakai di pelajaran.",
+    "upload": "Unggah berkas",
+    "uploading": "Mengunggah… {n}%",
+    "uploaded": "\"{name}\" berhasil diunggah. Sekarang bisa dipasang ke pelajaran.",
+    "uploadFailed": "Unggahan gagal. Silakan coba lagi.",
+    "uploadHint": "Unggah video MP4 atau WebM, audio MP3/M4A/WAV, gambar JPG/PNG/WebP, atau PDF. Berkas disimpan di server Anda sendiri dan diputar langsung di pelajaran — tanpa hosting video eksternal."
   },
   "mediaType": {
     "video": "Video",
@@ -84,7 +89,7 @@
     "url": "Alamat",
     "urlHint": "Alamat lengkap diawali https://, atau path di server ini yang diawali / — misalnya /uploads/pelajaran-1.mp4",
     "asset": "Aset media",
-    "assetHint": "Aset didaftarkan di Pustaka Media. Video baru bisa diputar setelah status transcode-nya Selesai.",
+    "assetHint": "Pilih berkas dari Pustaka Media, atau unggah yang baru di bawah.",
     "notReady": "belum siap",
     "fromLibrary": "Dari pustaka media",
     "body": "Teks",
@@ -101,6 +106,8 @@
     "loadFailed": "Gagal memuat isi pelajaran",
     "saveFailed": "Gagal menyimpan isi",
     "deleteFailed": "Gagal menghapus isi",
-    "reorderFailed": "Gagal mengubah urutan isi"
+    "reorderFailed": "Gagal mengubah urutan isi",
+    "orUpload": "Belum ada di pustaka?",
+    "uploadNew": "Unggah dari komputer"
   }
 }

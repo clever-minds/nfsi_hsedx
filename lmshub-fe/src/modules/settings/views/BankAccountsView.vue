@@ -171,7 +171,7 @@ onMounted(load);
   <div>
     <PageHeader :title="t('bankAccounts.title')" :subtitle="t('bankAccounts.subtitle')">
       <template #actions>
-        <RouterLink class="btn-outline" :to="{ name: 'pengaturan' }">{{ t('bankAccounts.back') }}</RouterLink>
+        <RouterLink class="btn-outline" :to="{ name: 'settings' }">{{ t('bankAccounts.back') }}</RouterLink>
         <button v-if="canEdit" class="btn-primary" @click="openCreate">{{ t('bankAccounts.add') }}</button>
       </template>
     </PageHeader>

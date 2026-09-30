@@ -31,7 +31,8 @@
     "currencies": "Currencies",
     "bankAccounts": "Bank accounts",
     "website": "Website",
-    "certificateTemplate": "Certificate Template"
+    "certificateTemplate": "Certificate Template",
+    "mediaLibrary": "Media Library"
   },
   "public": {
     "home": "Home",

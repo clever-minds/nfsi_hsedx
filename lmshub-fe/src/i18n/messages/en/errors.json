@@ -175,7 +175,11 @@
     "not_found": "Media asset not found",
     "not_owner": "You can only manage your own media assets",
     "transcode_pending": "This video is still being processed",
-    "unknown_asset": "Unknown asset"
+    "unknown_asset": "Unknown asset",
+    "unsupported_type": "Unsupported file type. Upload MP4 or WebM video, MP3/M4A/WAV audio, JPG/PNG/WebP images or PDF.",
+    "too_large": "The file is larger than the upload limit set on this server.",
+    "upload_interrupted": "The upload was interrupted. Please try again.",
+    "empty": "The file is empty."
   },
   "message": {
     "cannot_message_self": "You cannot send a message to yourself",

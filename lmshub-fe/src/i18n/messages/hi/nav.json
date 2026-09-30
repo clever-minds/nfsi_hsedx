@@ -31,7 +31,8 @@
     "currencies": "मुद्राएँ",
     "bankAccounts": "बैंक खाते",
     "website": "वेबसाइट",
-    "certificateTemplate": "प्रमाणपत्र टेम्पलेट"
+    "certificateTemplate": "प्रमाणपत्र टेम्पलेट",
+    "mediaLibrary": "मीडिया लाइब्रेरी"
   },
   "public": {
     "home": "होम",

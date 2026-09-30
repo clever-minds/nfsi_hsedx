@@ -22,6 +22,16 @@ export function roleLabel(role?: string | null): string {
   return lookup('common.role', role);
 }
 
+/**
+ * Role name where roles are told apart — a role picker or the users table.
+ * `roleLabel` deliberately calls a sub-user a "Student" (that is what they are
+ * to everyone else), but in a list of roles that makes two identical entries.
+ */
+export function roleOptionLabel(role?: string | null): string {
+  const raw = (role ?? '').trim().toLowerCase();
+  return te(`common.roleOption.${raw}`) ? t(`common.roleOption.${raw}`) : roleLabel(role);
+}
+
 export function statusLabel(status?: string | null): string {
   return lookup('common.status', status);
 }

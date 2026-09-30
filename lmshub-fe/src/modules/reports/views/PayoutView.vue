@@ -120,7 +120,7 @@ onMounted(load);
   <div>
     <PageHeader :title="t('reports.payout.title')" :subtitle="t('reports.payout.subtitle')">
       <template #actions>
-        <RouterLink class="btn-outline" :to="{ name: 'laporan' }">{{ t('reports.payout.back') }}</RouterLink>
+        <RouterLink class="btn-outline" :to="{ name: 'reports' }">{{ t('reports.payout.back') }}</RouterLink>
       </template>
     </PageHeader>
 

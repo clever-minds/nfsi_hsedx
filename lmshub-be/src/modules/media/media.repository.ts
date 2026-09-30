@@ -76,11 +76,13 @@ export async function insert(data: {
   ukuran_bytes: number | null;
   checksum: string | null;
   meta: unknown;
+  /** Uploaded files are browser-playable as-is; registered paths wait for a transcode step. */
+  status_transcode?: string;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
     `INSERT INTO media_assets
       (uploader_id, tipe_file, nama_file, path_object_storage, mime_type, ukuran_bytes, status_transcode, checksum, meta)
-     VALUES ($1,$2,$3,$4,$5,$6,'menunggu',$7,$8)
+     VALUES ($1,$2,$3,$4,$5,$6,$9,$7,$8)
      RETURNING id`,
     [
       data.uploader_id,
@@ -91,6 +93,7 @@ export async function insert(data: {
       data.ukuran_bytes,
       data.checksum,
       data.meta ? JSON.stringify(data.meta) : null,
+      data.status_transcode ?? 'menunggu',
     ],
   );
   return row!;

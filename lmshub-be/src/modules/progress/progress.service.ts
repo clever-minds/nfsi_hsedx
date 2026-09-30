@@ -124,7 +124,9 @@ export async function learnView(actor: AuthContext, courseId: string) {
           selesai: lp?.status === 'selesai',
           posisi_detik: lp?.posisi_detik ?? 0,
           terkunci,
-          drip_info: terkunci ? `Terbuka pada ${new Date(l.drip_release_at!).toLocaleDateString('id-ID')}` : undefined,
+          drip_info: terkunci
+            ? `Available on ${new Date(l.drip_release_at!).toLocaleDateString('en-US', { dateStyle: 'medium' })}`
+            : undefined,
           video_url: l.content_url ?? undefined,
           konten: l.content_body ?? undefined,
         };

@@ -60,7 +60,7 @@ onMounted(async () => {
 
       <div v-else-if="instructors.length" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <div v-for="ins in instructors" :key="ins.id" class="card group flex flex-col items-center rounded-xl p-6 text-center transition hover:-translate-y-1 hover:shadow-lg">
-          <RouterLink :to="`/instruktur/${ins.id}`" class="relative">
+          <RouterLink :to="`/instructors/${ins.id}`" class="relative">
             <span class="grid h-28 w-28 place-items-center overflow-hidden rounded-full bg-brand-100 text-3xl font-bold text-brand-600">
               <img v-if="ins.foto_profil" :src="assetUrl(ins.foto_profil)" :alt="ins.nama_lengkap" class="h-full w-full object-cover" />
               <template v-else>{{ ins.nama_lengkap[0] }}</template>
@@ -69,7 +69,7 @@ onMounted(async () => {
               <Icon name="check" :size="12" />
             </span>
           </RouterLink>
-          <RouterLink :to="`/instruktur/${ins.id}`" class="mt-4 font-bold text-slate-900 group-hover:text-brand-500">{{ ins.nama_lengkap }}</RouterLink>
+          <RouterLink :to="`/instructors/${ins.id}`" class="mt-4 font-bold text-slate-900 group-hover:text-brand-500">{{ ins.nama_lengkap }}</RouterLink>
           <p class="mt-0.5 text-xs text-slate-400">
             {{ (ins.keahlian ?? []).slice(0, 2).join(' · ') || t('catalog.instructors.defaultRole') }}
           </p>

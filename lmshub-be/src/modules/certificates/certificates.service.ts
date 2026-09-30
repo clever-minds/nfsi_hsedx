@@ -36,9 +36,13 @@ async function generateUniqueNomor(): Promise<string> {
   throw AppError.internal('Could not generate a unique certificate number, please try again', 'certificate.number_generation_failed');
 }
 
-/** URL publik halaman verifikasi untuk sebuah nomor sertifikat. */
+/**
+ * Public verification page for a certificate number. Certificates issued before
+ * the English URLs carry `/sertifikat/…` in their QR code; the frontend
+ * redirects those here, so both keep verifying.
+ */
 export function verifyUrl(nomor: string): string {
-  return `${env.PUBLIC_WEB_URL.replace(/\/$/, '')}/sertifikat/${nomor}`;
+  return `${env.PUBLIC_WEB_URL.replace(/\/$/, '')}/certificates/${nomor}`;
 }
 
 /** Bangun field penerbitan: nomor unik, kode verifikasi, & QR (data URI PNG) berisi URL verifikasi. */

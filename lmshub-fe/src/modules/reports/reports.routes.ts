@@ -3,14 +3,14 @@ import type { RouteRecordRaw } from 'vue-router';
 export const reportsRoutes: RouteRecordRaw[] = [
   {
     path: 'reports',
-    name: 'laporan',
+    name: 'reports',
     component: () => import('@/modules/reports/views/LaporanView.vue'),
-    meta: { permission: 'laporan.view', title: 'Laporan' },
+    meta: { permission: 'laporan.view', title: 'Reports' },
   },
   {
     path: 'reports/payouts',
-    name: 'laporan-payout',
+    name: 'payouts',
     component: () => import('@/modules/reports/views/PayoutView.vue'),
-    meta: { permission: 'laporan.view', title: 'Payout Instruktur' },
+    meta: { permission: 'laporan.view', title: 'Instructor Payouts' },
   },
 ];

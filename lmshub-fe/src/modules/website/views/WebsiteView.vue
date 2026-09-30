@@ -370,7 +370,7 @@ onBeforeUnmount(() => observer?.disconnect());
                   </div>
                   <div class="min-w-[10rem] flex-1">
                     <label class="label">{{ t('website.menu.url') }}</label>
-                    <input v-model="m.url" class="input" placeholder="/kursus" :disabled="!canEdit" />
+                    <input v-model="m.url" class="input" placeholder="/courses" :disabled="!canEdit" />
                   </div>
                   <div class="flex shrink-0 items-center gap-1 pb-1">
                     <label class="flex items-center gap-1.5 text-xs text-slate-500">
@@ -646,7 +646,7 @@ onBeforeUnmount(() => observer?.disconnect());
                       </div>
                       <div class="min-w-[9rem] flex-1">
                         <label class="label">{{ t('website.footer.linkUrl') }}</label>
-                        <input v-model="tautan.url" class="input" placeholder="/kursus" :disabled="!canEdit" />
+                        <input v-model="tautan.url" class="input" placeholder="/courses" :disabled="!canEdit" />
                       </div>
                       <button
                         v-if="canEdit"

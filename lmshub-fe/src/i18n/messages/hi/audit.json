@@ -16,5 +16,6 @@
   "detail": "विवरण",
   "reason": "कारण: {value}",
   "oldValue": "पुराना मान",
-  "newValue": "नया मान"
+  "newValue": "नया मान",
+  "allModules": "सभी मॉड्यूल"
 }

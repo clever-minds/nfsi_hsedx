@@ -78,7 +78,9 @@ export const navSections: NavSection[] = [
       // bisa dibuat sebelum ada minimal satu kategori (`category_id` NOT NULL).
       // Gerbangnya `kategori.create` — `kategori.view` juga dimiliki siswa.
       { labelKey: 'nav.item.categories', to: '/d/categories', permission: 'kategori.create', icon: 'tag' },
-      { labelKey: 'nav.item.curriculum', to: '/d/content', permission: 'kurikulum.view', icon: 'layers' },
+      { labelKey: 'nav.item.curriculum', to: '/d/curriculum', permission: 'kurikulum.view', icon: 'layers' },
+      // Uploaded videos, audio, images and PDFs that lessons play from this server.
+      { labelKey: 'nav.item.mediaLibrary', to: '/d/media', permission: 'konten.view', icon: 'film' },
       { labelKey: 'nav.item.grading', to: '/d/grading', permission: 'grading.view', icon: 'grid' },
     ],
   },
@@ -86,7 +88,7 @@ export const navSections: NavSection[] = [
     titleKey: 'nav.section.management',
     items: [
       { labelKey: 'nav.item.users', to: '/d/users', permission: 'pengguna.view', icon: 'users' },
-      { labelKey: 'nav.item.transactions', to: '/d/orders', permission: 'transaksi.view', icon: 'credit-card' },
+      { labelKey: 'nav.item.transactions', to: '/d/transactions', permission: 'transaksi.view', icon: 'credit-card' },
       { labelKey: 'nav.item.marketing', to: '/d/marketing', permission: 'marketing.view', icon: 'megaphone' },
       // Kode kupon checkout. Berdiri sendiri, bukan tab di Marketing, karena
       // yang mengurusnya sering admin penjualan dan bukan tim afiliasi.
@@ -110,7 +112,7 @@ export const navSections: NavSection[] = [
       // dimiliki siswa, jadi memakainya akan membuka halaman admin untuk mereka.
       {
         labelKey: 'nav.item.certificateTemplate',
-        to: '/d/certificates/template',
+        to: '/d/certificates/templates',
         permission: 'sertifikat.create',
         icon: 'award',
       },

@@ -55,8 +55,8 @@ function matches(to: string): boolean {
 }
 
 /**
- * Hanya item paling spesifik yang disorot. Tanpa ini `/d/pengaturan` ikut menyala
- * saat membuka `/d/pengaturan/rekening`, sehingga dua menu tampak aktif bersamaan.
+ * Hanya item paling spesifik yang disorot. Tanpa ini `/d/settings` ikut menyala
+ * saat membuka `/d/settings/bank-accounts`, sehingga dua menu tampak aktif bersamaan.
  */
 function isActive(to: string) {
   if (!matches(to)) return false;
@@ -117,7 +117,7 @@ const tahun = new Date().getFullYear();
 
       <div class="ms-auto flex items-center gap-1 pe-4 sm:gap-2">
         <!-- CTA buat kursus (hanya instruktur/admin yang punya izin membuat) -->
-        <RouterLink v-if="auth.can('kursus.create')" to="/d/courses/add" class="btn-primary hidden py-2 lg:inline-flex">
+        <RouterLink v-if="auth.can('kursus.create')" to="/d/courses/new" class="btn-primary hidden py-2 lg:inline-flex">
           {{ t('nav.header.newCourse') }}
         </RouterLink>
 

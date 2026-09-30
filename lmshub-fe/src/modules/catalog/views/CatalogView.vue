@@ -28,7 +28,7 @@ interface Course {
 interface Kategori { id: string; nama: string; slug: string; jumlah_kursus: number }
 
 const route = useRoute();
-// Komponen dipakai di dua tempat: katalog publik (/kursus) dan dalam dashboard (/d/katalog).
+// Komponen dipakai di dua tempat: katalog publik (/courses) dan dalam dashboard (/d/catalog).
 const inDashboard = computed(() => route.path.startsWith('/d'));
 const detailBase = computed(() => (inDashboard.value ? '/d/catalog' : '/courses'));
 
@@ -41,7 +41,8 @@ const limit = 9;
 
 // ── Filter ──
 const q = ref((route.query.q as string) || '');
-const kategori = ref((route.query.kategori as string) || '');
+// `kategori` is the pre-English query name; old shared links still carry it.
+const kategori = ref((route.query.category as string) || (route.query.kategori as string) || '');
 const level = ref('');
 const harga = ref<'semua' | 'gratis' | 'berbayar'>('semua');
 const sort = ref('-published_at'); // Terbaru dulu
@@ -106,12 +107,12 @@ function bersihkan() {
 
 watch([kategori, level, harga, sort], terapkan);
 watch(page, load);
-// Sinkron dengan query dari header/landing (mis. /kursus?q=…&kategori=…).
+// Sinkron dengan query dari header/landing (e.g. /courses?q=…&category=…).
 watch(
   () => route.query,
   (nq) => {
     const nQ = (nq.q as string) || '';
-    const nKat = (nq.kategori as string) || '';
+    const nKat = (nq.category as string) || (nq.kategori as string) || '';
     if (nQ !== q.value || nKat !== kategori.value) {
       q.value = nQ;
       kategori.value = nKat;

@@ -128,6 +128,27 @@ export async function apiDelete<T = void>(url: string): Promise<T> {
 }
 
 /**
+ * Send one file as the raw request body, reporting progress as a 0–100 number.
+ *
+ * Raw rather than multipart so the backend can stream it to disk without a
+ * parser; the file name travels in a header, URI-encoded so any language works.
+ * No timeout: a large lesson video on a slow line legitimately takes minutes.
+ */
+export async function apiUpload<T>(url: string, file: File, onProgress?: (percent: number) => void): Promise<T> {
+  const res = await http.post<Envelope<T>>(url, file, {
+    timeout: 0,
+    headers: {
+      'Content-Type': file.type || 'application/octet-stream',
+      'X-File-Name': encodeURIComponent(file.name),
+    },
+    onUploadProgress: (e) => {
+      if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100));
+    },
+  });
+  return res.data.data as T;
+}
+
+/**
  * Pesan error untuk ditampilkan ke pengguna.
  *
  * Urutan: pesan spesifik dari BE → `fallback` yang diberikan pemanggil →

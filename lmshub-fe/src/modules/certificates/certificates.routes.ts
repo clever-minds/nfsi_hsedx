@@ -4,26 +4,26 @@ import type { RouteRecordRaw } from 'vue-router';
 export const certificatesRoutes: RouteRecordRaw[] = [
   {
     path: 'certificates',
-    name: 'sertifikat',
+    name: 'certificates',
     component: () => import('@/modules/certificates/views/MyCertificatesView.vue'),
-    meta: { permission: 'sertifikat.view', title: 'Sertifikat Saya' },
+    meta: { permission: 'sertifikat.view', title: 'My Certificates' },
   },
   {
     path: 'certificates/view/:id',
-    name: 'sertifikat-viewer',
+    name: 'certificate-viewer',
     component: () => import('@/modules/certificates/views/CertificateViewerView.vue'),
-    meta: { permission: 'sertifikat.view', title: 'Sertifikat' },
+    meta: { permission: 'sertifikat.view', title: 'Certificates' },
   },
   {
     path: 'certificates/badges',
-    name: 'sertifikat-badge',
+    name: 'certificate-badges',
     component: () => import('@/modules/certificates/views/BadgesView.vue'),
-    meta: { permission: 'sertifikat.view', title: 'Badge & Gamifikasi' },
+    meta: { permission: 'sertifikat.view', title: 'Badges & Gamification' },
   },
   {
-    path: 'certificates/template',
-    name: 'sertifikat-template',
+    path: 'certificates/templates',
+    name: 'certificate-templates',
     component: () => import('@/modules/certificates/views/TemplateEditorView.vue'),
-    meta: { permission: 'sertifikat.update', title: 'Template Sertifikat' },
+    meta: { permission: 'sertifikat.update', title: 'Certificate Templates' },
   },
 ];

@@ -143,7 +143,7 @@ onMounted(load);
       :subtitle="isCustomer ? t('orders.list.subtitleCustomer') : t('orders.list.subtitleStaff')"
     >
       <template v-if="!isCustomer" #actions>
-        <RouterLink v-can="'transaksi.create'" class="btn-primary" :to="{ name: 'transaksi-tanda-jadi' }">
+        <RouterLink v-can="'transaksi.create'" class="btn-primary" :to="{ name: 'manual-payment' }">
           {{ t('orders.list.addManual') }}
         </RouterLink>
       </template>

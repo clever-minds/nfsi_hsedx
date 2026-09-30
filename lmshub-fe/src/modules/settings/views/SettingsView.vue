@@ -188,7 +188,7 @@ onBeforeUnmount(() => observer?.disconnect());
   <div>
     <PageHeader :title="t('settings.title')" :subtitle="t('settings.subtitle')">
       <template #actions>
-        <RouterLink class="btn-outline" :to="{ name: 'pengaturan-rekening' }">
+        <RouterLink class="btn-outline" :to="{ name: 'bank-accounts' }">
           {{ t('settings.bankAccounts') }}
         </RouterLink>
         <RouterLink class="btn-outline" :to="{ name: 'my-profile' }">{{ t('settings.myProfile') }}</RouterLink>

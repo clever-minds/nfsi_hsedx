@@ -45,6 +45,7 @@ const error = ref('');
 const busyId = ref<string | null>(null);
 const showForm = ref(false);
 const saving = ref(false);
+const fileToUpload = ref<File | null>(null);
 
 const form = reactive({
   tipe_file: 'video' as TipeFile,
@@ -91,18 +92,44 @@ function search() {
   load();
 }
 
+function handleFileChange(event: Event) {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files.length > 0) {
+    fileToUpload.value = target.files[0];
+    if (!form.nama_file) {
+      form.nama_file = target.files[0].name;
+    }
+  } else {
+    fileToUpload.value = null;
+  }
+}
+
 async function createAsset() {
-  if (!form.nama_file.trim() || !form.path_object_storage.trim()) return;
+  if (!form.nama_file.trim()) return;
+  if (!fileToUpload.value && !form.path_object_storage.trim()) return;
+
   saving.value = true;
   error.value = '';
   try {
+    let storagePath = form.path_object_storage.trim();
+    if (fileToUpload.value) {
+      const formData = new FormData();
+      formData.append('file', fileToUpload.value);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const res = await apiPost<any>('/media/upload', formData);
+      storagePath = res.path_object_storage;
+    }
+
     await apiPost('/media', {
       tipe_file: form.tipe_file,
       nama_file: form.nama_file.trim(),
-      path_object_storage: form.path_object_storage.trim(),
+      path_object_storage: storagePath,
     });
     form.nama_file = '';
     form.path_object_storage = '';
+    fileToUpload.value = null;
+    const fileInput = document.getElementById('fileUploadInput') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
     showForm.value = false;
     await load();
   } catch (e) {
@@ -162,7 +189,11 @@ onMounted(load);
         <input v-model="form.nama_file" class="input" :placeholder="t('content.media.fieldNamePlaceholder')" />
       </div>
       <div>
-        <label class="label">{{ t('content.media.fieldPath') }}</label>
+        <label class="label">Upload File</label>
+        <input type="file" id="fileUploadInput" @change="handleFileChange" class="input p-1" />
+      </div>
+      <div>
+        <label class="label">{{ t('content.media.fieldPath') }} (Optional)</label>
         <input v-model="form.path_object_storage" class="input" :placeholder="t('content.media.fieldPathPlaceholder')" />
       </div>
       <div class="sm:col-span-3">

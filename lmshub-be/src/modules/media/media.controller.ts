@@ -5,6 +5,27 @@ import { validated } from '../../core/validation/validate';
 import { AppError } from '../../core/http/AppError';
 import * as service from './media.service';
 import { CreateMediaInput, UpdateStatusInput } from './media.validation';
+import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + ext);
+  }
+});
+
+export const uploadMiddleware = multer({ storage });
+
 
 const auth = (req: Request) => {
   if (!req.auth) throw AppError.unauthorized();
@@ -41,4 +62,16 @@ export async function remove(req: Request, res: Response) {
 
 export async function signedUrl(req: Request, res: Response) {
   return ok(res, await service.signedUrl(auth(req), req.params.id));
+}
+
+export async function uploadFile(req: Request, res: Response) {
+  if (!req.file) {
+    throw AppError.badRequest('No file uploaded', 'media.no_file');
+  }
+  return ok(res, {
+    path_object_storage: req.file.filename,
+    nama_file: req.file.originalname,
+    mime_type: req.file.mimetype,
+    ukuran_bytes: req.file.size
+  });
 }

@@ -62,7 +62,7 @@ const terisiLain = computed(() => {
       class="input"
       :placeholder="fallback || t('website.defaultPlaceholder')"
       :disabled="disabled"
-      :dir="locale === 'ar' ? 'rtl' : 'ltr'"
+      :dir="(locale as string) === 'ar' ? 'rtl' : 'ltr'"
     ></textarea>
     <input
       v-else
@@ -70,7 +70,7 @@ const terisiLain = computed(() => {
       class="input"
       :placeholder="fallback || t('website.defaultPlaceholder')"
       :disabled="disabled"
-      :dir="locale === 'ar' ? 'rtl' : 'ltr'"
+      :dir="(locale as string) === 'ar' ? 'rtl' : 'ltr'"
     />
   </div>
 </template>

@@ -41,6 +41,11 @@ interface Assignment extends Record<string, unknown> {
   submission_status?: string;
 }
 
+interface CourseOption {
+  id: string;
+  judul: string;
+}
+
 const auth = useAuthStore();
 const { t, te } = useI18n();
 // Bank soal = area pengelola (instruktur/admin). Siswa hanya melihat kuis & tugas untuk dikerjakan.
@@ -285,8 +290,26 @@ function switchTab(next: 'bank' | 'kuis' | 'tugas') {
   tab.value = next;
 }
 
+const courses = ref<CourseOption[]>([]);
+const loadingCourses = ref(false);
+
+async function loadCourses() {
+  loadingCourses.value = true;
+  try {
+    const res = await apiGetFull<CourseOption[]>('/courses', { limit: 100 });
+    courses.value = res.data ?? [];
+  } catch (e) {
+    courses.value = [];
+  } finally {
+    loadingCourses.value = false;
+  }
+}
+
 onMounted(() => {
-  if (isPengelola) loadBanks(); // hindari 403 bank_soal.view untuk siswa
+  if (isPengelola) {
+    loadBanks(); // hindari 403 bank_soal.view untuk siswa
+    loadCourses();
+  }
   loadQuizzes();
   loadAssignments();
 });
@@ -334,7 +357,10 @@ onMounted(() => {
           </div>
           <div>
             <label class="label">{{ t('assessments.list.bankCourseId') }}</label>
-            <input v-model="bankForm.kursusId" class="input" :placeholder="t('assessments.list.courseIdPlaceholder')" />
+            <select v-model="bankForm.kursusId" class="input">
+              <option value="">{{ t('common.action.choose') }}</option>
+              <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.judul }}</option>
+            </select>
           </div>
         </div>
         <div class="mt-3 flex justify-end gap-2">
@@ -396,7 +422,10 @@ onMounted(() => {
           </div>
           <div>
             <label class="label">{{ t('assessments.list.assignmentCourseId') }}</label>
-            <input v-model="assignmentForm.kursusId" class="input" :placeholder="t('assessments.list.courseIdPlaceholder')" />
+            <select v-model="assignmentForm.kursusId" class="input">
+              <option value="">{{ t('common.action.choose') }}</option>
+              <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.judul }}</option>
+            </select>
           </div>
           <div>
             <label class="label">{{ t('assessments.list.dueDate') }}</label>

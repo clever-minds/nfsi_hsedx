@@ -48,7 +48,7 @@ const form = reactive({
   harga_coret: undefined as number | undefined,
   ringkasan: '',
   deskripsi: '',
-  bahasa: 'id',
+  bahasa: 'en',
   thumbnail_media_id: undefined as string | undefined,
 });
 
@@ -193,8 +193,7 @@ async function transition(action: 'submit' | 'publish' | 'archive') {
         </button>
       </div>
 
-      <p v-if="error" class="mb-4 alert-error">{{ error }}</p>
-      <p v-if="notice" class="mb-4 alert-success">{{ notice }}</p>
+
 
       <div v-if="tab === 'info'" class="space-y-6">
         <form class="card grid gap-4 p-5 sm:grid-cols-2" @submit.prevent="submit">
@@ -269,6 +268,10 @@ async function transition(action: 'submit' | 'publish' | 'archive') {
             {{ t('courses.editor.instructor', { name: instructorNama || '—' }) }}
           </div>
 
+          <div class="sm:col-span-2">
+            <p v-if="error" class="mb-4 alert-error">{{ error }}</p>
+            <p v-if="notice" class="mb-4 alert-success">{{ notice }}</p>
+          </div>
           <div class="flex flex-wrap gap-2 sm:col-span-2">
             <button class="btn-primary" type="submit" :disabled="saving">
               {{ saving ? t('common.state.saving') : t('common.action.save') }}

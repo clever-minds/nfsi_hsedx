@@ -2,10 +2,14 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { apiGet, apiPost, apiPut, errorMessage } from '@/lib/api';
+import { apiGet, apiGetFull, apiPost, apiPut, errorMessage } from '@/lib/api';
 import { fmtAngka } from '@/lib/format';
 import PageHeader from '@/components/ui/PageHeader.vue';
 
+interface CourseOption {
+  id: string;
+  judul: string;
+}
 interface QuestionBank {
   id: string;
   nama: string;
@@ -55,6 +59,21 @@ const selectedBankId = ref('');
 const questions = ref<QuestionSummary[]>([]);
 const questionsLoading = ref(false);
 const selectedQuestionIds = ref<Set<string>>(new Set());
+
+const courses = ref<CourseOption[]>([]);
+const coursesLoading = ref(false);
+
+async function loadCourses() {
+  coursesLoading.value = true;
+  try {
+    const res = await apiGetFull<CourseOption[]>('/courses', { limit: 100 });
+    courses.value = res.data ?? [];
+  } catch (e) {
+    courses.value = [];
+  } finally {
+    coursesLoading.value = false;
+  }
+}
 
 async function loadBanks() {
   banksLoading.value = true;
@@ -137,6 +156,7 @@ async function save() {
 }
 
 onMounted(() => {
+  loadCourses();
   loadBanks();
   loadQuiz();
 });
@@ -165,7 +185,10 @@ onMounted(() => {
           </div>
           <div class="sm:col-span-2">
             <label class="label">{{ t('assessments.builder.courseId') }}</label>
-            <input v-model="form.kursusId" class="input" :placeholder="t('assessments.builder.courseIdPlaceholder')" />
+            <select v-model="form.kursusId" class="input" :disabled="coursesLoading">
+              <option value="">{{ t('common.action.choose') }}</option>
+              <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.judul }}</option>
+            </select>
           </div>
           <div>
             <label class="label">{{ t('assessments.builder.timeLimit') }}</label>

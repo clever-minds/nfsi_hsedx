@@ -75,7 +75,13 @@ const lessonsBySection = ref<Record<string, Lesson[]>>({});
 const loadingCourses = ref(true);
 const loadingCurriculum = ref(false);
 const error = ref('');
+const notice = ref('');
 const busy = ref(false);
+
+function showNotice(msg: string) {
+  notice.value = msg;
+  setTimeout(() => notice.value = '', 3000);
+}
 
 const newSectionTitle = ref('');
 const newLessonTitle = ref<Record<string, string>>({});
@@ -357,6 +363,7 @@ async function addSection() {
     });
     newSectionTitle.value = '';
     await loadCurriculum();
+    showNotice(t('common.state.saved', 'Berhasil ditambahkan!'));
   } catch (e) {
     error.value = errorMessage(e, t('content.builder.addSectionFailed'));
   } finally {
@@ -407,6 +414,7 @@ async function addLesson(sectionId: string) {
     });
     newLessonTitle.value[sectionId] = '';
     await loadCurriculum();
+    showNotice(t('common.state.saved', 'Berhasil ditambahkan!'));
   } catch (e) {
     error.value = errorMessage(e, t('content.builder.addLessonFailed'));
   } finally {
@@ -483,6 +491,14 @@ onMounted(async () => {
     </div>
 
     <p v-if="error" class="mb-4 alert-error">{{ error }}</p>
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="notice" class="fixed bottom-6 right-6 z-[100] flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 font-medium text-white shadow-xl">
+          <Icon name="check-circle" :size="20" />
+          {{ notice }}
+        </div>
+      </Transition>
+    </Teleport>
 
     <div v-if="!hasCourse" class="empty-state">{{ t('content.builder.needCourse') }}</div>
     <div v-else-if="loadingCurriculum" class="empty-state">

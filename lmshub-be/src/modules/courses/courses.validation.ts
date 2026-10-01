@@ -15,7 +15,7 @@ export const createCourseSchema = z.object({
   harga_coret: z.number().min(0).optional(),
   thumbnail_media_id: z.string().uuid().optional(),
   promo_video_media_id: z.string().uuid().optional(),
-  bahasa: z.string().min(2).max(10).default('id'),
+  bahasa: z.string().min(2).max(10).default('en'),
   meta: z.record(z.unknown()).optional(),
 });
 

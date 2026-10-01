@@ -8,6 +8,11 @@ import StatusChip from '@/components/ui/StatusChip.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import TablePagination from '@/components/ui/TablePagination.vue';
 
+interface CourseOption {
+  id: string;
+  judul: string;
+}
+
 interface Enrollment extends Record<string, unknown> {
   id: string;
   siswa_nama?: string;
@@ -90,6 +95,21 @@ async function loadEnrollments() {
 function applyFilter() {
   meta.page = 1;
   loadEnrollments();
+}
+
+const courses = ref<CourseOption[]>([]);
+const coursesLoading = ref(false);
+
+async function loadCourses() {
+  coursesLoading.value = true;
+  try {
+    const res = await apiGetFull<CourseOption[]>('/courses', { limit: 100 });
+    courses.value = res.data ?? [];
+  } catch (e) {
+    courses.value = [];
+  } finally {
+    coursesLoading.value = false;
+  }
 }
 
 // Assign manual
@@ -234,7 +254,10 @@ function switchTab(next: 'enrollment' | 'cohort') {
 
 watch(() => meta.page, loadEnrollments);
 
-onMounted(loadEnrollments);
+onMounted(() => {
+  loadEnrollments();
+  loadCourses();
+});
 </script>
 
 <template>
@@ -278,7 +301,10 @@ onMounted(loadEnrollments);
           </div>
           <div>
             <label class="label">{{ t('enrollment.courseId') }}</label>
-            <input v-model="assignForm.kursusId" class="input" :placeholder="t('enrollment.courseIdPlaceholder')" />
+            <select v-model="assignForm.kursusId" class="input" :disabled="coursesLoading">
+              <option value="">{{ t('common.action.choose') }}</option>
+              <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.judul }}</option>
+            </select>
           </div>
           <div>
             <label class="label">{{ t('enrollment.accessPeriod') }}</label>

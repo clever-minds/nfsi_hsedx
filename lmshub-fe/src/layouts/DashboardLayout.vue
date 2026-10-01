@@ -121,8 +121,8 @@ const tahun = new Date().getFullYear();
           {{ t('nav.header.newCourse') }}
         </RouterLink>
 
-        <CurrencySwitcher />
-        <LocaleSwitcher />
+        <!-- <CurrencySwitcher /> -->
+        <!-- <LocaleSwitcher /> -->
 
         <!-- Ikon aksi -->
         <RouterLink

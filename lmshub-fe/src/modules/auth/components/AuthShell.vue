@@ -16,8 +16,8 @@ const tahun = new Date().getFullYear();
   <div class="auth-bg relative flex min-h-screen flex-col items-center justify-center px-4 py-10">
     <!-- Pemilih bahasa: harus tersedia sebelum login, bukan hanya di dalam app -->
     <div class="absolute end-4 top-4">
-      <CurrencySwitcher />
-      <LocaleSwitcher />
+      <!-- <CurrencySwitcher /> -->
+      <!-- <LocaleSwitcher /> -->
     </div>
 
     <!-- Logo -->

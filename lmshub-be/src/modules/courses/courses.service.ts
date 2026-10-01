@@ -111,7 +111,32 @@ export async function update(actor: AuthContext, id: string, input: UpdateCourse
   if (input.level !== undefined) fields.level = input.level;
   if (input.harga !== undefined) fields.harga = input.harga;
   if (input.harga_coret !== undefined) fields.harga_coret = input.harga_coret;
-  if (input.thumbnail_media_id !== undefined) fields.thumbnail_media_id = input.thumbnail_media_id;
+  if (input.thumbnail_media_id !== undefined) {
+    fields.thumbnail_media_id = input.thumbnail_media_id;
+    if (input.thumbnail_media_id) {
+      const media = await repo.mediaAssetExists(input.thumbnail_media_id);
+      if (!media) throw AppError.badRequest('Thumbnail not found', 'course.thumbnail_not_found');
+      
+      // We must fetch the actual path to store in meta.thumbnail_url because frontend reads it
+      const { queryOne } = await import('../../core/db/pool');
+      const mediaRow = await queryOne<{ path_object_storage: string }>(
+        `SELECT path_object_storage FROM media_assets WHERE id = $1`,
+        [input.thumbnail_media_id]
+      );
+      if (mediaRow) {
+        fields.meta = {
+          ...(typeof fields.meta === 'object' && fields.meta !== null ? fields.meta : (before.meta as Record<string, unknown> || {})),
+          thumbnail_url: mediaRow.path_object_storage
+        };
+      }
+    } else {
+      // clear the thumbnail url if thumbnail_media_id is null
+      fields.meta = {
+        ...(typeof fields.meta === 'object' && fields.meta !== null ? fields.meta : (before.meta as Record<string, unknown> || {})),
+        thumbnail_url: null
+      };
+    }
+  }
   if (input.promo_video_media_id !== undefined) fields.promo_video_media_id = input.promo_video_media_id;
   if (input.bahasa !== undefined) fields.bahasa = input.bahasa;
   if (input.meta !== undefined) fields.meta = input.meta;

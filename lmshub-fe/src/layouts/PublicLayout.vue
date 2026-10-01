@@ -107,8 +107,8 @@ const copyright = computed(() => {
           <Icon name="phone" :size="13" /> <span class="num">{{ telepon }}</span>
         </span>
         <div class="ms-auto flex items-center gap-3">
-          <CurrencySwitcher variant="dark" />
-          <LocaleSwitcher variant="dark" />
+          <!-- <CurrencySwitcher variant="dark" /> -->
+          <!-- <LocaleSwitcher variant="dark" /> -->
           <a
             v-for="s in site.sosialAktif"
             :key="s.platform"
@@ -160,8 +160,8 @@ const copyright = computed(() => {
 
         <div class="ms-auto flex items-center gap-2">
           <!-- Pemilih bahasa juga di header agar terlihat di mobile (topbar tersembunyi) -->
-          <CurrencySwitcher class="md:hidden" :show-label="false" />
-          <LocaleSwitcher class="md:hidden" :show-label="false" />
+          <!-- <CurrencySwitcher class="md:hidden" :show-label="false" /> -->
+          <!-- <LocaleSwitcher class="md:hidden" :show-label="false" /> -->
           <template v-if="auth.isAuthenticated">
             <RouterLink to="/d" class="btn-primary rounded-full py-2">{{ t('nav.header.goToDashboard') }}</RouterLink>
           </template>

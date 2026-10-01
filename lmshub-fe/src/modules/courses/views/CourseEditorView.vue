@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useCurrencyStore } from '@/stores/currency';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import StatusChip from '@/components/ui/StatusChip.vue';
+import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
 
 interface CourseDetail {
   id: string;
@@ -21,6 +22,7 @@ interface CourseDetail {
   bahasa: string;
   status_publikasi: string;
   instructor_nama?: string | null;
+  thumbnail_media_id?: string | null;
 }
 interface Category {
   id: string;
@@ -47,6 +49,7 @@ const form = reactive({
   ringkasan: '',
   deskripsi: '',
   bahasa: 'id',
+  thumbnail_media_id: undefined as string | undefined,
 });
 
 const currentStatus = ref('draf');
@@ -88,6 +91,7 @@ async function loadCourse(id: string) {
   form.ringkasan = c.ringkasan ?? '';
   form.deskripsi = c.deskripsi ?? '';
   form.bahasa = c.bahasa;
+  form.thumbnail_media_id = c.thumbnail_media_id ?? undefined;
   currentStatus.value = c.status_publikasi;
   instructorNama.value = c.instructor_nama ?? '';
 }
@@ -120,6 +124,7 @@ async function submit() {
       ringkasan: form.ringkasan || undefined,
       deskripsi: form.deskripsi || undefined,
       bahasa: form.bahasa,
+      thumbnail_media_id: form.thumbnail_media_id || undefined,
     };
     if (isEdit.value && courseId.value) {
       await apiPut(`/courses/${courseId.value}`, payload);
@@ -241,6 +246,20 @@ async function transition(action: 'submit' | 'publish' | 'archive') {
           <div class="sm:col-span-2">
             <label class="label">{{ t('courses.editor.fieldSummary') }}</label>
             <textarea v-model="form.ringkasan" class="input" rows="2" maxlength="500"></textarea>
+          </div>
+          <div class="sm:col-span-2 border-t border-slate-100 pt-4">
+            <label class="label">Course Thumbnail (Optional)</label>
+            <div class="flex items-center gap-3">
+              <MediaUploadButton
+                accept="image/jpeg,image/png,image/webp"
+                label="Upload New Thumbnail"
+                @uploaded="form.thumbnail_media_id = $event.id"
+              />
+              <span v-if="form.thumbnail_media_id" class="text-sm font-medium text-green-600">
+                Thumbnail selected! (ID: {{ form.thumbnail_media_id.substring(0,8) }}...)
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Upload a cover image for your course. It will automatically be selected.</p>
           </div>
           <div class="sm:col-span-2">
             <label class="label">{{ t('courses.editor.fieldDescription') }}</label>

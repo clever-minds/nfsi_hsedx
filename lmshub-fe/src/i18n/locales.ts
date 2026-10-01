@@ -32,9 +32,9 @@ export const LOCALES: Record<SupportedLocale, LocaleDef> = {
     native: 'English',
     english: 'English',
     dir: 'ltr',
-    intl: 'en-US',
-    intlNumber: 'en-US',
-    flag: '🇬🇧',
+    intl: 'en-IN',
+    intlNumber: 'en-IN',
+    flag: '🇮🇳',
   },
   hi: {
     code: 'hi',

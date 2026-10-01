@@ -38,6 +38,9 @@ const diskon = computed(() => {
   const c = Number(props.course.harga_coret ?? 0);
   return c > h && h > 0 ? Math.round(((c - h) / c) * 100) : 0;
 });
+
+// DEBUG LOG: See what the thumbnail URL is
+console.log(`Course [${props.course.judul}] thumbnail URL:`, props.course.meta?.thumbnail_url);
 </script>
 
 <template>

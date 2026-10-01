@@ -13,6 +13,11 @@ interface CourseOption {
   judul: string;
 }
 
+interface UserOption {
+  id: string;
+  nama_lengkap: string;
+}
+
 interface Enrollment extends Record<string, unknown> {
   id: string;
   siswa_nama?: string;
@@ -109,6 +114,21 @@ async function loadCourses() {
     courses.value = [];
   } finally {
     coursesLoading.value = false;
+  }
+}
+
+const users = ref<UserOption[]>([]);
+const usersLoading = ref(false);
+
+async function loadUsers() {
+  usersLoading.value = true;
+  try {
+    const res = await apiGetFull<UserOption[]>('/users', { limit: 100, 'filter[role]': 'siswa' });
+    users.value = res.data ?? [];
+  } catch (e) {
+    users.value = [];
+  } finally {
+    usersLoading.value = false;
   }
 }
 
@@ -257,6 +277,7 @@ watch(() => meta.page, loadEnrollments);
 onMounted(() => {
   loadEnrollments();
   loadCourses();
+  loadUsers();
 });
 </script>
 
@@ -297,7 +318,10 @@ onMounted(() => {
         <div class="mt-3 grid gap-3 sm:grid-cols-2">
           <div>
             <label class="label">{{ t('enrollment.studentIds') }}</label>
-            <input v-model="assignForm.siswaId" class="input" :placeholder="t('enrollment.studentIdsPlaceholder')" />
+            <select v-model="assignForm.siswaId" class="input" :disabled="usersLoading">
+              <option value="">{{ t('common.action.choose') }}</option>
+              <option v-for="u in users" :key="u.id" :value="u.id">{{ u.nama_lengkap }}</option>
+            </select>
           </div>
           <div>
             <label class="label">{{ t('enrollment.courseId') }}</label>

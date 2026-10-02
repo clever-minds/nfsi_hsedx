@@ -66,6 +66,7 @@ async function load() {
     const res = await apiGetFull<CourseRow[]>('/courses', {
       page: page.value,
       limit,
+      sort: '-created_at',
       q: q.value || undefined,
       'filter[status]': statusFilter.value || undefined,
       'filter[category_id]': categoryFilter.value || undefined,

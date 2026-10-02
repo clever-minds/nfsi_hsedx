@@ -14,7 +14,7 @@ const props = withDefaults(defineProps<{ accept?: string; label?: string }>(), {
   label: '',
 });
 
-const emit = defineEmits<{ uploaded: [asset: { id: string; nama_file: string; tipe_file: string }] }>();
+const emit = defineEmits<{ uploaded: [asset: { id: string; nama_file: string; tipe_file: string; path_object_storage?: string }] }>();
 
 const { t } = useI18n();
 const input = ref<HTMLInputElement | null>(null);
@@ -35,7 +35,7 @@ async function onPick(e: Event) {
   fileName.value = file.name;
   progress.value = 0;
   try {
-    const asset = await apiUpload<{ id: string; nama_file: string; tipe_file: string }>('/media/upload', file, (p) => {
+    const asset = await apiUpload<{ id: string; nama_file: string; tipe_file: string; path_object_storage?: string }>('/media/upload', file, (p) => {
       progress.value = p;
     });
     emit('uploaded', asset);

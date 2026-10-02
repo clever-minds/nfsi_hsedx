@@ -54,9 +54,21 @@ export async function create(actor: AuthContext, input: CreateCourseInput) {
   const existingSlug = await repo.bySlug(slug);
   if (existingSlug) throw AppError.conflict('That course slug is already in use', 'course.slug_taken');
 
+  let initialMeta: Record<string, unknown> | null = input.meta ? { ...input.meta } : null;
+
   if (input.thumbnail_media_id) {
     const ok = await repo.mediaAssetExists(input.thumbnail_media_id);
     if (!ok) throw AppError.badRequest('Thumbnail image not found', 'course.thumbnail_not_found');
+
+    const { queryOne } = await import('../../core/db/pool');
+    const mediaRow = await queryOne<{ path_object_storage: string }>(
+      `SELECT path_object_storage FROM media_assets WHERE id = $1`,
+      [input.thumbnail_media_id]
+    );
+    if (mediaRow) {
+      initialMeta = initialMeta ?? {};
+      initialMeta.thumbnail_url = mediaRow.path_object_storage;
+    }
   }
   if (input.promo_video_media_id) {
     const ok = await repo.mediaAssetExists(input.promo_video_media_id);
@@ -76,7 +88,7 @@ export async function create(actor: AuthContext, input: CreateCourseInput) {
     thumbnail_media_id: input.thumbnail_media_id ?? null,
     promo_video_media_id: input.promo_video_media_id ?? null,
     bahasa: input.bahasa,
-    meta: input.meta ?? null,
+    meta: initialMeta,
   });
 
   await recordAudit({

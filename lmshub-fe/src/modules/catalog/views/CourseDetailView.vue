@@ -439,8 +439,8 @@ const TERMASUK = computed(() => [
           </div>
 
           <!-- ── Sidebar ─────────────────────────────────────────────── -->
-          <aside class="space-y-5">
-            <div class="card sticky top-20 rounded-2xl p-5">
+          <aside class="space-y-5 sticky top-20 self-start">
+            <div class="card rounded-2xl p-5">
               <div class="flex items-baseline justify-between">
                 <span class="text-3xl font-extrabold" :class="Number(course.harga) > 0 ? 'text-slate-900' : 'text-emerald-500'">
                   {{ fmtHarga(course.harga) }}

@@ -78,9 +78,10 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: CourseRow
   const sortCol = ['judul', 'harga', 'status_publikasi', 'created_at'].includes(p.sort ?? '')
     ? `c.${p.sort}`
     : 'c.created_at';
+  const sortOrder = (p.sort || !p.order) && p.order ? p.order : 'DESC';
 
   const rows = await query<CourseRow>(
-    `${BASE_SELECT} WHERE ${whereSql} ORDER BY ${sortCol} ${p.order} LIMIT ${p.limit} OFFSET ${p.offset}`,
+    `${BASE_SELECT} WHERE ${whereSql} ORDER BY ${sortCol} ${sortOrder} LIMIT ${p.limit} OFFSET ${p.offset}`,
     params,
   );
   const totalRow = await queryOne<{ count: string }>(

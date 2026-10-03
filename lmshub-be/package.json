@@ -16,6 +16,7 @@
     "migrate:create": "node-pg-migrate create -j ts -m migrations",
     "seed": "tsx src/scripts/seed.ts",
     "seed:demo": "tsx src/scripts/demo.ts",
+    "seed:fire-safety": "tsx src/scripts/seed-fire-safety.ts",
     "seed:siswa-quiz": "tsx src/scripts/seed-siswa-quiz.ts",
     "seed:categories": "tsx src/scripts/seed-categories.ts",
     "test:features": "node scripts/feature-test.cjs",

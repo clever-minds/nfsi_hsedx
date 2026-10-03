@@ -8,22 +8,28 @@ async function one<T extends Record<string, unknown>>(sql: string, params: unkno
 }
 
 const FIRE_SAFETY_COURSES = [
-  { title: 'Fire Safety Basics', slug: 'fire-safety-basics', categorySlug: 'fire', categoryName: 'Fire', icon: '🔥', price: 0, learn: ['Understanding fire triangle', 'Types of fires', 'Evacuation procedures'] },
-  { title: 'Advanced Fire Fighting', slug: 'advanced-fire-fighting', categorySlug: 'fire', categoryName: 'Fire', icon: '🔥', price: 49, learn: ['Using fire extinguishers', 'Fire hoses and hydrants', 'Breathing apparatus'] },
-  { title: 'Workplace Fire Hazards', slug: 'workplace-fire-hazards', categorySlug: 'occupational-safety', categoryName: 'Occupational Safety', icon: '👷', price: 29, learn: ['Identifying hazards', 'Electrical safety', 'Chemical storage'] },
-  { title: 'Fire Warden Training', slug: 'fire-warden-training', categorySlug: 'fire', categoryName: 'Fire', icon: '🔥', price: 99, learn: ['Role of a fire warden', 'Emergency response plan', 'Conducting fire drills'] },
-  { title: 'Industrial Fire Protection', slug: 'industrial-fire-protection', categorySlug: 'occupational-safety', categoryName: 'Occupational Safety', icon: '👷', price: 149, learn: ['Industrial hazards', 'Suppression systems', 'Explosion prevention'] },
-  { title: 'Home Fire Safety', slug: 'home-fire-safety', categorySlug: 'health-environment', categoryName: 'Health & Environment', icon: '🌍', price: 0, learn: ['Kitchen fire safety', 'Smoke alarms', 'Family escape plans'] },
-  { title: 'Construction Site Fire Safety', slug: 'construction-fire-safety', categorySlug: 'occupational-safety', categoryName: 'Occupational Safety', icon: '👷', price: 79, learn: ['Hot work permits', 'Flammable materials', 'Temporary fire systems'] },
-  { title: 'Fire Risk Assessment', slug: 'fire-risk-assessment', categorySlug: 'occupational-safety', categoryName: 'Occupational Safety', icon: '👷', price: 89, learn: ['Legal requirements', 'Conducting assessments', 'Implementing controls'] },
-  { title: 'Healthcare Fire Safety', slug: 'healthcare-fire-safety', categorySlug: 'health-environment', categoryName: 'Health & Environment', icon: '🌍', price: 119, learn: ['Evacuating patients', 'Oxygen fire risks', 'Hospital fire systems'] },
-  { title: 'Wildfire Preparedness', slug: 'wildfire-preparedness', categorySlug: 'health-environment', categoryName: 'Health & Environment', icon: '🌍', price: 0, learn: ['Defensible space', 'Evacuation kits', 'Home hardening'] },
-  { title: 'Marine Fire Fighting', slug: 'marine-fire-fighting', categorySlug: 'fire', categoryName: 'Fire', icon: '🔥', price: 199, learn: ['Vessel fire dynamics', 'Shipboard suppression', 'Abandon ship procedures'] },
-  { title: 'Aviation Fire Rescue', slug: 'aviation-fire-rescue', categorySlug: 'fire', categoryName: 'Fire', icon: '🔥', price: 249, learn: ['Aircraft hazards', 'ARFF operations', 'Passenger rescue'] },
-  { title: 'Fire Investigation Basics', slug: 'fire-investigation-basics', categorySlug: 'fire', categoryName: 'Fire', icon: '🔥', price: 159, learn: ['Origin and cause', 'Evidence collection', 'Arson indicators'] },
-  { title: 'High-Rise Fire Safety', slug: 'high-rise-fire-safety', categorySlug: 'occupational-safety', categoryName: 'Occupational Safety', icon: '👷', price: 129, learn: ['Stairwell evacuation', 'Standpipe systems', 'Elevator procedures'] },
-  { title: 'Fire Prevention Systems', slug: 'fire-prevention-systems', categorySlug: 'occupational-safety', categoryName: 'Occupational Safety', icon: '👷', price: 69, learn: ['Sprinkler basics', 'Fire alarms', 'System maintenance'] },
+  { title: 'Fire Safety Basics', slug: 'fire-safety-basics', categorySlug: 'fire', categoryName: 'Fire', icon: '🔥', level: 'pemula', price: 0, learn: ['Understanding fire triangle', 'Types of fires', 'Evacuation procedures'] },
+  { title: 'Advanced Fire Fighting', slug: 'advanced-fire-fighting', categorySlug: 'fire', categoryName: 'Fire', icon: '🔥', level: 'mahir', price: 49, learn: ['Using fire extinguishers', 'Fire hoses and hydrants', 'Breathing apparatus'] },
+  { title: 'Workplace Fire Hazards', slug: 'workplace-fire-hazards', categorySlug: 'occupational-safety', categoryName: 'Occupational Safety', icon: '👷', level: 'menengah', price: 29, learn: ['Identifying hazards', 'Electrical safety', 'Chemical storage'] },
+  { title: 'Fire Warden Training', slug: 'fire-warden-training', categorySlug: 'fire', categoryName: 'Fire', icon: '🔥', level: 'menengah', price: 99, learn: ['Role of a fire warden', 'Emergency response plan', 'Conducting fire drills'] },
+  { title: 'Industrial Fire Protection', slug: 'industrial-fire-protection', categorySlug: 'occupational-safety', categoryName: 'Occupational Safety', icon: '👷', level: 'mahir', price: 149, learn: ['Industrial hazards', 'Suppression systems', 'Explosion prevention'] },
+  { title: 'Home Fire Safety', slug: 'home-fire-safety', categorySlug: 'health-environment', categoryName: 'Health & Environment', icon: '🌍', level: 'pemula', price: 0, learn: ['Kitchen fire safety', 'Smoke alarms', 'Family escape plans'] },
+  { title: 'Construction Site Fire Safety', slug: 'construction-fire-safety', categorySlug: 'occupational-safety', categoryName: 'Occupational Safety', icon: '👷', level: 'menengah', price: 79, learn: ['Hot work permits', 'Flammable materials', 'Temporary fire systems'] },
+  { title: 'Fire Risk Assessment', slug: 'fire-risk-assessment', categorySlug: 'occupational-safety', categoryName: 'Occupational Safety', icon: '👷', level: 'mahir', price: 89, learn: ['Legal requirements', 'Conducting assessments', 'Implementing controls'] },
+  { title: 'Healthcare Fire Safety', slug: 'healthcare-fire-safety', categorySlug: 'health-environment', categoryName: 'Health & Environment', icon: '🌍', level: 'menengah', price: 119, learn: ['Evacuating patients', 'Oxygen fire risks', 'Hospital fire systems'] },
+  { title: 'Wildfire Preparedness', slug: 'wildfire-preparedness', categorySlug: 'health-environment', categoryName: 'Health & Environment', icon: '🌍', level: 'pemula', price: 0, learn: ['Defensible space', 'Evacuation kits', 'Home hardening'] },
+  { title: 'Marine Fire Fighting', slug: 'marine-fire-fighting', categorySlug: 'fire', categoryName: 'Fire', icon: '🔥', level: 'mahir', price: 199, learn: ['Vessel fire dynamics', 'Shipboard suppression', 'Abandon ship procedures'] },
+  { title: 'Aviation Fire Rescue', slug: 'aviation-fire-rescue', categorySlug: 'fire', categoryName: 'Fire', icon: '🔥', level: 'mahir', price: 249, learn: ['Aircraft hazards', 'ARFF operations', 'Passenger rescue'] },
+  { title: 'Fire Investigation Basics', slug: 'fire-investigation-basics', categorySlug: 'fire', categoryName: 'Fire', icon: '🔥', level: 'menengah', price: 159, learn: ['Origin and cause', 'Evidence collection', 'Arson indicators'] },
+  { title: 'High-Rise Fire Safety', slug: 'high-rise-fire-safety', categorySlug: 'occupational-safety', categoryName: 'Occupational Safety', icon: '👷', level: 'menengah', price: 129, learn: ['Stairwell evacuation', 'Standpipe systems', 'Elevator procedures'] },
+  { title: 'Fire Prevention Systems', slug: 'fire-prevention-systems', categorySlug: 'occupational-safety', categoryName: 'Occupational Safety', icon: '👷', level: 'pemula', price: 69, learn: ['Sprinkler basics', 'Fire alarms', 'System maintenance'] },
 ];
+
+const LEVEL_LABEL: Record<string, string> = {
+  pemula: 'Beginner',
+  menengah: 'Intermediate',
+  mahir: 'Advanced',
+};
 
 const YOUTUBE_URLS = [
   'https://www.youtube.com/watch?v=U4iBCMWC4xM', 
@@ -42,7 +48,7 @@ async function main() {
       title: c.title,
       category: c.categorySlug,
       categoryLabel: c.categoryName,
-      level: 'Beginner'
+      level: LEVEL_LABEL[c.level]
     })),
     people: []
   });
@@ -88,7 +94,7 @@ async function main() {
                             durasi_total_menit, meta, published_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'terbit','en', 4.5, 10, 50, $10, $11, now())
        ON CONFLICT (slug) WHERE deleted_at IS NULL DO UPDATE SET
-         judul=EXCLUDED.judul, harga=EXCLUDED.harga, category_id=EXCLUDED.category_id, meta=EXCLUDED.meta
+         judul=EXCLUDED.judul, harga=EXCLUDED.harga, category_id=EXCLUDED.category_id, meta=EXCLUDED.meta, level=EXCLUDED.level
        RETURNING id`,
       [
         c.title,
@@ -97,7 +103,7 @@ async function main() {
         `This course covers everything you need to know about ${c.title}. Enroll now to improve your safety skills.`,
         cat.id,
         instructorProfile.id,
-        'pemula',
+        c.level,
         c.price,
         c.price === 0 ? 0 : c.price + 20,
         c.learn.length * 15,

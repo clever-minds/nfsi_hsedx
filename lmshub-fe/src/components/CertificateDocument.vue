@@ -44,7 +44,7 @@ const { t } = useI18n();
 
         <div class="footer" style="margin-top: auto;">
           <div class="foot-left"></div>
-          <div class="foot-right">
+          <div class="foot-right" style="margin-bottom: 90px;">
             <img v-if="cert.qr_code_url" :src="cert.qr_code_url" :alt="t('certificates.doc.qrAlt')" class="qr" />
           </div>
         </div>

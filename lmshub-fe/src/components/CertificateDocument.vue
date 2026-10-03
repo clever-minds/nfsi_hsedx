@@ -25,42 +25,17 @@ const { t } = useI18n();
       <span class="corner bl"></span><span class="corner br"></span> -->
 
       <div class="cert-inner">
-        <div class="brand">
-          <span class="brand-mark">▦</span>
-          <span class="brand-name">LMS HUB</span>
-        </div>
-        <div class="eyebrow">{{ t('certificates.doc.eyebrow') }}</div>
-        <h1 class="title">{{ t('certificates.doc.title') }}</h1>
-        <div class="divider"><span></span>❖<span></span></div>
-
-        <p class="lead">{{ t('certificates.doc.leadTo') }}</p>
-        <div class="nama">{{ cert.nama }}</div>
-        <p class="lead">{{ t('certificates.doc.leadFor') }}</p>
-        <div class="kursus">{{ cert.kursus }}</div>
-
-        <div class="meta">
-          <div class="meta-col">
-            <div class="meta-line"></div>
-            <div class="meta-label">{{ cert.instruktur || t('certificates.doc.instructor') }}</div>
-            <div class="meta-sub">{{ t('certificates.doc.instructor') }}</div>
-          </div>
-          <div class="seal">★</div>
-          <div class="meta-col">
-            <div class="meta-line"></div>
-            <div class="meta-label">{{ t('certificates.doc.academicDirector') }}</div>
-            <div class="meta-sub">LMS Hub</div>
-          </div>
-        </div>
+        <div class="nama" style="margin-top: 180px;">{{ cert.nama }}</div>
+        <div class="kursus" style="margin-top: 20px;">{{ cert.kursus }}</div>
 
         <div class="footer">
-          <div class="foot-left">
-            <div><b>{{ t('certificates.doc.number') }}</b> {{ cert.nomor_sertifikat || '—' }}</div>
-            <div><b>{{ t('certificates.doc.date') }}</b> {{ fmtTanggalPanjang(cert.tanggal_terbit) }}</div>
-            <div v-if="cert.kode_verifikasi" class="kode">{{ t('certificates.doc.code', { value: cert.kode_verifikasi }) }}</div>
+          <div class="foot-left" style="margin-left: 200px; text-align: center;">
+            <div style="font-size: 11px;">{{ cert.nomor_sertifikat || '—' }}</div>
+            <div style="font-size: 11px;">{{ fmtTanggalPanjang(cert.tanggal_terbit) }}</div>
+            <div v-if="cert.kode_verifikasi" class="kode">{{ cert.kode_verifikasi }}</div>
           </div>
-          <div class="foot-right">
+          <div class="foot-right" style="margin-bottom: 80px;">
             <img v-if="cert.qr_code_url" :src="cert.qr_code_url" :alt="t('certificates.doc.qrAlt')" class="qr" />
-            <div class="verify-note">{{ t('certificates.doc.verifyNote') }}</div>
           </div>
         </div>
       </div>

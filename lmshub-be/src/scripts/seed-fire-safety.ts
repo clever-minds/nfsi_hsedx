@@ -1,5 +1,6 @@
 import { pool } from '../core/db/pool';
 import { logger } from '../core/logger/logger';
+import { installDemoMedia, courseThumbnailUrl } from './demo-media';
 
 async function one<T extends Record<string, unknown>>(sql: string, params: unknown[] = []): Promise<T | null> {
   const r = await pool.query<T>(sql, params);
@@ -32,16 +33,19 @@ const YOUTUBE_URLS = [
   'https://www.youtube.com/watch?v=KRPRggeiVQ4',
 ];
 
-const THUMBNAILS = [
-  'https://images.unsplash.com/photo-1542617326-72d8293701df?q=80&w=600&auto=format&fit=crop', // fire truck/firefighter
-  'https://images.unsplash.com/photo-1589254395460-e4b9fc078e6a?q=80&w=600&auto=format&fit=crop', // fire extinguisher
-  'https://images.unsplash.com/photo-1550981987-a3a8e26bc19c?q=80&w=600&auto=format&fit=crop', // fire alarm
-  'https://images.unsplash.com/photo-1628108422453-3b1bb7a23c8a?q=80&w=600&auto=format&fit=crop', // fireman hose
-  'https://images.unsplash.com/photo-1498064977934-2e2a8682a3be?q=80&w=600&auto=format&fit=crop', // fire/flame
-];
-
 async function main() {
   logger.info('Starting Fire Safety courses seeding...');
+
+  await installDemoMedia({
+    courses: FIRE_SAFETY_COURSES.map(c => ({
+      slug: c.slug,
+      title: c.title,
+      category: c.categorySlug,
+      categoryLabel: c.categoryName,
+      level: 'Beginner'
+    })),
+    people: []
+  });
   
   // 1. Get an instructor profile
   let instructorProfile = await one<{ id: string }>(`SELECT id FROM instructor_profiles LIMIT 1`);
@@ -98,7 +102,7 @@ async function main() {
         c.price === 0 ? 0 : c.price + 20,
         c.learn.length * 15,
         JSON.stringify({
-          thumbnail_url: THUMBNAILS[courseIndex % THUMBNAILS.length],
+          thumbnail_url: courseThumbnailUrl(c.slug),
           yang_dipelajari: c.learn,
           persyaratan: ['No prior experience needed', 'Internet connection'],
           cocok_untuk: ['Safety officers', 'General public', 'Professionals'],

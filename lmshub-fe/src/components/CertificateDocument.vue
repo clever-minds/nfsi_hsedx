@@ -20,9 +20,9 @@ const { t } = useI18n();
 <template>
   <div class="cert-wrap">
     <div class="cert">
-      <!-- Ornamen sudut -->
-      <span class="corner tl"></span><span class="corner tr"></span>
-      <span class="corner bl"></span><span class="corner br"></span>
+      <!-- Ornamen sudut (disabled for custom background) -->
+      <!-- <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span> -->
 
       <div class="cert-inner">
         <div class="brand">
@@ -79,8 +79,7 @@ const { t } = useI18n();
   width: 100%;
   max-width: 900px;
   aspect-ratio: 1.414 / 1;
-  background: linear-gradient(135deg, #fbfdfb 0%, #f4f8f4 100%);
-  border: 2px solid #b98a2e;
+  background: url('/img/certificate-bg.jpg') center/cover no-repeat;
   box-shadow: 0 10px 40px rgba(18, 53, 38, 0.12);
   font-family: Georgia, 'Times New Roman', serif;
   color: #143d2f;
@@ -89,7 +88,7 @@ const { t } = useI18n();
 .cert-inner {
   position: absolute;
   inset: 14px;
-  border: 1px solid #d8b25a;
+  /* border: 1px solid #d8b25a; */
   display: flex;
   flex-direction: column;
   align-items: center;

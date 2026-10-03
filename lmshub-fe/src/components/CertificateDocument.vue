@@ -25,16 +25,26 @@ const { t } = useI18n();
       <span class="corner bl"></span><span class="corner br"></span> -->
 
       <div class="cert-inner">
-        <div class="nama" style="margin-top: 180px;">{{ cert.nama }}</div>
-        <div class="kursus" style="margin-top: 20px;">{{ cert.kursus }}</div>
+        <p class="lead" style="margin-top: 100px;">This is to certify that</p>
+        <div class="nama">{{ cert.nama }}</div>
+        
+        <p class="lead" style="max-width: 600px; margin: 10px auto;">has successfully completed and received a passing grade in</p>
+        <div class="kursus">{{ cert.kursus }}</div>
+        
+        <p class="lead" style="max-width: 600px; margin: 15px auto;">
+          a course of study offered by <strong>HSEdx</strong>, an Online Learning Initiative by <strong>National Fire Safety Institute</strong>.
+        </p>
 
-        <div class="footer">
-          <div class="foot-left" style="margin-left: 200px; text-align: center;">
-            <div style="font-size: 11px;">{{ cert.nomor_sertifikat || '—' }}</div>
-            <div style="font-size: 11px;">{{ fmtTanggalPanjang(cert.tanggal_terbit) }}</div>
-            <div v-if="cert.kode_verifikasi" class="kode">{{ cert.kode_verifikasi }}</div>
-          </div>
-          <div class="foot-right" style="margin-bottom: 80px;">
+        <div class="custom-footer" style="margin-top: 40px; font-size: 14px; color: #4a6157; text-align: center; line-height: 1.6;">
+          <!-- Since duration isn't in CertData yet, displaying a placeholder or hiding it -->
+          <div><strong>Course Duration:</strong> 15 Hours</div> 
+          <div><strong>Certificate Number:</strong> {{ cert.nomor_sertifikat || '—' }}</div>
+          <div><strong>Date of Issue:</strong> {{ fmtTanggalPanjang(cert.tanggal_terbit) }}</div>
+        </div>
+
+        <div class="footer" style="margin-top: auto;">
+          <div class="foot-left"></div>
+          <div class="foot-right">
             <img v-if="cert.qr_code_url" :src="cert.qr_code_url" :alt="t('certificates.doc.qrAlt')" class="qr" />
           </div>
         </div>

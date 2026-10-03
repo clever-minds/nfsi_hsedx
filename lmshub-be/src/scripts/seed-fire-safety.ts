@@ -84,7 +84,7 @@ async function main() {
                             durasi_total_menit, meta, published_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'terbit','en', 4.5, 10, 50, $10, $11, now())
        ON CONFLICT (slug) WHERE deleted_at IS NULL DO UPDATE SET
-         judul=EXCLUDED.judul, harga=EXCLUDED.harga, category_id=EXCLUDED.category_id
+         judul=EXCLUDED.judul, harga=EXCLUDED.harga, category_id=EXCLUDED.category_id, meta=EXCLUDED.meta
        RETURNING id`,
       [
         c.title,

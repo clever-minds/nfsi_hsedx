@@ -33,6 +33,7 @@ const footer = ref(find(KEY.footer)?.nilai ?? '');
 const saving = ref(false);
 const saved = ref(false);
 const error = ref('');
+const successMsg = ref('');
 const uploading = ref<'logo' | 'icon' | ''>('');
 
 const MAX_BYTES = 512 * 1024;
@@ -54,7 +55,11 @@ async function saveText() {
     await apiPut(`/settings/${KEY.footer}`, { nilai: footer.value });
     appConfig.setBrand({ appName: name.value.trim(), footerTemplate: footer.value });
     saved.value = true;
-    setTimeout(() => (saved.value = false), 1500);
+    successMsg.value = t('settings.saved');
+    setTimeout(() => {
+      saved.value = false;
+      successMsg.value = '';
+    }, 3000);
   } catch (e) {
     error.value = errorMessage(e, t('settings.saveFailed'));
   } finally {
@@ -92,6 +97,8 @@ async function onPick(jenis: 'logo' | 'icon', event: Event) {
       mime_type: file.type,
     });
     appConfig.setBrand(jenis === 'logo' ? { logoUrl: res.nilai } : { iconUrl: res.nilai });
+    successMsg.value = 'File berhasil diunggah';
+    setTimeout(() => { successMsg.value = ''; }, 3000);
   } catch (e) {
     error.value = errorMessage(e, t('settings.brand.uploadFailed'));
   } finally {
@@ -119,6 +126,12 @@ async function clearAsset(jenis: 'logo' | 'icon') {
     <p class="mt-1 text-xs text-slate-400">{{ t('settings.brand.intro') }}</p>
 
     <div v-if="error" class="mt-3 alert-error">{{ error }}</div>
+    
+    <!-- Toast/Floating Message -->
+    <div v-if="successMsg" class="fixed bottom-6 end-6 z-50 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-xl flex items-center gap-2">
+      <Icon name="check-circle" :size="18" />
+      {{ successMsg }}
+    </div>
 
     <!-- Nama aplikasi -->
     <div class="mt-4 border-t border-slate-100 pt-4">

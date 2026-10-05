@@ -67,15 +67,8 @@ console.log(`Course [${props.course.judul}] thumbnail URL:`, props.course.meta?.
 
     <!-- Isi -->
     <div class="flex flex-1 flex-col p-4">
-      <div class="flex items-center justify-between gap-2">
-        <span class="flex min-w-0 items-center gap-2 text-xs text-slate-500">
-          <span class="grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-100 text-[10px] font-bold text-brand-600">
-            <img v-if="course.instructor_foto" :src="assetUrl(course.instructor_foto)" :alt="course.instructor_nama ?? ''" class="h-full w-full object-cover" />
-            <template v-else>{{ inisial }}</template>
-          </span>
-          <span class="truncate">{{ course.instructor_nama || '—' }}</span>
-        </span>
-        <span v-if="course.category_nama" class="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+      <div class="flex items-center gap-2">
+        <span v-if="course.category_nama" class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
           {{ course.category_nama }}
         </span>
       </div>

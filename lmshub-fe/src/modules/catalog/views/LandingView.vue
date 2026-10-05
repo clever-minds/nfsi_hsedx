@@ -179,7 +179,7 @@ onMounted(async () => {
               </span>
             </div>
             <div>
-              <div class="text-sm font-bold text-slate-900">{{ fmtAngka(totalSiswa || 27000) }}+</div>
+              <div class="text-sm font-bold text-slate-900">{{ fmtAngka(totalSiswa) }}+</div>
               <div class="text-xs text-slate-400">{{ t('catalog.landing.float.students') }}</div>
             </div>
           </div>
@@ -211,19 +211,19 @@ onMounted(async () => {
           <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">{{ judulSeksi('kategori', t('catalog.landing.categories.title')) }}</h2>
           <p class="mx-auto mt-2 max-w-xl text-sm text-slate-500">{{ subjudulSeksi('kategori', t('catalog.landing.categories.subtitle')) }}</p>
         </div>
-        <div class="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          <RouterLink
-            v-for="k in categories"
-            :key="k.id"
-            :to="{ path: '/courses', query: { category: k.slug } }"
-            class="card group flex flex-col items-center gap-3 rounded-xl p-6 text-center transition hover:-translate-y-1 hover:shadow-lg"
-          >
-            <span class="grid h-14 w-14 place-items-center rounded-2xl bg-slate-50 text-2xl transition group-hover:bg-brand-50">{{ k.ikon || '📚' }}</span>
-            <div>
-              <div class="text-sm font-semibold text-slate-800 group-hover:text-brand-500">{{ k.nama }}</div>
-              <div class="mt-0.5 text-xs text-slate-400">{{ t('catalog.landing.categories.count', { n: fmtAngka(k.jumlah_kursus) }) }}</div>
-            </div>
-          </RouterLink>
+        <div class="mt-10 flex flex-wrap justify-center">
+          <div v-for="k in categories" :key="k.id" class="w-1/2 p-2 sm:w-1/3 lg:w-1/6">
+            <RouterLink
+              :to="{ path: '/courses', query: { category: k.slug } }"
+              class="card group flex h-full flex-col items-center gap-3 rounded-xl p-6 text-center transition hover:-translate-y-1 hover:shadow-lg"
+            >
+              <span class="grid h-14 w-14 place-items-center rounded-2xl bg-slate-50 text-2xl transition group-hover:bg-brand-50">{{ k.ikon || '📚' }}</span>
+              <div>
+                <div class="text-sm font-semibold text-slate-800 group-hover:text-brand-500">{{ k.nama }}</div>
+                <div class="mt-0.5 text-xs text-slate-400">{{ t('catalog.landing.categories.count', { n: fmtAngka(k.jumlah_kursus) }) }}</div>
+              </div>
+            </RouterLink>
+          </div>
         </div>
       </section>
 
@@ -273,9 +273,9 @@ onMounted(async () => {
             <h2 class="text-2xl font-extrabold tracking-tight sm:text-3xl">{{ judulSeksi('stats', t('catalog.landing.stats.title')) }}</h2>
             <p class="mt-2 text-sm text-slate-400">{{ subjudulSeksi('stats', t('catalog.landing.stats.subtitle')) }}</p>
           </div>
-          <div class="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-8 text-center md:grid-cols-4">
+          <div class="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-8 text-center md:grid-cols-3">
             <div>
-              <div class="text-3xl font-extrabold sm:text-4xl">{{ fmtAngka(totalSiswa || 27070) }}</div>
+              <div class="text-3xl font-extrabold sm:text-4xl">{{ fmtAngka(totalSiswa) }}</div>
               <div class="mt-1 text-xs text-slate-400">{{ t('catalog.landing.stats.students') }}</div>
             </div>
             <div class="md:border-s md:border-white/10">
@@ -285,10 +285,6 @@ onMounted(async () => {
             <div class="md:border-s md:border-white/10">
               <div class="text-3xl font-extrabold sm:text-4xl">{{ fmtAngka(categories.length) }}</div>
               <div class="mt-1 text-xs text-slate-400">{{ t('catalog.landing.stats.categories') }}</div>
-            </div>
-            <div class="md:border-s md:border-white/10">
-              <div class="text-3xl font-extrabold sm:text-4xl">{{ fmtAngka(instructors.length) }}</div>
-              <div class="mt-1 text-xs text-slate-400">{{ t('catalog.landing.stats.instructors') }}</div>
             </div>
           </div>
         </div>

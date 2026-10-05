@@ -293,7 +293,7 @@ const TERMASUK = computed(() => [
             </div>
 
             <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-              <RouterLink :to="course.instructor_id ? `/instructors/${course.instructor_id}` : '#'" class="group flex items-center gap-3">
+              <RouterLink v-if="false" :to="course.instructor_id ? `/instructors/${course.instructor_id}` : '#'" class="group flex items-center gap-3">
                 <span class="grid h-11 w-11 place-items-center overflow-hidden rounded-full bg-brand-100 text-sm font-bold text-brand-600">
                   <img v-if="course.instructor_foto" :src="assetUrl(course.instructor_foto)" :alt="course.instructor_nama" class="h-full w-full object-cover" />
                   <template v-else>{{ inisialInstruktur }}</template>
@@ -388,7 +388,7 @@ const TERMASUK = computed(() => [
             </div>
 
             <!-- Tentang instruktur -->
-            <div class="card rounded-2xl p-6">
+            <div v-if="false" class="card rounded-2xl p-6">
               <h3 class="text-lg font-bold text-slate-900">{{ t('catalog.detail.aboutInstructor') }}</h3>
               <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
                 <RouterLink :to="course.instructor_id ? `/instructors/${course.instructor_id}` : '#'" class="group flex items-center gap-3">

@@ -33,6 +33,7 @@ const canEdit = auth.can('pengaturan.update');
 const settings = ref<SettingItem[]>([]);
 const loading = ref(true);
 const error = ref('');
+const successMsg = ref('');
 const savingKey = ref<string | null>(null);
 const savedKey = ref<string | null>(null);
 
@@ -129,7 +130,11 @@ async function save(item: SettingItem) {
     // Mata uang memengaruhi seluruh harga — terapkan tanpa perlu muat ulang.
     if (item.key === 'currency.code') appConfig.setCurrency(nilai);
     savedKey.value = item.key;
-    setTimeout(() => (savedKey.value === item.key ? (savedKey.value = null) : null), 1500);
+    successMsg.value = t('settings.saved');
+    setTimeout(() => {
+      if (savedKey.value === item.key) savedKey.value = null;
+      successMsg.value = '';
+    }, 3000);
   } catch (e) {
     error.value = errorMessage(e, t('settings.saveFailed'));
   } finally {
@@ -199,6 +204,13 @@ onBeforeUnmount(() => observer?.disconnect());
 
     <template v-else>
       <div v-if="error" class="mb-4 alert-error">{{ error }}</div>
+
+      <!-- Toast/Floating Message -->
+      <div v-if="successMsg" class="fixed bottom-6 end-6 z-50 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-xl flex items-center gap-2">
+        <Icon name="check-circle" :size="18" />
+        {{ successMsg }}
+      </div>
+
       <div v-if="!settings.length" class="empty-state">{{ t('settings.empty') }}</div>
 
       <div v-else class="grid items-start gap-6 lg:grid-cols-[16rem,1fr]">

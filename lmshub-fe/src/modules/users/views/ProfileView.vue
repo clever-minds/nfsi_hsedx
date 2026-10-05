@@ -175,7 +175,10 @@ async function changePassword() {
             <div>
               <label class="label">{{ t('users.profile.email') }}</label>
               <input :value="auth.user?.email ?? '—'" class="input bg-slate-50 text-slate-400" disabled />
-              <p class="mt-1 text-xs text-slate-400">{{ t('users.profile.emailLocked') }}</p>
+              <p v-if="auth.roles.includes('super_admin') || auth.roles.includes('admin')" class="mt-1 text-xs text-slate-400">
+                Email address cannot be changed for security reasons.
+              </p>
+              <p v-else class="mt-1 text-xs text-slate-400">{{ t('users.profile.emailLocked') }}</p>
             </div>
             <div>
               <label class="label">{{ t('users.profile.accountStatus') }}</label>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { fmtTanggalPanjang } from '@/lib/format';
+import { useAppConfigStore } from '@/stores/appConfig';
 
 export interface CertData {
   nama: string;
@@ -15,37 +16,67 @@ export interface CertData {
 defineProps<{ cert: CertData }>();
 
 const { t } = useI18n();
+const appConfig = useAppConfigStore();
 </script>
 
 <template>
   <div class="cert-wrap">
     <div class="cert">
-      <!-- Ornamen sudut (disabled for custom background) -->
-      <!-- <span class="corner tl"></span><span class="corner tr"></span>
-      <span class="corner bl"></span><span class="corner br"></span> -->
-
       <div class="cert-inner">
-        <p class="lead" style="margin-top: 100px;">This is to certify that</p>
-        <div class="nama">{{ cert.nama }}</div>
-        
-        <p class="lead" style="max-width: 600px; margin: 10px auto;">has successfully completed and received a passing grade in</p>
-        <div class="kursus">{{ cert.kursus }}</div>
-        
-        <p class="lead" style="max-width: 600px; margin: 15px auto;">
-          a course of study offered by <strong>HSEdx</strong>, an Online Learning Initiative by <strong>National Fire Safety Institute</strong>.
-        </p>
-
-        <div class="custom-footer" style="margin-top: 40px; font-size: 14px; color: #4a6157; text-align: center; line-height: 1.6;">
-          <!-- Since duration isn't in CertData yet, displaying a placeholder or hiding it -->
-          <div><strong>Course Duration:</strong> 15 Hours</div> 
-          <div><strong>Certificate Number:</strong> {{ cert.nomor_sertifikat || '—' }}</div>
-          <div><strong>Date of Issue:</strong> {{ fmtTanggalPanjang(cert.tanggal_terbit) }}</div>
+        <!-- Header -->
+        <div class="cert-header">
+          <div class="header-left">
+            <h1 class="verified-title">VERIFIED</h1>
+            <p class="verified-sub">CERTIFICATE OF ACHIEVEMENT</p>
+          </div>
+          <div class="header-right">
+            <!-- Dynamic Logo -->
+            <img v-if="appConfig.logoUrl" :src="appConfig.logoUrl" alt="Logo" class="nfsi-logo" />
+          </div>
         </div>
 
-        <div class="footer" style="margin-top: auto;">
-          <div class="foot-left"></div>
-          <div class="foot-right" style="margin-bottom: 140px; margin-right: 30px;">
-            <img v-if="cert.qr_code_url" :src="cert.qr_code_url" :alt="t('certificates.doc.qrAlt')" class="qr" />
+        <!-- Body -->
+        <div class="cert-body">
+          <p class="lead">This is to inform that</p>
+          <div class="nama">Mr. / Mrs. / Ms. {{ cert.nama }}</div>
+          
+          <p class="lead mt-4">has successfully completed the certification course titled</p>
+          <div class="kursus">{{ cert.kursus }}</div>
+          
+          <p class="desc mt-4">
+            The participant has fulfilled all the requirements and standards of the course and is hereby
+            awarded this certificate as a mark of achievement.
+          </p>
+
+          <div class="details">
+            <div><strong>Course Duration:</strong> 12 hours</div>
+            <div><strong>Date of Completion:</strong> {{ cert.tanggal_terbit ? fmtTanggalPanjang(cert.tanggal_terbit) : 'January 21, 2026' }}</div>
+          </div>
+
+          <p class="desc">
+            This certificate is issued in recognition of the successful completion of the above-mentioned
+            course.
+          </p>
+        </div>
+
+        <!-- Signature -->
+        <div class="signature-section">
+          <div class="signature">
+            <div class="sig-name">Dr. Chiragkumar Makwana</div>
+            <div class="sig-title">Authorised Signature</div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="cert-footer">
+          <div class="foot-left">
+            <span class="brand-hsedx"><span style="color:red">HSE</span><span style="color:navy">d</span><span style="color:goldenrod">x</span></span>
+            <span class="foot-text">VERIFIED CERTIFICATE</span>
+            <span class="foot-text">VALID CERTIFICATE ID <br> <span class="text-black font-normal">{{ cert.nomor_sertifikat || '—' }}</span></span>
+          </div>
+          <div class="foot-right">
+            Recognized by Directorate of Industrial, Safety &<br>
+            Health (DISH), Govt. Of Gujarat
           </div>
         </div>
       </div>
@@ -62,68 +93,153 @@ const { t } = useI18n();
 .cert {
   position: relative;
   width: 100%;
-  max-width: 900px;
+  max-width: 1000px;
   aspect-ratio: 1.414 / 1;
   background: url('/img/certificate-bg.jpg') center/cover no-repeat;
-  box-shadow: 0 10px 40px rgba(18, 53, 38, 0.12);
-  font-family: Georgia, 'Times New Roman', serif;
-  color: #143d2f;
+  background-color: #fdfdfd;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  color: #111;
   overflow: hidden;
 }
 .cert-inner {
   position: absolute;
-  inset: 14px;
-  /* border: 1px solid #d8b25a; */
+  inset: 40px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 3% 8%;
+  z-index: 10;
 }
-.corner {
+.cert::before {
+  content: "";
   position: absolute;
-  width: 34px;
-  height: 34px;
-  border: 3px solid #b98a2e;
+  inset: 0;
+  background-image: var(--bg-watermark, none);
+  background-size: 50%;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.05;
+  z-index: 1;
 }
-.corner.tl { top: 6px; left: 6px; border-right: 0; border-bottom: 0; }
-.corner.tr { top: 6px; right: 6px; border-left: 0; border-bottom: 0; }
-.corner.bl { bottom: 6px; left: 6px; border-right: 0; border-top: 0; }
-.corner.br { bottom: 6px; right: 6px; border-left: 0; border-top: 0; }
-.brand { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.brand-mark {
-  width: 26px; height: 26px; border-radius: 6px; background: #164031; color: #fff;
-  display: grid; place-items: center; font-size: 15px;
+
+/* Header */
+.cert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  padding-left: 20px;
 }
-.brand-name { letter-spacing: 3px; font-weight: 700; font-size: 14px; color: #164031; }
-.eyebrow { letter-spacing: 4px; font-size: 10px; color: #b98a2e; font-weight: 700; margin-top: 4px; }
-.title { font-size: clamp(20px, 4vw, 38px); margin: 4px 0 0; color: #123526; font-weight: 700; }
-.divider { display: flex; align-items: center; gap: 10px; color: #d8b25a; margin: 8px 0 4px; }
-.divider span { width: clamp(40px, 12vw, 90px); height: 1px; background: #d8b25a; display: inline-block; }
-.lead { font-size: clamp(10px, 1.6vw, 13px); color: #4a6157; font-style: italic; margin: 6px 0 2px; }
+.verified-title {
+  color: #00b050;
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin: 0;
+  line-height: 1;
+}
+.verified-sub {
+  color: #00b050;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin: 6px 0 0 2px;
+}
+.nfsi-logo {
+  height: 90px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Body */
+.cert-body {
+  padding-left: 20px;
+  flex: 1;
+}
+.lead {
+  font-size: 14px;
+  color: #333;
+  margin: 0 0 10px 0;
+}
+.mt-4 {
+  margin-top: 16px;
+}
 .nama {
-  font-size: clamp(24px, 5vw, 44px); color: #164031; font-weight: 700;
-  border-bottom: 2px solid #d8b25a; padding: 0 12px 4px; margin: 2px 0 4px; line-height: 1.1;
+  font-size: 16px;
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 15px 0;
 }
-.kursus { font-size: clamp(14px, 2.6vw, 22px); color: #1f6b4c; font-weight: 700; margin-top: 2px; }
-.meta { display: flex; align-items: flex-end; justify-content: center; gap: clamp(20px, 8vw, 80px); margin-top: auto; padding-top: 3%; width: 100%; }
-.meta-col { text-align: center; min-width: 120px; }
-.meta-line { height: 1px; background: #143d2f66; margin-bottom: 4px; }
-.meta-label { font-size: clamp(11px, 1.6vw, 14px); font-weight: 700; }
-.meta-sub { font-size: 9px; color: #6a7a70; letter-spacing: 1px; text-transform: uppercase; }
-.seal {
-  width: clamp(38px, 6vw, 54px); height: clamp(38px, 6vw, 54px); border-radius: 50%;
-  background: radial-gradient(circle, #d8b25a, #b98a2e); color: #fff;
-  display: grid; place-items: center; font-size: clamp(18px, 3vw, 26px);
-  box-shadow: 0 2px 8px rgba(185, 138, 46, 0.5); border: 2px solid #fff;
+.kursus {
+  font-size: 22px;
+  font-weight: 800;
+  color: #000;
+  margin: 0 0 15px 0;
 }
-.footer { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; margin-top: 3%; font-size: 9px; color: #4a6157; }
-.foot-left { text-align: left; line-height: 1.5; }
-.foot-left .kode { font-family: 'SF Mono', Menlo, monospace; font-size: 7.5px; color: #8a978f; word-break: break-all; max-width: 220px; }
-.foot-right { text-align: center; }
-.qr { width: clamp(46px, 8vw, 70px); height: auto; }
-.verify-note { font-size: 7px; color: #8a978f; margin-top: 2px; }
+.desc {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.6;
+  margin: 0 0 20px 0;
+}
+.details {
+  font-size: 13px;
+  color: #000;
+  margin-bottom: 20px;
+  line-height: 1.8;
+}
+
+/* Signature */
+.signature-section {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 60px;
+  margin-bottom: 25px;
+}
+.signature {
+  text-align: center;
+}
+.sig-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #000;
+}
+.sig-title {
+  font-size: 12px;
+  color: #555;
+  margin-top: 4px;
+}
+
+/* Footer */
+.cert-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 20px;
+}
+.foot-left {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+.brand-hsedx {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+.foot-text {
+  font-size: 10px;
+  color: #555;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.text-black { color: #000; }
+.font-normal { font-weight: 400; }
+.foot-right {
+  text-align: right;
+  font-size: 10px;
+  color: #555;
+  line-height: 1.5;
+}
 
 @media print {
   :global(body *) { visibility: hidden; }

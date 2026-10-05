@@ -34,6 +34,7 @@ const bahasa = ref<LocaleKey>('en');
 const draft = ref<SiteContent>(structuredClone(DEFAULT_SITE_CONTENT));
 const loading = ref(true);
 const error = ref('');
+const successMsg = ref('');
 const savingKey = ref('');
 const savedKey = ref('');
 const activeGroup = ref('kontak');
@@ -80,7 +81,11 @@ async function save(key: GroupKey) {
     // Terapkan ke store agar header/footer di layar ini pun langsung ikut.
     site.patch(key, nilai as never);
     savedKey.value = key;
-    setTimeout(() => (savedKey.value === key ? (savedKey.value = '') : null), 1500);
+    successMsg.value = t('website.saved');
+    setTimeout(() => {
+      if (savedKey.value === key) savedKey.value = '';
+      successMsg.value = '';
+    }, 3000);
   } catch (e) {
     error.value = errorMessage(e, t('website.saveFailed'));
   } finally {
@@ -152,6 +157,8 @@ async function pilihGambar(event: Event) {
     });
     draft.value.hero.gambar_url = res.url;
     site.patch('hero', draft.value.hero);
+    successMsg.value = 'File berhasil diunggah';
+    setTimeout(() => { successMsg.value = ''; }, 3000);
   } catch (e) {
     error.value = errorMessage(e, t('website.hero.uploadFailed'));
   } finally {
@@ -226,6 +233,13 @@ onBeforeUnmount(() => observer?.disconnect());
 
     <template v-else>
       <div v-if="error" class="mb-4 alert-error">{{ error }}</div>
+      
+      <!-- Toast/Floating Message -->
+      <div v-if="successMsg" class="fixed bottom-6 end-6 z-50 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-xl flex items-center gap-2">
+        <Icon name="check-circle" :size="18" />
+        {{ successMsg }}
+      </div>
+
       <p v-if="!canEdit" class="mb-4 alert-warning">
         {{ t('website.readOnly') }}
       </p>

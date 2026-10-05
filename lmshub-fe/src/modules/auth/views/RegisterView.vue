@@ -104,7 +104,7 @@ onMounted(async () => {
         <Icon name="lock" :size="16" class="shrink-0" />
         <input v-model="form.password" type="password" required minlength="8" :placeholder="t('auth.register.password')" />
       </div>
-      <div>
+      <div v-if="false">
         <label class="label">{{ t('auth.register.asLabel') }}</label>
         <select v-model="form.sebagai" class="input">
           <option value="siswa">{{ t('auth.register.asStudent') }}</option>

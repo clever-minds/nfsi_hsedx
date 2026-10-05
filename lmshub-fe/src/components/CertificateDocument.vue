@@ -62,9 +62,7 @@ const appConfig = useAppConfigStore();
   </div>
 </template>
 
-<script>
-// We need to import vue-qrcode if we are generating it dynamically, or just use qr_code_url if it's an image.
-</script>
+
 
 <style scoped>
 .cert-wrap {

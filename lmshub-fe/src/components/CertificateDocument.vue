@@ -51,10 +51,20 @@ const appConfig = useAppConfigStore();
         <div class="cert-id">
           {{ cert.nomor_sertifikat || '—' }}
         </div>
+
+        <!-- QR Code -->
+        <div v-if="cert.qr_code_url || cert.verify_url" class="cert-qr">
+          <img v-if="cert.qr_code_url" :src="cert.qr_code_url" alt="QR Code" />
+          <vue-qrcode v-else-if="cert.verify_url" :value="cert.verify_url" :options="{ width: 70 }" />
+        </div>
       </div>
     </div>
   </div>
 </template>
+
+<script>
+// We need to import vue-qrcode if we are generating it dynamically, or just use qr_code_url if it's an image.
+</script>
 
 <style scoped>
 .cert-wrap {
@@ -124,11 +134,26 @@ const appConfig = useAppConfigStore();
 /* ID at bottom */
 .cert-id {
   position: absolute;
-  bottom: 45px;
-  left: 280px; /* Approximate position next to 'VALID CERTIFICATE ID' */
+  bottom: 53px;
+  left: 450px;
   font-size: 11px;
-  font-weight: 600;
-  color: #000;
+  font-weight: 700;
+  color: #3b82f6; /* matching the blue color */
+  background-color: #fff; /* covers the dummy text from background */
+  padding: 0 4px;
+}
+
+/* QR Code */
+.cert-qr {
+  position: absolute;
+  bottom: 30px;
+  left: 200px; /* Placing it between logo and the VERIFIED CERTIFICATE text */
+}
+.cert-qr img,
+.cert-qr canvas {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
 }
 
 @media print {

@@ -23,19 +23,7 @@ const appConfig = useAppConfigStore();
   <div class="cert-wrap">
     <div class="cert">
       <div class="cert-inner">
-        <!-- Header -->
-        <div class="cert-header">
-          <div class="header-left">
-            <h1 class="verified-title">VERIFIED</h1>
-            <p class="verified-sub">CERTIFICATE OF ACHIEVEMENT</p>
-          </div>
-          <div class="header-right">
-            <!-- Dynamic Logo -->
-            <img v-if="appConfig.logoUrl" :src="appConfig.logoUrl" alt="Logo" class="nfsi-logo" />
-          </div>
-        </div>
-
-        <!-- Body -->
+        <!-- Body Content -->
         <div class="cert-body">
           <p class="lead">This is to inform that</p>
           <div class="nama">Mr. / Mrs. / Ms. {{ cert.nama }}</div>
@@ -59,25 +47,9 @@ const appConfig = useAppConfigStore();
           </p>
         </div>
 
-        <!-- Signature -->
-        <div class="signature-section">
-          <div class="signature">
-            <div class="sig-name">Dr. Chiragkumar Makwana</div>
-            <div class="sig-title">Authorised Signature</div>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="cert-footer">
-          <div class="foot-left">
-            <span class="brand-hsedx"><span style="color:red">HSE</span><span style="color:navy">d</span><span style="color:goldenrod">x</span></span>
-            <span class="foot-text">VERIFIED CERTIFICATE</span>
-            <span class="foot-text">VALID CERTIFICATE ID <br> <span class="text-black font-normal">{{ cert.nomor_sertifikat || '—' }}</span></span>
-          </div>
-          <div class="foot-right">
-            Recognized by Directorate of Industrial, Safety &<br>
-            Health (DISH), Govt. Of Gujarat
-          </div>
+        <!-- Certificate ID placed at the bottom center/left where the background says VALID CERTIFICATE ID -->
+        <div class="cert-id">
+          {{ cert.nomor_sertifikat || '—' }}
         </div>
       </div>
     </div>
@@ -104,55 +76,16 @@ const appConfig = useAppConfigStore();
 }
 .cert-inner {
   position: absolute;
-  inset: 40px;
+  inset: 0;
   display: flex;
   flex-direction: column;
   z-index: 10;
 }
-.cert::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: var(--bg-watermark, none);
-  background-size: 50%;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.05;
-  z-index: 1;
-}
-
-/* Header */
-.cert-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 30px;
-  padding-left: 20px;
-}
-.verified-title {
-  color: #00b050;
-  font-size: 46px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  margin: 0;
-  line-height: 1;
-}
-.verified-sub {
-  color: #00b050;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  margin: 6px 0 0 2px;
-}
-.nfsi-logo {
-  height: 90px;
-  width: auto;
-  object-fit: contain;
-}
 
 /* Body */
 .cert-body {
-  padding-left: 20px;
+  padding-left: 60px; /* Aligned with the 'V' of VERIFIED */
+  padding-top: 200px; /* Pushed down below the VERIFIED header */
   flex: 1;
 }
 .lead {
@@ -164,13 +97,13 @@ const appConfig = useAppConfigStore();
   margin-top: 16px;
 }
 .nama {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: #000;
   margin: 0 0 15px 0;
 }
 .kursus {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   color: #000;
   margin: 0 0 15px 0;
@@ -188,57 +121,14 @@ const appConfig = useAppConfigStore();
   line-height: 1.8;
 }
 
-/* Signature */
-.signature-section {
-  display: flex;
-  justify-content: flex-end;
-  padding-right: 60px;
-  margin-bottom: 25px;
-}
-.signature {
-  text-align: center;
-}
-.sig-name {
-  font-weight: 700;
-  font-size: 14px;
+/* ID at bottom */
+.cert-id {
+  position: absolute;
+  bottom: 45px;
+  left: 280px; /* Approximate position next to 'VALID CERTIFICATE ID' */
+  font-size: 11px;
+  font-weight: 600;
   color: #000;
-}
-.sig-title {
-  font-size: 12px;
-  color: #555;
-  margin-top: 4px;
-}
-
-/* Footer */
-.cert-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 0 20px;
-}
-.foot-left {
-  display: flex;
-  align-items: center;
-  gap: 30px;
-}
-.brand-hsedx {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -1px;
-}
-.foot-text {
-  font-size: 10px;
-  color: #555;
-  font-weight: 700;
-  line-height: 1.4;
-}
-.text-black { color: #000; }
-.font-normal { font-weight: 400; }
-.foot-right {
-  text-align: right;
-  font-size: 10px;
-  color: #555;
-  line-height: 1.5;
 }
 
 @media print {

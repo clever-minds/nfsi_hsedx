@@ -133,19 +133,20 @@ const appConfig = useAppConfigStore();
 .cert-id {
   position: absolute;
   bottom: 53px;
-  left: 450px;
+  left: 415px; /* Aligned to the start of the dummy blue text */
+  width: 220px; /* Wide enough to cover the dummy text */
   font-size: 11px;
   font-weight: 700;
   color: #3b82f6; /* matching the blue color */
-  background-color: #fff; /* covers the dummy text from background */
-  padding: 0 4px;
+  background-color: #fdfdfd; /* covers the dummy text from background */
+  padding: 2px 0;
 }
 
 /* QR Code */
 .cert-qr {
   position: absolute;
-  bottom: 30px;
-  left: 200px; /* Placing it between logo and the VERIFIED CERTIFICATE text */
+  bottom: 35px;
+  right: 280px; /* Placing it near the signature on the right */
 }
 .cert-qr img,
 .cert-qr canvas {

@@ -130,11 +130,12 @@ const appConfig = useAppConfigStore();
 }
 
 /* ID at bottom */
+/* ID at bottom */
 .cert-id {
   position: absolute;
   bottom: 53px;
   left: 415px; /* Aligned to the start of the dummy blue text */
-  width: 220px; /* Wide enough to cover the dummy text */
+  width: 260px; /* Wide enough to cover ALL of the dummy text */
   font-size: 11px;
   font-weight: 700;
   color: #3b82f6; /* matching the blue color */
@@ -145,8 +146,8 @@ const appConfig = useAppConfigStore();
 /* QR Code */
 .cert-qr {
   position: absolute;
-  bottom: 35px;
-  right: 280px; /* Placing it near the signature on the right */
+  bottom: 110px; /* Above the signature */
+  right: 60px; /* Aligned to the right */
 }
 .cert-qr img,
 .cert-qr canvas {

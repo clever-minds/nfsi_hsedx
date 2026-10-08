@@ -30,6 +30,7 @@ export interface EnrollmentListRow extends EnrollmentRow {
   cohort_nama: string | null;
   /** Alias dari akses_kedaluwarsa_at agar cocok dengan kolom "Akses s/d" di FE. */
   tanggal_kedaluwarsa: string | null;
+  meta?: { thumbnail_url?: string } | null;
 }
 
 export interface EnrollmentFilters {
@@ -92,7 +93,7 @@ export async function list(p: PageParams, f: EnrollmentFilters): Promise<{ rows:
   const sortCol = ['created_at', 'status', 'tanggal_mulai'].includes(p.sort ?? '') ? p.sort : 'created_at';
 
   const rows = await query<EnrollmentListRow>(
-    `SELECT e.*, u.nama_lengkap AS siswa_nama, c.title AS course_title,
+    `SELECT e.*, u.nama_lengkap AS siswa_nama, c.title AS course_title, c.meta,
             co.name AS cohort_nama, e.akses_kedaluwarsa_at AS tanggal_kedaluwarsa
        FROM enrollments e
        JOIN users u ON u.id = e.user_id
@@ -112,7 +113,7 @@ export async function list(p: PageParams, f: EnrollmentFilters): Promise<{ rows:
 
 export async function detail(id: string): Promise<EnrollmentListRow | null> {
   return queryOne<EnrollmentListRow>(
-    `SELECT e.*, u.nama_lengkap AS siswa_nama, c.title AS course_title,
+    `SELECT e.*, u.nama_lengkap AS siswa_nama, c.title AS course_title, c.meta,
             co.name AS cohort_nama, e.akses_kedaluwarsa_at AS tanggal_kedaluwarsa
        FROM enrollments e
        JOIN users u ON u.id = e.user_id

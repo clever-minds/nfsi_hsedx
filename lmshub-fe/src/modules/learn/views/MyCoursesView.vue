@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { apiGet, apiGetFull, errorMessage } from '@/lib/api';
+import { apiGet, apiGetFull, errorMessage, assetUrl } from '@/lib/api';
 import { fmtPersen } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
 import PageHeader from '@/components/ui/PageHeader.vue';
@@ -15,6 +15,7 @@ interface EnrollmentRow {
   course_id: string;
   course_title: string;
   status: string;
+  meta?: { thumbnail_url?: string } | null;
 }
 interface EnrolledCourse {
   id: string;
@@ -22,6 +23,7 @@ interface EnrolledCourse {
   title: string;
   progress_percent: number;
   status: string;
+  meta?: { thumbnail_url?: string } | null;
 }
 
 const AKTIF = ['terdaftar', 'aktif', 'selesai'];
@@ -88,7 +90,7 @@ async function loadPage() {
       const persen = await apiGet<{ progress_percent: string }>(`/courses/${e.course_id}/progress`)
         .then((p) => Number(p.progress_percent))
         .catch(() => 0);
-      return { id: e.id, course_id: e.course_id, title: e.course_title, status: e.status, progress_percent: persen };
+      return { id: e.id, course_id: e.course_id, title: e.course_title, status: e.status, progress_percent: persen, meta: e.meta };
     }),
   );
   pageLoading.value = false;
@@ -116,7 +118,8 @@ onMounted(load);
     <template v-else>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <div v-for="c in courses" :key="c.id" class="card flex flex-col p-4">
-          <div class="h-28 rounded-lg bg-brand-100"></div>
+          <img v-if="c.meta?.thumbnail_url" :src="assetUrl(c.meta.thumbnail_url)" class="h-28 w-full rounded-lg object-cover bg-brand-100 border border-slate-100" />
+          <div v-else class="h-28 rounded-lg bg-brand-100"></div>
           <h3 class="mt-3 line-clamp-2 card-title">{{ c.title }}</h3>
 
           <div class="mt-3">

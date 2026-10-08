@@ -2,12 +2,13 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { apiGet, apiGetFull, apiPost, apiPut, errorMessage } from '@/lib/api';
+import { apiGet, apiGetFull, apiPost, apiPut, errorMessage, assetUrl } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 import { useCurrencyStore } from '@/stores/currency';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import StatusChip from '@/components/ui/StatusChip.vue';
 import RichTextEditor from '@/components/ui/RichTextEditor.vue';
+import MediaUploadButton from '@/components/ui/MediaUploadButton.vue';
 
 interface CourseDetail {
   id: string;
@@ -24,6 +25,8 @@ interface CourseDetail {
   instructor_nama?: string | null;
   final_exam_quiz_id?: string | null;
   allow_restart?: boolean;
+  thumbnail_media_id?: string | null;
+  meta?: { thumbnail_url?: string } | null;
 }
 interface QuizOption {
   id: string;
@@ -57,6 +60,7 @@ const form = reactive({
   summary: '',
   description: '',
   language: 'id',
+  thumbnail_media_id: undefined as string | undefined,
 });
 
 const currentStatus = ref('draf');
@@ -72,6 +76,7 @@ const saving = ref(false);
 const busy = ref(false);
 const error = ref('');
 const notice = ref('');
+const previewUrl = ref('');
 
 /**
  * Kegagalan di sini sengaja tidak membatalkan pemuatan halaman — editor tetap
@@ -100,6 +105,8 @@ async function loadCourse(id: string) {
   form.language = c.language;
   currentStatus.value = c.publication_status;
   instructorNama.value = c.instructor_nama ?? '';
+  form.thumbnail_media_id = c.thumbnail_media_id ?? undefined;
+  previewUrl.value = c.meta?.thumbnail_url ? assetUrl(c.meta.thumbnail_url) : '';
   rules.final_exam_quiz_id = c.final_exam_quiz_id ?? '';
   rules.allow_restart = !!c.allow_restart;
 }
@@ -166,6 +173,7 @@ async function submit() {
       summary: form.summary || undefined,
       description: form.description || undefined,
       language: form.language,
+      thumbnail_media_id: form.thumbnail_media_id || undefined,
     };
     if (isEdit.value && courseId.value) {
       await apiPut(`/courses/${courseId.value}`, payload);
@@ -193,6 +201,13 @@ async function transition(action: 'submit' | 'publish' | 'archive') {
     error.value = errorMessage(e, t('courses.editor.statusFailed'));
   } finally {
     busy.value = false;
+  }
+}
+
+function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }) {
+  form.thumbnail_media_id = asset.id;
+  if (asset.path_object_storage) {
+    previewUrl.value = assetUrl(asset.path_object_storage);
   }
 }
 </script>
@@ -301,6 +316,22 @@ async function transition(action: 'submit' | 'publish' | 'archive') {
           </div>
           <div v-if="isEdit" class="text-xs text-slate-400 sm:col-span-2">
             {{ t('courses.editor.instructor', { name: instructorNama || '—' }) }}
+          </div>
+
+          <div class="sm:col-span-2 border-t border-slate-100 pt-4">
+            <label class="label">Course Thumbnail (Optional)</label>
+            <div class="flex items-center gap-3">
+              <img v-if="previewUrl" :src="previewUrl" class="h-16 w-24 object-cover rounded-lg border border-slate-200" alt="Thumbnail Preview" />
+              <MediaUploadButton
+                accept="image/jpeg,image/png,image/webp"
+                label="Upload New Thumbnail"
+                @uploaded="onThumbnailUploaded"
+              />
+              <span v-if="form.thumbnail_media_id" class="text-sm font-medium text-green-600">
+                Thumbnail selected!
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Upload a cover image for your course. It will automatically be selected.</p>
           </div>
 
           <div class="flex flex-wrap gap-2 sm:col-span-2">

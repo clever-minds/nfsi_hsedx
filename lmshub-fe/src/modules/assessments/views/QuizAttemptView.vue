@@ -3,15 +3,15 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { apiPost, apiPut, errorMessage } from '@/lib/api';
-import { fmtAngka } from '@/lib/format';
+import { fmtAngka, fmtTanggal } from '@/lib/format';
 
 interface AttemptOption {
   id: string;
-  teks: string;
+  text: string;
 }
 interface AttemptQuestion {
   id: string;
-  teks: string;
+  text: string;
   // Sesuai enum BE: pilihan_tunggal | pilihan_ganda | benar_salah | isian_singkat | esai | upload_file | pencocokan
   tipe: string;
   opsi?: AttemptOption[];
@@ -50,7 +50,7 @@ const answers = reactive<Record<string, unknown>>({});
 const flagged = ref<Set<string>>(new Set());
 const currentIndex = ref(0);
 const remaining = ref(0);
-const timed = ref(false); // kuis punya batas waktu? bila tidak, timer & auto-submit dimatikan.
+const timed = ref(false); // quiz punya batas waktu? bila tidak, timer & auto-submit dimatikan.
 const autosaveStatus = ref<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
 let tickHandle: number | undefined;
@@ -85,16 +85,20 @@ async function startAttempt() {
       remainingSeconds: res.attempt.waktu_tersisa_detik ?? 0,
       questions: (res.soal ?? []).map((s) => ({
         id: s.question_id,
-        teks: s.teks_soal,
+        text: s.teks_soal,
         tipe: s.tipe,
-        opsi: (s.opsi ?? []).map((o) => ({ id: o.id, teks: o.teks_opsi })),
+        opsi: (s.opsi ?? []).map((o) => ({ id: o.id, text: o.teks_opsi })),
       })),
     };
     remaining.value = attempt.value.remainingSeconds ?? 0;
     timed.value = remaining.value > 0;
-    if (timed.value) tickHandle = window.setInterval(tick, 1000); // kuis tanpa batas waktu tak di-countdown
+    if (timed.value) tickHandle = window.setInterval(tick, 1000); // quiz tanpa batas waktu tak di-countdown
   } catch (e) {
-    error.value = errorMessage(e, t('assessments.attempt.startFailed'));
+    const err = (e as { response?: { data?: { error?: { key?: string; details?: { can_retry_at?: string } } } } }).response?.data?.error;
+    error.value =
+      err?.key === 'quiz.retake_cooldown' && err.details?.can_retry_at
+        ? t('assessments.attempt.cooldown', { time: fmtTanggal(err.details.can_retry_at) })
+        : errorMessage(e, t('assessments.attempt.startFailed'));
   } finally {
     loading.value = false;
   }
@@ -113,7 +117,10 @@ function setAnswer(questionId: string, value: unknown) {
   answers[questionId] = value;
   autosaveStatus.value = 'saving';
   if (saveTimers[questionId]) window.clearTimeout(saveTimers[questionId]);
-  saveTimers[questionId] = window.setTimeout(() => persistAnswer(questionId), 800);
+  saveTimers[questionId] = window.setTimeout(() => {
+    delete saveTimers[questionId];
+    persistAnswer(questionId);
+  }, 800);
 }
 
 /** Bungkus nilai UI jadi bentuk `jawaban` yang dipahami auto-grading BE. */
@@ -126,11 +133,11 @@ function encodeJawaban(tipe: string, val: unknown): Record<string, unknown> {
       return { option_ids: Array.isArray(val) ? val : [] };
     case 'isian_singkat':
     case 'esai':
-      return { teks: typeof val === 'string' ? val : '' };
+      return { text: typeof val === 'string' ? val : '' };
     case 'upload_file':
-      return { nama_file: typeof val === 'string' ? val : '' };
+      return { file_name: typeof val === 'string' ? val : '' };
     default:
-      return { teks: typeof val === 'string' ? val : String(val ?? '') };
+      return { text: typeof val === 'string' ? val : String(val ?? '') };
   }
 }
 
@@ -168,6 +175,14 @@ async function submit(auto = false) {
   }
   submitting.value = true;
   try {
+    // Jawaban disimpan dengan jeda 800ms. Tanpa ini, jawaban yang dipilih
+    // tepat sebelum menekan Kumpulkan belum terkirim dan dinilai kosong.
+    const pending = Object.keys(saveTimers).filter((id) => saveTimers[id]);
+    for (const id of pending) {
+      window.clearTimeout(saveTimers[id]);
+      delete saveTimers[id];
+    }
+    await Promise.all(pending.map((id) => persistAnswer(id)));
     await apiPost(`/attempts/${attempt.value.id}/submit`, {});
     if (tickHandle) window.clearInterval(tickHandle);
     router.push({ name: 'assessments' });
@@ -236,7 +251,7 @@ onBeforeUnmount(() => {
               {{ flagged.has(currentQuestion.id) ? t('assessments.attempt.flagged') : t('assessments.attempt.flag') }}
             </button>
           </div>
-          <p class="text-base text-slate-800">{{ currentQuestion.teks }}</p>
+          <p class="text-base text-slate-800">{{ currentQuestion.text }}</p>
 
           <div class="mt-4 space-y-2">
             <template v-if="currentQuestion.tipe === 'pilihan_tunggal' || currentQuestion.tipe === 'benar_salah'">
@@ -247,7 +262,7 @@ onBeforeUnmount(() => {
                   :checked="answers[currentQuestion.id] === o.id"
                   @change="setAnswer(currentQuestion.id, o.id)"
                 />
-                {{ o.teks }}
+                {{ o.text }}
               </label>
             </template>
 
@@ -265,7 +280,7 @@ onBeforeUnmount(() => {
                     )
                   "
                 />
-                {{ o.teks }}
+                {{ o.text }}
               </label>
             </template>
 

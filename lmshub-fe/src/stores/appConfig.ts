@@ -7,7 +7,7 @@ const DEFAULT_APP_NAME = 'LMS Hub';
 
 /**
  * Konfigurasi yang boleh dibaca siapa saja (`settings.is_public` di backend).
- * Dimuat sekali saat aplikasi start karena area pra-login pun perlu tahu nama
+ * Dimuat sekali saat aplikasi start karena area pra-login pun perlu tahu name
  * aplikasi, logo, dan mata uang untuk menggambar dirinya sendiri.
  */
 export const useAppConfigStore = defineStore('appConfig', {
@@ -22,7 +22,7 @@ export const useAppConfigStore = defineStore('appConfig', {
   }),
 
   getters: {
-    /** Baris footer siap tampil. Kosong berarti pemanggil memakai teks bawaannya. */
+    /** Baris footer siap tampil. Kosong berarti pemanggil memakai text bawaannya. */
     footerText(state): string {
       if (!state.footerTemplate.trim()) return '';
       // `split/join` dipakai alih-alih `replaceAll` agar cocok dengan target
@@ -52,7 +52,7 @@ export const useAppConfigStore = defineStore('appConfig', {
     apply(cfg: Record<string, string>) {
       const code = (cfg['currency.code'] ?? '').toUpperCase();
       // Kode tak dikenal diabaikan — lebih baik jatuh ke default daripada
-      // membuat Intl.NumberFormat melempar dan mematikan seluruh harga.
+      // membuat Intl.NumberFormat melempar dan mematikan seluruh price.
       if (code && isSupportedCurrency(code)) this.currency = code;
 
       this.appName = (cfg['brand.nama_aplikasi'] ?? '').trim() || DEFAULT_APP_NAME;
@@ -76,7 +76,7 @@ export const useAppConfigStore = defineStore('appConfig', {
       this.applyToDocument();
     },
 
-    /** Terapkan nama & ikon ke judul tab dan favicon. */
+    /** Terapkan name & ikon ke title tab dan favicon. */
     applyToDocument() {
       if (typeof document === 'undefined') return;
       document.title = this.appName;

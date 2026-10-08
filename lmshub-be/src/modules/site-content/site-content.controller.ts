@@ -29,6 +29,11 @@ export async function uploadAsset(req: Request, res: Response) {
   return ok(res, await service.uploadAsset(auth(req), input));
 }
 
+/** Unggah langsung: body = byte gambar mentah. */
+export async function uploadHero(req: Request, res: Response) {
+  return ok(res, await service.uploadHeroStream(auth(req), req));
+}
+
 export async function removeAsset(req: Request, res: Response) {
   const jenis = req.params.jenis;
   if (jenis !== 'hero') throw AppError.notFound('Unknown asset', 'media.unknown_asset');

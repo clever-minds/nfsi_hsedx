@@ -30,7 +30,7 @@ notificationsRouter.put(
   asyncHandler(ctrl.updateEventConfig),
 );
 
-// Pusat notifikasi in-app milik pengguna login (siswa hanya lihat miliknya)
+// Pusat notifikasi in-app milik pengguna login (student hanya lihat miliknya)
 notificationsRouter.get('/', requirePermission('notifikasi', 'view'), asyncHandler(ctrl.listInbox));
 notificationsRouter.post(
   '/:id/read',

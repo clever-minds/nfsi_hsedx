@@ -53,6 +53,11 @@
     "noteSaveFailed": "Failed to save the note",
     "noteDeleteFailed": "Failed to delete the note",
     "questionFailed": "Failed to send the question",
-    "answerFailed": "Failed to send the answer"
+    "answerFailed": "Failed to send the answer",
+    "congratsExamText": "All lessons are done. Pass the final exam “{exam}” to unlock your certificate.",
+    "takeFinalExam": "Take the final exam",
+    "restart": "Restart course",
+    "restartConfirm": "Restart this course? Your lesson progress goes back to 0%. Notes, exam attempts and certificates are kept.",
+    "restartFailed": "Could not restart the course."
   }
 }

@@ -4,21 +4,21 @@ import type { CreateCurrencyInput, UpdateCurrencyInput } from './currencies.vali
 export interface CurrencyRow {
   id: string;
   kode: string;
-  nama: string;
+  name: string;
   simbol: string;
   rate: string;
   desimal: number;
-  is_aktif: boolean;
-  urutan: number;
+  is_active: boolean;
+  sort_order: number;
 }
 
-const COLUMNS = 'id, kode, nama, simbol, rate, desimal, is_aktif, urutan';
+const COLUMNS = 'id, kode, name, simbol, rate, desimal, is_active, sort_order';
 
 export async function list(activeOnly = false): Promise<CurrencyRow[]> {
   return query<CurrencyRow>(
     `SELECT ${COLUMNS} FROM currencies
-      WHERE deleted_at IS NULL ${activeOnly ? 'AND is_aktif' : ''}
-      ORDER BY urutan, kode`,
+      WHERE deleted_at IS NULL ${activeOnly ? 'AND is_active' : ''}
+      ORDER BY sort_order, kode`,
   );
 }
 
@@ -35,9 +35,9 @@ export async function byKode(kode: string): Promise<CurrencyRow | null> {
 
 export async function insert(input: CreateCurrencyInput): Promise<CurrencyRow> {
   return (await queryOne<CurrencyRow>(
-    `INSERT INTO currencies (kode, nama, simbol, rate, desimal, is_aktif, urutan)
+    `INSERT INTO currencies (kode, name, simbol, rate, desimal, is_active, sort_order)
      VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING ${COLUMNS}`,
-    [input.kode, input.nama, input.simbol, input.rate, input.desimal, input.is_aktif, input.urutan],
+    [input.kode, input.name, input.simbol, input.rate, input.desimal, input.is_active, input.sort_order],
   ))!;
 }
 
@@ -46,22 +46,22 @@ export async function update(id: string, input: UpdateCurrencyInput): Promise<Cu
   // update cannot blank a column the caller never mentioned.
   return queryOne<CurrencyRow>(
     `UPDATE currencies SET
-       nama = COALESCE($2, nama),
+       name = COALESCE($2, name),
        simbol = COALESCE($3, simbol),
        rate = COALESCE($4, rate),
        desimal = COALESCE($5, desimal),
-       is_aktif = COALESCE($6, is_aktif),
-       urutan = COALESCE($7, urutan)
+       is_active = COALESCE($6, is_active),
+       sort_order = COALESCE($7, sort_order)
      WHERE id = $1 AND deleted_at IS NULL
      RETURNING ${COLUMNS}`,
     [
       id,
-      input.nama ?? null,
+      input.name ?? null,
       input.simbol ?? null,
       input.rate ?? null,
       input.desimal ?? null,
-      input.is_aktif ?? null,
-      input.urutan ?? null,
+      input.is_active ?? null,
+      input.sort_order ?? null,
     ],
   );
 }

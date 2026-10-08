@@ -10,22 +10,22 @@ import { useCheckout } from '@/composables/useCheckout';
 import { getPaymentConfig, type GatewayOption } from '@/lib/payments';
 import Icon from '@/components/ui/Icon.vue';
 
-interface Lesson { id: string; judul: string; tipe: string; durasi_menit?: number | null; gratis_preview?: boolean }
-interface Section { id: string; judul: string; lessons?: Lesson[] }
+interface Lesson { id: string; title: string; tipe: string; duration_minutes?: number | null; gratis_preview?: boolean }
+interface Section { id: string; title: string; lessons?: Lesson[] }
 interface CourseDetail {
   id: string;
-  judul: string;
-  ringkasan?: string;
-  deskripsi?: string | null;
-  harga: number;
-  harga_coret?: number | null;
+  title: string;
+  summary?: string;
+  description?: string | null;
+  price: number;
+  strike_price?: number | null;
   level?: string;
-  bahasa?: string;
+  language?: string;
   category_nama?: string;
   durasi_total_menit?: number;
   rating_avg?: string | number;
   rating_count?: number;
-  jumlah_siswa?: number;
+  student_count?: number;
   instructor_id?: string;
   instructor_nama?: string;
   instructor_foto?: string | null;
@@ -90,8 +90,8 @@ function toggleSection(id: string) {
 const totalLesson = computed(() => (course.value?.kurikulum ?? []).reduce((a, s) => a + (s.lessons?.length ?? 0), 0));
 const totalJam = computed(() => fmtDurasiMenit(course.value?.durasi_total_menit ?? 0));
 const diskon = computed(() => {
-  const h = Number(course.value?.harga ?? 0);
-  const c = Number(course.value?.harga_coret ?? 0);
+  const h = Number(course.value?.price ?? 0);
+  const c = Number(course.value?.strike_price ?? 0);
   return c > h && h > 0 ? Math.round(((c - h) / c) * 100) : 0;
 });
 const inisialInstruktur = computed(() =>
@@ -120,11 +120,11 @@ onMounted(async () => {
 async function openMethodPanel() {
   buyError.value = '';
 
-  // Kursus gratis tidak punya apa pun untuk dipilih. Menawarkan daftar metode
-  // pembayaran untuk tagihan nol hanya membingungkan, dan jalur gateway-nya
+  // Course gratis tidak punya apa pun untuk dipilih. Menawarkan daftar metode
+  // payment untuk tagihan nol hanya membingungkan, dan jalur gateway-nya
   // memang menolak order bernilai nol.
-  if (Number(course.value?.harga ?? 0) === 0) {
-    const ok = await buy([{ item_tipe: 'kursus', course_id: course.value!.id }]);
+  if (Number(course.value?.price ?? 0) === 0) {
+    const ok = await buy([{ item_tipe: 'course', course_id: course.value!.id }]);
     if (ok) {
       enrolled.value = true;
       router.push('/d/learn');
@@ -154,7 +154,7 @@ function closeMethodPanel() {
 
 async function bayarGateway(providerId: string) {
   if (!course.value) return;
-  const ok = await buy([{ item_tipe: 'kursus', course_id: course.value.id }], { metode: providerId });
+  const ok = await buy([{ item_tipe: 'course', course_id: course.value.id }], { metode: providerId });
   // Gateway hosted mengalihkan browser; tidak ada yang perlu dilakukan di sini.
   if (ok && status.value === 'sukses') {
     showMethodPanel.value = false;
@@ -199,7 +199,7 @@ function closeTransferPanel() {
 
 async function beliTransfer() {
   if (!course.value) return;
-  const ok = await buy([{ item_tipe: 'kursus', course_id: course.value.id }], {
+  const ok = await buy([{ item_tipe: 'course', course_id: course.value.id }], {
     metode: 'transfer',
     referensi: referensi.value,
   });
@@ -208,7 +208,7 @@ async function beliTransfer() {
 
 async function bagikan() {
   try {
-    if (navigator.share) await navigator.share({ title: course.value?.judul, url: location.href });
+    if (navigator.share) await navigator.share({ title: course.value?.title, url: location.href });
     else {
       await navigator.clipboard.writeText(location.href);
       alert(t('catalog.detail.linkCopied'));
@@ -219,12 +219,12 @@ async function bagikan() {
 }
 
 const TERMASUK = computed(() => [
-  { icon: 'play-circle', teks: t('catalog.detail.inc.video', { duration: totalJam.value }) },
-  { icon: 'file-text', teks: t('catalog.detail.inc.lessons', { n: fmtAngka(totalLesson.value) }) },
-  { icon: 'clock', teks: t('catalog.detail.inc.lifetime') },
-  { icon: 'smartphone', teks: t('catalog.detail.inc.devices') },
-  { icon: 'check-square', teks: t('catalog.detail.inc.quiz') },
-  { icon: 'award', teks: t('catalog.detail.inc.certificate') },
+  { icon: 'play-circle', text: t('catalog.detail.inc.video', { duration: totalJam.value }) },
+  { icon: 'file-text', text: t('catalog.detail.inc.lessons', { n: fmtAngka(totalLesson.value) }) },
+  { icon: 'clock', text: t('catalog.detail.inc.lifetime') },
+  { icon: 'smartphone', text: t('catalog.detail.inc.devices') },
+  { icon: 'check-square', text: t('catalog.detail.inc.quiz') },
+  { icon: 'award', text: t('catalog.detail.inc.certificate') },
 ]);
 </script>
 
@@ -239,7 +239,7 @@ const TERMASUK = computed(() => [
           <span class="h-1 w-4 rounded bg-brand-400"></span>
           <RouterLink to="/courses" class="transition hover:text-brand-500">{{ t('nav.public.courses') }}</RouterLink>
           <span class="h-1 w-4 rounded bg-brand-400"></span>
-          <span class="max-w-[14rem] truncate text-slate-700">{{ course?.judul || '…' }}</span>
+          <span class="max-w-[14rem] truncate text-slate-700">{{ course?.title || '…' }}</span>
         </nav>
       </div>
     </section>
@@ -248,13 +248,13 @@ const TERMASUK = computed(() => [
       <p v-if="error" class="card rounded-xl p-10 text-center text-slate-400">{{ error }}</p>
 
       <template v-else-if="course">
-        <!-- ── Kartu header kursus ─────────────────────────────────── -->
+        <!-- ── Kartu header course ─────────────────────────────────── -->
         <div class="card grid gap-6 rounded-2xl p-5 md:grid-cols-[minmax(0,22rem),1fr] md:p-6">
           <div class="relative overflow-hidden rounded-xl">
             <img
               v-if="course.meta?.thumbnail_url"
               :src="assetUrl(course.meta.thumbnail_url)"
-              :alt="course.judul"
+              :alt="course.title"
               class="h-52 w-full object-cover md:h-full"
             />
             <div v-else class="grid h-52 place-items-center bg-gradient-to-br from-brand-400 to-brand-600 md:h-full">
@@ -269,12 +269,12 @@ const TERMASUK = computed(() => [
 
           <div class="flex flex-col">
             <div class="flex flex-wrap items-start justify-between gap-3">
-              <h2 class="max-w-2xl text-2xl font-extrabold leading-snug text-slate-900">{{ course.judul }}</h2>
+              <h2 class="max-w-2xl text-2xl font-extrabold leading-snug text-slate-900">{{ course.title }}</h2>
               <span v-if="course.category_nama" class="rounded-full bg-accent-400 px-3 py-1 text-xs font-bold text-white">
                 {{ course.category_nama }}
               </span>
             </div>
-            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">{{ course.ringkasan }}</p>
+            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">{{ course.summary }}</p>
 
             <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-600">
               <span class="flex items-center gap-1.5">
@@ -284,7 +284,7 @@ const TERMASUK = computed(() => [
               <span class="flex items-center gap-1.5"><Icon name="clock" :size="15" class="text-accent-500" /> {{ totalJam }}</span>
               <span class="flex items-center gap-1.5">
                 <Icon name="users" :size="15" class="text-emerald-500" />
-                {{ t('catalog.detail.studentsEnrolled', { n: fmtAngka(course.jumlah_siswa ?? 0) }) }}
+                {{ t('catalog.detail.studentsEnrolled', { n: fmtAngka(course.student_count ?? 0) }) }}
               </span>
               <span class="flex items-center gap-1.5">
                 <Icon name="bar-chart" :size="15" class="text-sky-500" />
@@ -322,7 +322,7 @@ const TERMASUK = computed(() => [
               <h3 class="text-lg font-bold text-slate-900">{{ t('catalog.detail.overview') }}</h3>
               <h4 class="mt-4 text-sm font-semibold text-slate-800">{{ t('catalog.detail.description') }}</h4>
               <div class="mt-2 space-y-3 text-sm leading-relaxed text-slate-600">
-                <p v-for="(par, i) in (course.deskripsi || course.ringkasan || '').split('\n\n')" :key="i">{{ par }}</p>
+                <p v-for="(par, i) in (course.description || course.summary || '').split('\n\n')" :key="i">{{ par }}</p>
               </div>
 
               <template v-if="course.meta?.yang_dipelajari?.length">
@@ -353,7 +353,7 @@ const TERMASUK = computed(() => [
               </template>
             </div>
 
-            <!-- Konten kursus (akordeon) -->
+            <!-- Konten course (akordeon) -->
             <div class="card rounded-2xl p-6">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <h3 class="text-lg font-bold text-slate-900">{{ t('catalog.detail.courseContent') }}</h3>
@@ -368,18 +368,18 @@ const TERMASUK = computed(() => [
                     class="flex w-full items-center justify-between gap-2 bg-slate-50 px-4 py-3.5 text-start text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
                     @click="toggleSection(s.id)"
                   >
-                    {{ s.judul }}
+                    {{ s.title }}
                     <Icon name="chevron-down" :size="16" class="shrink-0 text-slate-400 transition-transform" :class="openSections.has(s.id) ? 'rotate-180' : ''" />
                   </button>
                   <div v-if="openSections.has(s.id)" class="divide-y divide-slate-100">
                     <div v-for="l in s.lessons || []" :key="l.id" class="flex items-center gap-3 px-4 py-3 text-sm">
                       <Icon name="play-circle" :size="16" class="shrink-0 text-brand-400" />
-                      <span class="min-w-0 flex-1 truncate text-slate-700">{{ l.judul }}</span>
+                      <span class="min-w-0 flex-1 truncate text-slate-700">{{ l.title }}</span>
                       <span v-if="l.gratis_preview" class="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-600">
                         {{ t('catalog.detail.preview') }}
                       </span>
-                      <span v-if="l.durasi_menit" class="shrink-0 text-xs text-slate-400">
-                        {{ fmtAngka(l.durasi_menit) }} {{ t('catalog.detail.minShort') }}
+                      <span v-if="l.duration_minutes" class="shrink-0 text-xs text-slate-400">
+                        {{ fmtAngka(l.duration_minutes) }} {{ t('catalog.detail.minShort') }}
                       </span>
                     </div>
                   </div>
@@ -387,7 +387,7 @@ const TERMASUK = computed(() => [
               </div>
             </div>
 
-            <!-- Tentang instruktur -->
+            <!-- Tentang instructor -->
             <div v-if="false" class="card rounded-2xl p-6">
               <h3 class="text-lg font-bold text-slate-900">{{ t('catalog.detail.aboutInstructor') }}</h3>
               <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
@@ -442,11 +442,11 @@ const TERMASUK = computed(() => [
           <aside class="space-y-5 sticky top-20 self-start">
             <div class="card rounded-2xl p-5">
               <div class="flex items-baseline justify-between">
-                <span class="text-3xl font-extrabold" :class="Number(course.harga) > 0 ? 'text-slate-900' : 'text-emerald-500'">
-                  {{ fmtHarga(course.harga) }}
+                <span class="text-3xl font-extrabold" :class="Number(course.price) > 0 ? 'text-slate-900' : 'text-emerald-500'">
+                  {{ fmtHarga(course.price) }}
                 </span>
                 <span v-if="diskon" class="text-sm text-slate-400">
-                  <span class="line-through">{{ fmtHarga(course.harga_coret!) }}</span> · {{ t('catalog.detail.off', { n: diskon }) }}
+                  <span class="line-through">{{ fmtHarga(course.strike_price!) }}</span> · {{ t('catalog.detail.off', { n: diskon }) }}
                 </span>
               </div>
 
@@ -479,20 +479,20 @@ const TERMASUK = computed(() => [
               <div class="mt-6 border-t border-slate-100 pt-4">
                 <h4 class="text-sm font-bold text-slate-900">{{ t('catalog.detail.included') }}</h4>
                 <ul class="mt-3 space-y-2.5">
-                  <li v-for="inc in TERMASUK" :key="inc.teks" class="flex items-center gap-2.5 text-sm text-slate-600">
-                    <Icon :name="inc.icon" :size="15" class="shrink-0 text-brand-400" /> {{ inc.teks }}
+                  <li v-for="inc in TERMASUK" :key="inc.text" class="flex items-center gap-2.5 text-sm text-slate-600">
+                    <Icon :name="inc.icon" :size="15" class="shrink-0 text-brand-400" /> {{ inc.text }}
                   </li>
                 </ul>
               </div>
             </div>
 
-            <!-- Fitur kursus -->
+            <!-- Fitur course -->
             <div class="card rounded-2xl p-5">
               <h4 class="text-sm font-bold text-slate-900">{{ t('catalog.detail.features') }}</h4>
               <ul class="mt-3 space-y-2.5 text-sm text-slate-600">
                 <li class="flex items-center gap-2.5">
                   <Icon name="users" :size="15" class="shrink-0 text-indigo-500" />
-                  {{ t('catalog.detail.feat.enrolled', { n: fmtAngka(course.jumlah_siswa ?? 0) }) }}
+                  {{ t('catalog.detail.feat.enrolled', { n: fmtAngka(course.student_count ?? 0) }) }}
                 </li>
                 <li class="flex items-center gap-2.5">
                   <Icon name="clock" :size="15" class="shrink-0 text-accent-500" />
@@ -512,7 +512,7 @@ const TERMASUK = computed(() => [
                 </li>
                 <li class="flex items-center gap-2.5">
                   <Icon name="globe" :size="15" class="shrink-0 text-slate-400" />
-                  {{ t('catalog.detail.feat.language', { value: (course.bahasa || 'ID').toUpperCase() }) }}
+                  {{ t('catalog.detail.feat.language', { value: (course.language || 'ID').toUpperCase() }) }}
                 </li>
               </ul>
             </div>
@@ -524,12 +524,12 @@ const TERMASUK = computed(() => [
       <div v-else class="card h-72 animate-pulse rounded-2xl bg-slate-100"></div>
     </div>
 
-    <!-- Panel pemilihan metode pembayaran -->
+    <!-- Panel pemilihan metode payment -->
     <div v-if="showMethodPanel" class="fixed inset-0 z-40 grid place-items-center bg-slate-900/40 p-4">
       <div class="card w-full max-w-md rounded-2xl p-5">
         <h3 class="text-lg font-bold text-slate-900">{{ t('catalog.detail.pay.title') }}</h3>
         <p class="mt-1 text-sm text-slate-500">
-          {{ course?.judul }} — {{ course ? fmtHarga(course.harga) : '' }}
+          {{ course?.title }} — {{ course ? fmtHarga(course.price) : '' }}
         </p>
         <div v-if="buyError" class="mt-3 alert-error">{{ buyError }}</div>
         <div class="mt-4 space-y-3">
@@ -601,7 +601,7 @@ const TERMASUK = computed(() => [
             </div>
           </template>
           <p class="mt-3 text-xs text-slate-500">
-            {{ t('catalog.detail.pay.hint', { amount: course ? fmtHarga(course.harga) : '' }) }}
+            {{ t('catalog.detail.pay.hint', { amount: course ? fmtHarga(course.price) : '' }) }}
           </p>
           <div class="mt-3">
             <label class="label">{{ t('catalog.detail.pay.refLabel') }}</label>

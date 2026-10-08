@@ -4,7 +4,7 @@ import { parsePage, pageMeta } from '../../core/http/pagination';
 import { validated } from '../../core/validation/validate';
 import { AppError } from '../../core/http/AppError';
 import * as service from './courses.service';
-import { ArchiveCourseInput, CreateCourseInput, PublishCourseInput, UpdateCourseInput } from './courses.validation';
+import { ArchiveCourseInput, CreateCourseInput, PublishCourseInput, UpdateCourseInput, CompletionRulesInput } from './courses.validation';
 
 const auth = (req: Request) => {
   if (!req.auth) throw AppError.unauthorized();
@@ -30,6 +30,10 @@ export async function detail(req: Request, res: Response) {
 
 export async function create(req: Request, res: Response) {
   return created(res, await service.create(auth(req), validated<CreateCourseInput>(req)));
+}
+
+export async function updateCompletionRules(req: Request, res: Response) {
+  return ok(res, await service.updateCompletionRules(auth(req), req.params.id, validated<CompletionRulesInput>(req)));
 }
 
 export async function update(req: Request, res: Response) {

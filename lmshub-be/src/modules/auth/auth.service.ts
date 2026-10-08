@@ -27,7 +27,7 @@ function publicUser(u: repo.UserRow) {
 
 async function issueTokens(user: repo.UserRow, ctx: { ua?: string; ip?: string }) {
   const roles = await repo.roleKodesOf(user.id);
-  const primary = roles[0] ?? 'siswa';
+  const primary = roles[0] ?? 'student';
   const expires = new Date(Date.now() + REFRESH_DAYS * 24 * 3600 * 1000);
   // buat sesi dulu (placeholder hash), lalu sign refresh dgn sid, lalu simpan hash final
   const sid = await repo.createSession({
@@ -60,10 +60,10 @@ export async function register(input: RegisterInput, ctx: { ua?: string; ip?: st
     if (exist) throw AppError.conflict('That phone number is already registered', 'user.phone_taken');
   }
 
-  const roleKode = input.sebagai === 'affiliate' ? 'marketing' : 'siswa';
+  const roleKode = input.sebagai === 'affiliate' ? 'marketing' : 'student';
   const roleId = await repo.roleIdByKode(roleKode);
   if (!roleId) throw AppError.internal('Base roles have not been seeded yet', 'rbac.base_roles_missing');
-  // affiliate wajib verifikasi admin dulu; siswa langsung aktif
+  // affiliate wajib verifikasi admin dulu; student langsung aktif
   const status: 'pending' | 'active' = input.sebagai === 'affiliate' ? 'pending' : 'active';
   const password_hash = await hashPassword(input.password);
 
@@ -102,7 +102,7 @@ export async function register(input: RegisterInput, ctx: { ua?: string; ip?: st
 
 // ── Verifikasi email ─────────────────────────────────────────
 
-async function issueEmailVerification(userId: string, email: string, nama: string) {
+async function issueEmailVerification(userId: string, email: string, name: string) {
   const token = crypto.randomBytes(24).toString('hex');
   await repo.createAuthToken({
     user_id: userId,
@@ -112,7 +112,7 @@ async function issueEmailVerification(userId: string, email: string, nama: strin
     target: email,
     expires_at: new Date(Date.now() + 24 * 3600 * 1000),
   });
-  const res = await sendVerificationEmail(email, nama, token);
+  const res = await sendVerificationEmail(email, name, token);
   return { sent: res.sent, token };
 }
 
@@ -144,8 +144,8 @@ export async function loginWithGoogle(idToken: string, ctx: { ua?: string; ip?: 
   }
   let user = await repo.findByIdentifier(profile.email);
   if (!user) {
-    // buat akun siswa baru dari profil Google (email terverifikasi)
-    const roleId = await repo.roleIdByKode('siswa');
+    // buat akun student baru dari profil Google (email terverifikasi)
+    const roleId = await repo.roleIdByKode('student');
     if (!roleId) throw AppError.internal('The student role has not been seeded yet', 'rbac.student_role_missing');
     const randomHash = await hashPassword(crypto.randomBytes(18).toString('hex'));
     user = await repo.createUser({

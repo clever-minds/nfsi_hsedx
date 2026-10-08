@@ -4,8 +4,8 @@ import { useAppConfigStore } from '@/stores/appConfig';
 import Icon from '@/components/ui/Icon.vue';
 
 /**
- * Logo + nama aplikasi. Bila admin sudah mengunggah logo, gambar itu yang
- * dipakai; kalau belum, jatuh ke lambang bawaan + nama aplikasi sebagai teks,
+ * Logo + name aplikasi. Bila admin sudah mengunggah logo, gambar itu yang
+ * dipakai; kalau belum, jatuh ke lambang bawaan + name aplikasi sebagai text,
  * sehingga instalasi baru tetap terlihat utuh tanpa mengunggah apa pun.
  */
 const props = withDefaults(

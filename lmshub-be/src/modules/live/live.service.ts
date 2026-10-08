@@ -20,9 +20,9 @@ async function assertManage(actor: AuthContext, sessionId: string): Promise<void
 
 export async function list(actor: AuthContext, p: PageParams, filters: { course_id?: string; cohort_id?: string; status?: string }) {
   const isStudentOnly = !isSuper(actor) && !actor.permissions.has('live_class.update');
-  // Siswa: hanya scope enrollment/cohort. Instruktur (punya live_class.update, bukan super):
-  // hanya scope host/pemilik kursus. Super: tanpa scope. Kedua filter TIDAK boleh
-  // dipasang bersamaan untuk siswa (akan ter-AND dan mengosongkan hasil).
+  // Student: hanya scope enrollment/cohort. Instructor (punya live_class.update, bukan super):
+  // hanya scope host/pemilik course. Super: tanpa scope. Kedua filter TIDAK boleh
+  // dipasang bersamaan untuk student (akan ter-AND dan mengosongkan hasil).
   return repo.list(p, {
     ...filters,
     studentUserId: isStudentOnly ? actor.userId : null,
@@ -46,12 +46,12 @@ export async function schedule(actor: AuthContext, input: CreateLiveSessionInput
   const { id } = await repo.insert({
     course_id: input.course_id ?? null,
     cohort_id: input.cohort_id ?? null,
-    judul: input.judul,
-    deskripsi: input.deskripsi ?? null,
+    title: input.title,
+    description: input.description ?? null,
     penyedia: input.penyedia,
     url_join: input.url_join,
     host_user_id: input.host_user_id,
-    waktu_mulai: input.waktu_mulai,
+    start_time: input.start_time,
     waktu_selesai: input.waktu_selesai,
     kapasitas_maks: input.kapasitas_maks ?? null,
     toleransi_terlambat_menit: input.toleransi_terlambat_menit,
@@ -61,8 +61,8 @@ export async function schedule(actor: AuthContext, input: CreateLiveSessionInput
     sumber: 'live_session',
     source_id: id,
     course_id: input.course_id ?? null,
-    judul: input.judul,
-    waktu_mulai: input.waktu_mulai,
+    title: input.title,
+    start_time: input.start_time,
     waktu_selesai: input.waktu_selesai,
   });
   await recordAudit({
@@ -84,17 +84,17 @@ export async function update(actor: AuthContext, id: string, input: UpdateLiveSe
     throw AppError.conflict('Only a scheduled session can be changed', 'live.only_scheduled_editable');
   }
   const fields: Record<string, unknown> = {};
-  for (const k of ['judul', 'deskripsi', 'penyedia', 'url_join', 'waktu_mulai', 'waktu_selesai', 'kapasitas_maks', 'toleransi_terlambat_menit'] as const) {
+  for (const k of ['title', 'description', 'penyedia', 'url_join', 'start_time', 'waktu_selesai', 'kapasitas_maks', 'toleransi_terlambat_menit'] as const) {
     if (input[k] !== undefined) fields[k] = input[k];
   }
   await repo.update(id, fields);
-  if (input.waktu_mulai || input.waktu_selesai) {
+  if (input.start_time || input.waktu_selesai) {
     await repo.upsertCalendarEvent({
       sumber: 'live_session',
       source_id: id,
       course_id: before.course_id,
-      judul: input.judul ?? before.judul,
-      waktu_mulai: input.waktu_mulai ?? before.waktu_mulai,
+      title: input.title ?? before.title,
+      start_time: input.start_time ?? before.start_time,
       waktu_selesai: input.waktu_selesai ?? before.waktu_selesai,
     });
   }
@@ -196,7 +196,7 @@ export async function join(actor: AuthContext, sessionId: string) {
     if (!enrolled) throw AppError.forbidden('You are not enrolled in the course or cohort for this session', 'live.not_in_session_cohort');
   }
   const now = new Date();
-  const mulai = new Date(session.waktu_mulai);
+  const mulai = new Date(session.start_time);
   const selesai = new Date(session.waktu_selesai);
   const toleransiMs = session.toleransi_terlambat_menit * 60_000;
   if (now < new Date(mulai.getTime() - 15 * 60_000) || now > selesai) {
@@ -236,8 +236,8 @@ export async function addRecording(actor: AuthContext, sessionId: string, input:
   const { id } = await repo.insertRecording({
     live_session_id: sessionId,
     url: input.url,
-    durasi_menit: input.durasi_menit ?? null,
-    ukuran_bytes: input.ukuran_bytes ?? null,
+    duration_minutes: input.duration_minutes ?? null,
+    size_bytes: input.size_bytes ?? null,
     retensi_hingga: input.retensi_hingga ?? null,
     diunggah_oleh: actor.userId,
   });

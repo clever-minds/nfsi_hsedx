@@ -40,7 +40,7 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: UserListR
   const sortCol = ['nama_lengkap', 'status', 'created_at'].includes(p.sort ?? '') ? p.sort : 'created_at';
 
   const rows = await query<UserListRow>(
-    `SELECT u.id, u.nama_lengkap, u.email, u.nomor_wa, r.kode AS role_kode, r.nama AS role_nama,
+    `SELECT u.id, u.nama_lengkap, u.email, u.nomor_wa, r.kode AS role_kode, r.name AS role_nama,
             u.status, u.created_by, cb.nama_lengkap AS created_by_nama, u.created_at
        FROM users u
        JOIN roles r ON r.id = u.role_id
@@ -59,7 +59,7 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: UserListR
 
 export async function detail(id: string): Promise<UserListRow | null> {
   return queryOne<UserListRow>(
-    `SELECT u.id, u.nama_lengkap, u.email, u.nomor_wa, r.kode AS role_kode, r.nama AS role_nama,
+    `SELECT u.id, u.nama_lengkap, u.email, u.nomor_wa, r.kode AS role_kode, r.name AS role_nama,
             u.status, u.foto_profil, u.created_by, cb.nama_lengkap AS created_by_nama, u.created_at
        FROM users u JOIN roles r ON r.id = u.role_id
        LEFT JOIN users cb ON cb.id = u.created_by
@@ -106,6 +106,20 @@ export async function passwordHashById(id: string): Promise<{ password_hash: str
     `SELECT password_hash FROM users WHERE id = $1 AND deleted_at IS NULL`,
     [id],
   );
+}
+
+/** Akun aktif (belum dihapus) lain yang sudah memakai email ini — `email` citext, jadi tidak peka huruf. */
+export async function emailTakenByOther(email: string, exceptUserId: string): Promise<boolean> {
+  const row = await queryOne<{ ok: boolean }>(
+    `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1 AND id <> $2 AND deleted_at IS NULL) AS ok`,
+    [email, exceptUserId],
+  );
+  return !!row?.ok;
+}
+
+/** Email baru belum terverifikasi: penanda verifikasi lama milik alamat sebelumnya. */
+export async function updateEmail(id: string, email: string): Promise<void> {
+  await query(`UPDATE users SET email = $2, email_verified_at = NULL WHERE id = $1`, [id, email]);
 }
 
 export async function updatePasswordHash(id: string, password_hash: string): Promise<void> {
@@ -156,8 +170,8 @@ export async function replaceUserPermissions(
 }
 
 export async function listRoles() {
-  return query<{ id: string; kode: string; nama: string; level: number }>(
-    `SELECT id, kode, nama, level FROM roles WHERE deleted_at IS NULL ORDER BY level`,
+  return query<{ id: string; kode: string; name: string; level: number }>(
+    `SELECT id, kode, name, level FROM roles WHERE deleted_at IS NULL ORDER BY level`,
   );
 }
 
@@ -175,13 +189,13 @@ export async function roleIdByKode(kode: string): Promise<string | null> {
 export interface RoleRow {
   id: string;
   kode: string;
-  nama: string;
+  name: string;
   /** Tangga wewenang: 0 = super_admin … 9 = sub_user. Makin kecil makin tinggi. */
   level: number;
 }
 
 export async function roleByKode(kode: string): Promise<RoleRow | null> {
-  return queryOne<RoleRow>(`SELECT id, kode, nama, level FROM roles WHERE kode = $1 AND deleted_at IS NULL`, [kode]);
+  return queryOne<RoleRow>(`SELECT id, kode, name, level FROM roles WHERE kode = $1 AND deleted_at IS NULL`, [kode]);
 }
 
 /**

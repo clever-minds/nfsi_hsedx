@@ -2,8 +2,8 @@
  * Daftar mata uang ISO 4217 yang masih berlaku — dipakai dropdown Pengaturan.
  *
  * Sengaja hard-coded (bukan dari API) supaya dropdown tetap terisi walau backend
- * belum siap, dan supaya daftarnya stabil lintas rilis. Nama ditulis dalam bahasa
- * Inggris karena itu nama resmi ISO; kode-nya yang dipakai untuk memformat.
+ * belum siap, dan supaya daftarnya stabil lintas rilis. Nama ditulis dalam language
+ * Inggris karena itu name resmi ISO; kode-nya yang dipakai untuk memformat.
  */
 export interface CurrencyDef {
   /** Kode ISO 4217 tiga huruf — nilai yang disimpan di setting `currency.code`. */

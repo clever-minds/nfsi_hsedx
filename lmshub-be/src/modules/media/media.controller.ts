@@ -14,7 +14,7 @@ const auth = (req: Request) => {
 export async function list(req: Request, res: Response) {
   const page = parsePage(req);
   const filters = {
-    tipe_file: req.query['filter[tipe_file]'] as string | undefined,
+    file_type: req.query['filter[file_type]'] as string | undefined,
     status_transcode: req.query['filter[status_transcode]'] as string | undefined,
     q: req.query.q as string | undefined,
   };

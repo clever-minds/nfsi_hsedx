@@ -8,7 +8,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 interface Notification {
   id: string;
   tipe: string;
-  judul: string;
+  title: string;
   isi?: string;
   tautan?: string;
   dibaca: boolean;
@@ -108,7 +108,7 @@ onMounted(load);
         <span class="mt-1 h-2 w-2 shrink-0 rounded-full" :class="n.dibaca ? 'bg-transparent' : 'bg-accent-500'"></span>
         <div class="min-w-0 flex-1">
           <div class="flex items-center justify-between gap-2">
-            <span class="font-medium text-slate-800">{{ n.judul }}</span>
+            <span class="font-medium text-slate-800">{{ n.title }}</span>
             <span class="shrink-0 text-xs text-slate-400">{{ fmtRelatif(n.dibuat_at) }}</span>
           </div>
           <p v-if="n.isi" class="mt-0.5 text-sm text-slate-500">{{ n.isi }}</p>

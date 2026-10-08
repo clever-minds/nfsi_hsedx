@@ -8,7 +8,7 @@ import * as ctrl from './currencies.controller';
 
 export const currenciesRouter = Router();
 
-// PUBLIC — harga di katalog harus tampil sebelum siapa pun masuk.
+// PUBLIC — price di catalog harus tampil sebelum siapa pun masuk.
 currenciesRouter.get('/public', asyncHandler(ctrl.publicList));
 
 // Master data mengikuti izin `pengaturan`, sama seperti rekening bank.

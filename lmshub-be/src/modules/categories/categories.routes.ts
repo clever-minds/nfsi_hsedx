@@ -8,7 +8,7 @@ import * as ctrl from './categories.controller';
 
 export const categoriesRouter = Router();
 
-// PUBLIC — katalog kategori & tag (dikonsumsi rute pra-login lmshub-fe)
+// PUBLIC — catalog kategori & tag (dikonsumsi rute pra-login lmshub-fe)
 categoriesRouter.get('/public', asyncHandler(ctrl.publicList));
 categoriesRouter.get('/public/:slug', asyncHandler(ctrl.publicDetail));
 categoriesRouter.get('/tags/public', asyncHandler(ctrl.publicTagList));

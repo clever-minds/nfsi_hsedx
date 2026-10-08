@@ -21,7 +21,7 @@ const base = {
   minimum_pembelian: z.number().min(0).nullable().optional(),
   berlaku_mulai: z.string().datetime().nullable().optional(),
   berlaku_sampai: z.string().datetime().nullable().optional(),
-  is_aktif: z.boolean().optional(),
+  is_active: z.boolean().optional(),
 };
 
 /** Potongan persen di atas 100 akan membuat total negatif. */
@@ -46,7 +46,7 @@ export const updateCouponSchema = z
     minimum_pembelian: z.number().min(0).nullable().optional(),
     berlaku_mulai: z.string().datetime().nullable().optional(),
     berlaku_sampai: z.string().datetime().nullable().optional(),
-    is_aktif: z.boolean().optional(),
+    is_active: z.boolean().optional(),
   })
   .refine(percentWithinRange, { message: 'A percentage discount cannot exceed 100', path: ['nilai_potongan'] })
   .refine(windowOrdered, { message: 'The end date must be later than the start date', path: ['berlaku_sampai'] });

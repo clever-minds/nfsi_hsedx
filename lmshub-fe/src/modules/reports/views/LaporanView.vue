@@ -18,9 +18,9 @@ type EntryRow = Record<string, unknown> & {
   id: string;
   tanggal?: string;
   jenis: string; // pemasukan | pengeluaran
-  /** BE mengirim `kategori_nama` (alias dari kategori_biaya.nama), bukan `kategori`. */
+  /** BE mengirim `kategori_nama` (alias dari kategori_biaya.name), bukan `kategori`. */
   kategori_nama?: string;
-  deskripsi?: string;
+  description?: string;
   nominal: number;
 };
 
@@ -41,7 +41,7 @@ const columns = computed(() => [
   { key: 'tanggal', label: t('reports.financial.colDate') },
   { key: 'jenis', label: t('reports.financial.colType') },
   { key: 'kategori_nama', label: t('reports.financial.colCategory') },
-  { key: 'deskripsi', label: t('reports.financial.colDescription') },
+  { key: 'description', label: t('reports.financial.colDescription') },
   { key: 'nominal', label: t('reports.financial.colAmount') },
 ]);
 
@@ -64,7 +64,7 @@ async function load() {
   error.value = '';
   const { dari, sampai } = monthRange();
   try {
-    // BE tidak punya GET /reports/financial; ringkasan diambil dari /reports/cashflow (per-periode, filter[dari]/filter[sampai])
+    // BE tidak punya GET /reports/financial; summary diambil dari /reports/cashflow (per-periode, filter[dari]/filter[sampai])
     const rows = await apiGet<Array<{ periode: string; pemasukan: number; pengeluaran: number; laba: number }>>(
       '/reports/cashflow',
       { 'filter[dari]': dari, 'filter[sampai]': sampai },

@@ -59,5 +59,25 @@
     "terbit": "Published",
     "diperbarui": "Updated",
     "diarsip": "Archived"
+  },
+  "completion": {
+    "tab": "Completion & certificate",
+    "title": "Completion rules",
+    "intro": "Choose what a student must do to earn the certificate of this course.",
+    "finalExam": "Final exam",
+    "noExam": "No final exam — certificate after completing the lessons",
+    "inactive": "inactive",
+    "finalExamHint": "With a final exam, the certificate stays locked until the student’s best graded attempt reaches the passing score. An inactive exam does not lock certificates.",
+    "examSummary": "Passing score: {pass}% · attempts: {attempts}.",
+    "defaultPass": "default",
+    "unlimited": "unlimited",
+    "editExam": "Edit exam settings",
+    "noQuizzes": "This course has no quiz yet.",
+    "createExam": "Create the final exam",
+    "allowRestart": "Allow students to restart this course",
+    "allowRestartHint": "Restarting resets lesson progress to 0%. Exam attempts already used are kept (restarting does not give extra attempts) and an issued certificate stays valid.",
+    "globalHint": "Defaults for every course (minimum lesson progress and the passing score used when a quiz leaves it empty) are in Settings → Certificate.",
+    "saved": "Completion rules saved.",
+    "saveFailed": "Could not save the completion rules."
   }
 }

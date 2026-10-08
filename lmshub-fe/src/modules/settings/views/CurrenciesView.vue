@@ -22,12 +22,12 @@ import Icon from '@/components/ui/Icon.vue';
 interface Row {
   id: string;
   kode: string;
-  nama: string;
+  name: string;
   simbol: string;
   rate: string;
   desimal: number;
-  is_aktif: boolean;
-  urutan: number;
+  is_active: boolean;
+  sort_order: number;
   is_basis: boolean;
 }
 
@@ -41,7 +41,7 @@ const error = ref('');
 const showForm = ref(false);
 const saving = ref(false);
 
-const draft = reactive({ kode: '', nama: '', simbol: '', rate: 1, desimal: 2, urutan: 0 });
+const draft = reactive({ kode: '', name: '', simbol: '', rate: 1, desimal: 2, sort_order: 0 });
 
 /** Kode yang belum dipakai — mencegah duplikat sebelum request dikirim. */
 const available = computed(() => {
@@ -64,14 +64,14 @@ async function load() {
 }
 
 function openForm() {
-  Object.assign(draft, { kode: '', nama: '', simbol: '', rate: 1, desimal: 2, urutan: rows.value.length });
+  Object.assign(draft, { kode: '', name: '', simbol: '', rate: 1, desimal: 2, sort_order: rows.value.length });
   showForm.value = true;
 }
 
 /** Nama resmi ISO diisikan otomatis begitu kode dipilih. */
 function onPickCode() {
   const found = CURRENCIES.find((c) => c.code === draft.kode);
-  if (found && !draft.nama) draft.nama = found.name;
+  if (found && !draft.name) draft.name = found.name;
 }
 
 async function save() {
@@ -115,7 +115,7 @@ async function remove(row: Row) {
   }
 }
 
-/** Muat ulang daftar publik juga, supaya harga di layar langsung ikut kurs baru. */
+/** Muat ulang daftar publik juga, supaya price di layar langsung ikut kurs baru. */
 async function refresh() {
   await load();
   store.ready = false;
@@ -159,7 +159,7 @@ onMounted(load);
                 {{ t('settings.currencies.baseBadge') }}
               </span>
             </td>
-            <td class="px-4 py-3 text-slate-600">{{ r.nama }}</td>
+            <td class="px-4 py-3 text-slate-600">{{ r.name }}</td>
             <td class="px-4 py-3 text-slate-600">{{ r.simbol || '—' }}</td>
             <td class="px-4 py-3">
               <span v-if="r.is_basis" class="text-slate-400">1.00</span>
@@ -174,8 +174,8 @@ onMounted(load);
             <td class="px-4 py-3">
               <input
                 type="checkbox" class="h-4 w-4 rounded border-slate-300 text-brand-500"
-                :checked="r.is_aktif" :disabled="r.is_basis"
-                @change="patch(r, { is_aktif: ($event.target as HTMLInputElement).checked })"
+                :checked="r.is_active" :disabled="r.is_basis"
+                @change="patch(r, { is_active: ($event.target as HTMLInputElement).checked })"
               />
             </td>
             <td class="px-4 py-3 text-end">
@@ -202,7 +202,7 @@ onMounted(load);
         </select>
 
         <label class="label mt-3">{{ t('settings.currencies.colName') }}</label>
-        <input v-model="draft.nama" class="input" />
+        <input v-model="draft.name" class="input" />
 
         <div class="mt-3 flex gap-3">
           <div class="flex-1">
@@ -221,7 +221,7 @@ onMounted(load);
           {{ t('settings.currencies.rateHint', { base, code: draft.kode || '—' }) }}
         </p>
 
-        <button class="btn-primary mt-5 w-full rounded-full" :disabled="saving || !draft.kode || !draft.nama" @click="save">
+        <button class="btn-primary mt-5 w-full rounded-full" :disabled="saving || !draft.kode || !draft.name" @click="save">
           {{ saving ? t('common.state.saving') : t('common.action.save') }}
         </button>
         <button class="mt-2 w-full text-center text-sm text-slate-400 hover:text-slate-600" @click="showForm = false">

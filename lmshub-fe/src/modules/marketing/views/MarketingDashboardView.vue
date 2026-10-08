@@ -10,7 +10,7 @@ import StatusChip from '@/components/ui/StatusChip.vue';
 
 interface Lead {
   id: string;
-  nama: string;
+  name: string;
   kontak?: string;
   minat_kursus?: string;
   nilai_estimasi?: number;
@@ -33,7 +33,7 @@ interface ReferralLink {
 }
 interface LeaderboardRow {
   id: string;
-  nama: string;
+  name: string;
   total_closing?: number;
   total_komisi?: number;
 }
@@ -57,7 +57,7 @@ const copied = ref(false);
 const kpi = reactive({ targetClosing: 0, tercapaiClosing: 0, komisiBulan: 0, komisiCair: 0 });
 
 const showAddLead = ref(false);
-const newLead = reactive({ nama: '', kontak: '', minat_kursus: '', nilai_estimasi: 0 });
+const newLead = reactive({ name: '', kontak: '', minat_kursus: '', nilai_estimasi: 0 });
 const addingLead = ref(false);
 
 function columnFor(stage: string): Lead[] {
@@ -160,12 +160,12 @@ async function moveStage(lead: Lead) {
 }
 
 async function addLead() {
-  if (!newLead.nama) return;
+  if (!newLead.name) return;
   addingLead.value = true;
   try {
     await apiPost('/marketing/leads', { ...newLead, stage: 'lead' });
     showAddLead.value = false;
-    newLead.nama = '';
+    newLead.name = '';
     newLead.kontak = '';
     newLead.minat_kursus = '';
     newLead.nilai_estimasi = 0;
@@ -247,7 +247,7 @@ onMounted(loadAll);
         <form v-if="showAddLead" class="card mb-4 grid gap-3 p-4 sm:grid-cols-2" @submit.prevent="addLead">
           <div>
             <label class="label">{{ t('marketing.leadName') }}</label>
-            <input v-model="newLead.nama" class="input" required />
+            <input v-model="newLead.name" class="input" required />
           </div>
           <div>
             <label class="label">{{ t('marketing.leadContact') }}</label>
@@ -281,7 +281,7 @@ onMounted(loadAll);
                 {{ t('marketing.stageEmpty') }}
               </div>
               <div v-for="lead in columnFor(stage.key)" :key="lead.id" class="card p-3">
-                <div class="font-medium text-slate-800">{{ lead.nama }}</div>
+                <div class="font-medium text-slate-800">{{ lead.name }}</div>
                 <div v-if="lead.minat_kursus" class="text-xs text-slate-500">
                   {{ t('marketing.interest', { value: lead.minat_kursus }) }}
                 </div>
@@ -298,7 +298,7 @@ onMounted(loadAll);
                   </button>
                   <RouterLink
                     v-if="stage.key === 'closing'"
-                    v-can="'transaksi.create'"
+                    v-can="'transaction.create'"
                     class="btn-primary btn-sm"
                     :to="{ name: 'manual-payment', query: { lead_id: lead.id } }"
                   >
@@ -342,7 +342,7 @@ onMounted(loadAll);
         <div v-if="!leaderboard.length" class="mt-2 text-sm text-slate-400">{{ t('marketing.leaderboardEmpty') }}</div>
         <ol v-else class="mt-2 space-y-1 text-sm">
           <li v-for="(row, i) in leaderboard" :key="row.id" class="flex justify-between">
-            <span>{{ fmtAngka(i + 1) }}. {{ row.nama }} {{ auth.user?.id === row.id ? t('marketing.you') : '' }}</span>
+            <span>{{ fmtAngka(i + 1) }}. {{ row.name }} {{ auth.user?.id === row.id ? t('marketing.you') : '' }}</span>
             <span class="text-slate-500">
               {{ t('marketing.leaderboardRow', { closings: fmtAngka(row.total_closing ?? 0), commission: fmtRp(row.total_komisi) }) }}
             </span>

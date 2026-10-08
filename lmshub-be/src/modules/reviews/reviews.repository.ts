@@ -15,7 +15,7 @@ export interface ReviewSummary {
   distribusi: Record<'1' | '2' | '3' | '4' | '5', number>;
 }
 
-/** Daftar ulasan publik sebuah kursus (join nama & foto penulis). */
+/** Daftar ulasan publik sebuah course (join name & foto penulis). */
 export async function listPublicReviews(courseId: string, limit = 50): Promise<PublicReviewRow[]> {
   return query<PublicReviewRow>(
     `SELECT r.id, r.rating, r.ulasan, u.nama_lengkap AS user_nama, u.foto_profil AS user_foto, r.created_at
@@ -60,7 +60,7 @@ export interface MyReviewRow {
   created_at: string;
 }
 
-/** Enrollment aktif/selesai milik user untuk kursus (sumber kelayakan review). */
+/** Enrollment aktif/selesai milik user untuk course (sumber kelayakan review). */
 export async function eligibleEnrollment(
   userId: string,
   courseId: string,

@@ -57,12 +57,12 @@ export async function revoke(req: Request, res: Response) {
 }
 
 // PUBLIC — tanpa requireAuth
-// Self-service siswa: terbitkan sertifikat untuk enrollment miliknya (bila memenuhi syarat).
+// Self-service student: terbitkan certificate untuk enrollment miliknya (bila memenuhi syarat).
 export async function claim(req: Request, res: Response) {
   return created(res, await service.claim(auth(req), req.params.enrollmentId));
 }
 
-// Data lengkap untuk merender desain sertifikat (pemilik/staf).
+// Data lengkap untuk merender desain certificate (pemilik/staf).
 export async function renderCert(req: Request, res: Response) {
   return ok(res, await service.renderById(auth(req), req.params.id));
 }

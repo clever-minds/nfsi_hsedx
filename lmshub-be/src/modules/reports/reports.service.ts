@@ -32,7 +32,7 @@ export async function createFinancialEntry(actor: AuthContext, input: CreateFina
     tanggal: input.tanggal,
     periode_bulan: tgl.getUTCMonth() + 1,
     periode_tahun: tgl.getUTCFullYear(),
-    deskripsi: input.deskripsi ?? null,
+    description: input.description ?? null,
     dicatat_oleh: actor.userId,
   });
   await recordAudit({
@@ -73,7 +73,7 @@ export async function exportReport(f: { dari?: string; sampai?: string }) {
 
 export async function listPayouts(actor: AuthContext, p: PageParams, status?: string) {
   const seesAll = isDirektur(actor) || actor.roles.includes('ketua') || actor.roles.includes('pembina');
-  // Instruktur: scope ke instructor_profiles.id miliknya (bukan user id — kolom instructor_id
+  // Instructor: scope ke instructor_profiles.id miliknya (bukan user id — kolom instructor_id
   // di instructor_payouts mereferensikan instructor_profiles.id).
   const instructorId = seesAll ? undefined : (await repo.instructorProfileIdByUser(actor.userId)) ?? '__none__';
   const [daftar, totalPending] = await Promise.all([
@@ -85,7 +85,7 @@ export async function listPayouts(actor: AuthContext, p: PageParams, status?: st
   return { ...daftar, totalPending };
 }
 
-/** Saldo revenue share instruktur yang tersedia untuk dicairkan. */
+/** Saldo revenue share instructor yang tersedia untuk dicairkan. */
 export async function availablePayout(actor: AuthContext) {
   const ipId = await repo.instructorProfileIdByUser(actor.userId);
   if (!ipId) return { nominal_tersedia: 0, jumlah_item: 0 };
@@ -93,7 +93,7 @@ export async function availablePayout(actor: AuthContext) {
   return { nominal_tersedia: nominal, jumlah_item: jumlah };
 }
 
-/** Instruktur mengajukan pencairan seluruh saldo tersedia → payout status 'menunggu_approval'. */
+/** Instructor mengajukan pencairan seluruh saldo tersedia → payout status 'menunggu_approval'. */
 export async function requestPayout(actor: AuthContext) {
   const ipId = await repo.instructorProfileIdByUser(actor.userId);
   if (!ipId) throw AppError.forbidden('Only an instructor can request a payout', 'payout.request_requires_instructor');
@@ -118,7 +118,7 @@ export async function requestPayout(actor: AuthContext) {
   }
 }
 
-/** Approval payout instruktur — HANYA Direktur (atau super_admin). Transaksi + row-lock cegah approve ganda. */
+/** Approval payout instructor — HANYA Direktur (atau super_admin). Transaction + row-lock cegah approve ganda. */
 export async function approvePayout(actor: AuthContext, id: string, input: ApprovePayoutInput) {
   if (!isDirektur(actor)) {
     throw AppError.forbidden('Only a Director can approve a payout', 'payout.approve_requires_director');
@@ -149,9 +149,9 @@ export async function approvePayout(actor: AuthContext, id: string, input: Appro
 }
 
 /**
- * Finansial — Pencairan payout instruktur yang SUDAH disetujui Direktur.
+ * Finansial — Pencairan payout instructor yang SUDAH disetujui Direktur.
  * `disetujui` → `selesai` (dicairkan_at diisi). Sama seperti `disburseCommission` (marketing):
- * Direktur/admin_ops boleh mengeksekusi pencairan (pemisahan tugas dari approval sudah terjadi
+ * Direktur/admin_ops boleh mengeksekusi pencairan (pemisahan assignment dari approval sudah terjadi
  * di langkah `approve`).
  */
 export async function payPayout(actor: AuthContext, id: string) {

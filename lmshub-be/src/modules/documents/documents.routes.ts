@@ -14,7 +14,7 @@ import * as ctrl from './documents.controller';
 export const documentsRouter = Router();
 
 /**
- * Rute publik dari modul ini, dipisah karena urutan mounting.
+ * Rute publik dari modul ini, dipisah karena sort_order mounting.
  *
  * Beberapa router yang di-mount di root (`curriculum`, `progress`, …) memasang
  * `requireAuth()` untuk SELURUH request yang melewatinya. Karena `documentsRouter`
@@ -23,27 +23,40 @@ export const documentsRouter = Router();
  */
 export const publicDocumentsRouter = Router();
 
+// PUBLIC — daftar halaman terbit (slug, title, penempatan footer), tanpa isinya
+publicDocumentsRouter.get('/public/pages', asyncHandler(ctrl.listPublicPages));
+
 // PUBLIC — halaman statis (tentang/FAQ/kebijakan) untuk area pra-login, hanya status='terbit'
 publicDocumentsRouter.get('/pages/:slug', asyncHandler(ctrl.getPublicPage));
 
-// PUBLIC — setting bertanda is_public (mata uang, kontak, nama lembaga)
+// PUBLIC — setting bertanda is_public (mata uang, kontak, name lembaga)
 publicDocumentsRouter.get('/settings/public', asyncHandler(ctrl.publicSettings));
 
-// content_pages — admin CRUD (permission `konten`)
-documentsRouter.get('/pages', requireAuth(), requirePermission('konten', 'view'), asyncHandler(ctrl.listPages));
+// content_pages — admin CRUD. Izin `pengaturan`, sama dengan menu Website:
+// halaman ini tampil untuk semua pengunjung (Terms, Privacy, …). `content`
+// dulu dipakai di sini, padahal izin itu juga dimiliki instructor untuk Media
+// Library — artinya setiap instructor bisa menulis ulang halaman kebijakan situs.
+documentsRouter.get('/pages', requireAuth(), requirePermission('pengaturan', 'view'), asyncHandler(ctrl.listPages));
 documentsRouter.post(
   '/pages',
   requireAuth(),
-  requirePermission('konten', 'create'),
+  requirePermission('pengaturan', 'update'),
   validate(createPageSchema),
   asyncHandler(ctrl.createPage),
 );
 documentsRouter.put(
   '/pages/:id',
   requireAuth(),
-  requirePermission('konten', 'update'),
+  requirePermission('pengaturan', 'update'),
   validate(updatePageSchema),
   asyncHandler(ctrl.updatePage),
+);
+
+documentsRouter.delete(
+  '/pages/:id',
+  requireAuth(),
+  requirePermission('pengaturan', 'update'),
+  asyncHandler(ctrl.removePage),
 );
 
 // settings — konfigurasi global (permission `pengaturan`)
@@ -53,8 +66,8 @@ documentsRouter.get(
   requirePermission('pengaturan', 'view'),
   asyncHandler(ctrl.listSettings),
 );
-// Metadata gateway pembayaran. Sama seperti brand-asset: harus sebelum
-// '/settings/:key', atau 'payment-gateways' tertangkap sebagai nama setting.
+// Metadata gateway payment. Sama seperti brand-asset: harus sebelum
+// '/settings/:key', atau 'payment-gateways' tertangkap sebagai name setting.
 documentsRouter.get(
   '/settings/payment-gateways',
   requirePermission('pengaturan', 'view'),
@@ -62,7 +75,7 @@ documentsRouter.get(
 );
 
 // Aset merek — didaftarkan sebelum '/settings/:key' agar 'brand-asset' tidak
-// tertangkap sebagai nama key setting.
+// tertangkap sebagai name key setting.
 documentsRouter.post(
   '/settings/brand-asset',
   requireAuth(),

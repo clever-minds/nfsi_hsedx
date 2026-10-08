@@ -6,11 +6,13 @@ import { PageParams } from '../../core/http/pagination';
 export interface ContentPageRow {
   id: string;
   slug: string;
-  judul: string;
-  konten: unknown;
+  title: string;
+  content: unknown;
   tipe: 'tentang' | 'faq' | 'kebijakan' | 'halaman';
   status: 'draft' | 'terbit' | 'arsip';
   meta_seo: unknown;
+  tampil_di_footer: boolean;
+  urutan_footer: number;
   dikelola_oleh: string | null;
   tanggal_terbit: string | null;
   created_at: string;
@@ -52,28 +54,55 @@ export async function getPageById(id: string): Promise<ContentPageRow | null> {
   return queryOne<ContentPageRow>(`SELECT * FROM content_pages WHERE id = $1 AND deleted_at IS NULL`, [id]);
 }
 
+export interface PublicPageListRow {
+  slug: string;
+  title: string;
+  tipe: ContentPageRow['tipe'];
+  tampil_di_footer: boolean;
+  urutan_footer: number;
+}
+
+/** Halaman terbit tanpa isinya — cukup untuk menyusun tautan footer. */
+export async function listPublishedPages(): Promise<PublicPageListRow[]> {
+  return query<PublicPageListRow>(
+    `SELECT slug, title, tipe, tampil_di_footer, urutan_footer
+       FROM content_pages
+      WHERE deleted_at IS NULL AND status = 'terbit'
+      ORDER BY urutan_footer, title`,
+  );
+}
+
+export async function softDeletePage(id: string): Promise<void> {
+  await query(`UPDATE content_pages SET deleted_at = now() WHERE id = $1`, [id]);
+}
+
 export async function insertPage(data: {
   slug: string;
-  judul: string;
-  konten: unknown;
+  title: string;
+  content: unknown;
   tipe: string;
   status: string;
   meta_seo: unknown;
   tanggal_terbit: string | null;
   dikelola_oleh: string;
+  tampil_di_footer: boolean;
+  urutan_footer: number;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO content_pages (slug, judul, konten, tipe, status, meta_seo, tanggal_terbit, dikelola_oleh)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
+    `INSERT INTO content_pages (slug, title, content, tipe, status, meta_seo, tanggal_terbit, dikelola_oleh,
+                                tampil_di_footer, urutan_footer)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
     [
       data.slug,
-      data.judul,
-      data.konten === undefined ? null : JSON.stringify(data.konten),
+      data.title,
+      data.content === undefined ? null : JSON.stringify(data.content),
       data.tipe,
       data.status,
       data.meta_seo === undefined ? null : JSON.stringify(data.meta_seo),
       data.tanggal_terbit,
       data.dikelola_oleh,
+      data.tampil_di_footer,
+      data.urutan_footer,
     ],
   );
   return row!;
@@ -97,7 +126,7 @@ export interface SettingRow {
   nilai: string | null;
   nilai_json: unknown;
   satuan: string | null;
-  deskripsi: string | null;
+  description: string | null;
   is_public: boolean;
   is_editable: boolean;
   is_encrypted: boolean;
@@ -108,7 +137,7 @@ export async function listSettings(): Promise<SettingRow[]> {
   return query<SettingRow>(`SELECT * FROM settings WHERE deleted_at IS NULL ORDER BY grup, key`);
 }
 
-/** Setting bertanda `is_public` — dibaca area pra-login (mata uang, kontak, nama lembaga). */
+/** Setting bertanda `is_public` — dibaca area pra-login (mata uang, kontak, name lembaga). */
 export async function listPublicSettings(): Promise<Array<Pick<SettingRow, 'key' | 'nilai' | 'tipe_nilai'>>> {
   return query<Pick<SettingRow, 'key' | 'nilai' | 'tipe_nilai'>>(
     `SELECT key, nilai, tipe_nilai FROM settings WHERE deleted_at IS NULL AND is_public AND NOT is_encrypted ORDER BY key`,

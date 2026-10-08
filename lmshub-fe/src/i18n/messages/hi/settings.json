@@ -35,11 +35,11 @@
   "invalidJson": "{label} मान्य JSON नहीं है — सहेजने से पहले मान ठीक करें।",
   "group": {
     "currency": "मुद्रा",
-    "harga": "मूल्य निर्धारण",
+    "price": "मूल्य निर्धारण",
     "checkout": "चेकआउट",
     "komisi": "कमीशन",
     "revenue_share": "राजस्व बँटवारा",
-    "sertifikat": "प्रमाणपत्र",
+    "certificate": "प्रमाणपत्र",
     "kontak": "संपर्क",
     "auth": "Google साइन-इन (OAuth)",
     "smtp": "SMTP (ईमेल)",
@@ -49,6 +49,7 @@
     "payment_stripe": "Stripe",
     "payment_paypal": "PayPal",
     "payment_razorpay": "Razorpay",
+    "payment_easebuzz": "Easebuzz",
     "payment_paystack": "Paystack",
     "payment_flutterwave": "Flutterwave",
     "payment_mollie": "Mollie",
@@ -175,7 +176,8 @@
     "badFormat": "प्रारूप PNG, JPG या WEBP होना चाहिए।",
     "tooLarge": "फ़ाइल अधिकतम 512 KB होनी चाहिए।",
     "readFailed": "फ़ाइल पढ़ी नहीं जा सकी",
-    "uploadFailed": "फ़ाइल अपलोड नहीं हो सकी"
+    "uploadFailed": "फ़ाइल अपलोड नहीं हो सकी",
+    "heroElsewhere": "होमपेज हीरो इमेज और फ़ुटर पेज (About, Terms, Privacy…) यहाँ प्रबंधित होते हैं:"
   },
   "payment": {
     "webhookTitle": "वेबहुक एंडपॉइंट",

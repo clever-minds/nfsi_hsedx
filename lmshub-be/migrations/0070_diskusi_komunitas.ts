@@ -24,7 +24,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE discussion_threads (
       id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       course_id       uuid NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
-      judul           varchar(200) NOT NULL,
+      title           varchar(200) NOT NULL,
       dibuat_oleh     uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       is_pinned       boolean NOT NULL DEFAULT false,
       is_locked       boolean NOT NULL DEFAULT false,

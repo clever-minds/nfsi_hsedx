@@ -6,57 +6,58 @@ import { apiDelete, apiGetFull, apiPost, apiPut, errorMessage } from '@/lib/api'
 import { fmtAngka } from '@/lib/format';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
+import RichTextEditor from '@/components/ui/RichTextEditor.vue';
 
-type LessonType = 'video' | 'teks' | 'pdf' | 'kuis' | 'tugas' | 'live_class' | 'embed' | 'scorm';
-const LESSON_TYPES: LessonType[] = ['video', 'teks', 'pdf', 'kuis', 'tugas', 'live_class', 'embed', 'scorm'];
+type LessonType = 'video' | 'text' | 'pdf' | 'quiz' | 'assignment' | 'live_class' | 'embed' | 'scorm';
+const LESSON_TYPES: LessonType[] = ['video', 'text', 'pdf', 'quiz', 'assignment', 'live_class', 'embed', 'scorm'];
 
 interface CourseOption {
   id: string;
-  judul: string;
+  title: string;
 }
 interface Section {
   id: string;
   course_id: string;
-  judul: string;
-  urutan: number;
-  deskripsi: string | null;
+  title: string;
+  sort_order: number;
+  description: string | null;
 }
 interface Lesson {
   id: string;
   section_id: string;
-  judul: string;
+  title: string;
   tipe: LessonType;
-  urutan: number;
-  durasi_menit: number | null;
+  sort_order: number;
+  duration_minutes: number | null;
   gratis_preview: boolean;
 }
 
 /**
- * Tipe isi pelajaran. Lebih sempit dari tipe pelajaran: 'kuis', 'tugas' dan
- * 'live_class' tidak punya baris isi — masing-masing dirakit di layar Asesmen
+ * Tipe isi pelajaran. Lebih sempit dari tipe pelajaran: 'quiz', 'assignment' dan
+ * 'live_class' tidak punya baris isi — masing-masing dirakit di layar Assessment
  * dan Live Class, lalu ditautkan ke pelajaran lewat tipe pelajarannya.
  */
-type ContentType = 'video' | 'teks' | 'pdf' | 'embed' | 'scorm';
-const CONTENT_TYPES: ContentType[] = ['video', 'teks', 'pdf', 'embed', 'scorm'];
-/** Tipe yang isinya berupa berkas/tautan, bukan teks atau paket SCORM. */
+type ContentType = 'video' | 'text' | 'pdf' | 'embed' | 'scorm';
+const CONTENT_TYPES: ContentType[] = ['video', 'text', 'pdf', 'embed', 'scorm'];
+/** Tipe yang isinya berupa berkas/tautan, bukan text atau paket SCORM. */
 const LINK_TYPES: ContentType[] = ['video', 'pdf', 'embed'];
 
 interface LessonContent {
   id: string;
   lesson_id: string;
   tipe: ContentType;
-  urutan: number;
+  sort_order: number;
   body: string | null;
   media_asset_id: string | null;
   url: string | null;
   scorm_manifest_url: string | null;
-  durasi_detik: number | null;
+  duration_seconds: number | null;
 }
 
 interface MediaAsset {
   id: string;
-  nama_file: string;
-  tipe_file: 'video' | 'gambar' | 'dokumen' | 'audio';
+  file_name: string;
+  file_type: 'video' | 'gambar' | 'document' | 'audio';
   status_transcode: string;
 }
 
@@ -64,7 +65,7 @@ const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 
-/** Label tipe pelajaran diambil dari katalog i18n agar ikut ganti bahasa. */
+/** Label tipe pelajaran diambil dari catalog i18n agar ikut ganti language. */
 const lessonTypeLabel = (tipe: LessonType) => t(`content.lessonType.${tipe}`);
 
 const courses = ref<CourseOption[]>([]);
@@ -115,7 +116,7 @@ const contentForm = ref({
   body: '',
   media_asset_id: '',
   scorm_manifest_url: '',
-  durasi_menit: 0,
+  duration_minutes: 0,
 });
 
 const contentTypeLabel = (tipe: ContentType) => t(`content.lessonType.${tipe}`);
@@ -123,8 +124,8 @@ const isLinkType = computed(() => LINK_TYPES.includes(contentForm.value.tipe));
 
 /** Aset yang masuk akal untuk tipe isi yang sedang dipilih. */
 const mediaChoices = computed(() => {
-  const want = contentForm.value.tipe === 'video' ? 'video' : 'dokumen';
-  return mediaAssets.value.filter((m) => m.tipe_file === want);
+  const want = contentForm.value.tipe === 'video' ? 'video' : 'document';
+  return mediaAssets.value.filter((m) => m.file_type === want);
 });
 
 /** File types the inline upload offers for the content type being edited. */
@@ -139,7 +140,7 @@ function onAssetUploaded(asset: { id: string }) {
 function resetContentForm() {
   editingContentId.value = null;
   contentSource.value = 'media';
-  contentForm.value = { tipe: 'video', url: '', body: '', media_asset_id: '', scorm_manifest_url: '', durasi_menit: 0 };
+  contentForm.value = { tipe: 'video', url: '', body: '', media_asset_id: '', scorm_manifest_url: '', duration_minutes: 0 };
 }
 
 async function loadMediaAssets() {
@@ -148,7 +149,7 @@ async function loadMediaAssets() {
     const res = await apiGetFull<MediaAsset[]>('/media', { limit: 100 });
     mediaAssets.value = res.data ?? [];
   } catch {
-    // Pustaka Media memakai izin 'konten.view'. Bila pengguna tidak punya, panel
+    // Pustaka Media memakai izin 'content.view'. Bila pengguna tidak punya, panel
     // tetap berguna lewat alamat web — jadi kegagalan di sini tidak ditampilkan.
     mediaAssets.value = [];
   }
@@ -159,7 +160,7 @@ async function loadContents(lessonId: string) {
   contentError.value = '';
   try {
     const res = await apiGetFull<LessonContent[]>(`/lessons/${lessonId}/contents`);
-    contents.value[lessonId] = (res.data ?? []).slice().sort((a, b) => a.urutan - b.urutan);
+    contents.value[lessonId] = (res.data ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
   } catch (e) {
     contentError.value = errorMessage(e, t('content.contents.loadFailed'));
     contents.value[lessonId] = [];
@@ -184,7 +185,7 @@ async function toggleContents(lesson: Lesson) {
 
 /** Ringkasan satu baris untuk daftar isi yang sudah tersimpan. */
 function contentSummary(c: LessonContent): string {
-  if (c.tipe === 'teks') {
+  if (c.tipe === 'text') {
     const plain = (c.body ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     return plain.length > 90 ? `${plain.slice(0, 90)}…` : plain || t('content.contents.emptyBody');
   }
@@ -192,7 +193,7 @@ function contentSummary(c: LessonContent): string {
   if (c.url) return c.url;
   if (c.media_asset_id) {
     const m = mediaAssets.value.find((a) => a.id === c.media_asset_id);
-    return m ? m.nama_file : t('content.contents.fromLibrary');
+    return m ? m.file_name : t('content.contents.fromLibrary');
   }
   return '—';
 }
@@ -201,7 +202,7 @@ async function submitContent(lessonId: string) {
   const f = contentForm.value;
   const payload: Record<string, unknown> = { tipe: f.tipe };
 
-  if (f.tipe === 'teks') {
+  if (f.tipe === 'text') {
     if (!f.body.trim()) {
       contentError.value = t('content.contents.bodyRequired');
       return;
@@ -236,7 +237,7 @@ async function submitContent(lessonId: string) {
     if (editingContentId.value) payload.media_asset_id = null;
   }
 
-  if (f.tipe === 'video' && f.durasi_menit > 0) payload.durasi_detik = Math.round(f.durasi_menit * 60);
+  if (f.tipe === 'video' && f.duration_minutes > 0) payload.duration_seconds = Math.round(f.duration_minutes * 60);
 
   busy.value = true;
   contentError.value = '';
@@ -244,7 +245,7 @@ async function submitContent(lessonId: string) {
     if (editingContentId.value) {
       await apiPut(`/contents/${editingContentId.value}`, payload);
     } else {
-      payload.urutan = (contents.value[lessonId] || []).length;
+      payload.sort_order = (contents.value[lessonId] || []).length;
       await apiPost(`/lessons/${lessonId}/contents`, payload);
     }
     resetContentForm();
@@ -265,7 +266,7 @@ function editContent(c: LessonContent) {
     body: c.body ?? '',
     media_asset_id: c.media_asset_id ?? '',
     scorm_manifest_url: c.scorm_manifest_url ?? '',
-    durasi_menit: c.durasi_detik ? Math.round(c.durasi_detik / 60) : 0,
+    duration_minutes: c.duration_seconds ? Math.round(c.duration_seconds / 60) : 0,
   };
   contentError.value = '';
 }
@@ -286,7 +287,7 @@ async function removeContent(lessonId: string, id: string) {
 }
 
 /**
- * Tidak ada endpoint reorder khusus untuk isi pelajaran, jadi urutan ditukar
+ * Tidak ada endpoint reorder khusus untuk isi pelajaran, jadi sort_order ditukar
  * lewat dua kali PUT — cukup karena satu pelajaran jarang punya banyak isi.
  */
 async function moveContent(lessonId: string, id: string, dir: -1 | 1) {
@@ -297,8 +298,8 @@ async function moveContent(lessonId: string, id: string, dir: -1 | 1) {
   busy.value = true;
   contentError.value = '';
   try {
-    await apiPut(`/contents/${list[idx].id}`, { urutan: swapIdx });
-    await apiPut(`/contents/${list[swapIdx].id}`, { urutan: idx });
+    await apiPut(`/contents/${list[idx].id}`, { sort_order: swapIdx });
+    await apiPut(`/contents/${list[swapIdx].id}`, { sort_order: idx });
     await loadContents(lessonId);
   } catch (e) {
     contentError.value = errorMessage(e, t('content.contents.reorderFailed'));
@@ -310,7 +311,7 @@ async function moveContent(lessonId: string, id: string, dir: -1 | 1) {
 async function loadCourses() {
   loadingCourses.value = true;
   try {
-    // Backend otomatis membatasi instruktur non-admin ke kursus miliknya sendiri.
+    // Backend otomatis membatasi instructor non-admin ke course miliknya sendiri.
     const res = await apiGetFull<CourseOption[]>('/courses', { limit: 100 });
     courses.value = res.data ?? [];
   } catch (e) {
@@ -331,11 +332,11 @@ async function loadCurriculum() {
   error.value = '';
   try {
     const res = await apiGetFull<Section[]>(`/courses/${selectedCourseId.value}/sections`);
-    sections.value = (res.data ?? []).slice().sort((a, b) => a.urutan - b.urutan);
+    sections.value = (res.data ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
     const entries = await Promise.all(
       sections.value.map(async (s) => {
         const lr = await apiGetFull<Lesson[]>(`/sections/${s.id}/lessons`);
-        return [s.id, (lr.data ?? []).slice().sort((a, b) => a.urutan - b.urutan)] as const;
+        return [s.id, (lr.data ?? []).slice().sort((a, b) => a.sort_order - b.sort_order)] as const;
       }),
     );
     lessonsBySection.value = Object.fromEntries(entries);
@@ -358,8 +359,8 @@ async function addSection() {
   busy.value = true;
   try {
     await apiPost(`/courses/${selectedCourseId.value}/sections`, {
-      judul: newSectionTitle.value.trim(),
-      urutan: sections.value.length,
+      title: newSectionTitle.value.trim(),
+      sort_order: sections.value.length,
     });
     newSectionTitle.value = '';
     await loadCurriculum();
@@ -387,10 +388,10 @@ async function moveSection(id: string, dir: -1 | 1) {
   const idx = sections.value.findIndex((s) => s.id === id);
   const swapIdx = idx + dir;
   if (idx < 0 || swapIdx < 0 || swapIdx >= sections.value.length) return;
-  const items = sections.value.map((s, i) => ({ id: s.id, urutan: i }));
-  const tmp = items[idx].urutan;
-  items[idx].urutan = items[swapIdx].urutan;
-  items[swapIdx].urutan = tmp;
+  const items = sections.value.map((s, i) => ({ id: s.id, sort_order: i }));
+  const tmp = items[idx].sort_order;
+  items[idx].sort_order = items[swapIdx].sort_order;
+  items[swapIdx].sort_order = tmp;
   busy.value = true;
   try {
     await apiPut(`/courses/${selectedCourseId.value}/sections/reorder`, { items });
@@ -403,14 +404,14 @@ async function moveSection(id: string, dir: -1 | 1) {
 }
 
 async function addLesson(sectionId: string) {
-  const judul = (newLessonTitle.value[sectionId] || '').trim();
-  if (!judul) return;
+  const title = (newLessonTitle.value[sectionId] || '').trim();
+  if (!title) return;
   busy.value = true;
   try {
     await apiPost(`/sections/${sectionId}/lessons`, {
-      judul,
+      title,
       tipe: newLessonType.value[sectionId] || 'video',
-      urutan: (lessonsBySection.value[sectionId] || []).length,
+      sort_order: (lessonsBySection.value[sectionId] || []).length,
     });
     newLessonTitle.value[sectionId] = '';
     await loadCurriculum();
@@ -439,10 +440,10 @@ async function moveLesson(sectionId: string, id: string, dir: -1 | 1) {
   const idx = list.findIndex((l) => l.id === id);
   const swapIdx = idx + dir;
   if (idx < 0 || swapIdx < 0 || swapIdx >= list.length) return;
-  const items = list.map((l, i) => ({ id: l.id, urutan: i, section_id: sectionId }));
-  const tmp = items[idx].urutan;
-  items[idx].urutan = items[swapIdx].urutan;
-  items[swapIdx].urutan = tmp;
+  const items = list.map((l, i) => ({ id: l.id, sort_order: i, section_id: sectionId }));
+  const tmp = items[idx].sort_order;
+  items[idx].sort_order = items[swapIdx].sort_order;
+  items[swapIdx].sort_order = tmp;
   busy.value = true;
   try {
     await apiPut('/lessons/reorder', { items });
@@ -486,7 +487,7 @@ onMounted(async () => {
         @change="selectCourse(($event.target as HTMLSelectElement).value)"
       >
         <option value="">{{ t('content.builder.pickPlaceholder') }}</option>
-        <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.judul }}</option>
+        <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.title }}</option>
       </select>
     </div>
 
@@ -513,7 +514,7 @@ onMounted(async () => {
         <div class="mb-3 flex items-start justify-between gap-2">
           <div>
             <span class="text-xs text-slate-400">{{ t('content.builder.sectionN', { n: fmtAngka(si + 1) }) }}</span>
-            <h3 class="card-title">{{ s.judul }}</h3>
+            <h3 class="card-title">{{ s.title }}</h3>
           </div>
           <div class="flex shrink-0 items-center gap-1">
             <button class="btn-outline btn-sm" :disabled="busy || si === 0" @click="moveSection(s.id, -1)">↑</button>
@@ -535,12 +536,12 @@ onMounted(async () => {
           <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
             <div class="flex items-center gap-2">
               <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-medium text-brand-800">{{ lessonTypeLabel(l.tipe) }}</span>
-              <span class="text-slate-700">{{ l.judul }}</span>
+              <span class="text-slate-700">{{ l.title }}</span>
               <span v-if="l.gratis_preview" class="text-[10px] font-medium text-emerald-600">
                 {{ t('content.builder.freePreview') }}
               </span>
-              <span v-if="l.durasi_menit" class="text-xs text-slate-400">
-                {{ fmtAngka(l.durasi_menit) }} {{ t('content.builder.minShort') }}
+              <span v-if="l.duration_minutes" class="text-xs text-slate-400">
+                {{ fmtAngka(l.duration_minutes) }} {{ t('content.builder.minShort') }}
               </span>
             </div>
             <div class="flex items-center gap-1">
@@ -555,10 +556,10 @@ onMounted(async () => {
               <button class="btn-outline btn-sm" :disabled="busy" @click="toggleFreePreview(l)">
                 {{ l.gratis_preview ? t('content.builder.cancelPreview') : t('content.builder.freePreview') }}
               </button>
-              <!-- Tanpa tombol ini pelajaran hanya berupa judul: video, teks dan
+              <!-- Tanpa tombol ini pelajaran hanya berupa title: video, text dan
                    PDF-nya tidak punya tempat untuk diisi. -->
               <button
-                v-can="'konten.view'"
+                v-can="'content.view'"
                 class="btn-outline btn-sm"
                 :class="openLessonId === l.id ? 'border-brand-400 text-brand-600' : ''"
                 :disabled="busy"
@@ -598,11 +599,11 @@ onMounted(async () => {
                   >
                     ↓
                   </button>
-                  <button v-can="'konten.update'" class="btn-outline btn-sm" :disabled="busy" @click="editContent(c)">
+                  <button v-can="'content.update'" class="btn-outline btn-sm" :disabled="busy" @click="editContent(c)">
                     {{ t('common.action.edit') }}
                   </button>
                   <button
-                    v-can="'konten.delete'"
+                    v-can="'content.delete'"
                     class="btn-outline px-2 py-0.5 text-[11px] text-rose-600"
                     :disabled="busy"
                     @click="removeContent(l.id, c.id)"
@@ -615,7 +616,7 @@ onMounted(async () => {
             <p v-else class="mb-3 text-xs text-slate-400">{{ t('content.contents.empty') }}</p>
 
             <!-- Formulir tambah / ubah isi -->
-            <div v-can="'konten.create'" class="rounded border border-slate-200 bg-white p-3">
+            <div v-can="'content.create'" class="rounded border border-slate-200 bg-white p-3">
               <p class="mb-2 text-xs font-medium text-slate-600">
                 {{ editingContentId ? t('content.contents.formEdit') : t('content.contents.formNew') }}
               </p>
@@ -647,21 +648,21 @@ onMounted(async () => {
                   <select v-model="contentForm.media_asset_id" class="input">
                     <option value="">{{ t('common.action.choose') }}</option>
                     <option v-for="m in mediaChoices" :key="m.id" :value="m.id">
-                      {{ m.nama_file }}<template v-if="m.tipe_file === 'video' && m.status_transcode !== 'selesai'">
+                      {{ m.file_name }}<template v-if="m.file_type === 'video' && m.status_transcode !== 'selesai'">
                         — {{ t('content.contents.notReady') }}
 </template>
                     </option>
                   </select>
                   <p class="mt-1 text-xs text-slate-400">{{ t('content.contents.assetHint') }}</p>
-                  <div v-can="'konten.create'" class="mt-2 flex flex-wrap items-center gap-2">
+                  <div v-can="'content.create'" class="mt-2 flex flex-wrap items-center gap-2">
                     <span class="text-xs text-slate-500">{{ t('content.contents.orUpload') }}</span>
                     <MediaUploadButton :accept="uploadAccept" :label="t('content.contents.uploadNew')" @uploaded="onAssetUploaded" />
                   </div>
                 </div>
 
-                <div v-if="contentForm.tipe === 'teks'" class="sm:col-span-2">
+                <div v-if="contentForm.tipe === 'text'" class="sm:col-span-2">
                   <label class="label">{{ t('content.contents.body') }}</label>
-                  <textarea v-model="contentForm.body" rows="5" class="input" :placeholder="t('content.contents.bodyPlaceholder')"></textarea>
+                  <RichTextEditor v-model="contentForm.body" />
                   <p class="mt-1 text-xs text-slate-400">{{ t('content.contents.bodyHint') }}</p>
                 </div>
 
@@ -672,7 +673,7 @@ onMounted(async () => {
 
                 <div v-if="contentForm.tipe === 'video'">
                   <label class="label">{{ t('content.contents.duration') }}</label>
-                  <input v-model.number="contentForm.durasi_menit" type="number" min="0" class="input" />
+                  <input v-model.number="contentForm.duration_minutes" type="number" min="0" class="input" />
                 </div>
               </div>
 

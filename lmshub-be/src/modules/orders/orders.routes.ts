@@ -14,6 +14,16 @@ export const ordersRouter = Router();
 // global di app.ts sudah menanganinya.
 ordersRouter.post('/webhook/:provider', asyncHandler(ctrl.gatewayWebhook));
 
+// Proxy untuk gateway yang me-redirect pembeli dengan metode HTTP POST
+// (seperti Easebuzz, PayU). Frontend SPA (Vite/Nginx) akan menolak POST ke 
+// berkas statis (404/405). Rute ini mencegat POST tersebut dan mengubahnya 
+// menjadi GET biasa dengan 302 Redirect.
+ordersRouter.post('/redirect', (req, res) => {
+  const target = req.query.url as string;
+  if (!target || typeof target !== 'string') return res.redirect('/');
+  res.redirect(302, target);
+});
+
 ordersRouter.use(requireAuth());
 
 // Konfigurasi gateway untuk FE (client key)
@@ -22,24 +32,24 @@ ordersRouter.get('/payment-config', asyncHandler(ctrl.paymentConfig));
 // input tanda jadi manual (marketing/admin) — attribution marketing_user_id
 ordersRouter.post(
   '/manual',
-  requirePermission('transaksi', 'create'),
+  requirePermission('transaction', 'create'),
   validate(manualOrderSchema),
   asyncHandler(ctrl.createManual),
 );
 
-ordersRouter.post('/', requirePermission('transaksi', 'create'), validate(checkoutSchema), asyncHandler(ctrl.checkout));
-ordersRouter.get('/', requirePermission('transaksi', 'view'), asyncHandler(ctrl.list));
-ordersRouter.get('/:id', requirePermission('transaksi', 'view'), asyncHandler(ctrl.detail));
-ordersRouter.get('/:id/invoice', requirePermission('pembayaran', 'view'), asyncHandler(ctrl.invoice));
+ordersRouter.post('/', requirePermission('transaction', 'create'), validate(checkoutSchema), asyncHandler(ctrl.checkout));
+ordersRouter.get('/', requirePermission('transaction', 'view'), asyncHandler(ctrl.list));
+ordersRouter.get('/:id', requirePermission('transaction', 'view'), asyncHandler(ctrl.detail));
+ordersRouter.get('/:id/invoice', requirePermission('payment', 'view'), asyncHandler(ctrl.invoice));
 
 // FINANSIAL — transfer manual/mock, WAJIB withTransaction (lihat orders.service)
-ordersRouter.post('/:id/pay', requirePermission('pembayaran', 'create'), validate(paySchema), asyncHandler(ctrl.pay));
-// FINANSIAL — mulai pembayaran gateway (settle HANYA lewat webhook)
-ordersRouter.post('/:id/pay-gateway', requirePermission('pembayaran', 'create'), asyncHandler(ctrl.payGateway));
+ordersRouter.post('/:id/pay', requirePermission('payment', 'create'), validate(paySchema), asyncHandler(ctrl.pay));
+// FINANSIAL — mulai payment gateway (settle HANYA lewat webhook)
+ordersRouter.post('/:id/pay-gateway', requirePermission('payment', 'create'), asyncHandler(ctrl.payGateway));
 // FINANSIAL — verifikasi admin_ops atas transfer manual
 ordersRouter.post(
   '/:id/verify',
-  requirePermission('pembayaran', 'update'),
+  requirePermission('payment', 'update'),
   validate(verifyPaymentSchema),
   asyncHandler(ctrl.verify),
 );

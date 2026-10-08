@@ -58,7 +58,7 @@ export async function pay(req: Request, res: Response) {
   return ok(res, await service.pay(auth(req), req.params.id, validated<PayInput>(req)));
 }
 
-// Mulai pembayaran gateway — kembalikan URL checkout provider.
+// Mulai payment gateway — kembalikan URL checkout provider.
 // `provider` opsional: klien lama tanpa field ini memakai gateway pertama yang aktif.
 export async function payGateway(req: Request, res: Response) {
   const provider = typeof req.body?.provider === 'string' ? req.body.provider : undefined;

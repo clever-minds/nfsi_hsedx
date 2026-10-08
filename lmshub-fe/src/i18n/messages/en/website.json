@@ -49,11 +49,11 @@
     "titlePost": "After highlight",
     "subtitle": "Subheading",
     "image": "Hero image",
-    "imageHint": "JPG, PNG, or WebP · max 2MB. Empty shows the gradient block.",
+    "imageHint": "JPG, PNG, or WebP · max 5MB. Empty shows the gradient block.",
     "noImage": "No image yet",
     "replace": "Upload image",
     "badFormat": "Format must be JPG, PNG, or WebP.",
-    "tooLarge": "File must be 2MB or smaller.",
+    "tooLarge": "File must be 5MB or smaller.",
     "readFailed": "Could not read the file.",
     "uploadFailed": "Upload failed.",
     "ratingScore": "Rating score",
@@ -86,7 +86,7 @@
       "name": "Statistics",
       "desc": "Students, courses, categories, and instructors."
     },
-    "instruktur": {
+    "instructor": {
       "name": "Top Instructors",
       "desc": "Instructor cards with rating and student count."
     },

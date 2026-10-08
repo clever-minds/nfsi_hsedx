@@ -8,7 +8,7 @@ import Icon from '@/components/ui/Icon.vue';
  *
  * Menampilkan status dan — yang paling penting — URL webhook siap salin.
  * URL itu dihitung server dari APP_URL, bukan diketik ulang oleh pembeli:
- * salah ketik satu karakter membuat pembayaran berhasil sementara ordernya diam
+ * salah ketik satu karakter membuat payment berhasil sementara ordernya diam
  * menggantung tanpa pesan error apa pun, dan itu keluhan support paling mahal
  * pada integrasi seperti ini.
  */

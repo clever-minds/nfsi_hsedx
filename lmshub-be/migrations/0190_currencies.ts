@@ -17,7 +17,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE currencies (
       id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       kode         varchar(3) NOT NULL,
-      nama         varchar(80) NOT NULL,
+      name         varchar(80) NOT NULL,
       /* Blank falls back to the code, which is what Intl does for currencies
          with no well-known glyph. */
       simbol       varchar(8) NOT NULL DEFAULT '',
@@ -26,8 +26,8 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       rate         numeric(20,8) NOT NULL DEFAULT 1,
       /* Display decimals. IDR and JPY are written whole; KWD uses three. */
       desimal      smallint NOT NULL DEFAULT 2,
-      is_aktif     boolean NOT NULL DEFAULT true,
-      urutan       int NOT NULL DEFAULT 0,
+      is_active     boolean NOT NULL DEFAULT true,
+      sort_order       int NOT NULL DEFAULT 0,
       created_at   timestamptz NOT NULL DEFAULT now(),
       updated_at   timestamptz NOT NULL DEFAULT now(),
       deleted_at   timestamptz,
@@ -35,7 +35,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       CONSTRAINT currencies_desimal_chk CHECK (desimal BETWEEN 0 AND 4)
     );
     CREATE UNIQUE INDEX currencies_kode_uq ON currencies (upper(kode)) WHERE deleted_at IS NULL;
-    CREATE INDEX currencies_aktif_idx ON currencies (is_aktif, urutan);
+    CREATE INDEX currencies_aktif_idx ON currencies (is_active, sort_order);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON currencies
       FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
@@ -44,7 +44,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   // so an existing installation behaves exactly as before until someone adds a
   // second currency.
   pgm.sql(`
-    INSERT INTO currencies (kode, nama, simbol, rate, desimal, is_aktif, urutan)
+    INSERT INTO currencies (kode, name, simbol, rate, desimal, is_active, sort_order)
     SELECT upper(COALESCE(NULLIF(s.nilai, ''), 'USD')),
            CASE upper(COALESCE(NULLIF(s.nilai, ''), 'USD'))
              WHEN 'IDR' THEN 'Indonesian Rupiah'
@@ -64,7 +64,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   // Whether shoppers may switch at all. Off by default: a store with one
   // currency should not grow a dropdown containing one option.
   pgm.sql(`
-    INSERT INTO settings (key, grup, label, tipe_nilai, nilai, is_public, is_encrypted, deskripsi) VALUES
+    INSERT INTO settings (key, grup, label, tipe_nilai, nilai, is_public, is_encrypted, description) VALUES
       ('currency.switcher_enabled', 'currency', 'Let visitors switch currency', 'boolean', 'false', true, false,
        'Shows a currency picker beside the language picker. Prices are converted for display only; payment is still taken in the base currency.')
     ON CONFLICT (key) WHERE deleted_at IS NULL DO NOTHING;

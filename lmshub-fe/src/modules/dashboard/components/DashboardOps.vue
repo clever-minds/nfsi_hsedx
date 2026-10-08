@@ -10,12 +10,12 @@ import DonutChart from '@/components/ui/DonutChart.vue';
 import Icon from '@/components/ui/Icon.vue';
 
 interface TrenHari { tanggal: string; jumlah: number }
-interface KursusPopuler { id: string; judul: string; jumlah_siswa: number | null; rating_avg: string | null; instructor_nama: string }
+interface KursusPopuler { id: string; title: string; student_count: number | null; rating_avg: string | null; instructor_nama: string }
 interface PendaftaranBaru { id: string; user_nama: string; course_judul: string; status: string; created_at: string }
 interface AntreanPayout { id: string; nominal_total: string; status: string; created_at: string }
 interface AuditItem { id: string; modul: string; aksi: string; entity_type: string | null; waktu: string }
 interface KomposisiRow { status: string; jumlah: number }
-interface TopInstruktur { id: string; nama: string; foto_profil: string | null; jumlah_kursus: number; total_siswa: number; rating_avg: string | null }
+interface TopInstruktur { id: string; name: string; foto_profil: string | null; jumlah_kursus: number; total_siswa: number; rating_avg: string | null }
 interface TransaksiBaru { id: string; pembeli_nama: string; jalur: string; status: string; total: string; created_at: string }
 
 const props = defineProps<{ data: Record<string, unknown> }>();
@@ -26,9 +26,9 @@ const MONEY_RE = /pendapatan|revenue|laba|pengeluaran|komisi/;
 
 const iconFor = (label: string) => {
   const l = label.toLowerCase();
-  if (MONEY_RE.test(l) || l.includes('payout') || l.includes('pembayaran') || l.includes('refund')) return 'credit-card';
-  if (l.includes('kursus')) return 'book-open';
-  if (l.includes('pengguna') || l.includes('siswa') || l.includes('pendaftaran') || l.includes('enrollment')) return 'users';
+  if (MONEY_RE.test(l) || l.includes('payout') || l.includes('payment') || l.includes('refund')) return 'credit-card';
+  if (l.includes('course')) return 'book-open';
+  if (l.includes('pengguna') || l.includes('student') || l.includes('pendaftaran') || l.includes('enrollment')) return 'users';
   if (l.includes('live')) return 'video';
   if (l.includes('rating')) return 'award';
   return 'bar-chart';
@@ -63,7 +63,7 @@ const auditTerbaru = computed(() => (props.data.audit_terbaru as AuditItem[] | u
 
 /**
  * Urutan status yang menentukan slot warna. Sengaja dipatok di sini, bukan
- * mengikuti urutan kiriman backend (yang tersusun menurun berdasarkan jumlah):
+ * mengikuti sort_order kiriman backend (yang tersusun menurun berdasarkan jumlah):
  * kalau warna ikut peringkat, satu status bisa berganti warna hanya karena
  * angkanya naik, dan pembaca kehilangan jangkarnya.
  */
@@ -76,18 +76,18 @@ const URUTAN_ENROLLMENT = ['terdaftar', 'aktif', 'selesai', 'kedaluwarsa', 'bata
  * peran ke-enam dan seterusnya lebih jujur diringkas daripada dipaksa berwarna
  * sama dengan peran lain.
  */
-const URUTAN_PERAN = ['siswa', 'instruktur', 'admin_ops', 'marketing'];
+const URUTAN_PERAN = ['student', 'instructor', 'admin_ops', 'marketing'];
 const PERAN_LAINNYA = 'lainnya';
 
 /**
- * `label` menentukan katalog terjemahan yang dipakai. Donut peran berisi kode
- * peran (`siswa`, `instruktur`), bukan kode status, sehingga memakai
+ * `label` menentukan catalog terjemahan yang dipakai. Donut peran berisi kode
+ * peran (`student`, `instructor`), bukan kode status, sehingga memakai
  * `statusLabel` untuk semuanya membuat legenda peran jatuh ke kode mentah dan
- * menampilkan "Siswa"/"Instruktur" di UI berbahasa apa pun.
+ * menampilkan "Student"/"Instructor" di UI berbahasa apa pun.
  */
 function toSegments(
   rows: KomposisiRow[],
-  urutan: string[],
+  sort_order: string[],
   label: (code: string) => string = statusLabel,
 ): DonutSegment[] {
   return rows
@@ -96,9 +96,9 @@ function toSegments(
       label: label(r.status),
       value: Number(r.jumlah) || 0,
       // Status di luar daftar tetap ditaruh di slot terakhir agar tetap tampil.
-      color: chartColor(urutan.indexOf(r.status) === -1 ? urutan.length : urutan.indexOf(r.status)),
+      color: chartColor(sort_order.indexOf(r.status) === -1 ? sort_order.length : sort_order.indexOf(r.status)),
     }))
-    .sort((a, b) => urutan.indexOf(a.key) - urutan.indexOf(b.key));
+    .sort((a, b) => sort_order.indexOf(a.key) - sort_order.indexOf(b.key));
 }
 
 const segmenOrder = computed(() =>
@@ -151,7 +151,7 @@ const kolomDonut = computed(() =>
 const topInstruktur = computed(() => (props.data.top_instruktur as TopInstruktur[] | undefined) ?? []);
 const transaksiTerbaru = computed(() => (props.data.transaksi_terbaru as TransaksiBaru[] | undefined) ?? []);
 
-/** Warna badge status transaksi — status, bukan kategori, jadi paletnya terpisah. */
+/** Warna badge status transaction — status, bukan kategori, jadi paletnya terpisah. */
 function badgeStatus(status: string): string {
   if (status === 'lunas' || status === 'akses_aktif') return 'bg-emerald-50 text-emerald-700';
   if (status === 'batal') return 'bg-rose-50 text-rose-700';
@@ -229,11 +229,11 @@ function badgeStatus(status: string): string {
         </div>
       </section>
 
-      <!-- Transaksi baru -->
+      <!-- Transaction baru -->
       <section v-if="transaksiTerbaru.length">
         <div class="mb-4 flex items-center justify-between">
           <h2 class="section-title">{{ t('dashboard.ops.recentTransactions') }}</h2>
-          <RouterLink v-if="auth.can('transaksi.view')" to="/d/transactions" class="section-link">
+          <RouterLink v-if="auth.can('transaction.view')" to="/d/transactions" class="section-link">
             {{ t('dashboard.student.seeAll') }}
           </RouterLink>
         </div>
@@ -270,7 +270,7 @@ function badgeStatus(status: string): string {
         </div>
       </section>
 
-      <!-- Kursus terpopuler -->
+      <!-- Course terpopuler -->
       <section v-if="kursusPopuler.length">
         <div class="mb-4 flex items-center justify-between">
           <h2 class="section-title">
@@ -286,12 +286,12 @@ function badgeStatus(status: string): string {
               {{ i + 1 }}
             </span>
             <div class="min-w-0 flex-1">
-              <h3 class="truncate card-title">{{ c.judul }}</h3>
+              <h3 class="truncate card-title">{{ c.title }}</h3>
               <div class="text-xs text-slate-400">{{ t('dashboard.ops.byInstructor', { name: c.instructor_nama }) }}</div>
             </div>
             <div class="shrink-0 text-end">
               <div class="flex items-center gap-1 text-sm font-medium text-slate-700">
-                <Icon name="users" :size="13" class="text-slate-400" /> {{ fmtAngka(c.jumlah_siswa ?? 0) }}
+                <Icon name="users" :size="13" class="text-slate-400" /> {{ fmtAngka(c.student_count ?? 0) }}
               </div>
               <div class="text-xs text-accent-500">★ <span class="num">{{ Number(c.rating_avg ?? 0).toFixed(1) }}</span></div>
             </div>
@@ -310,10 +310,10 @@ function badgeStatus(status: string): string {
         <div class="grid gap-3 sm:grid-cols-2">
           <div v-for="(ins, i) in topInstruktur" :key="ins.id" class="card flex items-center gap-3 p-4">
             <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-bold" :class="i === 0 ? 'bg-accent-500/15 text-accent-600' : 'bg-slate-100 text-slate-500'">
-              {{ initialsOf(ins.nama) }}
+              {{ initialsOf(ins.name) }}
             </span>
             <div class="min-w-0 flex-1">
-              <h3 class="truncate card-title">{{ ins.nama }}</h3>
+              <h3 class="truncate card-title">{{ ins.name }}</h3>
               <div class="text-xs text-slate-400">
                 {{ t('dashboard.ops.courseCount', { n: fmtAngka(ins.jumlah_kursus) }) }}
               </div>
@@ -385,10 +385,10 @@ function badgeStatus(status: string): string {
           <RouterLink v-if="auth.can('pengguna.view')" to="/d/users" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="users" :size="16" /> {{ t('dashboard.ops.quickUsers') }}
           </RouterLink>
-          <RouterLink v-if="auth.can('kursus.create')" to="/d/courses" class="nav-item rounded border-0 px-3 py-2">
+          <RouterLink v-if="auth.can('course.create')" to="/d/courses" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="book-open" :size="16" /> {{ t('dashboard.ops.quickCourses') }}
           </RouterLink>
-          <RouterLink v-if="auth.can('transaksi.view')" to="/d/transactions" class="nav-item rounded border-0 px-3 py-2">
+          <RouterLink v-if="auth.can('transaction.view')" to="/d/transactions" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="credit-card" :size="16" /> {{ t('dashboard.ops.quickTransactions') }}
           </RouterLink>
           <RouterLink v-if="auth.can('laporan.view')" to="/d/reports" class="nav-item rounded border-0 px-3 py-2">

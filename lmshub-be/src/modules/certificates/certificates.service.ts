@@ -6,7 +6,9 @@ import { withTransaction } from '../../core/db/withTransaction';
 import { AuthContext } from '../../core/rbac/types';
 import { PageParams } from '../../core/http/pagination';
 import { env } from '../../core/config/env';
+import { getSetting, getSettingInt } from '../../core/settings/settings';
 import * as repo from './certificates.repository';
+import { DEFAULT_PASSING_SCORE, evaluasiUjianAkhir } from './completion-rules';
 import {
   CreateTemplateInput,
   UpdateTemplateInput,
@@ -22,10 +24,10 @@ import {
 const isSuper = (actor: AuthContext) => actor.permissions.has('*');
 const isDirektur = (actor: AuthContext) => isSuper(actor) || actor.roles.includes('direktur');
 
-// Nomor sertifikat: prefix + tahun + 10 karakter acak alfanumerik uppercase — tidak pernah dipakai ulang.
+// Nomor certificate: prefix + tahun + 10 karakter acak alfanumerik uppercase — tidak pernah dipakai ulang.
 const nomorAlphabet = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 10);
 const MAX_GENERATE_RETRY = 5;
-const GRADUATION_MIN_PERSEN_SELESAI = 100; // syarat minimal progres selesai (default; belum ada tabel graduation_requirements terpisah)
+const GRADUATION_MIN_PERSEN_SELESAI = 100; // bawaan setting `certificate.syarat_progres_min_persen`
 
 async function generateUniqueNomor(): Promise<string> {
   for (let i = 0; i < MAX_GENERATE_RETRY; i++) {
@@ -38,7 +40,7 @@ async function generateUniqueNomor(): Promise<string> {
 
 /**
  * Public verification page for a certificate number. Certificates issued before
- * the English URLs carry `/sertifikat/…` in their QR code; the frontend
+ * the English URLs carry `/certificate/…` in their QR code; the frontend
  * redirects those here, so both keep verifying.
  */
 export function verifyUrl(nomor: string): string {
@@ -46,17 +48,17 @@ export function verifyUrl(nomor: string): string {
 }
 
 /** Bangun field penerbitan: nomor unik, kode verifikasi, & QR (data URI PNG) berisi URL verifikasi. */
-async function buildIssueFields(): Promise<{ nomor_sertifikat: string; kode_verifikasi: string; qr_code_url: string }> {
+async function buildIssueFields(): Promise<{ certificate_number: string; verification_code: string; qr_code_url: string }> {
   const nomor = await generateUniqueNomor();
   const kode = nanoid(32);
   const qr = await QRCode.toDataURL(verifyUrl(nomor), { margin: 1, width: 240 });
-  return { nomor_sertifikat: nomor, kode_verifikasi: kode, qr_code_url: qr };
+  return { certificate_number: nomor, verification_code: kode, qr_code_url: qr };
 }
 
 // ── Certificates ──────────────────────────────────────────
 
 export async function list(actor: AuthContext, p: PageParams, filters: { user_id?: string; course_id?: string; status?: string }) {
-  const isStaff = isSuper(actor) || actor.permissions.has('sertifikat.update');
+  const isStaff = isSuper(actor) || actor.permissions.has('certificate.update');
   const scoped = isStaff ? filters : { ...filters, user_id: actor.userId };
   return repo.list(p, scoped);
 }
@@ -64,30 +66,66 @@ export async function list(actor: AuthContext, p: PageParams, filters: { user_id
 export async function detail(actor: AuthContext, id: string) {
   const cert = await repo.detail(id);
   if (!cert) throw AppError.notFound('Certificate not found', 'certificate.not_found');
-  const isStaff = isSuper(actor) || actor.permissions.has('sertifikat.update');
+  const isStaff = isSuper(actor) || actor.permissions.has('certificate.update');
   if (!isStaff && cert.user_id !== actor.userId) throw AppError.forbidden('This is outside your scope', 'scope.out_of_scope');
   return cert;
 }
 
+/** Syarat progres minimum (persen); setting Pengaturan → Certificate, bawaan 100. */
+async function minPersenSelesai(): Promise<number> {
+  const n = await getSettingInt('certificate.syarat_progres_min_persen', GRADUATION_MIN_PERSEN_SELESAI);
+  return Math.min(100, Math.max(0, n));
+}
+
 /**
- * Evaluasi syarat kelulusan berbasis `course_progress` (domain 03). Evaluasi lengkap lintas-domain
- * (gradebook domain 04, kehadiran domain 06) adalah engine terpisah — modul ini hanya mengevaluasi
- * progres pelajaran sebagai syarat minimal yang tersedia dalam cakupan modul ini.
+ * Evaluasi syarat kelulusan: progres pelajaran + ujian akhir (bila course punya).
+ *
+ * - Progres minimum dibaca dari setting `certificate.syarat_progres_min_persen`
+ *   (bawaan 100 — sama dengan perilaku sebelumnya).
+ * - Ujian akhir ditunjuk per course (`courses.final_exam_quiz_id`). Lulus bila
+ *   percobaan terbaik yang sudah dinilai ≥ nilai lulus quiz (atau setting
+ *   `certificate.syarat_passing_score_min` bila quiz tidak mengisinya).
+ * - Course tanpa ujian akhir: hanya progres, persis seperti sebelumnya.
+ *
+ * Certificate yang sudah terbit tidak pernah dievaluasi ulang. Yang belum terbit
+ * selalu mengikuti hasil evaluasi terbaru — termasuk turun kembali ke "belum
+ * memenuhi syarat" bila admin menambahkan ujian akhir setelahnya.
  */
 export async function evaluate(actor: AuthContext, enrollmentId: string) {
   const enrollment = await repo.getEnrollment(enrollmentId);
   if (!enrollment) throw AppError.notFound('Enrolment not found', 'enrollment.not_found');
-  const isStaff = isSuper(actor) || actor.permissions.has('sertifikat.update');
+  const isStaff = isSuper(actor) || actor.permissions.has('certificate.update');
   if (!isStaff && enrollment.user_id !== actor.userId) throw AppError.forbidden('This is outside your scope', 'scope.out_of_scope');
 
-  const progress = await repo.getCourseProgress(enrollmentId);
-  const persenSelesai = Number(progress?.persen_selesai ?? 0);
-  const memenuhiSyarat = persenSelesai >= GRADUATION_MIN_PERSEN_SELESAI;
+  const [progress, minPersen, quiz, settingPassing] = await Promise.all([
+    repo.getCourseProgress(enrollmentId),
+    minPersenSelesai(),
+    repo.getFinalExam(enrollment.course_id),
+    getSetting('certificate.syarat_passing_score_min', ''),
+  ]);
+  const persenSelesai = Number(progress?.progress_percent ?? 0);
+  const ujian = evaluasiUjianAkhir({
+    quiz,
+    skorTerbaik: quiz ? await repo.bestGradedScore(enrollmentId, quiz.id) : null,
+    settingPassing,
+  });
+  const progresCukup = persenSelesai >= minPersen;
+  const memenuhiSyarat = progresCukup && ujian.lulus;
   const snapshot = {
-    persen_selesai: persenSelesai,
-    min_persen_selesai: GRADUATION_MIN_PERSEN_SELESAI,
+    progress_percent: persenSelesai,
+    min_persen_selesai: minPersen,
+    ujian_akhir: ujian.ada
+      ? {
+          quiz_id: ujian.quiz_id,
+          title: ujian.title,
+          passing_score_val: ujian.passing_score_val,
+          skor_terbaik_persen: ujian.skor_terbaik_persen,
+          lulus: ujian.lulus,
+        }
+      : null,
     dievaluasi_at: new Date().toISOString(),
   };
+  const status = memenuhiSyarat ? 'memenuhi_syarat' : 'belum_memenuhi_syarat';
 
   let cert = await repo.findActiveByEnrollment(enrollmentId);
   if (!cert) {
@@ -96,22 +134,50 @@ export async function evaluate(actor: AuthContext, enrollmentId: string) {
       course_id: enrollment.course_id,
       enrollment_id: enrollmentId,
       template_id: null,
-      status: memenuhiSyarat ? 'memenuhi_syarat' : 'belum_memenuhi_syarat',
+      status,
       syarat_snapshot: snapshot,
     });
-  } else if (cert.status === 'belum_memenuhi_syarat' && memenuhiSyarat) {
-    await repo.updateStatus(cert.id, 'memenuhi_syarat', snapshot);
-    cert = await repo.detail(cert.id);
-  } else if (cert.status === 'belum_memenuhi_syarat') {
-    await repo.updateStatus(cert.id, 'belum_memenuhi_syarat', snapshot);
-    cert = await repo.detail(cert.id);
+  } else if (cert.status !== 'terbit') {
+    // Certificate pengecualian (jalur Direktur) tidak boleh diturunkan oleh evaluasi biasa.
+    const pengecualian = (cert.syarat_snapshot as { pengecualian?: boolean } | null)?.pengecualian === true;
+    if (!pengecualian) {
+      await repo.updateStatus(cert.id, status, snapshot);
+      cert = await repo.detail(cert.id);
+    }
   }
   return cert;
 }
 
-/** Penerbitan sertifikat: nomor unik + kode verifikasi, dibungkus DB transaction. */
+/** Alasan klaim ditolak, dalam kalimat yang bisa langsung ditampilkan. */
+function alasanBelumLulus(snapshot: unknown): { message: string; key: string; details: unknown } {
+  const s = (snapshot ?? {}) as {
+    progress_percent?: number;
+    min_persen_selesai?: number;
+    ujian_akhir?: { title?: string; passing_score_val?: number; skor_terbaik_persen?: number | null; lulus?: boolean } | null;
+  };
+  const persen = s.progress_percent ?? 0;
+  const min = s.min_persen_selesai ?? GRADUATION_MIN_PERSEN_SELESAI;
+  if (persen < min) {
+    return {
+      message: `Graduation requirements not met (progress ${persen}% of ${min}%)`,
+      key: 'certificate.requirements_not_met',
+      details: s,
+    };
+  }
+  const u = s.ujian_akhir;
+  return {
+    message:
+      u?.skor_terbaik_persen === null || u?.skor_terbaik_persen === undefined
+        ? `Pass the final exam "${u?.title ?? ''}" (minimum ${u?.passing_score_val ?? DEFAULT_PASSING_SCORE}%) to unlock your certificate`
+        : `Your best final exam score is ${u.skor_terbaik_persen}% — ${u.passing_score_val}% is required to unlock your certificate`,
+    key: 'certificate.final_exam_not_passed',
+    details: s,
+  };
+}
+
+/** Penerbitan certificate: nomor unik + kode verifikasi, dibungkus DB transaction. */
 export async function issue(actor: AuthContext, certificateId: string) {
-  if (!isSuper(actor) && !actor.permissions.has('sertifikat.update')) {
+  if (!isSuper(actor) && !actor.permissions.has('certificate.update')) {
     throw AppError.forbidden('You need the certificate.update permission', 'permission.certificate_update_required');
   }
   return withTransaction(async (tx) => {
@@ -125,12 +191,12 @@ export async function issue(actor: AuthContext, certificateId: string) {
     await recordAudit(
       {
         userId: actor.userId,
-        module: 'sertifikat',
+        module: 'certificate',
         action: 'issue',
         entity: 'certificates',
         entityId: certificateId,
         before: { status: cert.status },
-        after: { status: 'terbit', nomor_sertifikat: fields.nomor_sertifikat },
+        after: { status: 'terbit', certificate_number: fields.certificate_number },
       },
       tx,
     );
@@ -139,13 +205,13 @@ export async function issue(actor: AuthContext, certificateId: string) {
 }
 
 /**
- * Self-service siswa: evaluasi enrollment sendiri, lalu terbitkan sertifikat bila memenuhi syarat.
- * Tidak memerlukan izin `sertifikat.update` — cukup pemilik enrollment. Sistem sebagai penerbit.
+ * Self-service student: evaluasi enrollment sendiri, lalu terbitkan certificate bila memenuhi syarat.
+ * Tidak memerlukan izin `certificate.update` — cukup pemilik enrollment. Sistem sebagai penerbit.
  */
 export async function claim(actor: AuthContext, enrollmentId: string) {
   const enrollment = await repo.getEnrollment(enrollmentId);
   if (!enrollment) throw AppError.notFound('Enrolment not found', 'enrollment.not_found');
-  const isStaff = isSuper(actor) || actor.permissions.has('sertifikat.update');
+  const isStaff = isSuper(actor) || actor.permissions.has('certificate.update');
   if (!isStaff && enrollment.user_id !== actor.userId) throw AppError.forbidden('This is outside your scope', 'scope.out_of_scope');
 
   // evaluasi (buat/update pending) memakai jalur yang sama dengan endpoint evaluate
@@ -153,8 +219,8 @@ export async function claim(actor: AuthContext, enrollmentId: string) {
   if (!evaluated) throw AppError.internal('Could not evaluate completion eligibility', 'certificate.eligibility_check_failed');
   if (evaluated.status === 'terbit') return evaluated; // sudah terbit → idempoten
   if (evaluated.status !== 'memenuhi_syarat') {
-    const persen = (evaluated.syarat_snapshot as { persen_selesai?: number })?.persen_selesai ?? 0;
-    throw AppError.conflict(`Graduation requirements not met (progress ${persen}% of ${GRADUATION_MIN_PERSEN_SELESAI}%)`, 'certificate.requirements_not_met');
+    const why = alasanBelumLulus(evaluated.syarat_snapshot);
+    throw AppError.conflict(why.message, why.key, why.details);
   }
 
   return withTransaction(async (tx) => {
@@ -166,11 +232,11 @@ export async function claim(actor: AuthContext, enrollmentId: string) {
     await recordAudit(
       {
         userId: actor.userId,
-        module: 'sertifikat',
+        module: 'certificate',
         action: 'claim_issue',
         entity: 'certificates',
         entityId: evaluated.id,
-        after: { status: 'terbit', nomor_sertifikat: fields.nomor_sertifikat, self_service: true },
+        after: { status: 'terbit', certificate_number: fields.certificate_number, self_service: true },
       },
       tx,
     );
@@ -178,13 +244,13 @@ export async function claim(actor: AuthContext, enrollmentId: string) {
   });
 }
 
-/** Data lengkap untuk merender desain sertifikat (pemilik atau staf). */
+/** Data lengkap untuk merender desain certificate (pemilik atau staf). */
 export async function renderById(actor: AuthContext, id: string) {
   const data = await repo.displayById(id);
   if (!data) throw AppError.notFound('Certificate not found', 'certificate.not_found');
-  const isStaff = isSuper(actor) || actor.permissions.has('sertifikat.update');
+  const isStaff = isSuper(actor) || actor.permissions.has('certificate.update');
   if (!isStaff && data.user_id !== actor.userId) throw AppError.forbidden('This is outside your scope', 'scope.out_of_scope');
-  return { ...data, verify_url: data.nomor_sertifikat ? verifyUrl(data.nomor_sertifikat) : null };
+  return { ...data, verify_url: data.certificate_number ? verifyUrl(data.certificate_number) : null };
 }
 
 /** Jalur pengecualian — wajib approval Direktur, dicatat wajib di audit_log. */
@@ -214,16 +280,16 @@ export async function exceptionIssue(actor: AuthContext, input: ExceptionIssueIn
     if (!locked) throw AppError.notFound('Certificate not found', 'certificate.not_found');
     if (locked.status === 'terbit') throw AppError.conflict('This certificate has already been issued', 'certificate.already_issued');
     const fields = await buildIssueFields();
-    const nomor = fields.nomor_sertifikat;
+    const nomor = fields.certificate_number;
     const issued = await repo.issue(cert.id, { ...fields, pdf_url: null, diterbitkan_oleh: actor.userId }, tx);
     await recordAudit(
       {
         userId: actor.userId,
-        module: 'sertifikat',
+        module: 'certificate',
         action: 'exception_issue',
         entity: 'certificates',
         entityId: cert.id,
-        after: { nomor_sertifikat: nomor, enrollment_id: input.enrollment_id },
+        after: { certificate_number: nomor, enrollment_id: input.enrollment_id },
         reason: input.alasan,
       },
       tx,
@@ -233,7 +299,7 @@ export async function exceptionIssue(actor: AuthContext, input: ExceptionIssueIn
 }
 
 export async function reissue(actor: AuthContext, certificateId: string, input: ReissueInput) {
-  if (!isSuper(actor) && !actor.permissions.has('sertifikat.update')) {
+  if (!isSuper(actor) && !actor.permissions.has('certificate.update')) {
     throw AppError.forbidden('You need the certificate.update permission', 'permission.certificate_update_required');
   }
   return withTransaction(async (tx) => {
@@ -248,8 +314,8 @@ export async function reissue(actor: AuthContext, certificateId: string, input: 
         course_id: old.course_id,
         enrollment_id: old.enrollment_id,
         template_id: old.template_id,
-        nomor_sertifikat: nomor,
-        kode_verifikasi: kodeVerifikasi,
+        certificate_number: nomor,
+        verification_code: kodeVerifikasi,
         syarat_snapshot: old.syarat_snapshot,
         supersedes_certificate_id: old.id,
         diterbitkan_oleh: actor.userId,
@@ -260,12 +326,12 @@ export async function reissue(actor: AuthContext, certificateId: string, input: 
     await recordAudit(
       {
         userId: actor.userId,
-        module: 'sertifikat',
+        module: 'certificate',
         action: 'reissue',
         entity: 'certificates',
         entityId: fresh.id,
-        before: { supersedes: old.id, nomor_lama: old.nomor_sertifikat },
-        after: { nomor_sertifikat: nomor },
+        before: { supersedes: old.id, nomor_lama: old.certificate_number },
+        after: { certificate_number: nomor },
         reason: input.alasan,
       },
       tx,
@@ -275,7 +341,7 @@ export async function reissue(actor: AuthContext, certificateId: string, input: 
 }
 
 export async function revoke(actor: AuthContext, certificateId: string, input: RevokeInput) {
-  if (!isSuper(actor) && !actor.permissions.has('sertifikat.update')) {
+  if (!isSuper(actor) && !actor.permissions.has('certificate.update')) {
     throw AppError.forbidden('You need the certificate.update permission', 'permission.certificate_update_required');
   }
   const cert = await repo.detail(certificateId);
@@ -283,7 +349,7 @@ export async function revoke(actor: AuthContext, certificateId: string, input: R
   await repo.revoke(certificateId, input.alasan);
   await recordAudit({
     userId: actor.userId,
-    module: 'sertifikat',
+    module: 'certificate',
     action: 'revoke',
     entity: 'certificates',
     entityId: certificateId,
@@ -307,15 +373,15 @@ export async function listTemplates(p: PageParams) {
 export async function createTemplate(actor: AuthContext, input: CreateTemplateInput) {
   if (input.is_default) await repo.clearDefaultTemplate();
   const tpl = await repo.insertTemplate({
-    nama: input.nama,
-    deskripsi: input.deskripsi ?? null,
+    name: input.name,
+    description: input.description ?? null,
     layout: input.layout,
     category_id: input.category_id ?? null,
     course_id: input.course_id ?? null,
     is_default: input.is_default,
-    is_aktif: input.is_aktif,
+    is_active: input.is_active,
   });
-  await recordAudit({ userId: actor.userId, module: 'sertifikat', action: 'create_template', entity: 'certificate_templates', entityId: tpl.id });
+  await recordAudit({ userId: actor.userId, module: 'certificate', action: 'create_template', entity: 'certificate_templates', entityId: tpl.id });
   return tpl;
 }
 
@@ -324,7 +390,7 @@ export async function updateTemplate(actor: AuthContext, id: string, input: Upda
   if (!tpl) throw AppError.notFound('Template not found', 'template.not_found');
   if (input.is_default) await repo.clearDefaultTemplate();
   await repo.updateTemplate(id, input as Record<string, unknown>);
-  await recordAudit({ userId: actor.userId, module: 'sertifikat', action: 'update_template', entity: 'certificate_templates', entityId: id, before: tpl, after: input });
+  await recordAudit({ userId: actor.userId, module: 'certificate', action: 'update_template', entity: 'certificate_templates', entityId: id, before: tpl, after: input });
   return repo.getTemplate(id);
 }
 
@@ -332,7 +398,7 @@ export async function deleteTemplate(actor: AuthContext, id: string) {
   const tpl = await repo.getTemplate(id);
   if (!tpl) throw AppError.notFound('Template not found', 'template.not_found');
   await repo.softDeleteTemplate(id);
-  await recordAudit({ userId: actor.userId, module: 'sertifikat', action: 'delete_template', entity: 'certificate_templates', entityId: id });
+  await recordAudit({ userId: actor.userId, module: 'certificate', action: 'delete_template', entity: 'certificate_templates', entityId: id });
 }
 
 // ── Badges & gamifikasi ─────────────────────────────────────
@@ -344,11 +410,11 @@ export async function listBadges(p: PageParams) {
 export async function createBadge(actor: AuthContext, input: CreateBadgeInput) {
   const badge = await repo.insertBadge({
     kode: input.kode,
-    nama: input.nama,
-    deskripsi: input.deskripsi ?? null,
+    name: input.name,
+    description: input.description ?? null,
     kriteria: input.kriteria,
     icon_url: input.icon_url ?? null,
-    is_aktif: input.is_aktif,
+    is_active: input.is_active,
   });
   await recordAudit({ userId: actor.userId, module: 'gamifikasi', action: 'create_badge', entity: 'badges', entityId: badge.id });
   return badge;
@@ -393,7 +459,7 @@ export async function awardPoints(actor: AuthContext, input: AwardPointsInput) {
     saldo_setelah: saldoSetelah,
     sumber_type: input.sumber_type ?? 'manual_admin',
     sumber_id: input.sumber_id ?? null,
-    deskripsi: input.deskripsi ?? null,
+    description: input.description ?? null,
   });
   await recordAudit({
     userId: actor.userId,

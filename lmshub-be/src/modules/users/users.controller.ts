@@ -6,6 +6,7 @@ import { AppError } from '../../core/http/AppError';
 import * as service from './users.service';
 import {
   ChangeMyPasswordInput,
+  ChangeMyEmailInput,
   CreateUserInput,
   SetPermissionsInput,
   UpdateMeInput,
@@ -50,6 +51,10 @@ export async function remove(req: Request, res: Response) {
 
 export async function updateMe(req: Request, res: Response) {
   return ok(res, await service.updateMe(auth(req), validated<UpdateMeInput>(req)));
+}
+
+export async function changeMyEmail(req: Request, res: Response) {
+  return ok(res, await service.changeMyEmail(auth(req), validated<ChangeMyEmailInput>(req)));
 }
 
 export async function changeMyPassword(req: Request, res: Response) {

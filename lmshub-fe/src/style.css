@@ -22,7 +22,7 @@ body {
     @apply btn border border-slate-300 bg-white text-slate-600 hover:border-brand-500 hover:text-brand-500;
   }
   /* Aksi di dalam baris tabel: ikon netral yang baru berwarna saat hover.
-     Sebelumnya tiap view memakai link teks `text-rose-600` sehingga daftar
+     Sebelumnya tiap view memakai link text `text-rose-600` sehingga daftar
      berisi 20 baris tampil sebagai dinding merah — aksi rutin terbaca seperti
      peringatan, dan aksi destruktif kehilangan bobotnya karena warnanya sama
      dengan segalanya. Pola ini diambil dari CurrenciesView yang sudah benar. */
@@ -45,7 +45,7 @@ body {
     @apply rounded border border-dashed border-slate-200 p-4 text-center text-sm text-slate-400;
   }
   /* Umpan balik inline. Sebelumnya ada delapan varian struktural: dua radius
-     (rounded / rounded-lg), dua nuansa teks (rose-600 / rose-700), dan dua
+     (rounded / rounded-lg), dua nuansa text (rose-600 / rose-700), dan dua
      wadah berbeda — strip berwarna vs kartu putih — untuk hal yang sama.
      Radius disamakan dengan .card/.input/.btn agar satu halaman tidak memuat
      dua bahasa bentuk. */
@@ -94,7 +94,7 @@ body {
   .btn-sm {
     @apply px-3 py-1.5 text-xs;
   }
-  /* Tombol ikon persegi (hapus baris, geser urutan, dsb). */
+  /* Tombol ikon persegi (hapus baris, geser sort_order, dsb). */
   .btn-icon {
     @apply px-2 py-2;
   }
@@ -173,13 +173,13 @@ body {
   transform: scaleX(-1);
 }
 
-/* Progress bar & slider native tetap mengalir dari sisi awal teks. */
+/* Progress bar & slider native tetap mengalir dari sisi awal text. */
 [dir='rtl'] progress,
 [dir='rtl'] input[type='range'] {
   direction: rtl;
 }
 
-/* Nilai numerik (harga, skor, nomor sertifikat) dibaca LTR walau di UI RTL. */
+/* Nilai numerik (price, skor, nomor certificate) dibaca LTR walau di UI RTL. */
 .num {
   direction: ltr;
   unicode-bidi: isolate;
@@ -190,3 +190,25 @@ body {
   background-color: #f7f7f7;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='none' stroke='%23e7e7e7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='30' cy='30' r='12'/%3E%3Cpath d='M100 22l12 22h-24z'/%3E%3Crect x='108' y='108' width='22' height='22' rx='4'/%3E%3Cpath d='M22 112c10-10 20 10 30 0'/%3E%3Cpath d='M74 74h16M82 66v16'/%3E%3Cpath d='M140 60c-6 2-6 10 0 12'/%3E%3C/g%3E%3C/svg%3E");
 }
+
+/* Isi halaman statis (About, Terms, …) dan editornya. Tidak ada plugin
+   typography, jadi tipografi dasarnya ditulis di sini. */
+.prose-page {
+  @apply text-[15px] leading-relaxed text-slate-700;
+}
+.prose-page h1 { @apply mb-3 mt-6 text-2xl font-bold text-slate-900; }
+.prose-page h2 { @apply mb-3 mt-6 text-xl font-bold text-slate-900; }
+.prose-page h3 { @apply mb-2 mt-5 text-lg font-semibold text-slate-900; }
+.prose-page h4 { @apply mb-2 mt-4 font-semibold text-slate-900; }
+.prose-page p { @apply my-3; }
+.prose-page ul { @apply my-3 list-disc ps-6; }
+.prose-page ol { @apply my-3 list-decimal ps-6; }
+.prose-page li { @apply my-1; }
+.prose-page a { @apply text-brand-600 underline; }
+.prose-page blockquote { @apply my-4 border-s-4 border-slate-200 ps-4 italic text-slate-500; }
+.prose-page img { @apply my-4 h-auto max-w-full rounded; }
+.prose-page table { @apply my-4 w-full border-collapse text-sm; }
+.prose-page th,
+.prose-page td { @apply border border-slate-200 px-3 py-2 text-start; }
+.prose-page pre { @apply my-4 overflow-x-auto rounded bg-slate-900 p-4 text-xs text-slate-100; }
+.prose-page > :first-child { @apply mt-0; }

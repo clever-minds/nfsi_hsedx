@@ -29,7 +29,7 @@ function tsFiles(dir: string): string[] {
  *
  * Backticks are not a stylistic detail here. An earlier version of this pattern
  * matched single quotes only, so nine Indonesian messages built by interpolation
- * — `Kursus ${id} tidak ditemukan` and friends — were invisible to every check
+ * — `Course ${id} tidak ditemukan` and friends — were invisible to every check
  * below while the suite reported green. Any message form that reaches a user has
  * to be a form this regex can see.
  */

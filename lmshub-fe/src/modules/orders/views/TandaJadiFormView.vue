@@ -9,8 +9,8 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 
 interface CourseOption {
   id: string;
-  judul: string;
-  harga: number;
+  title: string;
+  price: number;
 }
 
 const route = useRoute();
@@ -26,7 +26,7 @@ const success = ref(false);
 const form = reactive({
   pembeli_nama: '',
   pembeli_kontak: '',
-  kursus_id: '',
+  course_id: '',
   nominal: 0 as number | null,
   metode: 'transfer_bank',
   catatan: '',
@@ -55,7 +55,7 @@ async function prefillFromLead() {
   if (!form.lead_id) return;
   try {
     const lead = await apiGet<Record<string, unknown>>(`/marketing/leads/${form.lead_id}`);
-    form.pembeli_nama = String(lead.nama ?? lead.pembeli_nama ?? '');
+    form.pembeli_nama = String(lead.name ?? lead.pembeli_nama ?? '');
     form.pembeli_kontak = String(lead.kontak ?? '');
     if (lead.nilai_estimasi) form.nominal = Number(lead.nilai_estimasi);
     if (lead.catatan) form.catatan = String(lead.catatan);
@@ -67,7 +67,7 @@ async function prefillFromLead() {
 async function submit() {
   error.value = '';
   success.value = false;
-  if (!form.pembeli_nama || !form.kursus_id || !form.nominal || form.nominal <= 0) {
+  if (!form.pembeli_nama || !form.course_id || !form.nominal || form.nominal <= 0) {
     error.value = t('orders.manual.incomplete');
     return;
   }
@@ -77,7 +77,7 @@ async function submit() {
       const fd = new FormData();
       fd.append('pembeli_nama', form.pembeli_nama);
       fd.append('pembeli_kontak', form.pembeli_kontak);
-      fd.append('kursus_id', form.kursus_id);
+      fd.append('course_id', form.course_id);
       fd.append('nominal', String(form.nominal));
       fd.append('metode', form.metode);
       fd.append('catatan', form.catatan);
@@ -99,7 +99,7 @@ function resetForm() {
   success.value = false;
   form.pembeli_nama = '';
   form.pembeli_kontak = '';
-  form.kursus_id = '';
+  form.course_id = '';
   form.nominal = 0;
   form.catatan = '';
   bukti.value = null;
@@ -135,11 +135,11 @@ onMounted(async () => {
       </div>
       <div>
         <label class="label">{{ t('orders.manual.course') }}</label>
-        <select v-model="form.kursus_id" class="input" required>
+        <select v-model="form.course_id" class="input" required>
           <option value="" disabled>
             {{ loadingCourses ? t('orders.manual.loadingCourses') : t('orders.manual.pickCourse') }}
           </option>
-          <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.judul }} — {{ fmtHarga(c.harga) }}</option>
+          <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.title }} — {{ fmtHarga(c.price) }}</option>
         </select>
       </div>
       <div class="grid gap-4 sm:grid-cols-2">

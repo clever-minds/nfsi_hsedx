@@ -8,8 +8,8 @@ export const registerSchema = z
     password: z.string().min(8).max(100),
     // pendaftaran affiliate: kode referral pengundang (opsional)
     referral: z.string().optional(),
-    // jalur pendaftaran: siswa (default) atau affiliate (butuh verifikasi admin)
-    sebagai: z.enum(['siswa', 'affiliate']).default('siswa'),
+    // jalur pendaftaran: student (default) atau affiliate (butuh verifikasi admin)
+    sebagai: z.enum(['student', 'affiliate']).default('student'),
   })
   .refine((d) => d.email || d.nomor_wa, {
     message: 'Enter an email address or a WhatsApp number',

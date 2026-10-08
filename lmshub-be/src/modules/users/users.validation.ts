@@ -50,6 +50,15 @@ export const changeMyPasswordSchema = z.object({
   password_baru: z.string().min(8).max(100),
 });
 
+/**
+ * Ganti email akun sendiri — hanya super admin (dicek di service), wajib
+ * konfirmasi password saat ini.
+ */
+export const changeMyEmailSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+  password_saat_ini: z.string().min(1, 'The current password is required'),
+});
+
 // Foto profil dikirim sebagai base64 (payload JSON, limit body 2mb → gambar efektif ±1.5MB).
 export const uploadMyPhotoSchema = z.object({
   data_base64: z.string().min(1, 'Image data is required'),
@@ -62,4 +71,5 @@ export type SetPermissionsInput = z.infer<typeof setPermissionsSchema>;
 export type VerifyInput = z.infer<typeof verifySchema>;
 export type UpdateMeInput = z.infer<typeof updateMeSchema>;
 export type ChangeMyPasswordInput = z.infer<typeof changeMyPasswordSchema>;
+export type ChangeMyEmailInput = z.infer<typeof changeMyEmailSchema>;
 export type UploadMyPhotoInput = z.infer<typeof uploadMyPhotoSchema>;

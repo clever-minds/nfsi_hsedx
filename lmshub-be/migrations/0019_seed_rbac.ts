@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import type { MigrationBuilder } from 'node-pg-migrate';
 
-/** Domain 01 — seed peran, katalog permission, & matriks role_permissions default. */
+/** Domain 01 — seed peran, catalog permission, & matriks role_permissions default. */
 export const shorthands = undefined;
 
 const ROLES: Array<[string, string, number]> = [
@@ -10,25 +10,25 @@ const ROLES: Array<[string, string, number]> = [
   ['ketua', 'Ketua / Pimpinan Lembaga', 2],
   ['pembina', 'Pembina / Pengawas', 3],
   ['admin_ops', 'Admin Operasional', 4],
-  ['instruktur', 'Instruktur / Pengajar', 5],
+  ['instructor', 'Instructor / Pengajar', 5],
   ['asisten', 'Asisten Pengajar (TA)', 6],
   ['marketing', 'Marketing / Affiliate', 7],
-  ['siswa', 'Siswa / Peserta', 8],
+  ['student', 'Student / Peserta', 8],
   ['sub_user', 'Sub-Pengguna', 9],
 ];
 
 const MODULES = [
-  'konfigurasi', 'pengguna', 'role', 'pengaturan', 'kategori', 'kursus', 'kurikulum', 'konten',
-  'enrollment', 'cohort', 'asesmen', 'bank_soal', 'grading', 'gradebook', 'live_class', 'kehadiran',
-  'diskusi', 'sertifikat', 'gamifikasi', 'transaksi', 'pembayaran', 'refund', 'marketing', 'komisi',
-  'payout', 'laporan', 'keuangan', 'notifikasi', 'dokumen', 'pesan', 'audit',
+  'konfigurasi', 'pengguna', 'role', 'pengaturan', 'kategori', 'course', 'kurikulum', 'content',
+  'enrollment', 'cohort', 'assessment', 'bank_soal', 'grading', 'gradebook', 'live_class', 'kehadiran',
+  'diskusi', 'certificate', 'gamifikasi', 'transaction', 'payment', 'refund', 'marketing', 'komisi',
+  'payout', 'laporan', 'keuangan', 'notifikasi', 'document', 'pesan', 'audit',
 ];
 
 export async function up(pgm: MigrationBuilder): Promise<void> {
   // ── Roles ──
-  for (const [kode, nama, level] of ROLES) {
+  for (const [kode, name, level] of ROLES) {
     pgm.sql(
-      `INSERT INTO roles (kode, nama, level, is_system) VALUES ('${kode}', '${nama.replace(/'/g, "''")}', ${level}, true) ON CONFLICT (kode) WHERE deleted_at IS NULL DO NOTHING;`,
+      `INSERT INTO roles (kode, name, level, is_system) VALUES ('${kode}', '${name.replace(/'/g, "''")}', ${level}, true) ON CONFLICT (kode) WHERE deleted_at IS NULL DO NOTHING;`,
     );
   }
 
@@ -63,49 +63,49 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   grant('ketua', `p.action = 'view' AND p.module <> 'konfigurasi'`);
 
   // pembina: baca + audit (pengawas)
-  grant('pembina', `p.action = 'view' AND p.module IN ('pengguna','kursus','enrollment','asesmen','grading','gradebook','transaksi','pembayaran','laporan','keuangan','sertifikat','audit')`);
+  grant('pembina', `p.action = 'view' AND p.module IN ('pengguna','course','enrollment','assessment','grading','gradebook','transaction','payment','laporan','keuangan','certificate','audit')`);
 
   // admin_ops: CRUD data operasional; view pada finansial
   grant(
     'admin_ops',
-    `(p.module IN ('kategori','kursus','kurikulum','konten','enrollment','cohort','asesmen','bank_soal','grading','gradebook','live_class','kehadiran','diskusi','sertifikat','gamifikasi','notifikasi','dokumen','pesan') AND p.action IN ('view','create','update','delete'))
-     OR (p.module IN ('pengguna','marketing','komisi','transaksi','pembayaran') AND p.action IN ('view','create','update'))
+    `(p.module IN ('kategori','course','kurikulum','content','enrollment','cohort','assessment','bank_soal','grading','gradebook','live_class','kehadiran','diskusi','certificate','gamifikasi','notifikasi','document','pesan') AND p.action IN ('view','create','update','delete'))
+     OR (p.module IN ('pengguna','marketing','komisi','transaction','payment') AND p.action IN ('view','create','update'))
      OR (p.module IN ('laporan','keuangan','payout','refund') AND p.action = 'view')`,
   );
 
-  // instruktur: kelola kursus miliknya (row-level di service) + ajar
+  // instructor: kelola course miliknya (row-level di service) + ajar
   grant(
-    'instruktur',
-    `(p.module IN ('kursus','kurikulum','konten','asesmen','bank_soal','grading','gradebook','live_class','kehadiran','diskusi') AND p.action IN ('view','create','update'))
-     OR (p.module IN ('laporan','payout','sertifikat','pengguna','notifikasi','pesan','dokumen') AND p.action = 'view')`,
+    'instructor',
+    `(p.module IN ('course','kurikulum','content','assessment','bank_soal','grading','gradebook','live_class','kehadiran','diskusi') AND p.action IN ('view','create','update'))
+     OR (p.module IN ('laporan','payout','certificate','pengguna','notifikasi','pesan','document') AND p.action = 'view')`,
   );
 
   // asisten (TA): bantu grading & moderasi
   grant(
     'asisten',
     `(p.module IN ('grading','gradebook','diskusi') AND p.action IN ('view','update'))
-     OR (p.module IN ('kursus','asesmen','kehadiran','live_class') AND p.action = 'view')`,
+     OR (p.module IN ('course','assessment','kehadiran','live_class') AND p.action = 'view')`,
   );
 
   // marketing/affiliate
   grant(
     'marketing',
     `(p.module IN ('marketing','pesan') AND p.action IN ('view','create','update'))
-     OR (p.module = 'transaksi' AND p.action IN ('view','create'))
+     OR (p.module = 'transaction' AND p.action IN ('view','create'))
      OR (p.module IN ('komisi','laporan','pengguna','notifikasi') AND p.action = 'view')`,
   );
 
-  // siswa/peserta
+  // student/peserta
   grant(
-    'siswa',
-    `(p.module IN ('kursus','enrollment','gradebook','sertifikat','notifikasi','dokumen','kategori') AND p.action = 'view')
-     OR (p.module IN ('asesmen','diskusi','pesan') AND p.action IN ('view','create'))
-     OR (p.module IN ('transaksi','pembayaran') AND p.action IN ('view','create'))
+    'student',
+    `(p.module IN ('course','enrollment','gradebook','certificate','notifikasi','document','kategori') AND p.action = 'view')
+     OR (p.module IN ('assessment','diskusi','pesan') AND p.action IN ('view','create'))
+     OR (p.module IN ('transaction','payment') AND p.action IN ('view','create'))
      OR (p.module IN ('live_class','kehadiran','gamifikasi') AND p.action = 'view')`,
   );
 
   // sub_user: view terbatas (checklist per orang mempersempit lebih lanjut)
-  grant('sub_user', `p.action = 'view' AND p.module IN ('kursus','enrollment','gradebook','sertifikat','notifikasi')`);
+  grant('sub_user', `p.action = 'view' AND p.module IN ('course','enrollment','gradebook','certificate','notifikasi')`);
 }
 
 export async function down(pgm: MigrationBuilder): Promise<void> {

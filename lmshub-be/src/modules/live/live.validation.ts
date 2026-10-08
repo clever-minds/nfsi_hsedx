@@ -4,12 +4,12 @@ export const createLiveSessionSchema = z
   .object({
     course_id: z.string().uuid().optional(),
     cohort_id: z.string().uuid().optional(),
-    judul: z.string().min(2).max(200),
-    deskripsi: z.string().max(2000).optional(),
+    title: z.string().min(2).max(200),
+    description: z.string().max(2000).optional(),
     penyedia: z.enum(['zoom', 'bbb', 'meet']).default('zoom'),
     url_join: z.string().min(3),
     host_user_id: z.string().uuid(),
-    waktu_mulai: z.string().datetime(),
+    start_time: z.string().datetime(),
     waktu_selesai: z.string().datetime(),
     kapasitas_maks: z.number().int().positive().optional(),
     toleransi_terlambat_menit: z.number().int().min(0).default(15),
@@ -18,17 +18,17 @@ export const createLiveSessionSchema = z
     message: 'Either course_id or cohort_id is required',
     path: ['course_id'],
   })
-  .refine((d) => new Date(d.waktu_selesai) > new Date(d.waktu_mulai), {
-    message: 'waktu_selesai must be later than waktu_mulai',
+  .refine((d) => new Date(d.waktu_selesai) > new Date(d.start_time), {
+    message: 'waktu_selesai must be later than start_time',
     path: ['waktu_selesai'],
   });
 
 export const updateLiveSessionSchema = z.object({
-  judul: z.string().min(2).max(200).optional(),
-  deskripsi: z.string().max(2000).nullable().optional(),
+  title: z.string().min(2).max(200).optional(),
+  description: z.string().max(2000).nullable().optional(),
   penyedia: z.enum(['zoom', 'bbb', 'meet']).optional(),
   url_join: z.string().min(3).optional(),
-  waktu_mulai: z.string().datetime().optional(),
+  start_time: z.string().datetime().optional(),
   waktu_selesai: z.string().datetime().optional(),
   kapasitas_maks: z.number().int().positive().nullable().optional(),
   toleransi_terlambat_menit: z.number().int().min(0).optional(),
@@ -42,8 +42,8 @@ export const markAttendanceSchema = z.object({
 
 export const createRecordingSchema = z.object({
   url: z.string().min(3),
-  durasi_menit: z.number().int().min(0).optional(),
-  ukuran_bytes: z.number().int().min(0).optional(),
+  duration_minutes: z.number().int().min(0).optional(),
+  size_bytes: z.number().int().min(0).optional(),
   retensi_hingga: z.string().datetime().optional(),
 });
 

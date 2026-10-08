@@ -44,7 +44,8 @@
     "number_generation_failed": "تعذّر توليد رقم شهادة فريد، حاول مجددًا",
     "only_issued_can_be_reissued": "يمكن إعادة إصدار الشهادات الصادرة فقط",
     "override_requires_director": "الإصدار الاستثنائي يتطلب موافقة المدير",
-    "requirements_not_met": "لم يتم استيفاء متطلبات التخرج بعد"
+    "requirements_not_met": "لم يتم استيفاء متطلبات التخرج بعد",
+    "final_exam_not_passed": "انجح في الاختبار النهائي لهذه الدورة لفتح الشهادة"
   },
   "cohort": {
     "already_member": "أنت عضو في هذه المجموعة بالفعل",
@@ -91,7 +92,8 @@
     "publish_requires_admin": "يمكن لمسؤول العمليات أو المدير فقط نشر دورة",
     "publish_wrong_status": "يجب أن تكون الدورة قيد المراجعة أو محدّثة قبل نشرها",
     "slug_taken": "معرّف الدورة مستخدم بالفعل",
-    "thumbnail_not_found": "لم يُعثر على الصورة المصغّرة"
+    "thumbnail_not_found": "لم يُعثر على الصورة المصغّرة",
+    "final_exam_invalid": "يجب أن يكون الاختبار النهائي من اختبارات هذه الدورة"
   },
   "curriculum": {
     "not_owner": "يمكنك إدارة مناهج دوراتك أنت فقط"
@@ -113,7 +115,9 @@
     "not_enrolled": "أنت غير مسجّل في هذه الدورة",
     "not_enrolled_course": "أنت غير مسجّل في هذه الدورة",
     "not_found": "لم يُعثر على التسجيل",
-    "not_found_for_course": "لم يُعثر على تسجيل لهذه الدورة"
+    "not_found_for_course": "لم يُعثر على تسجيل لهذه الدورة",
+    "restart_not_allowed": "إعادة هذه الدورة غير مسموح بها",
+    "restart_invalid_status": "لا يمكن إعادة سوى التسجيل النشط أو المكتمل"
   },
   "finance": {
     "category_not_found": "لم يُعثر على فئة المصروف",
@@ -252,7 +256,8 @@
     "attempt_not_found": "لم يُعثر على المحاولة",
     "inactive": "هذا الاختبار غير نشط",
     "not_found": "لم يُعثر على الاختبار",
-    "submit_requires_owner": "يمكن لصاحب المحاولة فقط تسليمها"
+    "submit_requires_owner": "يمكن لصاحب المحاولة فقط تسليمها",
+    "retake_cooldown": "يرجى الانتظار قبل إعادة هذا الاختبار"
   },
   "rbac": {
     "base_roles_missing": "لم تُنشأ الأدوار الأساسية بعد",
@@ -313,7 +318,9 @@
     "max_512kb": "يجب ألا يتجاوز حجم الملف 512 كيلوبايت",
     "photo_max_2mb": "يجب ألا يتجاوز حجم الصورة 2 ميغابايت",
     "site_dir_not_writable": "تعذّر حفظ الملف: المجلد uploads/site غير قابل للكتابة",
-    "unknown_asset_type": "نوع ملف غير معروف"
+    "unknown_asset_type": "نوع ملف غير معروف",
+    "max_5mb": "يجب ألا يتجاوز حجم الصورة 5 ميجابايت",
+    "image_type_invalid": "الملف ليس صورة JPG أو PNG أو WebP"
   },
   "user": {
     "cannot_be_own_manager": "لا يمكن أن يكون المستخدم مديرًا لنفسه",
@@ -321,7 +328,9 @@
     "email_taken": "هذا البريد الإلكتروني مسجّل بالفعل",
     "not_found": "لم يُعثر على المستخدم",
     "permission_escalation": "لا يمكنك منح صلاحية لا تملكها أنت",
-    "phone_taken": "رقم الهاتف مسجّل بالفعل"
+    "phone_taken": "رقم الهاتف مسجّل بالفعل",
+    "email_change_requires_super_admin": "لا يمكن تغيير البريد ذاتيًا إلا للمشرف الأعلى — اطلب ذلك من المسؤول",
+    "email_unchanged": "هذا هو بريدك الحالي بالفعل"
   },
   "validation": {
     "failed": "فشل التحقق من البيانات"

@@ -4,8 +4,8 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 /**
  * Domain 03 — Enrollment & Progress
  * cohorts, enrollments, cohort_members, lesson_progress, course_progress, notes, bookmarks.
- * Catatan urutan: `cohorts` dibuat sebelum `enrollments` dalam file ini (berbeda dari penomoran
- * dokumen rencana) karena `enrollments.cohort_id` mereferensikan `cohorts(id)`.
+ * Catatan sort_order: `cohorts` dibuat sebelum `enrollments` dalam file ini (berbeda dari penomoran
+ * document rencana) karena `enrollments.cohort_id` mereferensikan `cohorts(id)`.
  */
 export const shorthands = undefined;
 
@@ -37,7 +37,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE cohorts (
       id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       course_id         uuid NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
-      nama              varchar(150) NOT NULL,
+      name              varchar(150) NOT NULL,
       tanggal_mulai     date NOT NULL,
       tanggal_selesai   date,
       kuota_maksimal    integer,
@@ -109,7 +109,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       enrollment_id     uuid NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,
       lesson_id         uuid NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
       status            progress_status NOT NULL DEFAULT 'belum',
-      posisi_detik      integer NOT NULL DEFAULT 0,
+      position_seconds      integer NOT NULL DEFAULT 0,
       waktu_selesai     timestamptz,
       created_at        timestamptz NOT NULL DEFAULT now(),
       updated_at        timestamptz NOT NULL DEFAULT now(),
@@ -127,18 +127,18 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE course_progress (
       id                         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       enrollment_id              uuid NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,
-      persen_selesai             numeric(5,2) NOT NULL DEFAULT 0,
-      jumlah_lesson_selesai      integer NOT NULL DEFAULT 0,
+      progress_percent             numeric(5,2) NOT NULL DEFAULT 0,
+      completed_lessons_count      integer NOT NULL DEFAULT 0,
       total_lesson               integer NOT NULL DEFAULT 0,
       last_accessed_at           timestamptz,
       completed_at               timestamptz,
       created_at                 timestamptz NOT NULL DEFAULT now(),
       updated_at                 timestamptz NOT NULL DEFAULT now(),
       deleted_at                 timestamptz,
-      CONSTRAINT course_progress_persen_chk CHECK (persen_selesai BETWEEN 0 AND 100)
+      CONSTRAINT course_progress_persen_chk CHECK (progress_percent BETWEEN 0 AND 100)
     );
     CREATE UNIQUE INDEX course_progress_enrollment_uq ON course_progress (enrollment_id);
-    CREATE INDEX course_progress_persen_idx ON course_progress (persen_selesai);
+    CREATE INDEX course_progress_persen_idx ON course_progress (progress_percent);
     CREATE INDEX course_progress_last_accessed_idx ON course_progress (last_accessed_at);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON course_progress FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
@@ -166,7 +166,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       enrollment_id     uuid NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,
       lesson_id         uuid NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
-      posisi_detik      integer,
+      position_seconds      integer,
       catatan           varchar(200),
       created_at        timestamptz NOT NULL DEFAULT now()
     );

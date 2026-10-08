@@ -7,7 +7,7 @@ import Icon from '@/components/ui/Icon.vue';
 import type { SettingItem } from '../settings-schema';
 
 /**
- * Identitas merek: nama aplikasi, baris footer, logo, dan ikon browser.
+ * Identitas merek: name aplikasi, baris footer, logo, dan ikon browser.
  *
  * Dipisah dari daftar setting generik karena dua field-nya adalah unggahan
  * berkas, bukan pasangan key/value — dan karena admin memerlukan pratinjau
@@ -33,7 +33,6 @@ const footer = ref(find(KEY.footer)?.nilai ?? '');
 const saving = ref(false);
 const saved = ref(false);
 const error = ref('');
-const successMsg = ref('');
 const uploading = ref<'logo' | 'icon' | ''>('');
 
 const MAX_BYTES = 512 * 1024;
@@ -55,11 +54,7 @@ async function saveText() {
     await apiPut(`/settings/${KEY.footer}`, { nilai: footer.value });
     appConfig.setBrand({ appName: name.value.trim(), footerTemplate: footer.value });
     saved.value = true;
-    successMsg.value = t('settings.saved');
-    setTimeout(() => {
-      saved.value = false;
-      successMsg.value = '';
-    }, 3000);
+    setTimeout(() => (saved.value = false), 1500);
   } catch (e) {
     error.value = errorMessage(e, t('settings.saveFailed'));
   } finally {
@@ -97,8 +92,6 @@ async function onPick(jenis: 'logo' | 'icon', event: Event) {
       mime_type: file.type,
     });
     appConfig.setBrand(jenis === 'logo' ? { logoUrl: res.nilai } : { iconUrl: res.nilai });
-    successMsg.value = 'File berhasil diunggah';
-    setTimeout(() => { successMsg.value = ''; }, 3000);
   } catch (e) {
     error.value = errorMessage(e, t('settings.brand.uploadFailed'));
   } finally {
@@ -124,14 +117,15 @@ async function clearAsset(jenis: 'logo' | 'icon') {
   <section id="setting-group-brand" class="card mb-6 scroll-mt-24 p-5">
     <h2 class="section-title">{{ t('settings.group.brand') }}</h2>
     <p class="mt-1 text-xs text-slate-400">{{ t('settings.brand.intro') }}</p>
+    <!-- Gambar hero & halaman footer hidup di menu Website; pembeli mencarinya di sini. -->
+    <p class="mt-2 text-xs text-slate-500">
+      {{ t('settings.brand.heroElsewhere') }}
+      <RouterLink to="/d/website" class="font-medium text-brand-600 hover:underline">{{ t('nav.item.website') }}</RouterLink>
+      ·
+      <RouterLink to="/d/website/pages" class="font-medium text-brand-600 hover:underline">{{ t('nav.item.pages') }}</RouterLink>
+    </p>
 
     <div v-if="error" class="mt-3 alert-error">{{ error }}</div>
-    
-    <!-- Toast/Floating Message -->
-    <div v-if="successMsg" class="fixed bottom-6 end-6 z-50 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-xl flex items-center gap-2">
-      <Icon name="check-circle" :size="18" />
-      {{ successMsg }}
-    </div>
 
     <!-- Nama aplikasi -->
     <div class="mt-4 border-t border-slate-100 pt-4">

@@ -12,19 +12,19 @@ import StatusChip from '@/components/ui/StatusChip.vue';
 
 interface CourseRow extends Record<string, unknown> {
   id: string;
-  judul: string;
+  title: string;
   slug: string;
   category_nama: string | null;
   instructor_id: string;
   instructor_nama: string | null;
   level: string;
-  harga: string;
-  status_publikasi: string;
+  price: string;
+  publication_status: string;
   created_at: string;
 }
 interface Category {
   id: string;
-  nama: string;
+  name: string;
 }
 
 const auth = useAuthStore();
@@ -39,22 +39,22 @@ const limit = 20;
 const q = ref('');
 const statusFilter = ref('');
 const categoryFilter = ref('');
-// Cakupan awal mengikuti siapa yang membuka halaman. Untuk instruktur, "kursus
-// saya" memang yang dicari lebih dulu. Untuk admin yang tidak mengampu kursus,
+// Cakupan awal mengikuti siapa yang membuka halaman. Untuk instructor, "course
+// saya" memang yang dicari lebih dulu. Untuk admin yang tidak mengampu course,
 // cakupan itu selalu menghasilkan tabel kosong — halaman terbaca seperti tidak
-// ada kursus sama sekali padahal isinya penuh.
-const onlyMine = ref(auth.roles.includes('instruktur') || auth.roles.includes('asisten'));
+// ada course sama sekali padahal isinya penuh.
+const onlyMine = ref(auth.roles.includes('instructor') || auth.roles.includes('asisten'));
 
 const loading = ref(true);
 const error = ref('');
 const busyId = ref<string | null>(null);
 
 const columns = computed(() => [
-  { key: 'judul', label: t('courses.list.colCourse') },
+  { key: 'title', label: t('courses.list.colCourse') },
   { key: 'category_nama', label: t('courses.list.colCategory') },
   { key: 'level', label: t('courses.list.colLevel') },
-  { key: 'harga', label: t('courses.list.colPrice') },
-  { key: 'status_publikasi', label: t('courses.list.colStatus') },
+  { key: 'price', label: t('courses.list.colPrice') },
+  { key: 'publication_status', label: t('courses.list.colStatus') },
 ]);
 
 const STATUS_OPTIONS = ['draf', 'dalam_review', 'terbit', 'diperbarui', 'diarsip'];
@@ -141,7 +141,7 @@ onMounted(() => {
   <div>
     <PageHeader :title="t('courses.list.title')" :subtitle="t('courses.list.subtitle')">
       <template #actions>
-        <RouterLink v-can="'kursus.create'" to="/d/courses/new" class="btn-primary">{{ t('courses.list.add') }}</RouterLink>
+        <RouterLink v-can="'course.create'" to="/d/courses/new" class="btn-primary">{{ t('courses.list.add') }}</RouterLink>
       </template>
     </PageHeader>
 
@@ -156,7 +156,7 @@ onMounted(() => {
         </select>
         <select v-model="categoryFilter" class="input w-auto" @change="search">
           <option value="">{{ t('courses.list.allCategories') }}</option>
-          <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.nama }}</option>
+          <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
         </select>
         <select v-model="onlyMine" class="input w-auto">
           <option :value="false">{{ t('courses.list.scopeAll') }}</option>
@@ -164,20 +164,20 @@ onMounted(() => {
         </select>
         <button class="btn-outline" @click="search">{{ t('common.action.search') }}</button>
       </template>
-      <template #cell:judul="{ row }">
-        <div class="font-medium text-slate-800">{{ (row as unknown as CourseRow).judul }}</div>
+      <template #cell:title="{ row }">
+        <div class="font-medium text-slate-800">{{ (row as unknown as CourseRow).title }}</div>
         <div class="text-xs text-slate-400">{{ (row as unknown as CourseRow).instructor_nama || '—' }}</div>
       </template>
       <template #cell:level="{ value }">{{ levelLabel(String(value)) }}</template>
-      <template #cell:harga="{ value }">{{ fmtRp(value as string | number) }}</template>
-      <template #cell:status_publikasi="{ value }">
+      <template #cell:price="{ value }">{{ fmtRp(value as string | number) }}</template>
+      <template #cell:publication_status="{ value }">
         <StatusChip :status="String(value)" />
       </template>
       <template #actions="{ row }">
         <div class="flex flex-wrap justify-end gap-2">
           <button
-            v-if="(row as unknown as CourseRow).status_publikasi === 'draf'"
-            v-can="'kursus.update'"
+            v-if="(row as unknown as CourseRow).publication_status === 'draf'"
+            v-can="'course.update'"
             class="row-link row-link-primary"
             :disabled="busyId === (row as unknown as CourseRow).id"
             @click="submitReview((row as unknown as CourseRow).id)"
@@ -185,8 +185,8 @@ onMounted(() => {
             {{ t('courses.list.submitReview') }}
           </button>
           <button
-            v-if="['dalam_review', 'diperbarui'].includes((row as unknown as CourseRow).status_publikasi)"
-            v-can="'kursus.update'"
+            v-if="['dalam_review', 'diperbarui'].includes((row as unknown as CourseRow).publication_status)"
+            v-can="'course.update'"
             class="row-link row-link-positive"
             :disabled="busyId === (row as unknown as CourseRow).id"
             @click="publish((row as unknown as CourseRow).id)"
@@ -194,8 +194,8 @@ onMounted(() => {
             {{ t('courses.list.publish') }}
           </button>
           <button
-            v-if="!['diarsip'].includes((row as unknown as CourseRow).status_publikasi)"
-            v-can="'kursus.update'"
+            v-if="!['diarsip'].includes((row as unknown as CourseRow).publication_status)"
+            v-can="'course.update'"
             class="row-link row-link-danger"
             :disabled="busyId === (row as unknown as CourseRow).id"
             @click="archive((row as unknown as CourseRow).id)"

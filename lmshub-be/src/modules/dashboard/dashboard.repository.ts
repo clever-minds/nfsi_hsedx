@@ -2,15 +2,15 @@ import { query, queryOne } from '../../core/db/pool';
 
 export interface ReminderMendatangRow {
   id: string;
-  judul: string;
+  title: string;
   jatuh_tempo: string;
   sumber: string;
 }
 
 export interface JadwalLiveRow {
   id: string;
-  judul: string;
-  waktu_mulai: string;
+  title: string;
+  start_time: string;
   status: string;
 }
 
@@ -44,10 +44,10 @@ async function sumOne(sql: string, params: unknown[] = []): Promise<number> {
   return Number(row?.total ?? 0);
 }
 
-// ── Siswa ────────────────────────────────────────────────────────────────
+// ── Student ────────────────────────────────────────────────────────────────
 
 export async function siswaKpi(userId: string) {
-  const [kursusAktif, kursusSelesai, sertifikat, notifikasiBelumDibaca] = await Promise.all([
+  const [kursusAktif, kursusSelesai, certificate, notifikasiBelumDibaca] = await Promise.all([
     countOne(
       `SELECT COUNT(*)::int AS count FROM enrollments WHERE user_id = $1 AND status IN ('terdaftar','aktif') AND deleted_at IS NULL`,
       [userId],
@@ -62,12 +62,12 @@ export async function siswaKpi(userId: string) {
       [userId],
     ),
   ]);
-  return { kursus_aktif: kursusAktif, kursus_selesai: kursusSelesai, sertifikat_diraih: sertifikat, notifikasi_belum_dibaca: notifikasiBelumDibaca };
+  return { kursus_aktif: kursusAktif, kursus_selesai: kursusSelesai, sertifikat_diraih: certificate, notifikasi_belum_dibaca: notifikasiBelumDibaca };
 }
 
 export async function siswaReminderMendatang(userId: string): Promise<ReminderMendatangRow[]> {
   return query<ReminderMendatangRow>(
-    `SELECT r.id, r.judul, r.jatuh_tempo, r.sumber
+    `SELECT r.id, r.title, r.jatuh_tempo, r.sumber
        FROM reminder_tracking rt
        JOIN reminders r ON r.id = rt.reminder_id AND r.deleted_at IS NULL
       WHERE rt.user_id = $1 AND rt.status_direspons = false AND r.jatuh_tempo >= now()
@@ -78,19 +78,19 @@ export async function siswaReminderMendatang(userId: string): Promise<ReminderMe
 
 export async function siswaJadwalLiveTerdekat(userId: string): Promise<JadwalLiveRow[]> {
   return query<JadwalLiveRow>(
-    `SELECT ls.id, ls.judul, ls.waktu_mulai, ls.status
+    `SELECT ls.id, ls.title, ls.start_time, ls.status
        FROM live_sessions ls
-      WHERE ls.deleted_at IS NULL AND ls.status = 'dijadwalkan' AND ls.waktu_mulai >= now()
+      WHERE ls.deleted_at IS NULL AND ls.status = 'dijadwalkan' AND ls.start_time >= now()
         AND (
           EXISTS (SELECT 1 FROM enrollments e WHERE e.course_id = ls.course_id AND e.user_id = $1 AND e.deleted_at IS NULL AND e.status IN ('terdaftar','aktif'))
           OR EXISTS (SELECT 1 FROM cohort_members cm WHERE cm.cohort_id = ls.cohort_id AND cm.user_id = $1)
         )
-      ORDER BY ls.waktu_mulai ASC LIMIT 5`,
+      ORDER BY ls.start_time ASC LIMIT 5`,
     [userId],
   );
 }
 
-// ── Instruktur ───────────────────────────────────────────────────────────
+// ── Instructor ───────────────────────────────────────────────────────────
 
 export async function instrukturKpi(userId: string) {
   const [jumlahKursus, jumlahSiswa, ratingRow, pendapatanBulanIni, payoutPending] = await Promise.all([
@@ -132,7 +132,7 @@ export async function instrukturKpi(userId: string) {
   ]);
   return {
     jumlah_kursus: jumlahKursus,
-    jumlah_siswa: jumlahSiswa,
+    student_count: jumlahSiswa,
     rating_rata_rata: ratingRow?.avg ? Number(ratingRow.avg) : null,
     pendapatan_bulan_ini: pendapatanBulanIni,
     payout_pending: payoutPending,
@@ -141,11 +141,11 @@ export async function instrukturKpi(userId: string) {
 
 export interface KursusSayaRow {
   id: string;
-  judul: string;
-  status_publikasi: string;
-  jumlah_siswa: number | null;
+  title: string;
+  publication_status: string;
+  student_count: number | null;
   rating_avg: string | null;
-  harga: string;
+  price: string;
 }
 
 export interface EnrollmentTerbaruRow {
@@ -156,23 +156,23 @@ export interface EnrollmentTerbaruRow {
   created_at: string;
 }
 
-/** Kursus milik instruktur, diurutkan berdasarkan jumlah siswa. */
+/** Course milik instructor, diurutkan berdasarkan jumlah student. */
 export async function instrukturKursusSaya(userId: string): Promise<KursusSayaRow[]> {
   return query<KursusSayaRow>(
-    `SELECT c.id, c.judul, c.status_publikasi, c.jumlah_siswa, c.rating_avg, c.harga
+    `SELECT c.id, c.title, c.publication_status, c.student_count, c.rating_avg, c.price
        FROM courses c
        JOIN instructor_profiles ip ON ip.id = c.instructor_id
       WHERE ip.user_id = $1 AND c.deleted_at IS NULL
-      ORDER BY c.jumlah_siswa DESC NULLS LAST, c.created_at DESC
+      ORDER BY c.student_count DESC NULLS LAST, c.created_at DESC
       LIMIT 6`,
     [userId],
   );
 }
 
-/** Pendaftaran terbaru ke kursus-kursus milik instruktur. */
+/** Pendaftaran terbaru ke course-course milik instructor. */
 export async function instrukturEnrollmentTerbaru(userId: string): Promise<EnrollmentTerbaruRow[]> {
   return query<EnrollmentTerbaruRow>(
-    `SELECT e.id, u.nama_lengkap AS user_nama, c.judul AS course_judul, e.status, e.created_at
+    `SELECT e.id, u.nama_lengkap AS user_nama, c.title AS course_judul, e.status, e.created_at
        FROM enrollments e
        JOIN courses c ON c.id = e.course_id
        JOIN instructor_profiles ip ON ip.id = c.instructor_id
@@ -183,15 +183,15 @@ export async function instrukturEnrollmentTerbaru(userId: string): Promise<Enrol
   );
 }
 
-/** Live session terdekat pada kursus milik instruktur. */
+/** Live session terdekat pada course milik instructor. */
 export async function instrukturJadwalLiveTerdekat(userId: string): Promise<JadwalLiveRow[]> {
   return query<JadwalLiveRow>(
-    `SELECT ls.id, ls.judul, ls.waktu_mulai, ls.status
+    `SELECT ls.id, ls.title, ls.start_time, ls.status
        FROM live_sessions ls
        JOIN courses c ON c.id = ls.course_id
        JOIN instructor_profiles ip ON ip.id = c.instructor_id
-      WHERE ip.user_id = $1 AND ls.deleted_at IS NULL AND ls.status = 'dijadwalkan' AND ls.waktu_mulai >= now()
-      ORDER BY ls.waktu_mulai ASC LIMIT 5`,
+      WHERE ip.user_id = $1 AND ls.deleted_at IS NULL AND ls.status = 'dijadwalkan' AND ls.start_time >= now()
+      ORDER BY ls.start_time ASC LIMIT 5`,
     [userId],
   );
 }
@@ -205,8 +205,8 @@ export interface TrenEnrollmentRow {
 
 export interface KursusTerpopulerRow {
   id: string;
-  judul: string;
-  jumlah_siswa: number | null;
+  title: string;
+  student_count: number | null;
   rating_avg: string | null;
   instructor_nama: string;
 }
@@ -228,18 +228,18 @@ export async function trenEnrollment7Hari(): Promise<TrenEnrollmentRow[]> {
 
 export async function kursusTerpopuler(): Promise<KursusTerpopulerRow[]> {
   return query<KursusTerpopulerRow>(
-    `SELECT c.id, c.judul, c.jumlah_siswa, c.rating_avg, u.nama_lengkap AS instructor_nama
+    `SELECT c.id, c.title, c.student_count, c.rating_avg, u.nama_lengkap AS instructor_nama
        FROM courses c
        JOIN instructor_profiles ip ON ip.id = c.instructor_id
        JOIN users u ON u.id = ip.user_id
-      WHERE c.deleted_at IS NULL AND c.status_publikasi IN ('terbit', 'diperbarui')
-      ORDER BY c.jumlah_siswa DESC NULLS LAST LIMIT 5`,
+      WHERE c.deleted_at IS NULL AND c.publication_status IN ('terbit', 'diperbarui')
+      ORDER BY c.student_count DESC NULLS LAST LIMIT 5`,
   );
 }
 
 export async function pendaftaranTerbaruGlobal(): Promise<EnrollmentTerbaruRow[]> {
   return query<EnrollmentTerbaruRow>(
-    `SELECT e.id, u.nama_lengkap AS user_nama, c.judul AS course_judul, e.status, e.created_at
+    `SELECT e.id, u.nama_lengkap AS user_nama, c.title AS course_judul, e.status, e.created_at
        FROM enrollments e
        JOIN courses c ON c.id = e.course_id
        JOIN users u ON u.id = e.user_id
@@ -252,7 +252,7 @@ export async function globalRingkasan() {
   const [totalPenggunaAktif, totalKursusTerbit, enrollmentBulanIni, pendapatanBulanIni] = await Promise.all([
     countOne(`SELECT COUNT(*)::int AS count FROM users WHERE status = 'active' AND deleted_at IS NULL`),
     countOne(
-      `SELECT COUNT(*)::int AS count FROM courses WHERE status_publikasi IN ('terbit','diperbarui') AND deleted_at IS NULL`,
+      `SELECT COUNT(*)::int AS count FROM courses WHERE publication_status IN ('terbit','diperbarui') AND deleted_at IS NULL`,
     ),
     countOne(
       `SELECT COUNT(*)::int AS count FROM enrollments
@@ -326,7 +326,7 @@ export async function komposisiPeran(): Promise<KomposisiRow[]> {
 
 export interface TopInstrukturRow {
   id: string;
-  nama: string;
+  name: string;
   foto_profil: string | null;
   jumlah_kursus: number;
   total_siswa: number;
@@ -334,24 +334,24 @@ export interface TopInstrukturRow {
 }
 
 /**
- * Instruktur dengan siswa terbanyak. `total_siswa` dihitung ulang dari kursus
+ * Instructor dengan student terbanyak. `total_siswa` dihitung ulang dari course
  * terbit alih-alih memakai kolom denormalisasi di instructor_profiles, supaya
- * angkanya konsisten dengan yang tampil di daftar kursus.
+ * angkanya konsisten dengan yang tampil di daftar course.
  */
 export async function topInstruktur(): Promise<TopInstrukturRow[]> {
   return query<TopInstrukturRow>(
     `SELECT ip.id,
-            u.nama_lengkap AS nama,
+            u.nama_lengkap AS name,
             u.foto_profil,
             COUNT(c.id)::int AS jumlah_kursus,
-            COALESCE(SUM(c.jumlah_siswa), 0)::int AS total_siswa,
+            COALESCE(SUM(c.student_count), 0)::int AS total_siswa,
             ip.rating_avg
        FROM instructor_profiles ip
        JOIN users u ON u.id = ip.user_id
        LEFT JOIN courses c
          ON c.instructor_id = ip.id
         AND c.deleted_at IS NULL
-        AND c.status_publikasi IN ('terbit', 'diperbarui')
+        AND c.publication_status IN ('terbit', 'diperbarui')
       WHERE ip.deleted_at IS NULL AND u.deleted_at IS NULL
       GROUP BY ip.id, u.nama_lengkap, u.foto_profil, ip.rating_avg
       HAVING COUNT(c.id) > 0
@@ -369,7 +369,7 @@ export interface TransaksiTerbaruRow {
   created_at: string;
 }
 
-/** Order terbaru lintas pembeli — kolom "Transaksi Baru" di dashboard. */
+/** Order terbaru lintas pembeli — kolom "Transaction Baru" di dashboard. */
 export async function transaksiTerbaru(): Promise<TransaksiTerbaruRow[]> {
   return query<TransaksiTerbaruRow>(
     `SELECT o.id, u.nama_lengkap AS pembeli_nama, o.jalur::text, o.status::text, o.total, o.created_at
@@ -388,7 +388,7 @@ export async function adminKpi() {
     countOne(`SELECT COUNT(*)::int AS count FROM payments WHERE status = 'menunggu_verifikasi'`),
     countOne(`SELECT COUNT(*)::int AS count FROM users WHERE status = 'pending' AND deleted_at IS NULL`),
     countOne(
-      `SELECT COUNT(*)::int AS count FROM live_sessions WHERE deleted_at IS NULL AND waktu_mulai::date = CURRENT_DATE`,
+      `SELECT COUNT(*)::int AS count FROM live_sessions WHERE deleted_at IS NULL AND start_time::date = CURRENT_DATE`,
     ),
     countOne(`SELECT COUNT(*)::int AS count FROM refunds WHERE status = 'diajukan'`),
   ]);
@@ -443,7 +443,7 @@ export async function ketuaKpi() {
     countOne(
       `SELECT COUNT(DISTINCT user_id)::int AS count FROM enrollments WHERE status IN ('terdaftar','aktif') AND deleted_at IS NULL`,
     ),
-    countOne(`SELECT COUNT(*)::int AS count FROM courses WHERE status_publikasi = 'terbit' AND deleted_at IS NULL`),
+    countOne(`SELECT COUNT(*)::int AS count FROM courses WHERE publication_status = 'terbit' AND deleted_at IS NULL`),
     queryOne<{ avg: string | null }>(
       `SELECT AVG(rating)::numeric(3,2) AS avg FROM reviews WHERE deleted_at IS NULL AND is_hidden = false`,
     ),

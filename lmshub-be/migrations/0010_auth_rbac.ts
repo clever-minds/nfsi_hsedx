@@ -22,9 +22,9 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE roles (
       id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       kode        citext NOT NULL,
-      nama        varchar(100) NOT NULL,
+      name        varchar(100) NOT NULL,
       level       smallint NOT NULL DEFAULT 0,
-      deskripsi   text,
+      description   text,
       is_system   boolean NOT NULL DEFAULT false,
       created_at  timestamptz NOT NULL DEFAULT now(),
       updated_at  timestamptz NOT NULL DEFAULT now(),
@@ -39,7 +39,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       module      varchar(60) NOT NULL,
       action      permission_action NOT NULL,
-      deskripsi   text,
+      description   text,
       created_at  timestamptz NOT NULL DEFAULT now(),
       updated_at  timestamptz NOT NULL DEFAULT now(),
       deleted_at  timestamptz

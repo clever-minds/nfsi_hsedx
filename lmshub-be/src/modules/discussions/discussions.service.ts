@@ -47,7 +47,7 @@ export async function threadDetail(actor: AuthContext, threadId: string) {
 
 export async function createThread(actor: AuthContext, courseId: string, input: CreateThreadInput) {
   await assertCourseMember(actor, courseId);
-  const thread = await repo.insertThread({ course_id: courseId, judul: input.judul, dibuat_oleh: actor.userId });
+  const thread = await repo.insertThread({ course_id: courseId, title: input.title, dibuat_oleh: actor.userId });
   if (input.isi) {
     await repo.insertPost({ thread_id: thread.id, parent_post_id: null, user_id: actor.userId, isi: input.isi });
     await repo.incrementThreadPostCount(thread.id);

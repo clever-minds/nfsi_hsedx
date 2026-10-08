@@ -28,7 +28,7 @@ const LOCALE_CURRENCY: Record<string, string> = {
 
 export interface CurrencyOption {
   kode: string;
-  nama: string;
+  name: string;
   simbol: string;
   /** One base unit equals this many of this currency. */
   rate: number;
@@ -57,7 +57,7 @@ export const useCurrencyStore = defineStore('currency', {
     active(state): CurrencyOption {
       const fallback: CurrencyOption = {
         kode: state.base,
-        nama: state.base,
+        name: state.base,
         simbol: '',
         rate: 1,
         desimal: 2,

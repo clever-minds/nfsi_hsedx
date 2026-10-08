@@ -1,0 +1,63 @@
+{
+  "editor": {
+    "linkPrompt": "Alamat tautan (https://…, /pages/…, mailto:…)",
+    "bold": "Tebal",
+    "italic": "Miring",
+    "underline": "Garis bawah",
+    "paragraph": "Paragraf",
+    "bulletList": "Daftar berpoin",
+    "numberList": "Daftar bernomor",
+    "quote": "Kutipan",
+    "link": "Sisipkan tautan",
+    "clear": "Hapus format",
+    "htmlMode": "HTML",
+    "visualMode": "Visual"
+  },
+  "public": {
+    "notFoundTitle": "Halaman tidak ditemukan",
+    "notFoundText": "Halaman ini tidak ada atau belum diterbitkan.",
+    "backHome": "Kembali ke beranda"
+  },
+  "admin": {
+    "title": "Halaman",
+    "subtitle": "Halaman statis seperti About, Help Center, Privacy, Terms, dan Contact. Halaman bertanda “Tampil di footer” muncul di kolom Support footer.",
+    "add": "Halaman baru",
+    "formTitleNew": "Halaman baru",
+    "formTitleEdit": "Ubah halaman",
+    "colTitle": "Judul",
+    "colStatus": "Status",
+    "colFooter": "Footer",
+    "colUpdated": "Diperbarui",
+    "slug": "Alamat (slug)",
+    "slugHint": "Huruf kecil, angka, dan tanda hubung. Mengubahnya memutus tautan yang sudah mengarah ke alamat lama.",
+    "type": "Jenis",
+    "statusHint": "Hanya halaman terbit yang bisa dibuka pengunjung.",
+    "showInFooter": "Tampil di footer",
+    "footerOrder": "Urutan di footer",
+    "content": "Isi",
+    "contentHint": "Skrip, frame sisipan, dan tautan tidak aman otomatis dibuang saat halaman disimpan.",
+    "view": "Lihat",
+    "open": "Buka",
+    "publish": "Terbitkan",
+    "unpublish": "Jadikan draft",
+    "empty": "Belum ada halaman.",
+    "saved": "Halaman disimpan.",
+    "loadFailed": "Gagal memuat halaman.",
+    "saveFailed": "Gagal menyimpan halaman.",
+    "deleteFailed": "Gagal menghapus halaman.",
+    "confirmDelete": "Hapus halaman “{title}”? Tautan ke halaman ini tidak akan berfungsi lagi.",
+    "titleRequired": "Isi title minimal 2 karakter.",
+    "slugInvalid": "Alamat hanya boleh huruf kecil, angka, dan tanda hubung (2–150 karakter)."
+  },
+  "tipe": {
+    "tentang": "Tentang",
+    "faq": "FAQ / Bantuan",
+    "kebijakan": "Kebijakan",
+    "halaman": "Halaman umum"
+  },
+  "status": {
+    "draft": "Draft",
+    "terbit": "Terbit",
+    "arsip": "Arsip"
+  }
+}

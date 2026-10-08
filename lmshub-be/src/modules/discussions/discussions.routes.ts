@@ -22,7 +22,7 @@ export const discussionsRouter = Router();
 
 discussionsRouter.use(requireAuth());
 
-// Forum per kursus
+// Forum per course
 discussionsRouter.get(
   '/courses/:courseId/threads',
   requirePermission('diskusi', 'view'),

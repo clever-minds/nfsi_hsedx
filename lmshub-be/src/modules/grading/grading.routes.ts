@@ -15,7 +15,7 @@ export const gradingRouter = Router();
 
 gradingRouter.use(requireAuth());
 
-// Antrian penilaian lintas kursus (staf: semua; instruktur/asisten: kursus sendiri)
+// Antrian penilaian lintas course (staf: semua; instructor/asisten: course sendiri)
 gradingRouter.get('/submissions', requirePermission('grading', 'view'), asyncHandler(ctrl.listSubmissions));
 gradingRouter.get('/submissions/:id/grade', requirePermission('grading', 'view'), asyncHandler(ctrl.getSubmissionGrade));
 gradingRouter.post(

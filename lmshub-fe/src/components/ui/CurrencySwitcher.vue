@@ -5,7 +5,7 @@ import { useCurrencyStore } from '@/stores/currency';
 import Icon from '@/components/ui/Icon.vue';
 
 /**
- * Pemilih mata uang tampilan, dipasang bersebelahan dengan pemilih bahasa.
+ * Pemilih mata uang tampilan, dipasang bersebelahan dengan pemilih language.
  *
  * Menggambar dirinya hanya bila memang ada pilihan: sakelar di Pengaturan
  * menyala DAN tersedia lebih dari satu mata uang aktif. Dropdown berisi satu
@@ -68,7 +68,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside));
         v-if="open"
         class="absolute end-0 z-50 mt-2 w-56 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
       >
-        <!-- Mengikuti bahasa antarmuka; itu yang diharapkan kebanyakan pengunjung. -->
+        <!-- Mengikuti language antarmuka; itu yang diharapkan kebanyakan pengunjung. -->
         <button
           type="button"
           class="flex w-full items-center gap-2.5 px-3 py-2 text-start text-sm transition hover:bg-brand-50"

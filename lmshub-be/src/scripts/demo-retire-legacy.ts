@@ -44,9 +44,9 @@ const LEGACY_CATEGORY_SLUGS = ['pemrograman', 'desain', 'bisnis-marketing', 'pen
 const LEGACY_EMAILS = [
   'budi@lmshub.test',
   // Placeholder account from an older dev script. It carries the literal name
-  // "Instruktur Dev", which would appear on the public instructor list.
-  'dev.instruktur@lmshub.test',
-  'budi.siswa@lmshub.test',
+  // "Instructor Dev", which would appear on the public instructor list.
+  'dev.instructor@lmshub.test',
+  'budi.student@lmshub.test',
   'citra@lmshub.test',
   'dewi@lmshub.test',
   'eko@lmshub.test',

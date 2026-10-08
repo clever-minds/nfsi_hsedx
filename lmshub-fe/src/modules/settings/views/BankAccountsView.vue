@@ -19,9 +19,9 @@ interface BankAccount extends Record<string, unknown> {
   atas_nama: string;
   cabang: string | null;
   catatan: string | null;
-  is_aktif: boolean;
+  is_active: boolean;
   is_utama: boolean;
-  urutan: number;
+  sort_order: number;
 }
 
 const auth = useAuthStore();
@@ -44,16 +44,16 @@ const form = reactive({
   atas_nama: '',
   cabang: '',
   catatan: '',
-  is_aktif: true,
+  is_active: true,
   is_utama: false,
-  urutan: 0,
+  sort_order: 0,
 });
 
 const columns = computed(() => [
   { key: 'nama_bank', label: t('bankAccounts.colBank') },
   { key: 'nomor_rekening', label: t('bankAccounts.colNumber') },
   { key: 'atas_nama', label: t('bankAccounts.colHolder') },
-  { key: 'is_aktif', label: t('bankAccounts.colStatus') },
+  { key: 'is_active', label: t('bankAccounts.colStatus') },
 ]);
 
 async function load() {
@@ -79,9 +79,9 @@ function resetForm() {
     atas_nama: '',
     cabang: '',
     catatan: '',
-    is_aktif: true,
+    is_active: true,
     is_utama: false,
-    urutan: 0,
+    sort_order: 0,
   });
 }
 
@@ -99,9 +99,9 @@ function openEdit(row: BankAccount) {
     atas_nama: row.atas_nama,
     cabang: row.cabang ?? '',
     catatan: row.catatan ?? '',
-    is_aktif: row.is_aktif,
+    is_active: row.is_active,
     is_utama: row.is_utama,
-    urutan: row.urutan,
+    sort_order: row.sort_order,
   });
   showForm.value = true;
 }
@@ -119,9 +119,9 @@ async function submit() {
     atas_nama: form.atas_nama.trim(),
     cabang: form.cabang.trim() || null,
     catatan: form.catatan.trim() || null,
-    is_aktif: form.is_aktif,
+    is_active: form.is_active,
     is_utama: form.is_utama,
-    urutan: Number(form.urutan) || 0,
+    sort_order: Number(form.sort_order) || 0,
   };
   try {
     if (editingId.value) await apiPut(`/bank-accounts/${editingId.value}`, payload);
@@ -208,11 +208,11 @@ onMounted(load);
         </div>
         <div>
           <label class="label">{{ t('bankAccounts.order') }}</label>
-          <input v-model.number="form.urutan" type="number" min="0" class="input" />
+          <input v-model.number="form.sort_order" type="number" min="0" class="input" />
         </div>
         <div class="flex flex-col justify-end gap-2 pb-1">
           <label class="label-inline">
-            <input v-model="form.is_aktif" type="checkbox" /> {{ t('bankAccounts.active') }}
+            <input v-model="form.is_active" type="checkbox" /> {{ t('bankAccounts.active') }}
           </label>
           <label class="label-inline">
             <input v-model="form.is_utama" type="checkbox" /> {{ t('bankAccounts.primary') }}
@@ -248,7 +248,7 @@ onMounted(load);
         <span class="num">{{ value }}</span>
       </template>
 
-      <template #cell:is_aktif="{ value }">
+      <template #cell:is_active="{ value }">
         <span
           class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
           :class="value ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'"
@@ -260,7 +260,7 @@ onMounted(load);
       <template #actions="{ row }">
         <div v-if="canEdit" class="flex flex-wrap justify-end gap-2">
           <button
-            v-if="!(row as unknown as BankAccount).is_utama && (row as unknown as BankAccount).is_aktif"
+            v-if="!(row as unknown as BankAccount).is_utama && (row as unknown as BankAccount).is_active"
             class="row-link row-link-primary"
             :disabled="busyId === (row as unknown as BankAccount).id"
             @click="makePrimary(row as unknown as BankAccount)"

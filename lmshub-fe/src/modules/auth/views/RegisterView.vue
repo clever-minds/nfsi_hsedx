@@ -27,7 +27,7 @@ const auth = useAuthStore();
 const router = useRouter();
 const { t } = useI18n();
 
-const form = ref({ nama_lengkap: '', email: '', password: '', sebagai: 'siswa' as 'siswa' | 'affiliate' });
+const form = ref({ nama_lengkap: '', email: '', password: '', sebagai: 'student' as 'student' | 'affiliate' });
 const loading = ref(false);
 const error = ref('');
 const info = ref('');
@@ -107,7 +107,7 @@ onMounted(async () => {
       <div v-if="false">
         <label class="label">{{ t('auth.register.asLabel') }}</label>
         <select v-model="form.sebagai" class="input">
-          <option value="siswa">{{ t('auth.register.asStudent') }}</option>
+          <option value="student">{{ t('auth.register.asStudent') }}</option>
           <option value="affiliate">{{ t('auth.register.asAffiliate') }}</option>
         </select>
       </div>

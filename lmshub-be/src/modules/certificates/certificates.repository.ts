@@ -6,15 +6,15 @@ const runner = (tx?: PoolClient) => tx ?? pool;
 
 export interface CertificateTemplateRow {
   id: string;
-  nama: string;
-  deskripsi: string | null;
+  name: string;
+  description: string | null;
   layout: unknown;
   category_id: string | null;
   /** Joined from `categories`; absent on single-row lookups. */
   kategori_nama?: string | null;
   course_id: string | null;
   is_default: boolean;
-  is_aktif: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -25,8 +25,8 @@ export interface CertificateRow {
   course_id: string;
   enrollment_id: string;
   template_id: string | null;
-  nomor_sertifikat: string | null;
-  kode_verifikasi: string | null;
+  certificate_number: string | null;
+  verification_code: string | null;
   qr_code_url: string | null;
   pdf_url: string | null;
   status: 'belum_memenuhi_syarat' | 'memenuhi_syarat' | 'terbit';
@@ -49,19 +49,19 @@ export interface EnrollmentRow {
 
 export interface CourseProgressRow {
   enrollment_id: string;
-  persen_selesai: string;
-  jumlah_lesson_selesai: number;
+  progress_percent: string;
+  completed_lessons_count: number;
   total_lesson: number;
 }
 
 export interface BadgeRow {
   id: string;
   kode: string;
-  nama: string;
-  deskripsi: string | null;
+  name: string;
+  description: string | null;
   kriteria: unknown;
   icon_url: string | null;
-  is_aktif: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -82,7 +82,7 @@ export interface PointsLedgerRow {
   saldo_setelah: number;
   sumber_type: string | null;
   sumber_id: string | null;
-  deskripsi: string | null;
+  description: string | null;
   created_at: string;
 }
 
@@ -115,10 +115,36 @@ export async function getEnrollment(id: string): Promise<EnrollmentRow | null> {
 
 export async function getCourseProgress(enrollmentId: string): Promise<CourseProgressRow | null> {
   return queryOne<CourseProgressRow>(
-    `SELECT enrollment_id, persen_selesai, jumlah_lesson_selesai, total_lesson
+    `SELECT enrollment_id, progress_percent, completed_lessons_count, total_lesson
        FROM course_progress WHERE enrollment_id = $1`,
     [enrollmentId],
   );
+}
+
+/**
+ * Ujian akhir course yang masih berlaku: ditunjuk di `courses.final_exam_quiz_id`,
+ * belum dihapus, dan aktif. Quiz yang dinonaktifkan tidak bisa dikerjakan, jadi
+ * tidak boleh mengunci certificate siapa pun.
+ */
+export async function getFinalExam(
+  courseId: string,
+): Promise<{ id: string; title: string; passing_score: string | null; total_points: string } | null> {
+  return queryOne(
+    `SELECT q.id, q.title, q.passing_score, q.total_points
+       FROM courses c JOIN quizzes q ON q.id = c.final_exam_quiz_id
+      WHERE c.id = $1 AND q.deleted_at IS NULL AND q.is_active = true`,
+    [courseId],
+  );
+}
+
+/** Skor (poin) terbaik dari percobaan yang sudah selesai dinilai. */
+export async function bestGradedScore(enrollmentId: string, quizId: string): Promise<string | null> {
+  const row = await queryOne<{ skor: string | null }>(
+    `SELECT max(skor) AS skor FROM quiz_attempts
+      WHERE enrollment_id = $1 AND quiz_id = $2 AND status = 'dinilai'`,
+    [enrollmentId, quizId],
+  );
+  return row?.skor ?? null;
 }
 
 // ── Certificate templates ──────────────────────────────────
@@ -128,7 +154,7 @@ export async function listTemplates(p: PageParams): Promise<{ rows: CertificateT
   // only stores `category_id`, so a list that selected `*` gave the UI a UUID
   // and its Category column rendered empty on every row.
   const rows = await query<CertificateTemplateRow>(
-    `SELECT ct.*, c.nama AS kategori_nama
+    `SELECT ct.*, c.name AS kategori_nama
        FROM certificate_templates ct
        LEFT JOIN categories c ON c.id = ct.category_id AND c.deleted_at IS NULL
       WHERE ct.deleted_at IS NULL
@@ -145,18 +171,18 @@ export async function getTemplate(id: string): Promise<CertificateTemplateRow | 
 }
 
 export async function insertTemplate(data: {
-  nama: string;
-  deskripsi: string | null;
+  name: string;
+  description: string | null;
   layout: unknown;
   category_id: string | null;
   course_id: string | null;
   is_default: boolean;
-  is_aktif: boolean;
+  is_active: boolean;
 }): Promise<CertificateTemplateRow> {
   const row = await queryOne<CertificateTemplateRow>(
-    `INSERT INTO certificate_templates (nama, deskripsi, layout, category_id, course_id, is_default, is_aktif)
+    `INSERT INTO certificate_templates (name, description, layout, category_id, course_id, is_default, is_active)
      VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-    [data.nama, data.deskripsi, JSON.stringify(data.layout), data.category_id, data.course_id, data.is_default, data.is_aktif],
+    [data.name, data.description, JSON.stringify(data.layout), data.category_id, data.course_id, data.is_default, data.is_active],
   );
   return row!;
 }
@@ -200,7 +226,7 @@ export async function list(p: PageParams, f: CertListFilters): Promise<{ rows: C
   where[0] = 'cert.deleted_at IS NULL';
   const whereSql = where.join(' AND ');
   const rows = await query<CertificateRow>(
-    `SELECT cert.*, c.judul AS kursus_judul
+    `SELECT cert.*, c.title AS course_title
        FROM certificates cert
        LEFT JOIN courses c ON c.id = cert.course_id
       WHERE ${whereSql} ORDER BY cert.created_at DESC LIMIT ${p.limit} OFFSET ${p.offset}`,
@@ -218,7 +244,7 @@ export async function detail(id: string): Promise<CertificateRow | null> {
 }
 
 export async function getByNomor(nomor: string): Promise<CertificateRow | null> {
-  return queryOne<CertificateRow>(`SELECT * FROM certificates WHERE nomor_sertifikat = $1 AND deleted_at IS NULL`, [nomor]);
+  return queryOne<CertificateRow>(`SELECT * FROM certificates WHERE certificate_number = $1 AND deleted_at IS NULL`, [nomor]);
 }
 
 export async function findActiveByEnrollment(enrollmentId: string): Promise<CertificateRow | null> {
@@ -260,15 +286,15 @@ export async function lockForUpdate(id: string, tx: PoolClient): Promise<Certifi
 
 export async function issue(
   id: string,
-  data: { nomor_sertifikat: string; kode_verifikasi: string; qr_code_url: string | null; pdf_url: string | null; diterbitkan_oleh: string | null },
+  data: { certificate_number: string; verification_code: string; qr_code_url: string | null; pdf_url: string | null; diterbitkan_oleh: string | null },
   tx: PoolClient,
 ): Promise<CertificateRow> {
   const res = await tx.query<CertificateRow>(
     `UPDATE certificates
-        SET status = 'terbit', nomor_sertifikat = $2, kode_verifikasi = $3,
+        SET status = 'terbit', certificate_number = $2, verification_code = $3,
             qr_code_url = $4, pdf_url = $5, tanggal_terbit = now(), diterbitkan_oleh = $6
       WHERE id = $1 RETURNING *`,
-    [id, data.nomor_sertifikat, data.kode_verifikasi, data.qr_code_url, data.pdf_url, data.diterbitkan_oleh],
+    [id, data.certificate_number, data.verification_code, data.qr_code_url, data.pdf_url, data.diterbitkan_oleh],
   );
   return res.rows[0];
 }
@@ -279,8 +305,8 @@ export async function insertIssuedCopy(
     course_id: string;
     enrollment_id: string;
     template_id: string | null;
-    nomor_sertifikat: string;
-    kode_verifikasi: string;
+    certificate_number: string;
+    verification_code: string;
     syarat_snapshot: unknown;
     supersedes_certificate_id: string;
     diterbitkan_oleh: string | null;
@@ -289,7 +315,7 @@ export async function insertIssuedCopy(
 ): Promise<CertificateRow> {
   const res = await tx.query<CertificateRow>(
     `INSERT INTO certificates
-       (user_id, course_id, enrollment_id, template_id, status, nomor_sertifikat, kode_verifikasi,
+       (user_id, course_id, enrollment_id, template_id, status, certificate_number, verification_code,
         syarat_snapshot, tanggal_terbit, supersedes_certificate_id, diterbitkan_oleh)
      VALUES ($1,$2,$3,$4,'terbit',$5,$6,$7,now(),$8,$9) RETURNING *`,
     [
@@ -297,8 +323,8 @@ export async function insertIssuedCopy(
       data.course_id,
       data.enrollment_id,
       data.template_id,
-      data.nomor_sertifikat,
-      data.kode_verifikasi,
+      data.certificate_number,
+      data.verification_code,
       JSON.stringify(data.syarat_snapshot),
       data.supersedes_certificate_id,
       data.diterbitkan_oleh,
@@ -314,10 +340,10 @@ export async function revoke(id: string, reason: string, tx?: PoolClient): Promi
 // ── Public verification ────────────────────────────────────
 
 export interface VerificationResult {
-  nama: string;
-  kursus: string;
-  instruktur: string | null;
-  nomor_sertifikat: string;
+  name: string;
+  course: string;
+  instructor: string | null;
+  certificate_number: string;
   qr_code_url: string | null;
   tanggal_terbit: string | null;
   status: 'valid' | 'dibatalkan' | 'tidak_ditemukan';
@@ -325,31 +351,31 @@ export interface VerificationResult {
 
 export async function verifyByNomor(nomor: string): Promise<VerificationResult | null> {
   const row = await queryOne<{
-    nama: string;
-    kursus: string;
-    instruktur: string | null;
-    nomor_sertifikat: string;
+    name: string;
+    course: string;
+    instructor: string | null;
+    certificate_number: string;
     qr_code_url: string | null;
     tanggal_terbit: string | null;
     is_revoked: boolean;
     status: string;
   }>(
-    `SELECT u.nama_lengkap AS nama, c.judul AS kursus, iu.nama_lengkap AS instruktur,
-            cert.nomor_sertifikat, cert.qr_code_url, cert.tanggal_terbit, cert.is_revoked, cert.status
+    `SELECT u.nama_lengkap AS name, c.title AS course, iu.nama_lengkap AS instructor,
+            cert.certificate_number, cert.qr_code_url, cert.tanggal_terbit, cert.is_revoked, cert.status
        FROM certificates cert
        JOIN users u ON u.id = cert.user_id
        JOIN courses c ON c.id = cert.course_id
        LEFT JOIN instructor_profiles ip ON ip.id = c.instructor_id
        LEFT JOIN users iu ON iu.id = ip.user_id
-      WHERE cert.nomor_sertifikat = $1 AND cert.deleted_at IS NULL`,
+      WHERE cert.certificate_number = $1 AND cert.deleted_at IS NULL`,
     [nomor],
   );
   if (!row) return null;
   return {
-    nama: row.nama,
-    kursus: row.kursus,
-    instruktur: row.instruktur,
-    nomor_sertifikat: row.nomor_sertifikat,
+    name: row.name,
+    course: row.course,
+    instructor: row.instructor,
+    certificate_number: row.certificate_number,
     qr_code_url: row.qr_code_url,
     tanggal_terbit: row.tanggal_terbit,
     status: row.is_revoked ? 'dibatalkan' : row.status === 'terbit' ? 'valid' : 'tidak_ditemukan',
@@ -359,23 +385,23 @@ export async function verifyByNomor(nomor: string): Promise<VerificationResult |
 export interface CertificateDisplay {
   id: string;
   user_id: string;
-  nomor_sertifikat: string | null;
-  kode_verifikasi: string | null;
+  certificate_number: string | null;
+  verification_code: string | null;
   qr_code_url: string | null;
   status: string;
   tanggal_terbit: string | null;
   is_revoked: boolean;
-  nama: string;
-  kursus: string;
-  instruktur: string | null;
+  name: string;
+  course: string;
+  instructor: string | null;
 }
 
-/** Data lengkap untuk merender desain sertifikat (nama, kursus, instruktur, QR, dsb). */
+/** Data lengkap untuk merender desain certificate (name, course, instructor, QR, dsb). */
 export async function displayById(id: string): Promise<CertificateDisplay | null> {
   return queryOne<CertificateDisplay>(
-    `SELECT cert.id, cert.user_id, cert.nomor_sertifikat, cert.kode_verifikasi, cert.qr_code_url,
+    `SELECT cert.id, cert.user_id, cert.certificate_number, cert.verification_code, cert.qr_code_url,
             cert.status, cert.tanggal_terbit, cert.is_revoked,
-            u.nama_lengkap AS nama, c.judul AS kursus, iu.nama_lengkap AS instruktur
+            u.nama_lengkap AS name, c.title AS course, iu.nama_lengkap AS instructor
        FROM certificates cert
        JOIN users u ON u.id = cert.user_id
        JOIN courses c ON c.id = cert.course_id
@@ -400,16 +426,16 @@ export async function getBadge(id: string): Promise<BadgeRow | null> {
 
 export async function insertBadge(data: {
   kode: string;
-  nama: string;
-  deskripsi: string | null;
+  name: string;
+  description: string | null;
   kriteria: unknown;
   icon_url: string | null;
-  is_aktif: boolean;
+  is_active: boolean;
 }): Promise<BadgeRow> {
   const row = await queryOne<BadgeRow>(
-    `INSERT INTO badges (kode, nama, deskripsi, kriteria, icon_url, is_aktif)
+    `INSERT INTO badges (kode, name, description, kriteria, icon_url, is_active)
      VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-    [data.kode, data.nama, data.deskripsi, JSON.stringify(data.kriteria), data.icon_url, data.is_aktif],
+    [data.kode, data.name, data.description, JSON.stringify(data.kriteria), data.icon_url, data.is_active],
   );
   return row!;
 }
@@ -452,12 +478,12 @@ export async function insertPointsEntry(data: {
   saldo_setelah: number;
   sumber_type: string | null;
   sumber_id: string | null;
-  deskripsi: string | null;
+  description: string | null;
 }): Promise<PointsLedgerRow> {
   const row = await queryOne<PointsLedgerRow>(
-    `INSERT INTO points_ledger (user_id, jenis, jumlah, saldo_setelah, sumber_type, sumber_id, deskripsi)
+    `INSERT INTO points_ledger (user_id, jenis, jumlah, saldo_setelah, sumber_type, sumber_id, description)
      VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-    [data.user_id, data.jenis, data.jumlah, data.saldo_setelah, data.sumber_type, data.sumber_id, data.deskripsi],
+    [data.user_id, data.jenis, data.jumlah, data.saldo_setelah, data.sumber_type, data.sumber_id, data.description],
   );
   return row!;
 }
@@ -492,17 +518,17 @@ export async function listLeaderboards(filters: { periode_jenis?: string; course
 
 export async function computeRanking(
   courseId: string | null,
-): Promise<Array<{ user_id: string; nama: string; poin: number }>> {
-  const rows = await query<{ user_id: string; nama: string; poin: string }>(
+): Promise<Array<{ user_id: string; name: string; poin: number }>> {
+  const rows = await query<{ user_id: string; name: string; poin: string }>(
     courseId
-      ? `SELECT pl.user_id, u.nama_lengkap AS nama,
+      ? `SELECT pl.user_id, u.nama_lengkap AS name,
                 SUM(CASE WHEN pl.jenis = 'earn' THEN pl.jumlah ELSE -pl.jumlah END) AS poin
            FROM points_ledger pl
            JOIN users u ON u.id = pl.user_id
            JOIN enrollments e ON e.user_id = pl.user_id AND e.course_id = $1 AND e.deleted_at IS NULL
           GROUP BY pl.user_id, u.nama_lengkap
           ORDER BY poin DESC`
-      : `SELECT pl.user_id, u.nama_lengkap AS nama,
+      : `SELECT pl.user_id, u.nama_lengkap AS name,
                 SUM(CASE WHEN pl.jenis = 'earn' THEN pl.jumlah ELSE -pl.jumlah END) AS poin
            FROM points_ledger pl
            JOIN users u ON u.id = pl.user_id
@@ -510,7 +536,7 @@ export async function computeRanking(
           ORDER BY poin DESC`,
     courseId ? [courseId] : [],
   );
-  return rows.map((r) => ({ user_id: r.user_id, nama: r.nama, poin: Number(r.poin) }));
+  return rows.map((r) => ({ user_id: r.user_id, name: r.name, poin: Number(r.poin) }));
 }
 
 export async function insertLeaderboardSnapshot(data: {

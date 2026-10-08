@@ -14,9 +14,9 @@ export const createBankAccountSchema = z.object({
   atas_nama: z.string().min(2).max(120),
   cabang: z.string().max(120).nullable().optional(),
   catatan: z.string().max(500).nullable().optional(),
-  is_aktif: z.boolean().optional(),
+  is_active: z.boolean().optional(),
   is_utama: z.boolean().optional(),
-  urutan: z.number().int().min(0).max(9999).optional(),
+  sort_order: z.number().int().min(0).max(9999).optional(),
 });
 
 export const updateBankAccountSchema = z.object({
@@ -25,9 +25,9 @@ export const updateBankAccountSchema = z.object({
   atas_nama: z.string().min(2).max(120).optional(),
   cabang: z.string().max(120).nullable().optional(),
   catatan: z.string().max(500).nullable().optional(),
-  is_aktif: z.boolean().optional(),
+  is_active: z.boolean().optional(),
   is_utama: z.boolean().optional(),
-  urutan: z.number().int().min(0).max(9999).optional(),
+  sort_order: z.number().int().min(0).max(9999).optional(),
 });
 
 export type CreateBankAccountInput = z.infer<typeof createBankAccountSchema>;

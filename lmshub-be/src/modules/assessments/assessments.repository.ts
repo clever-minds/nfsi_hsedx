@@ -11,14 +11,14 @@ export type QuestionTipe =
   | 'pencocokan';
 export type QuizAttemptStatus = 'belum_dikerjakan' | 'sedang' | 'dikumpulkan' | 'dinilai';
 export type SubmissionStatus = 'belum' | 'dikumpulkan' | 'dinilai' | 'revisi_diminta';
-export type TipePengumpulan = 'file' | 'teks' | 'url' | 'campuran';
+export type TipePengumpulan = 'file' | 'text' | 'url' | 'campuran';
 
 export interface QuestionBankRow {
   id: string;
-  nama: string;
+  name: string;
   course_id: string | null;
   category_id: string | null;
-  deskripsi: string | null;
+  description: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -42,7 +42,7 @@ export interface QuestionOptionRow {
   teks_opsi: string;
   is_benar: boolean;
   pasangan_key: string | null;
-  urutan: number;
+  sort_order: number;
 }
 
 export interface QuizRow {
@@ -50,31 +50,37 @@ export interface QuizRow {
   course_id: string;
   section_id: string | null;
   lesson_id: string | null;
-  judul: string;
-  deskripsi: string | null;
+  title: string;
+  description: string | null;
   batas_waktu_menit: number | null;
   acak_soal: boolean;
   acak_opsi: boolean;
-  attempt_maksimal: number;
+  /** 0 = tanpa batas. */
+  max_attempts: number;
+  /** Jeda minimum antar-percobaan (menit). */
+  retry_delay_minutes: number;
   passing_score: string | null;
   tampilkan_jawaban_setelah_selesai: boolean;
-  is_aktif: boolean;
-  total_poin: string;
+  is_active: boolean;
+  total_points: string;
   created_at: string;
   updated_at: string;
-  /** Terisi pada query list (JOIN courses) untuk kolom "Kursus" di FE. */
-  kursus_judul?: string | null;
-  /** Terisi pada list untuk siswa: status/nilai attempt miliknya. */
+  /** Terisi pada query list (JOIN courses) untuk kolom "Course" di FE. */
+  course_title?: string | null;
+  /** Terisi pada list untuk student: status/nilai attempt miliknya. */
   attempt_status?: string | null;
-  skor_terbaik?: string | null;
-  attempt_terpakai?: number | null;
+  best_score?: string | null;
+  used_attempts?: number | null;
+  last_completed_at?: string | null;
+  /** Quiz ini ujian akhir kursusnya (`courses.final_exam_quiz_id`). */
+  is_ujian_akhir?: boolean;
 }
 
 export interface QuizQuestionRow {
   id: string;
   quiz_id: string;
   question_id: string;
-  urutan: number;
+  sort_order: number;
   poin_override: string | null;
 }
 
@@ -83,18 +89,18 @@ export interface AssignmentRow {
   course_id: string;
   section_id: string | null;
   lesson_id: string | null;
-  judul: string;
-  instruksi: string;
-  tenggat_at: string | null;
-  tipe_pengumpulan: TipePengumpulan;
+  title: string;
+  instructions: string;
+  due_at: string | null;
+  submission_type: TipePengumpulan;
   maksimal_ukuran_mb: number | null;
   poin_maksimal: string;
-  is_aktif: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
-  /** Terisi pada query list (JOIN courses) untuk kolom "Kursus" di FE. */
-  kursus_judul?: string | null;
-  /** Terisi pada list untuk siswa: status submission miliknya. */
+  /** Terisi pada query list (JOIN courses) untuk kolom "Course" di FE. */
+  course_title?: string | null;
+  /** Terisi pada list untuk student: status submission miliknya. */
   submission_status?: string | null;
   dikumpulkan_at?: string | null;
 }
@@ -102,7 +108,7 @@ export interface AssignmentRow {
 export interface RubricRow {
   id: string;
   assignment_id: string;
-  kriteria: Array<{ nama: string; bobot: number; deskripsi_level?: string }>;
+  kriteria: Array<{ name: string; bobot: number; deskripsi_level?: string }>;
   created_at: string;
   updated_at: string;
 }
@@ -164,7 +170,11 @@ export async function listQuestionBanks(f: { course_id?: string; category_id?: s
     );
   }
   return query<QuestionBankRow>(
-    `SELECT qb.* FROM question_banks qb WHERE ${where.join(' AND ')} ORDER BY qb.created_at DESC`,
+    // Judul course & jumlah soal untuk kolom tabel Bank Soal di Admin Panel.
+    `SELECT qb.*, c.title AS course_title,
+            (SELECT count(*)::int FROM questions q WHERE q.question_bank_id = qb.id AND q.deleted_at IS NULL) AS jumlah_soal
+       FROM question_banks qb LEFT JOIN courses c ON c.id = qb.course_id
+      WHERE ${where.join(' AND ')} ORDER BY qb.created_at DESC`,
     params,
   );
 }
@@ -174,15 +184,15 @@ export async function questionBankDetail(id: string): Promise<QuestionBankRow | 
 }
 
 export async function insertQuestionBank(data: {
-  nama: string;
+  name: string;
   course_id: string | null;
   category_id: string | null;
-  deskripsi: string | null;
+  description: string | null;
   created_by: string;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO question_banks (nama, course_id, category_id, deskripsi, created_by) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
-    [data.nama, data.course_id, data.category_id, data.deskripsi, data.created_by],
+    `INSERT INTO question_banks (name, course_id, category_id, description, created_by) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+    [data.name, data.course_id, data.category_id, data.description, data.created_by],
   );
   return row!;
 }
@@ -214,7 +224,7 @@ export async function questionDetail(id: string): Promise<QuestionRow | null> {
 export async function listOptions(questionId: string, tx?: PoolClient): Promise<QuestionOptionRow[]> {
   const runner = tx ?? pool;
   const res = await runner.query<QuestionOptionRow>(
-    `SELECT * FROM question_options WHERE question_id = $1 ORDER BY urutan`,
+    `SELECT * FROM question_options WHERE question_id = $1 ORDER BY sort_order`,
     [questionId],
   );
   return res.rows;
@@ -246,15 +256,15 @@ export async function softDeleteQuestion(id: string): Promise<void> {
 
 export async function replaceOptions(
   questionId: string,
-  options: Array<{ teks_opsi: string; is_benar: boolean; pasangan_key: string | null; urutan: number }>,
+  options: Array<{ teks_opsi: string; is_benar: boolean; pasangan_key: string | null; sort_order: number }>,
   tx?: PoolClient,
 ): Promise<void> {
   const runner = tx ?? pool;
   await runner.query(`DELETE FROM question_options WHERE question_id = $1`, [questionId]);
   for (const o of options) {
     await runner.query(
-      `INSERT INTO question_options (question_id, teks_opsi, is_benar, pasangan_key, urutan) VALUES ($1,$2,$3,$4,$5)`,
-      [questionId, o.teks_opsi, o.is_benar, o.pasangan_key, o.urutan],
+      `INSERT INTO question_options (question_id, teks_opsi, is_benar, pasangan_key, sort_order) VALUES ($1,$2,$3,$4,$5)`,
+      [questionId, o.teks_opsi, o.is_benar, o.pasangan_key, o.sort_order],
     );
   }
 }
@@ -284,15 +294,15 @@ export async function listQuizzes(f: {
     params.push(f.ownerUserId);
     where.push(`qz.course_id IN (SELECT c.id FROM courses c WHERE c.instructor_id IN (SELECT id FROM instructor_profiles WHERE user_id = $${params.length}))`);
   }
-  // Cakupan siswa: hanya kuis AKTIF dari kursus yang enrollment-nya aktif/terdaftar.
+  // Cakupan student: hanya quiz AKTIF dari course yang enrollment-nya aktif/terdaftar.
   if (f.enrolledUserId) {
     params.push(f.enrolledUserId);
     where.push(
-      `qz.is_aktif = true AND qz.course_id IN (SELECT e.course_id FROM enrollments e WHERE e.user_id = $${params.length} AND e.deleted_at IS NULL AND e.status IN ('terdaftar','aktif'))`,
+      `qz.is_active = true AND qz.course_id IN (SELECT e.course_id FROM enrollments e WHERE e.user_id = $${params.length} AND e.deleted_at IS NULL AND e.status IN ('terdaftar','aktif','selesai'))`,
     );
   }
   return query<QuizRow>(
-    `SELECT qz.*, c.judul AS kursus_judul
+    `SELECT qz.*, c.title AS course_title, (c.final_exam_quiz_id = qz.id) AS is_ujian_akhir
        FROM quizzes qz JOIN courses c ON c.id = qz.course_id
       WHERE ${where.join(' AND ')} ORDER BY qz.created_at DESC`,
     params,
@@ -300,7 +310,7 @@ export async function listQuizzes(f: {
 }
 
 /**
- * Daftar kuis untuk SISWA: hanya kuis aktif dari kursus yang diikuti, dilengkapi
+ * Daftar quiz untuk SISWA: hanya quiz aktif dari course yang diikuti, dilengkapi
  * status & nilai attempt miliknya (untuk kolom "Status" yang benar, bukan "draft").
  */
 export async function listQuizzesForStudent(userId: string, courseId?: string) {
@@ -311,14 +321,17 @@ export async function listQuizzesForStudent(userId: string, courseId?: string) {
     courseFilter = `AND qz.course_id = $${params.length}`;
   }
   return query<QuizRow>(
-    `SELECT qz.*, c.judul AS kursus_judul,
+    `SELECT qz.*, c.title AS course_title,
+            (c.final_exam_quiz_id = qz.id) AS is_ujian_akhir,
             latest.status AS attempt_status,
-            best.skor AS skor_terbaik,
-            cnt.jumlah AS attempt_terpakai
+            best.skor AS best_score,
+            cnt.jumlah AS used_attempts,
+            cnt.last_completed_at
        FROM quizzes qz
        JOIN courses c ON c.id = qz.course_id
+       -- 'selesai' ikut: ujian akhir dikerjakan SETELAH pelajaran terakhir ditandai selesai.
        JOIN enrollments e ON e.course_id = qz.course_id AND e.user_id = $1
-            AND e.deleted_at IS NULL AND e.status IN ('terdaftar','aktif')
+            AND e.deleted_at IS NULL AND e.status IN ('terdaftar','aktif','selesai')
        LEFT JOIN LATERAL (
          SELECT qa.status FROM quiz_attempts qa
           WHERE qa.quiz_id = qz.id AND qa.enrollment_id = e.id
@@ -330,10 +343,10 @@ export async function listQuizzesForStudent(userId: string, courseId?: string) {
           WHERE qa.quiz_id = qz.id AND qa.enrollment_id = e.id
        ) best ON true
        LEFT JOIN LATERAL (
-         SELECT count(*)::int AS jumlah FROM quiz_attempts qa
+         SELECT count(*)::int AS jumlah, max(qa.selesai_at) AS last_completed_at FROM quiz_attempts qa
           WHERE qa.quiz_id = qz.id AND qa.enrollment_id = e.id
        ) cnt ON true
-      WHERE qz.deleted_at IS NULL AND qz.is_aktif = true ${courseFilter}
+      WHERE qz.deleted_at IS NULL AND qz.is_active = true ${courseFilter}
       ORDER BY qz.created_at DESC`,
     params,
   );
@@ -343,24 +356,25 @@ export async function quizDetail(id: string): Promise<QuizRow | null> {
   return queryOne<QuizRow>(`SELECT * FROM quizzes WHERE id = $1 AND deleted_at IS NULL`, [id]);
 }
 
-export async function insertQuiz(data: Omit<QuizRow, 'id' | 'total_poin' | 'created_at' | 'updated_at'>): Promise<{ id: string }> {
+export async function insertQuiz(data: Omit<QuizRow, 'id' | 'total_points' | 'created_at' | 'updated_at'>): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO quizzes (course_id, section_id, lesson_id, judul, deskripsi, batas_waktu_menit, acak_soal, acak_opsi,
-                           attempt_maksimal, passing_score, tampilkan_jawaban_setelah_selesai, is_aktif)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
+    `INSERT INTO quizzes (course_id, section_id, lesson_id, title, description, batas_waktu_menit, acak_soal, acak_opsi,
+                           max_attempts, passing_score, tampilkan_jawaban_setelah_selesai, is_active, retry_delay_minutes)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id`,
     [
       data.course_id,
       data.section_id,
       data.lesson_id,
-      data.judul,
-      data.deskripsi,
+      data.title,
+      data.description,
       data.batas_waktu_menit,
       data.acak_soal,
       data.acak_opsi,
-      data.attempt_maksimal,
+      data.max_attempts,
       data.passing_score,
       data.tampilkan_jawaban_setelah_selesai,
-      data.is_aktif,
+      data.is_active,
+      data.retry_delay_minutes,
     ],
   );
   return row!;
@@ -379,25 +393,45 @@ export async function softDeleteQuiz(id: string): Promise<void> {
 
 export async function replaceQuizQuestions(
   quizId: string,
-  items: Array<{ question_id: string; urutan: number; poin_override: number | null }>,
+  items: Array<{ question_id: string; sort_order: number; poin_override: number | null }>,
 ): Promise<void> {
   await query(`DELETE FROM quiz_questions WHERE quiz_id = $1`, [quizId]);
   let totalPoin = 0;
   for (const it of items) {
     await query(
-      `INSERT INTO quiz_questions (quiz_id, question_id, urutan, poin_override) VALUES ($1,$2,$3,$4)`,
-      [quizId, it.question_id, it.urutan, it.poin_override],
+      `INSERT INTO quiz_questions (quiz_id, question_id, sort_order, poin_override) VALUES ($1,$2,$3,$4)`,
+      [quizId, it.question_id, it.sort_order, it.poin_override],
     );
     const q = await queryOne<{ poin: string }>(`SELECT poin FROM questions WHERE id = $1`, [it.question_id]);
     totalPoin += it.poin_override ?? Number(q?.poin ?? 0);
   }
-  await query(`UPDATE quizzes SET total_poin = $2, updated_at = now() WHERE id = $1`, [quizId, totalPoin]);
+  await query(`UPDATE quizzes SET total_points = $2, updated_at = now() WHERE id = $1`, [quizId, totalPoin]);
+}
+
+/** Soal yang terpasang di quiz (tanpa isi soal) — untuk layar penyunting. */
+export async function quizQuestionLinks(
+  quizId: string,
+): Promise<Array<{ question_id: string; sort_order: number; poin_override: string | null }>> {
+  return query(
+    `SELECT qq.question_id, qq.sort_order, qq.poin_override
+       FROM quiz_questions qq JOIN questions q ON q.id = qq.question_id AND q.deleted_at IS NULL
+      WHERE qq.quiz_id = $1 ORDER BY qq.sort_order`,
+    [quizId],
+  );
+}
+
+export async function isFinalExamOfCourse(quizId: string, courseId: string): Promise<boolean> {
+  const row = await queryOne<{ ok: boolean }>(
+    `SELECT EXISTS(SELECT 1 FROM courses WHERE id = $2 AND final_exam_quiz_id = $1) AS ok`,
+    [quizId, courseId],
+  );
+  return !!row?.ok;
 }
 
 export async function quizQuestionsWithOptions(
   quizId: string,
 ): Promise<Array<QuizQuestionRow & { question: QuestionRow; options: QuestionOptionRow[] }>> {
-  const links = await query<QuizQuestionRow>(`SELECT * FROM quiz_questions WHERE quiz_id = $1 ORDER BY urutan`, [quizId]);
+  const links = await query<QuizQuestionRow>(`SELECT * FROM quiz_questions WHERE quiz_id = $1 ORDER BY sort_order`, [quizId]);
   const result: Array<QuizQuestionRow & { question: QuestionRow; options: QuestionOptionRow[] }> = [];
   for (const link of links) {
     const question = await questionDetail(link.question_id);
@@ -425,7 +459,7 @@ export async function listAssignments(f: {
     params.push(f.ownerUserId);
     where.push(`a.course_id IN (SELECT c.id FROM courses c WHERE c.instructor_id IN (SELECT id FROM instructor_profiles WHERE user_id = $${params.length}))`);
   }
-  // Cakupan siswa: hanya tugas dari kursus yang enrollment-nya aktif/terdaftar.
+  // Cakupan student: hanya assignment dari course yang enrollment-nya aktif/terdaftar.
   if (f.enrolledUserId) {
     params.push(f.enrolledUserId);
     where.push(
@@ -433,7 +467,7 @@ export async function listAssignments(f: {
     );
   }
   return query<AssignmentRow>(
-    `SELECT a.*, c.judul AS kursus_judul
+    `SELECT a.*, c.title AS course_title
        FROM assignments a JOIN courses c ON c.id = a.course_id
       WHERE ${where.join(' AND ')} ORDER BY a.created_at DESC`,
     params,
@@ -441,7 +475,7 @@ export async function listAssignments(f: {
 }
 
 /**
- * Daftar tugas untuk SISWA: hanya tugas dari kursus yang diikuti, dilengkapi
+ * Daftar assignment untuk SISWA: hanya assignment dari course yang diikuti, dilengkapi
  * status submission miliknya (Belum dikumpulkan / Terkumpul / Dinilai / Revisi).
  */
 export async function listAssignmentsForStudent(userId: string, courseId?: string) {
@@ -452,7 +486,7 @@ export async function listAssignmentsForStudent(userId: string, courseId?: strin
     courseFilter = `AND a.course_id = $${params.length}`;
   }
   return query<AssignmentRow>(
-    `SELECT a.*, c.judul AS kursus_judul,
+    `SELECT a.*, c.title AS course_title,
             COALESCE(s.status, 'belum') AS submission_status,
             s.dikumpulkan_at
        FROM assignments a
@@ -460,7 +494,7 @@ export async function listAssignmentsForStudent(userId: string, courseId?: strin
        JOIN enrollments e ON e.course_id = a.course_id AND e.user_id = $1
             AND e.deleted_at IS NULL AND e.status IN ('terdaftar','aktif')
        LEFT JOIN submissions s ON s.assignment_id = a.id AND s.enrollment_id = e.id AND s.deleted_at IS NULL
-      WHERE a.deleted_at IS NULL AND a.is_aktif = true ${courseFilter}
+      WHERE a.deleted_at IS NULL AND a.is_active = true ${courseFilter}
       ORDER BY a.created_at DESC`,
     params,
   );
@@ -472,20 +506,20 @@ export async function assignmentDetail(id: string): Promise<AssignmentRow | null
 
 export async function insertAssignment(data: Omit<AssignmentRow, 'id' | 'created_at' | 'updated_at'>): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO assignments (course_id, section_id, lesson_id, judul, instruksi, tenggat_at, tipe_pengumpulan,
-                               maksimal_ukuran_mb, poin_maksimal, is_aktif)
+    `INSERT INTO assignments (course_id, section_id, lesson_id, title, instructions, due_at, submission_type,
+                               maksimal_ukuran_mb, poin_maksimal, is_active)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
     [
       data.course_id,
       data.section_id,
       data.lesson_id,
-      data.judul,
-      data.instruksi,
-      data.tenggat_at,
-      data.tipe_pengumpulan,
+      data.title,
+      data.instructions,
+      data.due_at,
+      data.submission_type,
       data.maksimal_ukuran_mb,
       data.poin_maksimal,
-      data.is_aktif,
+      data.is_active,
     ],
   );
   return row!;
@@ -524,6 +558,15 @@ export async function countAttempts(enrollmentId: string, quizId: string): Promi
     [enrollmentId, quizId],
   );
   return Number(row?.count ?? 0);
+}
+
+/** Waktu pengumpulan percobaan terakhir — titik mulai jeda ulang. */
+export async function lastSubmittedAt(enrollmentId: string, quizId: string): Promise<string | null> {
+  const row = await queryOne<{ at: string | null }>(
+    `SELECT max(selesai_at) AS at FROM quiz_attempts WHERE enrollment_id = $1 AND quiz_id = $2`,
+    [enrollmentId, quizId],
+  );
+  return row?.at ?? null;
 }
 
 export async function insertAttempt(data: {
@@ -637,7 +680,7 @@ export async function setSubmissionStatus(id: string, status: SubmissionStatus, 
   await runner.query(`UPDATE submissions SET status = $2, updated_at = now() WHERE id = $1`, [id, status]);
 }
 
-/** Row-level: cek instruktur pemilik kursus (courses.instructor_id -> instructor_profiles.user_id). */
+/** Row-level: cek instructor pemilik course (courses.instructor_id -> instructor_profiles.user_id). */
 export async function isCourseOwnedByInstructor(courseId: string, userId: string): Promise<boolean> {
   const row = await queryOne<{ ok: boolean }>(
     `SELECT EXISTS(

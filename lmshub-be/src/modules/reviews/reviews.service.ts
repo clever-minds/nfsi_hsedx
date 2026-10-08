@@ -5,8 +5,8 @@ import { UpsertReviewInput } from './reviews.validation';
 
 /** Ringkasan rating + daftar ulasan publik (tanpa auth). */
 export async function publicReviews(courseId: string) {
-  const [ringkasan, reviews] = await Promise.all([repo.summary(courseId), repo.listPublicReviews(courseId)]);
-  return { summary: ringkasan, reviews };
+  const [summary, reviews] = await Promise.all([repo.summary(courseId), repo.listPublicReviews(courseId)]);
+  return { summary: summary, reviews };
 }
 
 /** Ulasan milik sendiri + status kelayakan memberi ulasan. */
@@ -22,7 +22,7 @@ export async function myReviewState(actor: AuthContext, courseId: string) {
   };
 }
 
-/** Buat/ubah ulasan (satu per enrollment). Hanya siswa aktif/selesai. */
+/** Buat/ubah ulasan (satu per enrollment). Hanya student aktif/selesai. */
 export async function upsert(actor: AuthContext, courseId: string, input: UpsertReviewInput) {
   const enrollment = await repo.eligibleEnrollment(actor.userId, courseId);
   if (!enrollment) throw AppError.forbidden('You are not enrolled in this course', 'enrollment.not_enrolled');

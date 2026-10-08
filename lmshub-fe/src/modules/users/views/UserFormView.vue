@@ -20,7 +20,7 @@ interface UserDetail {
 interface RoleOption {
   id: string;
   kode: string;
-  nama: string;
+  name: string;
   level: number;
 }
 type Action = 'view' | 'create' | 'update' | 'delete';

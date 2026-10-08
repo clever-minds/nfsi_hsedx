@@ -47,7 +47,7 @@ export async function getPaymentConfig(force = false): Promise<PaymentConfig> {
   return cached;
 }
 
-/** Buang cache — dipanggil setelah admin mengubah pengaturan pembayaran. */
+/** Buang cache — dipanggil setelah admin mengubah pengaturan payment. */
 export function invalidatePaymentConfig(): void {
   cached = null;
 }

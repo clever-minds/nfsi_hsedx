@@ -34,7 +34,7 @@ export async function registerAffiliate(actor: AuthContext, input: RegisterAffil
   if (existing) throw AppError.conflict('You are already registered as a marketing agent', 'marketing.already_an_agent');
 
   const category = await repo.categoryByKode(input.category_kode);
-  if (!category || !category.is_aktif) throw AppError.badRequest('That marketing category is unknown or inactive', 'marketing.category_unknown');
+  if (!category || !category.is_active) throw AppError.badRequest('That marketing category is unknown or inactive', 'marketing.category_unknown');
 
   if (input.parent_agen_user_id === actor.userId) {
     throw AppError.badRequest('A user cannot be their own manager', 'user.cannot_be_own_manager');
@@ -143,7 +143,7 @@ export async function createReferralLink(actor: AuthContext, input: CreateReferr
       agen_user_id: actor.userId,
       kode,
       url_target: input.url_target,
-      judul: input.judul ?? null,
+      title: input.title ?? null,
       expires_at: input.expires_at ? new Date(input.expires_at) : null,
     });
     break;
@@ -253,7 +253,7 @@ export async function moveLeadStage(actor: AuthContext, id: string, input: MoveS
 // ── Commission engine (finansial) ────────────────────────
 
 /**
- * Finansial — dipanggil oleh `orders.service` DALAM transaksi yang sama saat order menjadi Lunas.
+ * Finansial — dipanggil oleh `orders.service` DALAM transaction yang sama saat order menjadi Lunas.
  * Menghitung komisi dari attribution `orders.marketing_user_id`; tanpa attribution → tidak ada komisi.
  */
 export async function computeCommissionOnOrderLunas(
@@ -295,7 +295,7 @@ export async function computeCommissionOnOrderLunas(
 }
 
 /**
- * Finansial — dipanggil oleh `orders.service` DALAM transaksi refund.
+ * Finansial — dipanggil oleh `orders.service` DALAM transaction refund.
  * Komisi yang belum cair langsung dibatalkan; komisi yang sudah disetujui/cair ditandai `ditolak`
  * untuk peninjauan ulang manual (kebijakan pemulihan piutang di luar cakupan modul ini).
  */
@@ -369,7 +369,7 @@ export async function submitCommission(actor: AuthContext, id: string) {
   });
 }
 
-/** menunggu_approval → disetujui|ditolak — WAJIB Direktur (pemisahan tugas dari perhitungan sistem). */
+/** menunggu_approval → disetujui|ditolak — WAJIB Direktur (pemisahan assignment dari perhitungan sistem). */
 export async function approveCommission(actor: AuthContext, id: string, input: ApproveCommissionInput) {
   if (!isDirektur(actor)) throw AppError.forbidden('Only a Director can approve a commission', 'commission.approve_requires_director');
   const c = await repo.commissionById(id);

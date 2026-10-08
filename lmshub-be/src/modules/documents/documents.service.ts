@@ -8,6 +8,7 @@ import { recordAudit } from '../../core/audit/audit';
 import { AuthContext } from '../../core/rbac/types';
 import { PageParams } from '../../core/http/pagination';
 import { invalidateSettingsCache } from '../../core/settings/settings';
+import { sanitizeRichText } from '../../core/html/sanitize';
 import * as repo from './documents.repository';
 import { rebaseRates } from '../currencies/currencies.service';
 import {
@@ -30,22 +31,55 @@ export async function getPublicPage(slug: string) {
   return page;
 }
 
+/** Daftar halaman terbit untuk footer — tanpa isi, tanpa penyunting. */
+export async function listPublicPages() {
+  return repo.listPublishedPages();
+}
+
+/**
+ * Bentuk tersimpan `content_pages.content`.
+ *
+ * Editor Admin Panel mengirim `konten_html`; hasilnya disimpan sebagai
+ * `{ format: 'html', html }` setelah disanitasi. Klien lama yang mengirim
+ * `content` mentah tetap diterima, tetapi bila objek itu membawa `html`,
+ * bagian itu ikut dibersihkan — tidak ada jalan menyimpan HTML kotor.
+ *
+ * `undefined` berarti "tidak diubah".
+ */
+export function normalizeKonten(input: { content?: unknown; konten_html?: string }): unknown {
+  if (input.konten_html !== undefined) return { format: 'html', html: sanitizeRichText(input.konten_html) };
+  if (input.content === undefined) return undefined;
+  if (input.content && typeof input.content === 'object' && !Array.isArray(input.content)) {
+    const k = input.content as Record<string, unknown>;
+    if (typeof k.html === 'string') return { ...k, format: 'html', html: sanitizeRichText(k.html) };
+  }
+  return input.content;
+}
+
+async function assertSlugFree(slug: string, exceptId?: string) {
+  const existing = await repo.getPageBySlug(slug);
+  if (existing && existing.id !== exceptId) {
+    throw AppError.conflict('That slug is already in use', 'common.slug_taken');
+  }
+}
+
 export async function createPage(actor: AuthContext, input: CreatePageInput) {
-  const existing = await repo.getPageBySlug(input.slug);
-  if (existing) throw AppError.conflict('That slug is already in use', 'common.slug_taken');
+  await assertSlugFree(input.slug);
   const { id } = await repo.insertPage({
     slug: input.slug,
-    judul: input.judul,
-    konten: input.konten,
+    title: input.title,
+    content: normalizeKonten(input),
     tipe: input.tipe,
     status: input.status,
     meta_seo: input.meta_seo,
     tanggal_terbit: input.status === 'terbit' ? new Date().toISOString() : null,
     dikelola_oleh: actor.userId,
+    tampil_di_footer: input.tampil_di_footer,
+    urutan_footer: input.urutan_footer,
   });
   await recordAudit({
     userId: actor.userId,
-    module: 'konten',
+    module: 'content',
     action: 'create',
     entity: 'content_pages',
     entityId: id,
@@ -59,9 +93,16 @@ export async function updatePage(actor: AuthContext, id: string, input: UpdatePa
   if (!before) throw AppError.notFound('Page not found', 'page.not_found');
 
   const fields: Record<string, unknown> = { dikelola_oleh: actor.userId };
-  if (input.judul !== undefined) fields.judul = input.judul;
-  if (input.konten !== undefined) fields.konten = JSON.stringify(input.konten);
+  if (input.slug !== undefined && input.slug !== before.slug) {
+    await assertSlugFree(input.slug, id);
+    fields.slug = input.slug;
+  }
+  if (input.title !== undefined) fields.title = input.title;
+  const content = normalizeKonten(input);
+  if (content !== undefined) fields.content = JSON.stringify(content);
   if (input.tipe !== undefined) fields.tipe = input.tipe;
+  if (input.tampil_di_footer !== undefined) fields.tampil_di_footer = input.tampil_di_footer;
+  if (input.urutan_footer !== undefined) fields.urutan_footer = input.urutan_footer;
   if (input.meta_seo !== undefined) fields.meta_seo = input.meta_seo === null ? null : JSON.stringify(input.meta_seo);
   if (input.status !== undefined) {
     fields.status = input.status;
@@ -72,14 +113,30 @@ export async function updatePage(actor: AuthContext, id: string, input: UpdatePa
   await repo.updatePage(id, fields);
   await recordAudit({
     userId: actor.userId,
-    module: 'konten',
+    module: 'content',
     action: 'update',
     entity: 'content_pages',
     entityId: id,
-    before: { status: before.status },
-    after: input,
+    before: { status: before.status, slug: before.slug },
+    // Isi halaman bisa sangat panjang; audit cukup mencatat field yang berubah.
+    after: { ...input, content: undefined, konten_html: content !== undefined ? '[updated]' : undefined },
   });
   return repo.getPageById(id);
+}
+
+/** Hapus lunak — slug-nya bebas dipakai lagi, barisnya tetap ada untuk audit. */
+export async function removePage(actor: AuthContext, id: string) {
+  const before = await repo.getPageById(id);
+  if (!before) throw AppError.notFound('Page not found', 'page.not_found');
+  await repo.softDeletePage(id);
+  await recordAudit({
+    userId: actor.userId,
+    module: 'content',
+    action: 'delete',
+    entity: 'content_pages',
+    entityId: id,
+    before: { slug: before.slug, status: before.status },
+  });
 }
 
 // ── settings ─────────────────────────────────────────────────────────────
@@ -92,7 +149,7 @@ export async function listSettings() {
 
 /**
  * Setting publik sebagai map `key -> nilai`. Dipakai FE/mobile sebelum login untuk
- * hal-hal yang memengaruhi tampilan katalog — terutama mata uang harga.
+ * hal-hal yang memengaruhi tampilan catalog — terutama mata uang price.
  */
 export async function publicSettings(): Promise<Record<string, string>> {
   const rows = await repo.listPublicSettings();
@@ -200,7 +257,7 @@ export async function updateSetting(actor: AuthContext, key: string, input: Upda
   // Mengganti mata uang basis membuat setiap kurs yang tersimpan berubah arti,
   // jadi kursnya dinyatakan ulang terhadap basis baru SEBELUM setting disimpan.
   // Bila mata uang barunya belum terdaftar, penyimpanan dibatalkan — lebih baik
-  // gagal terang-terangan daripada meninggalkan katalog berharga salah.
+  // gagal terang-terangan daripada meninggalkan catalog berharga salah.
   if (key === 'currency.code' && nilai && nilai.toUpperCase() !== (before.nilai ?? '').toUpperCase()) {
     await rebaseRates(before.nilai ?? '', nilai);
   }
@@ -227,13 +284,13 @@ export async function listAuditLog(p: PageParams, f: repo.AuditLogFilters) {
   return repo.listAuditLog(p, f);
 }
 
-// ── Gateway pembayaran (layar Pengaturan) ────────────────────────────────
+// ── Gateway payment (layar Pengaturan) ────────────────────────────────
 
 /**
  * Metadata tiap gateway untuk layar Pengaturan.
  *
  * URL webhook dihitung di server, bukan diketik pembeli. Salah satu penyebab
- * paling sering "pembayaran berhasil tapi order tidak lunas" adalah URL webhook
+ * paling sering "payment berhasil tapi order tidak lunas" adalah URL webhook
  * yang salah ketik, dan itu tidak memunculkan error apa pun — order hanya diam
  * menggantung. Ditampilkan siap salin, kesalahan itu hilang.
  */

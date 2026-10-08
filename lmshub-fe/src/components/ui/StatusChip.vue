@@ -4,8 +4,8 @@ import { statusLabel } from '@/lib/labels';
 
 const props = defineProps<{ status: string }>();
 
-// Warna ditentukan dari kode mentah BE (selalu Indonesia), bukan dari teks
-// yang sudah diterjemahkan — jadi tetap akurat di semua bahasa.
+// Warna ditentukan dari kode mentah BE (selalu Indonesia), bukan dari text
+// yang sudah diterjemahkan — jadi tetap akurat di semua language.
 const tone = computed(() => {
   const s = props.status.toLowerCase();
   if (/(aktif|terbit|lunas|selesai|disetujui|diterima|hadir|active)/.test(s)) return 'bg-emerald-100 text-emerald-700';

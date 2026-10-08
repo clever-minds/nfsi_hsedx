@@ -1,3 +1,4 @@
+import { easebuzzProvider } from './providers/easebuzz';
 import { flutterwaveProvider } from './providers/flutterwave';
 import { midtransProvider } from './providers/midtrans';
 import { mollieProvider } from './providers/mollie';
@@ -22,6 +23,7 @@ const PROVIDERS: readonly PaymentProvider[] = [
   flutterwaveProvider,
   mollieProvider,
   midtransProvider,
+  easebuzzProvider,
 ];
 
 export function allProviders(): readonly PaymentProvider[] {

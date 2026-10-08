@@ -12,9 +12,9 @@ const { t } = useI18n();
 interface Course {
   id: string;
   slug: string;
-  judul: string;
-  harga: number;
-  harga_coret?: number | null;
+  title: string;
+  price: number;
+  strike_price?: number | null;
   level?: string;
   category_nama?: string;
   category_slug?: string;
@@ -22,13 +22,13 @@ interface Course {
   instructor_foto?: string | null;
   rating_avg?: string | number | null;
   rating_count?: number;
-  jumlah_siswa?: number;
+  student_count?: number;
   meta?: { thumbnail_url?: string } | null;
 }
-interface Kategori { id: string; nama: string; slug: string; jumlah_kursus: number }
+interface Kategori { id: string; name: string; slug: string; jumlah_kursus: number }
 
 const route = useRoute();
-// Komponen dipakai di dua tempat: katalog publik (/courses) dan dalam dashboard (/d/catalog).
+// Komponen dipakai di dua tempat: catalog publik (/courses) dan dalam dashboard (/d/catalog).
 const inDashboard = computed(() => route.path.startsWith('/d'));
 const detailBase = computed(() => (inDashboard.value ? '/d/catalog' : '/courses'));
 
@@ -44,7 +44,7 @@ const q = ref((route.query.q as string) || '');
 // `kategori` is the pre-English query name; old shared links still carry it.
 const kategori = ref((route.query.category as string) || (route.query.kategori as string) || '');
 const level = ref('');
-const harga = ref<'semua' | 'gratis' | 'berbayar'>('semua');
+const price = ref<'semua' | 'gratis' | 'berbayar'>('semua');
 const sort = ref('-published_at'); // Terbaru dulu
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / limit)));
@@ -55,7 +55,7 @@ const rentang = computed(() => {
   return t('catalog.list.range', { from: fmtAngka(awal), to: fmtAngka(akhir), total: fmtAngka(total.value) });
 });
 
-const adaFilter = computed(() => !!(q.value || kategori.value || level.value || harga.value !== 'semua'));
+const adaFilter = computed(() => !!(q.value || kategori.value || level.value || price.value !== 'semua'));
 
 // Nilai (`v`) tetap kode BE; hanya labelnya yang diterjemahkan.
 const LEVELS = computed(() => [
@@ -77,8 +77,8 @@ async function load() {
       q: q.value || undefined,
       'filter[kategori]': kategori.value || undefined,
       'filter[level]': level.value || undefined,
-      'filter[harga_min]': harga.value === 'berbayar' ? 1 : undefined,
-      'filter[harga_max]': harga.value === 'gratis' ? 0 : undefined,
+      'filter[harga_min]': price.value === 'berbayar' ? 1 : undefined,
+      'filter[harga_max]': price.value === 'gratis' ? 0 : undefined,
       sort: sort.value,
       page: page.value,
       limit,
@@ -101,11 +101,11 @@ function bersihkan() {
   q.value = '';
   kategori.value = '';
   level.value = '';
-  harga.value = 'semua';
+  price.value = 'semua';
   terapkan();
 }
 
-watch([kategori, level, harga, sort], terapkan);
+watch([kategori, level, price, sort], terapkan);
 watch(page, load);
 // Sinkron dengan query dari header/landing (e.g. /courses?q=…&category=…).
 watch(
@@ -163,7 +163,7 @@ onMounted(async () => {
               </label>
               <label v-for="k in categories" :key="k.id" class="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
                 <input v-model="kategori" type="radio" :value="k.slug" class="accent-brand-500" />
-                <span class="flex-1">{{ k.nama }}</span>
+                <span class="flex-1">{{ k.name }}</span>
                 <span class="text-xs text-slate-400">({{ k.jumlah_kursus }})</span>
               </label>
             </div>
@@ -182,7 +182,7 @@ onMounted(async () => {
             <h3 class="text-sm font-semibold text-slate-800">{{ t('catalog.list.price') }}</h3>
             <div class="mt-3 space-y-2">
               <label v-for="h in HARGA" :key="h.v" class="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
-                <input v-model="harga" type="radio" :value="h.v" class="accent-brand-500" /> {{ h.t }}
+                <input v-model="price" type="radio" :value="h.v" class="accent-brand-500" /> {{ h.t }}
               </label>
             </div>
           </div>
@@ -195,9 +195,9 @@ onMounted(async () => {
             <div class="ms-auto flex flex-wrap items-center gap-2">
               <select v-model="sort" class="input w-auto rounded-full py-2 text-sm">
                 <option value="-published_at">{{ t('catalog.list.sortNewest') }}</option>
-                <option value="harga">{{ t('catalog.list.sortPriceAsc') }}</option>
-                <option value="-harga">{{ t('catalog.list.sortPriceDesc') }}</option>
-                <option value="judul">{{ t('catalog.list.sortTitle') }}</option>
+                <option value="price">{{ t('catalog.list.sortPriceAsc') }}</option>
+                <option value="-price">{{ t('catalog.list.sortPriceDesc') }}</option>
+                <option value="title">{{ t('catalog.list.sortTitle') }}</option>
               </select>
               <div class="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2">
                 <Icon name="search" :size="14" class="text-slate-400" />

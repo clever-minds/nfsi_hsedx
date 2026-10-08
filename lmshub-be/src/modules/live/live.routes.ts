@@ -16,7 +16,7 @@ export const liveRouter = Router();
 
 liveRouter.use(requireAuth());
 
-// Kalender terpadu (live class + agenda kursus) untuk pengguna login
+// Kalender terpadu (live class + agenda course) untuk pengguna login
 liveRouter.get('/calendar', requirePermission('live_class', 'view'), asyncHandler(ctrl.calendar));
 
 // Sesi live

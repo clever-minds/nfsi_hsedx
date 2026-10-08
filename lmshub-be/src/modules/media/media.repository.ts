@@ -5,14 +5,14 @@ import { PageParams } from '../../core/http/pagination';
 export interface MediaAssetRow {
   id: string;
   uploader_id: string;
-  tipe_file: string;
-  nama_file: string;
+  file_type: string;
+  file_name: string;
   path_object_storage: string;
   mime_type: string | null;
-  ukuran_bytes: string | null;
+  size_bytes: string | null;
   status_transcode: string;
   hls_manifest_url: string | null;
-  durasi_detik: number | null;
+  duration_seconds: number | null;
   checksum: string | null;
   meta: unknown;
   created_at: string;
@@ -20,7 +20,7 @@ export interface MediaAssetRow {
 }
 
 export interface Filters {
-  tipe_file?: string;
+  file_type?: string;
   status_transcode?: string;
   q?: string;
   /** Row-level: non-admin dibatasi ke aset miliknya sendiri. */
@@ -34,17 +34,17 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: MediaAsse
     params.push(val);
     where.push(clause.replace('$?', `$${params.length}`));
   };
-  if (f.tipe_file) add('tipe_file = $?', f.tipe_file);
+  if (f.file_type) add('file_type = $?', f.file_type);
   if (f.status_transcode) add('status_transcode = $?', f.status_transcode);
   if (f.scopeUploaderId) add('uploader_id = $?', f.scopeUploaderId);
-  if (f.q) add('nama_file ILIKE $?', `%${f.q}%`);
+  if (f.q) add('file_name ILIKE $?', `%${f.q}%`);
 
   const whereSql = where.join(' AND ');
-  const sortCol = ['nama_file', 'created_at'].includes(p.sort ?? '') ? p.sort : 'created_at';
+  const sortCol = ['file_name', 'created_at'].includes(p.sort ?? '') ? p.sort : 'created_at';
 
   const rows = await query<MediaAssetRow>(
-    `SELECT id, uploader_id, tipe_file, nama_file, path_object_storage, mime_type, ukuran_bytes,
-            status_transcode, hls_manifest_url, durasi_detik, checksum, meta, created_at, updated_at
+    `SELECT id, uploader_id, file_type, file_name, path_object_storage, mime_type, size_bytes,
+            status_transcode, hls_manifest_url, duration_seconds, checksum, meta, created_at, updated_at
        FROM media_assets
       WHERE ${whereSql}
       ORDER BY ${sortCol} ${p.order}
@@ -60,8 +60,8 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: MediaAsse
 
 export async function detail(id: string): Promise<MediaAssetRow | null> {
   return queryOne<MediaAssetRow>(
-    `SELECT id, uploader_id, tipe_file, nama_file, path_object_storage, mime_type, ukuran_bytes,
-            status_transcode, hls_manifest_url, durasi_detik, checksum, meta, created_at, updated_at
+    `SELECT id, uploader_id, file_type, file_name, path_object_storage, mime_type, size_bytes,
+            status_transcode, hls_manifest_url, duration_seconds, checksum, meta, created_at, updated_at
        FROM media_assets WHERE id = $1 AND deleted_at IS NULL`,
     [id],
   );
@@ -69,11 +69,11 @@ export async function detail(id: string): Promise<MediaAssetRow | null> {
 
 export async function insert(data: {
   uploader_id: string;
-  tipe_file: string;
-  nama_file: string;
+  file_type: string;
+  file_name: string;
   path_object_storage: string;
   mime_type: string | null;
-  ukuran_bytes: number | null;
+  size_bytes: number | null;
   checksum: string | null;
   meta: unknown;
   /** Uploaded files are browser-playable as-is; registered paths wait for a transcode step. */
@@ -81,16 +81,16 @@ export async function insert(data: {
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
     `INSERT INTO media_assets
-      (uploader_id, tipe_file, nama_file, path_object_storage, mime_type, ukuran_bytes, status_transcode, checksum, meta)
+      (uploader_id, file_type, file_name, path_object_storage, mime_type, size_bytes, status_transcode, checksum, meta)
      VALUES ($1,$2,$3,$4,$5,$6,$9,$7,$8)
      RETURNING id`,
     [
       data.uploader_id,
-      data.tipe_file,
-      data.nama_file,
+      data.file_type,
+      data.file_name,
       data.path_object_storage,
       data.mime_type,
-      data.ukuran_bytes,
+      data.size_bytes,
       data.checksum,
       data.meta ? JSON.stringify(data.meta) : null,
       data.status_transcode ?? 'menunggu',
@@ -110,7 +110,7 @@ export async function updateStatus(
     `UPDATE media_assets
         SET status_transcode = $2,
             hls_manifest_url = COALESCE($3, hls_manifest_url),
-            durasi_detik = COALESCE($4, durasi_detik)
+            duration_seconds = COALESCE($4, duration_seconds)
       WHERE id = $1`,
     [id, status, hlsManifestUrl, durasiDetik],
   );

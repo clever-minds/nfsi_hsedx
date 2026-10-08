@@ -9,19 +9,19 @@
   },
   "item": {
     "home": "Beranda",
-    "catalog": "Katalog Kursus",
+    "catalog": "Catalog Course",
     "enrollment": "Enrollment",
     "myLearning": "Belajar Saya",
-    "assessments": "Asesmen",
+    "assessments": "Assessment",
     "liveClass": "Live Class",
     "discussions": "Diskusi",
-    "certificates": "Sertifikat",
-    "courses": "Kursus",
+    "certificates": "Certificate",
+    "courses": "Course",
     "categories": "Kategori",
     "curriculum": "Kurikulum & Konten",
     "grading": "Grading",
     "users": "Pengguna",
-    "transactions": "Transaksi",
+    "transactions": "Transaction",
     "marketing": "Marketing",
     "coupons": "Kupon",
     "reports": "Laporan",
@@ -31,21 +31,22 @@
     "currencies": "Mata Uang",
     "bankAccounts": "Rekening Bank",
     "website": "Website",
-    "certificateTemplate": "Template Sertifikat",
-    "mediaLibrary": "Pustaka Media"
+    "certificateTemplate": "Template Certificate",
+    "mediaLibrary": "Pustaka Media",
+    "pages": "Halaman"
   },
   "public": {
     "home": "Beranda",
-    "courses": "Kursus",
-    "instructors": "Instruktur"
+    "courses": "Course",
+    "instructors": "Instructor"
   },
   "header": {
     "toggleMenu": "Buka/tutup menu",
     "menu": "Menu",
-    "searchPublic": "Cari kursus, instruktur…",
-    "searchPublicShort": "Cari kursus…",
-    "searchDashboard": "Cari kursus, materi, pengguna…",
-    "newCourse": "Buat Kursus Baru",
+    "searchPublic": "Cari course, instructor…",
+    "searchPublicShort": "Cari course…",
+    "searchDashboard": "Cari course, materi, pengguna…",
+    "newCourse": "Buat Course Baru",
     "goToDashboard": "Dashboard",
     "switchRole": "Ganti peran",
     "address": "Jl. Merdeka No. 42, Jakarta"
@@ -59,9 +60,10 @@
     "terms": "Syarat & Ketentuan",
     "registerFree": "Daftar Gratis",
     "newsletter": "Berlangganan Kabar",
-    "newsletterHint": "Dapatkan rekomendasi kursus & promo langsung di email kamu.",
+    "newsletterHint": "Dapatkan rekomendasi course & promo langsung di email kamu.",
     "emailPlaceholder": "Alamat email",
-    "blurb": "Platform akademi kursus daring — belajar skill baru dari instruktur berpengalaman, kerjakan asesmen, dan raih sertifikat.",
-    "copyright": "© {year} {name} · {tagline}"
+    "blurb": "Platform akademi course daring — belajar skill baru dari instructor berpengalaman, kerjakan assessment, dan raih certificate.",
+    "copyright": "© {year} {name} · {tagline}",
+    "contact": "Kontak"
   }
 }

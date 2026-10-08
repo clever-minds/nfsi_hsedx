@@ -26,15 +26,15 @@ const CHANNEL_TO_KANAL: Record<'in_app' | 'email' | 'wa' | 'push', string> = {
 const { t } = useI18n();
 
 /**
- * Nama event datang dari backend (`notification_event_config.nama`), yang
- * menyimpannya dalam satu bahasa (Indonesia) — jadi kolom Event Type tetap
- * berbahasa Indonesia walau antarmuka diset ke bahasa lain. Sama seperti layar
- * Pengaturan, tiap `jenis_event` dipetakan ke kunci i18n dan nama dari backend
+ * Nama event datang dari backend (`notification_event_config.name`), yang
+ * menyimpannya dalam satu language (Indonesia) — jadi kolom Event Type tetap
+ * berbahasa Indonesia walau antarmuka diset ke language lain. Sama seperti layar
+ * Pengaturan, tiap `jenis_event` dipetakan ke kunci i18n dan name dari backend
  * dipakai sebagai cadangan, supaya event baru yang belum diterjemahkan tetap
  * tampil alih-alih hilang.
  *
  * Titik pada `jenis_event` diganti garis bawah: titik adalah pemisah path di
- * vue-i18n, jadi 'siswa.mendaftar' akan dibaca sebagai dua tingkat objek.
+ * vue-i18n, jadi 'student.mendaftar' akan dibaca sebagai dua tingkat objek.
  */
 function eventLabel(row: { jenis_event: string; label: string }): string {
   const k = `notifications.prefs.event.${row.jenis_event.replace(/\./g, '_')}`;
@@ -54,7 +54,7 @@ const savedAt = ref<number | null>(null);
 
 interface EventConfigRow {
   jenis_event: string;
-  nama: string;
+  name: string;
   kanal: string[];
   is_kritikal: boolean;
 }
@@ -68,7 +68,7 @@ async function load() {
     const res = await apiGetFull<EventConfigRow[]>('/notifications/event-config');
     matrix.value = (res.data ?? []).map((row) => ({
       jenis_event: row.jenis_event,
-      label: row.nama,
+      label: row.name,
       kritikal: row.is_kritikal,
       in_app: row.kanal.includes('in_app'),
       email: row.kanal.includes('email'),

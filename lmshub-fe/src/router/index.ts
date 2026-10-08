@@ -28,6 +28,12 @@ const routes: RouteRecordRaw[] = [
         name: 'instructor-detail',
         component: () => import('@/modules/catalog/views/InstructorDetailView.vue'),
       },
+      // Halaman statis (About, Terms, …) yang dikelola di Website → Pages.
+      {
+        path: 'pages/:slug',
+        name: 'static-page',
+        component: () => import('@/modules/catalog/views/StaticPageView.vue'),
+      },
       {
         path: 'certificates/:nomor',
         name: 'verify-certificate',
@@ -60,7 +66,7 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
     children: [
       { path: '', name: 'dashboard', component: () => import('@/modules/dashboard/views/DashboardHome.vue') },
-      // Katalog di dalam dashboard (komponen sama dengan katalog publik, link menyesuaikan)
+      // Catalog di dalam dashboard (komponen sama dengan catalog publik, link menyesuaikan)
       { path: 'catalog', name: 'dash-catalog', component: () => import('@/modules/catalog/views/CatalogView.vue') },
       {
         path: 'catalog/:slug',

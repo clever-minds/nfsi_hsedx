@@ -23,7 +23,7 @@ export default {
       },
       fontFamily: {
         // Noto Sans Arabic/Devanagari ikut di stack: browser memilih otomatis
-        // per rentang glyph, jadi satu kelas font cukup untuk 4 bahasa.
+        // per rentang glyph, jadi satu kelas font cukup untuk 4 language.
         sans: [
           'Roboto',
           'Noto Sans Arabic',

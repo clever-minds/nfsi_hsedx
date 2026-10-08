@@ -19,7 +19,7 @@ export const targetOverrideSchema = z.object({
 
 export const createReferralLinkSchema = z.object({
   url_target: z.string().min(3).max(2000),
-  judul: z.string().max(150).optional(),
+  title: z.string().max(150).optional(),
   expires_at: z.string().datetime().optional(),
 });
 
@@ -35,7 +35,7 @@ export const moveStageSchema = z
   .object({
     tahap: z.enum(['lead', 'prospek', 'closing']),
     catatan: z.string().max(500).optional(),
-    // wajib bila tahap='closing' — hasil POST /orders/manual (09-transaksi-pembayaran)
+    // wajib bila tahap='closing' — hasil POST /orders/manual (09-transaction-payment)
     order_id: z.string().uuid().optional(),
   })
   .refine((d) => d.tahap !== 'closing' || !!d.order_id, {

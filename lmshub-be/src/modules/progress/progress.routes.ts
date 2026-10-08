@@ -15,7 +15,7 @@ export const progressRouter = Router();
 
 progressRouter.use(requireAuth());
 
-// Semua endpoint di-scope "Sendiri" (siswa hanya data miliknya) via req.auth.userId di service.
+// Semua endpoint di-scope "Sendiri" (student hanya data miliknya) via req.auth.userId di service.
 progressRouter.put(
   '/lessons/:lessonId/progress',
   requirePermission('enrollment', 'view'),
@@ -24,7 +24,7 @@ progressRouter.put(
 );
 progressRouter.get('/courses/:courseId/progress', requirePermission('enrollment', 'view'), asyncHandler(ctrl.getCourseProgress));
 
-// Tampilan belajar (kurikulum + progres) untuk siswa ter-enroll — dikonsumsi CoursePlayerView FE.
+// Tampilan belajar (kurikulum + progres) untuk student ter-enroll — dikonsumsi CoursePlayerView FE.
 progressRouter.get('/courses/:courseId/learn', requirePermission('enrollment', 'view'), asyncHandler(ctrl.learnView));
 
 progressRouter.get('/lessons/:lessonId/notes', requirePermission('enrollment', 'view'), asyncHandler(ctrl.listNotes));

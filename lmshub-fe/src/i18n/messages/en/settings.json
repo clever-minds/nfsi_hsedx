@@ -35,11 +35,11 @@
   "invalidJson": "{label} is not valid JSON — fix the value before saving.",
   "group": {
     "currency": "Currency",
-    "harga": "Pricing",
+    "price": "Pricing",
     "checkout": "Checkout",
     "komisi": "Commission",
     "revenue_share": "Revenue share",
-    "sertifikat": "Certificates",
+    "certificate": "Certificates",
     "kontak": "Contact",
     "auth": "Google Sign-In (OAuth)",
     "smtp": "SMTP (Email)",
@@ -49,6 +49,7 @@
     "payment_stripe": "Stripe",
     "payment_paypal": "PayPal",
     "payment_razorpay": "Razorpay",
+    "payment_easebuzz": "Easebuzz",
     "payment_paystack": "Paystack",
     "payment_flutterwave": "Flutterwave",
     "payment_mollie": "Mollie",
@@ -175,7 +176,8 @@
     "badFormat": "The format must be PNG, JPG, or WEBP.",
     "tooLarge": "The file must be at most 512 KB.",
     "readFailed": "Failed to read the file",
-    "uploadFailed": "Failed to upload the file"
+    "uploadFailed": "Failed to upload the file",
+    "heroElsewhere": "The homepage hero image and the footer pages (About, Terms, Privacy…) are managed in:"
   },
   "payment": {
     "webhookTitle": "Webhook endpoint",

@@ -3,9 +3,9 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 /**
  * Isi halaman publik yang dapat diubah admin tanpa deploy ulang.
  *
- * Satu baris = satu blok konten (`kontak`, `sosial`, `menu`, `hero`,
+ * Satu baris = satu blok content (`kontak`, `sosial`, `menu`, `hero`,
  * `sections`, `footer`), bukan satu field. Alasannya: sebagian blok berisi
- * daftar yang panjangnya bebas (tautan sosmed, kolom footer, urutan seksi),
+ * daftar yang panjangnya bebas (tautan sosmed, kolom footer, sort_order seksi),
  * dan memaksanya jadi pasangan key/value seperti tabel `settings` akan
  * melahirkan puluhan baris yang harus dibaca bersamaan setiap kali halaman
  * depan digambar.

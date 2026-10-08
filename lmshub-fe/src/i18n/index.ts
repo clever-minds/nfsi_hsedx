@@ -62,7 +62,7 @@ export const i18n = createI18n({
 /**
  * Akses global vue-i18n lewat antarmuka sederhana.
  *
- * Tipe pesan vue-i18n di-infer dari katalog; untuk katalog sebesar ini
+ * Tipe pesan vue-i18n di-infer dari catalog; untuk catalog sebesar ini
  * `vue-tsc` menyerah dengan TS2589 (instantiation too deep). Kita hanya
  * butuh t/te/locale, jadi cukup narrow ke bentuk minimal ini.
  */
@@ -88,7 +88,7 @@ export const t: GlobalI18n['t'] = (key, ...args) => g.t(key, ...args);
 export const te: GlobalI18n['te'] = (key) => g.te(key);
 
 /**
- * Ganti bahasa: set vue-i18n, simpan pilihan, sinkronkan atribut dokumen.
+ * Ganti language: set vue-i18n, simpan pilihan, sinkronkan atribut document.
  * `<html dir>` yang bikin seluruh layout Tailwind logical-property membalik.
  */
 export function setLocale(locale: SupportedLocale) {

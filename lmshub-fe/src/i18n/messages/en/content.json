@@ -28,10 +28,10 @@
   },
   "lessonType": {
     "video": "Video",
-    "teks": "Text/Article",
+    "text": "Text/Article",
     "pdf": "PDF",
-    "kuis": "Quiz",
-    "tugas": "Assignment",
+    "quiz": "Quiz",
+    "assignment": "Assignment",
     "live_class": "Live Class",
     "embed": "Embed",
     "scorm": "SCORM"
@@ -68,7 +68,7 @@
   "mediaType": {
     "video": "Video",
     "gambar": "Image",
-    "dokumen": "Document",
+    "document": "Document",
     "audio": "Audio"
   },
   "transcode": {

@@ -5,7 +5,7 @@ import Icon from '@/components/ui/Icon.vue';
 import type { SupportedLocale } from '@/i18n';
 
 /**
- * Pemilih bahasa. `variant` menyesuaikan warna agar cocok dipakai di
+ * Pemilih language. `variant` menyesuaikan warna agar cocok dipakai di
  * topbar gelap (dark), header putih (light), maupun daftar penuh (block).
  */
 const props = withDefaults(
@@ -31,7 +31,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside));
 </script>
 
 <template>
-  <!-- Varian block: dipakai di halaman Pengaturan, semua bahasa terlihat. -->
+  <!-- Varian block: dipakai di halaman Pengaturan, semua language terlihat. -->
   <div v-if="props.variant === 'block'" class="grid gap-2 sm:grid-cols-2">
     <button
       v-for="l in locales"

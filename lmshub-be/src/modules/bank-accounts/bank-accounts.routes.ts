@@ -8,7 +8,7 @@ import * as ctrl from './bank-accounts.controller';
 
 export const bankAccountsRouter = Router();
 
-// PUBLIC — rekening aktif untuk instruksi transfer di checkout.
+// PUBLIC — rekening aktif untuk instructions transfer di checkout.
 bankAccountsRouter.get('/public', asyncHandler(ctrl.publicList));
 
 // Master data dikelola di bawah izin `pengaturan` (sama dengan layar Settings).

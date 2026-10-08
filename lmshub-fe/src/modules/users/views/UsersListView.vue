@@ -24,7 +24,7 @@ interface UserRow extends Record<string, unknown> {
 interface RoleOption {
   id: string;
   kode: string;
-  nama: string;
+  name: string;
   level: number;
 }
 

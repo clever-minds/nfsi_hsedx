@@ -1,6 +1,6 @@
 {
   "appName": "LMS Hub",
-  "tagline": "Platform Akademi Kursus Daring",
+  "tagline": "Platform Akademi Course Daring",
   "free": "Gratis",
   "justNow": "baru saja",
   "language": "Bahasa",
@@ -131,17 +131,17 @@
     "hourShort": "j",
     "minuteShort": "m",
     "secondShort": "d",
-    "student": "siswa",
+    "student": "student",
     "lesson": "materi",
-    "course": "kursus",
+    "course": "course",
     "review": "ulasan",
     "question": "soal",
     "day": "hari"
   },
   "role": {
-    "siswa": "Pelajar",
+    "student": "Pelajar",
     "sub_user": "Pelajar",
-    "instruktur": "Instruktur",
+    "instructor": "Instructor",
     "asisten": "Asisten Pengajar",
     "admin": "Admin",
     "admin_ops": "Admin Operasional",
@@ -181,7 +181,7 @@
     "proses": "Diproses",
     "dinilai": "Sudah dinilai",
     "belum_dinilai": "Belum dinilai",
-    "menunggu_pembayaran": "Menunggu pembayaran",
+    "menunggu_pembayaran": "Menunggu payment",
     "dp_cicilan_berjalan": "Cicilan berjalan",
     "akses_aktif": "Akses aktif",
     "terdaftar": "Terdaftar",
@@ -236,15 +236,16 @@
     "unauthorized": "Sesi kamu berakhir. Silakan masuk lagi.",
     "forbidden": "Kamu tidak punya izin untuk melakukan itu.",
     "notFound": "Halaman yang kamu cari tidak ditemukan.",
-    "server": "Kesalahan server. Coba lagi nanti."
+    "server": "Kesalahan server. Coba lagi nanti.",
+    "payloadTooLarge": "Server menolak berkas karena terlalu besar (HTTP 413). Naikkan client_max_body_size di konfigurasi web server (Nginx)."
   },
   "module": {
-    "asesmen": "Asesmen",
+    "assessment": "Assessment",
     "audit": "Log audit",
     "bank_soal": "Bank soal",
     "cohort": "Cohort",
     "diskusi": "Diskusi",
-    "dokumen": "Dokumen",
+    "document": "Document",
     "enrollment": "Enrollment",
     "gamifikasi": "Gamifikasi",
     "gradebook": "Gradebook",
@@ -254,27 +255,27 @@
     "keuangan": "Keuangan",
     "komisi": "Komisi",
     "konfigurasi": "Konfigurasi sistem",
-    "konten": "Konten",
+    "content": "Konten",
     "kurikulum": "Kurikulum",
-    "kursus": "Kursus",
+    "course": "Course",
     "laporan": "Laporan",
     "live_class": "Live class",
     "marketing": "Marketing",
     "notifikasi": "Notifikasi",
     "payout": "Payout",
-    "pembayaran": "Pembayaran",
+    "payment": "Payment",
     "pengaturan": "Pengaturan",
     "pengguna": "Pengguna",
     "pesan": "Pesan",
     "refund": "Refund",
     "role": "Peran",
-    "sertifikat": "Sertifikat",
-    "transaksi": "Transaksi"
+    "certificate": "Certificate",
+    "transaction": "Transaction"
   },
   "currency": {
     "label": "Mata uang",
     "followLanguage": "Ikuti bahasa",
-    "billedIn": "Harga dikonversi untuk tampilan. Pembayaran tetap ditagih dalam {code}."
+    "billedIn": "Harga dikonversi untuk tampilan. Payment tetap ditagih dalam {code}."
   },
   "roleOption": {
     "sub_user": "Pelajar (sub-akun)"

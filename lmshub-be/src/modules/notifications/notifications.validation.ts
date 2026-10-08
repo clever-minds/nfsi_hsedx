@@ -5,15 +5,15 @@ export const kanalEnum = z.enum(['in_app', 'email', 'whatsapp', 'push']);
 
 // ── notification_event_config (admin) ──────────────────────────────────────
 export const updateEventConfigSchema = z.object({
-  nama: z.string().min(2).max(150).optional(),
-  deskripsi: z.string().max(2000).nullable().optional(),
+  name: z.string().min(2).max(150).optional(),
+  description: z.string().max(2000).nullable().optional(),
   role_penerima: z.array(z.string()).optional(),
   kanal: z.array(kanalEnum).optional(),
   template_judul: z.string().min(1).optional(),
   template_isi: z.string().min(1).optional(),
   butuh_respons: z.boolean().optional(),
   is_kritikal: z.boolean().optional(),
-  is_aktif: z.boolean().optional(),
+  is_active: z.boolean().optional(),
 });
 
 // ── notifications ────────────────────────────────────────────────────────
@@ -25,8 +25,8 @@ export const respondNotificationSchema = z.object({
 export const createReminderSchema = z.object({
   sumber: z.enum(['jadwal_live', 'tenggat_tugas', 'tagihan', 'lainnya']),
   source_id: z.string().uuid().optional(),
-  judul: z.string().min(2).max(200),
-  deskripsi: z.string().max(2000).optional(),
+  title: z.string().min(2).max(200),
+  description: z.string().max(2000).optional(),
   jatuh_tempo: z.string().datetime(),
   pengulangan: z.enum(['tidak', 'harian', 'mingguan', 'bulanan']).default('tidak'),
   aturan_eskalasi: z
@@ -46,7 +46,7 @@ export const respondReminderSchema = z.object({
 // ── announcements ────────────────────────────────────────────────────────
 export const createAnnouncementSchema = z
   .object({
-    judul: z.string().min(2).max(200),
+    title: z.string().min(2).max(200),
     isi: z.string().min(1),
     segmen: z
       .object({
@@ -59,7 +59,7 @@ export const createAnnouncementSchema = z
       }),
     tanggal_mulai: z.string().datetime().optional(),
     tanggal_selesai: z.string().datetime().nullable().optional(),
-    is_aktif: z.boolean().default(true),
+    is_active: z.boolean().default(true),
   })
   .refine(
     (d) => !d.tanggal_selesai || !d.tanggal_mulai || new Date(d.tanggal_selesai) >= new Date(d.tanggal_mulai),

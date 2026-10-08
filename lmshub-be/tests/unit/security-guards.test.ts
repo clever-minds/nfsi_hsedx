@@ -21,7 +21,7 @@ describe('rahasia penandatangan produksi', () => {
 
   /**
    * Kegagalan aslinya: guard membandingkan dengan nilai bawaan skema, sedangkan
-   * `.env.example` berisi teks yang berbeda. Setiap pembeli yang menyalin berkas
+   * `.env.example` berisi text yang berbeda. Setiap pembeli yang menyalin berkas
    * contoh — persis yang diperintahkan panduan pemasangan — lolos tanpa suara.
    * Test ini membaca `.env.example` yang sungguhan, jadi ia ikut gagal kalau
    * suatu saat berkas itu diedit menjadi sesuatu yang lolos lagi.
@@ -70,7 +70,7 @@ describe('POST /orders/:id/pay — hanya metode luar-jaringan', () => {
 });
 
 describe('POST /orders/:id/verify', () => {
-  it('menerima payload layar Transaksi (tanpa payment_id)', () => {
+  it('menerima payload layar Transaction (tanpa payment_id)', () => {
     const r = verifyPaymentSchema.safeParse({ aksi: 'verify' });
     expect(r.success).toBe(true);
   });
@@ -87,7 +87,7 @@ describe('POST /orders/:id/verify', () => {
 
 describe('tangga peran — PUT /users/:id { role_kode }', () => {
   // roles.level pada seed: super_admin 0, direktur 1, ketua 2, pembina 3,
-  // admin_ops 4, instruktur 5, asisten 6, marketing 7, siswa 8, sub_user 9.
+  // admin_ops 4, instructor 5, asisten 6, marketing 7, student 8, sub_user 9.
   const ADMIN_OPS = 4;
 
   it.each([
@@ -99,22 +99,22 @@ describe('tangga peran — PUT /users/:id { role_kode }', () => {
   });
 
   it.each([
-    ['instruktur', 5],
+    ['instructor', 5],
     ['marketing', 7],
-    ['siswa', 8],
+    ['student', 8],
   ])('admin_ops boleh memberikan peran %s', (_kode, level) => {
     expect(bolehMemberiPeran(ADMIN_OPS, level)).toBe(true);
   });
 });
 
-describe('order bernilai nol — kursus gratis & kupon potong-habis', () => {
+describe('order bernilai nol — course gratis & kupon potong-habis', () => {
   const item = (t: string, extra: Record<string, unknown> = {}) => ({
-    item_tipe: t as 'kursus' | 'bundle' | 'path' | 'langganan',
+    item_tipe: t as 'course' | 'bundle' | 'path' | 'langganan',
     kuantitas: 1,
     ...extra,
   });
 
-  it.each(['kursus', 'bundle', 'path'])('harga %s diturunkan server dari katalog', (t) => {
+  it.each(['course', 'bundle', 'path'])('price %s diturunkan server dari catalog', (t) => {
     expect(hargaSepenuhnyaDariKatalog([item(t)])).toBe(true);
   });
 
@@ -123,12 +123,12 @@ describe('order bernilai nol — kursus gratis & kupon potong-habis', () => {
    * dari request. Kalau tipe itu sampai lolos, pembeli bisa mengirim satu baris
    * langganan berharga 0 dan mencetak order lunas atas kemauannya sendiri.
    */
-  it('harga langganan dipasok klien, jadi total nol tidak boleh dipercaya', () => {
+  it('price langganan dipasok klien, jadi total nol tidak boleh dipercaya', () => {
     expect(hargaSepenuhnyaDariKatalog([item('langganan', { harga_satuan: 0 })])).toBe(false);
   });
 
   it('satu item berharga-klien mencemari seluruh keranjang', () => {
-    expect(hargaSepenuhnyaDariKatalog([item('kursus'), item('langganan', { harga_satuan: 0 })])).toBe(false);
+    expect(hargaSepenuhnyaDariKatalog([item('course'), item('langganan', { harga_satuan: 0 })])).toBe(false);
   });
 
   /**

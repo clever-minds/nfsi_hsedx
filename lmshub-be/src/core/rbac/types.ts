@@ -1,7 +1,7 @@
 /** Aksi permission kanonik (selaras enum `permission_action` di DB). */
 export type PermissionAction = 'view' | 'create' | 'update' | 'delete';
 
-/** String permission bentuk `module.action`, mis. `kursus.view`. */
+/** String permission bentuk `module.action`, mis. `course.view`. */
 export type PermissionKey = `${string}.${PermissionAction}`;
 
 /** Kode peran kanonik. */
@@ -11,10 +11,10 @@ export type RoleKode =
   | 'ketua'
   | 'pembina'
   | 'admin_ops'
-  | 'instruktur'
+  | 'instructor'
   | 'asisten'
   | 'marketing'
-  | 'siswa'
+  | 'student'
   | 'sub_user';
 
 /** Identitas terautentikasi yang ditempel ke `req.auth`. */

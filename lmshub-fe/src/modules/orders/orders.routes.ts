@@ -4,13 +4,13 @@ export const ordersRoutes: RouteRecordRaw[] = [
   {
     path: 'transactions',
     name: 'transactions',
-    component: () => import('@/modules/orders/views/TransaksiListView.vue'),
-    meta: { permission: 'transaksi.view', title: 'Transactions' },
+    component: () => import('@/modules/orders/views/TransactionListView.vue'),
+    meta: { permission: 'transaction.view', title: 'Transactions' },
   },
   {
     path: 'transactions/manual-payment',
     name: 'manual-payment',
     component: () => import('@/modules/orders/views/TandaJadiFormView.vue'),
-    meta: { permission: 'transaksi.create', title: 'Record Manual Payment' },
+    meta: { permission: 'transaction.create', title: 'Record Manual Payment' },
   },
 ];

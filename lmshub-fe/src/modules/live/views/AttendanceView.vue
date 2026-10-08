@@ -11,10 +11,10 @@ import StatusChip from '@/components/ui/StatusChip.vue';
 
 interface AttendanceRecord extends Record<string, unknown> {
   user_id: string;
-  nama: string;
+  name: string;
   status: string; // belum | hadir | terlambat | absen
   waktu_join?: string;
-  durasi_menit?: number;
+  duration_minutes?: number;
 }
 
 const route = useRoute();
@@ -28,10 +28,10 @@ const error = ref('');
 const savingId = ref<string | null>(null);
 
 const columns = computed(() => [
-  { key: 'nama', label: t('live.attendance.colParticipant') },
+  { key: 'name', label: t('live.attendance.colParticipant') },
   { key: 'status', label: t('live.attendance.colStatus') },
   { key: 'waktu_join', label: t('live.attendance.colJoinTime') },
-  { key: 'durasi_menit', label: t('live.attendance.colDuration') },
+  { key: 'duration_minutes', label: t('live.attendance.colDuration') },
 ]);
 
 const statuses = ['hadir', 'terlambat', 'absen'];
@@ -85,7 +85,7 @@ onMounted(load);
       <template #cell:waktu_join="{ value }">
         {{ value ? fmtJam(value as string) : '—' }}
       </template>
-      <template #cell:durasi_menit="{ value }">
+      <template #cell:duration_minutes="{ value }">
         {{ value ? t('live.attendance.minutes', { n: fmtAngka(value as number) }) : '—' }}
       </template>
       <template v-if="auth.can('live_class.update')" #actions="{ row }">

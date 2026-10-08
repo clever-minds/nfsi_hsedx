@@ -15,9 +15,9 @@ import {
 } from './enrollments.validation';
 
 const isSuper = (actor: AuthContext) => actor.roles.includes('super_admin');
-const isSiswa = (actor: AuthContext) => actor.roles.includes('siswa') && !isSuper(actor);
+const isSiswa = (actor: AuthContext) => actor.roles.includes('student') && !isSuper(actor);
 const isInstructorScoped = (actor: AuthContext) =>
-  !isSuper(actor) && actor.roles.includes('instruktur') && !actor.roles.some((r) => ['admin_ops', 'direktur', 'ketua', 'pembina'].includes(r));
+  !isSuper(actor) && actor.roles.includes('instructor') && !actor.roles.some((r) => ['admin_ops', 'direktur', 'ketua', 'pembina'].includes(r));
 
 export async function list(actor: AuthContext, p: PageParams, filters: repo.EnrollmentFilters) {
   const f: repo.EnrollmentFilters = { ...filters };
@@ -33,7 +33,7 @@ export async function detail(actor: AuthContext, id: string) {
   return e;
 }
 
-/** Enroll (beli/assign/bundle/path) — dipanggil admin/instruktur untuk assign manual, atau internal untuk sumber lain. */
+/** Enroll (beli/assign/bundle/path) — dipanggil admin/instructor untuk assign manual, atau internal untuk sumber lain. */
 export async function create(actor: AuthContext, input: CreateEnrollmentInput) {
   const existing = await repo.findActiveByUserCourse(input.user_id, input.course_id);
   if (existing) throw AppError.conflict('This user is already actively enrolled in this course', 'enrollment.already_active');
@@ -108,6 +108,51 @@ export async function revoke(actor: AuthContext, id: string, input: RevokeEnroll
   return repo.detail(id);
 }
 
+const isStaff = (actor: AuthContext) =>
+  isSuper(actor) || actor.roles.some((r) => ['admin_ops', 'direktur', 'ketua', 'pembina'].includes(r));
+
+/**
+ * Ulang course dari awal (reset progres).
+ *
+ * Student hanya bisa mengulang enrollment miliknya, dan hanya bila course itu
+ * mengizinkan (`courses.allow_restart`, diatur per course di Admin Panel).
+ * Admin selalu bisa mereset progres student mana pun.
+ *
+ * Percobaan ujian TIDAK dikembalikan: kalau iya, mengulang course menjadi cara
+ * melewati batas percobaan ujian. Certificate yang sudah terbit tetap berlaku.
+ */
+export async function restart(actor: AuthContext, id: string) {
+  const e = await repo.detail(id);
+  if (!e) throw AppError.notFound('Enrolment not found', 'enrollment.not_found');
+  const staff = isStaff(actor);
+  if (!staff) {
+    if (e.user_id !== actor.userId) throw AppError.forbidden('This is outside your scope', 'scope.out_of_scope');
+    if (!(await repo.courseAllowsRestart(e.course_id))) {
+      throw AppError.forbidden('Restarting this course is not allowed', 'enrollment.restart_not_allowed');
+    }
+  }
+  if (!['terdaftar', 'aktif', 'selesai'].includes(e.status)) {
+    throw AppError.conflict('Only an active or completed enrolment can be restarted', 'enrollment.restart_invalid_status');
+  }
+
+  await withTransaction(async (tx) => {
+    await repo.resetProgress(id, tx);
+    await recordAudit(
+      {
+        userId: actor.userId,
+        module: 'enrollment',
+        action: 'restart',
+        entity: 'enrollments',
+        entityId: id,
+        before: { status: e.status },
+        after: { status: 'aktif', progress: 0, by_staff: staff && e.user_id !== actor.userId },
+      },
+      tx,
+    );
+  });
+  return repo.detail(id);
+}
+
 export async function bulkImport(actor: AuthContext, input: BulkImportInput) {
   const hasil: Array<{ user_id: string; ok: boolean; error?: string }> = [];
   for (const userId of input.user_ids) {
@@ -155,7 +200,7 @@ export async function listCohorts(_actor: AuthContext, courseId: string) {
 export async function createCohort(actor: AuthContext, courseId: string, input: CreateCohortInput) {
   const { id } = await repo.insertCohort({
     course_id: courseId,
-    nama: input.nama,
+    name: input.name,
     tanggal_mulai: input.tanggal_mulai,
     tanggal_selesai: input.tanggal_selesai ?? null,
     kuota_maksimal: input.kuota_maksimal ?? null,
@@ -168,7 +213,7 @@ export async function updateCohort(actor: AuthContext, id: string, input: Update
   const before = await repo.cohortDetail(id);
   if (!before) throw AppError.notFound('Cohort not found', 'cohort.not_found');
   const fields: Record<string, unknown> = {};
-  if (input.nama !== undefined) fields.nama = input.nama;
+  if (input.name !== undefined) fields.name = input.name;
   if (input.tanggal_mulai !== undefined) fields.tanggal_mulai = input.tanggal_mulai;
   if (input.tanggal_selesai !== undefined) fields.tanggal_selesai = input.tanggal_selesai;
   if (input.kuota_maksimal !== undefined) fields.kuota_maksimal = input.kuota_maksimal;
@@ -184,7 +229,7 @@ export async function listCohortMembers(_actor: AuthContext, cohortId: string) {
   return repo.listCohortMembers(cohortId);
 }
 
-/** Semua cohort lintas kursus (untuk halaman admin/manajemen cohort). */
+/** Semua cohort lintas course (untuk halaman admin/manajemen cohort). */
 export async function listAllCohorts(p: PageParams) {
   return repo.listAllCohorts(p);
 }
@@ -226,7 +271,7 @@ export async function promoteWaitlistMember(actor: AuthContext, cohortId: string
   });
 }
 
-/** Siswa mendaftar cohort: aktif bila ada slot, else masuk waitlist FIFO. */
+/** Student mendaftar cohort: aktif bila ada slot, else masuk waitlist FIFO. */
 export async function joinCohort(actor: AuthContext, cohortId: string) {
   return withTransaction(async (tx) => {
     const cohort = await repo.lockCohort(cohortId, tx);

@@ -44,7 +44,8 @@
     "number_generation_failed": "Could not generate a unique certificate number, please try again",
     "only_issued_can_be_reissued": "Only an issued certificate can be reissued",
     "override_requires_director": "Issuing by exception requires Director approval",
-    "requirements_not_met": "The graduation requirements have not been met yet"
+    "requirements_not_met": "The graduation requirements have not been met yet",
+    "final_exam_not_passed": "Pass the final exam of this course to unlock the certificate"
   },
   "cohort": {
     "already_member": "You are already a member of this cohort",
@@ -91,7 +92,8 @@
     "publish_requires_admin": "Only an Operations Admin or Director can publish a course",
     "publish_wrong_status": "A course must be in review or updated before it can be published",
     "slug_taken": "That course slug is already in use",
-    "thumbnail_not_found": "Thumbnail image not found"
+    "thumbnail_not_found": "Thumbnail image not found",
+    "final_exam_invalid": "The final exam must be a quiz of this course"
   },
   "curriculum": {
     "not_owner": "You can only manage the curriculum of your own courses"
@@ -113,7 +115,9 @@
     "not_enrolled": "You are not enrolled in this course",
     "not_enrolled_course": "You are not enrolled in this course",
     "not_found": "Enrolment not found",
-    "not_found_for_course": "No enrolment found for this course"
+    "not_found_for_course": "No enrolment found for this course",
+    "restart_not_allowed": "Restarting this course is not allowed",
+    "restart_invalid_status": "Only an active or completed enrolment can be restarted"
   },
   "finance": {
     "category_not_found": "Expense category not found",
@@ -252,7 +256,8 @@
     "attempt_not_found": "Attempt not found",
     "inactive": "This quiz is not active",
     "not_found": "Quiz not found",
-    "submit_requires_owner": "Only the person taking this attempt can submit it"
+    "submit_requires_owner": "Only the person taking this attempt can submit it",
+    "retake_cooldown": "Please wait before retaking this quiz"
   },
   "rbac": {
     "base_roles_missing": "Base roles have not been seeded yet",
@@ -313,7 +318,9 @@
     "max_512kb": "The file must be 512KB or smaller",
     "photo_max_2mb": "The photo must be 2MB or smaller",
     "site_dir_not_writable": "Could not save the file: the uploads/site directory is not writable",
-    "unknown_asset_type": "Unknown asset type"
+    "unknown_asset_type": "Unknown asset type",
+    "max_5mb": "The image must be 5MB or smaller",
+    "image_type_invalid": "The file is not a JPG, PNG or WebP image"
   },
   "user": {
     "cannot_be_own_manager": "A user cannot be their own manager",
@@ -321,7 +328,9 @@
     "email_taken": "That email address is already registered",
     "not_found": "User not found",
     "permission_escalation": "You cannot grant a permission you do not hold yourself",
-    "phone_taken": "That phone number is already registered"
+    "phone_taken": "That phone number is already registered",
+    "email_change_requires_super_admin": "Only a super admin can change their own email — ask an administrator",
+    "email_unchanged": "That is already your email address"
   },
   "validation": {
     "failed": "Validation failed"

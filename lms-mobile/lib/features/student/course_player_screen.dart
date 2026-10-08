@@ -67,7 +67,7 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_course?.judul ?? widget.title ?? AppLocalizations.of(context).learn)),
+      appBar: AppBar(title: Text(_course?.title ?? widget.title ?? AppLocalizations.of(context).learn)),
       body: _buildBody(),
     );
   }
@@ -91,7 +91,7 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(c.judul, style: T.h3),
+          Text(c.title, style: T.h3),
           const SizedBox(height: 12),
           ProgressBar(c.progressPercent),
           const SizedBox(height: 8),
@@ -111,7 +111,7 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> {
         initiallyExpanded: true,
         shape: const Border(),
         collapsedShape: const Border(),
-        title: Text(section.judul, style: T.h3),
+        title: Text(section.title, style: T.h3),
         childrenPadding: EdgeInsets.zero,
         children: section.lessons.map(_lessonTile).toList(),
       ),
@@ -126,7 +126,7 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> {
         color: locked ? AppColors.inkFaint : AppColors.brand,
       ),
       title: Text(
-        lesson.judul,
+        lesson.title,
         style: T.body.copyWith(
           color: locked ? AppColors.inkFaint : AppColors.ink,
         ),
@@ -151,13 +151,13 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> {
     switch (tipe) {
       case 'video':
         return Icons.play_circle_outline;
-      case 'teks':
+      case 'text':
         return Icons.article_outlined;
-      case 'kuis':
+      case 'quiz':
         return Icons.quiz_outlined;
-      case 'tugas':
+      case 'assignment':
         return Icons.assignment_outlined;
-      case 'dokumen':
+      case 'document':
         return Icons.description_outlined;
       default:
         return Icons.circle_outlined;
@@ -165,7 +165,7 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> {
   }
 }
 
-/// Tampilan detail satu pelajaran (video / konten) + tombol tandai selesai.
+/// Tampilan detail satu pelajaran (video / content) + tombol tandai selesai.
 class _LessonView extends StatefulWidget {
   const _LessonView({required this.lesson});
   final LearnLesson lesson;
@@ -192,10 +192,10 @@ class _LessonViewState extends State<_LessonView> {
         // Videos uploaded to the Media Library arrive as a server path
         // (`/uploads/media/…`); a WebView cannot load that without the host.
         ..loadRequest(Uri.parse(Fmt.asset(l.videoUrl)!));
-    } else if (l.konten != null && _looksLikeHtml(l.konten!)) {
+    } else if (l.content != null && _looksLikeHtml(l.content!)) {
       _controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..loadHtmlString(_wrapHtml(l.konten!));
+        ..loadHtmlString(_wrapHtml(l.content!));
     }
   }
 
@@ -239,7 +239,7 @@ class _LessonViewState extends State<_LessonView> {
   Widget build(BuildContext context) {
     final l = widget.lesson;
     return Scaffold(
-      appBar: AppBar(title: Text(l.judul)),
+      appBar: AppBar(title: Text(l.title)),
       body: ListView(
         children: [
           _content(l),
@@ -268,17 +268,17 @@ class _LessonViewState extends State<_LessonView> {
         child: WebViewWidget(controller: _controller!),
       );
     }
-    if (l.konten != null && l.konten!.isNotEmpty) {
+    if (l.content != null && l.content!.isNotEmpty) {
       if (_controller != null) {
         return SizedBox(
           height: 480,
           child: WebViewWidget(controller: _controller!),
         );
       }
-      // Konten teks biasa.
+      // Konten text biasa.
       return Padding(
         padding: const EdgeInsets.all(16),
-        child: SelectableText(l.konten!, style: T.body),
+        child: SelectableText(l.content!, style: T.body),
       );
     }
     return Padding(

@@ -6,13 +6,13 @@
  * di tabel `site_content`. Karena itu menambah field baru di rilis berikutnya
  * cukup dilakukan di berkas ini — tidak perlu migrasi data.
  *
- * Teks dibiarkan kosong dengan sengaja. Kosong berarti "pakai teks bawaan
- * aplikasi", dan teks bawaan itu hidup di katalog i18n frontend sehingga tetap
- * tersedia dalam empat bahasa. Begitu admin mengisi salah satu bahasa, nilai
- * itulah yang dipakai untuk bahasa tersebut.
+ * Teks dibiarkan kosong dengan sengaja. Kosong berarti "pakai text bawaan
+ * aplikasi", dan text bawaan itu hidup di catalog i18n frontend sehingga tetap
+ * tersedia dalam empat language. Begitu admin mengisi salah satu language, nilai
+ * itulah yang dipakai untuk language tersebut.
  */
 
-/** Teks per bahasa. Kunci yang kosong/absen berarti jatuh ke teks bawaan. */
+/** Teks per language. Kunci yang kosong/absen berarti jatuh ke text bawaan. */
 export interface Localized {
   en?: string;
   hi?: string;
@@ -32,7 +32,7 @@ export interface SectionItem {
   key: string;
   aktif: boolean;
   badge: Localized;
-  judul: Localized;
+  title: Localized;
   subjudul: Localized;
 }
 export interface FooterTautan {
@@ -40,7 +40,7 @@ export interface FooterTautan {
   url: string;
 }
 export interface FooterKolom {
-  judul: Localized;
+  title: Localized;
   tautan: FooterTautan[];
 }
 
@@ -70,9 +70,9 @@ export interface SiteContent {
   };
   sections: SectionItem[];
   footer: {
-    deskripsi: Localized;
+    description: Localized;
     kolom: FooterKolom[];
-    newsletter: { aktif: boolean; judul: Localized; teks: Localized };
+    newsletter: { aktif: boolean; title: Localized; text: Localized };
     copyright: Localized;
     tampilkan_sosial: boolean;
   };
@@ -86,7 +86,7 @@ export type SiteContentKey = keyof SiteContent;
  * Hero tidak ikut di sini karena posisinya selalu paling atas dan punya
  * kelompok pengaturannya sendiri.
  */
-export const SECTION_KEYS = ['kategori', 'benefit', 'featured', 'stats', 'instruktur', 'cta'] as const;
+export const SECTION_KEYS = ['kategori', 'benefit', 'featured', 'stats', 'instructor', 'cta'] as const;
 
 const kosong = (): Localized => ({});
 
@@ -94,7 +94,7 @@ const seksi = (key: string): SectionItem => ({
   key,
   aktif: true,
   badge: kosong(),
-  judul: kosong(),
+  title: kosong(),
   subjudul: kosong(),
 });
 
@@ -112,7 +112,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     { platform: 'youtube', url: '#', aktif: true },
     { platform: 'linkedin', url: '#', aktif: true },
   ],
-  // Kosong berarti memakai menu bawaan (Beranda / Kursus / Instruktur) yang
+  // Kosong berarti memakai menu bawaan (Beranda / Course / Instructor) yang
   // sudah diterjemahkan; admin bisa menggantinya dengan susunan sendiri.
   menu: [],
   hero: {
@@ -132,10 +132,10 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
   },
   sections: SECTION_KEYS.map(seksi),
   footer: {
-    deskripsi: kosong(),
+    description: kosong(),
     // Kosong berarti memakai dua kolom bawaan (Jelajahi & Bantuan).
     kolom: [],
-    newsletter: { aktif: true, judul: kosong(), teks: kosong() },
+    newsletter: { aktif: true, title: kosong(), text: kosong() },
     copyright: kosong(),
     tampilkan_sosial: true,
   },

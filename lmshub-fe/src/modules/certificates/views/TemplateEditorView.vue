@@ -8,7 +8,7 @@ import TablePagination from '@/components/ui/TablePagination.vue';
 
 interface CertificateTemplate extends Record<string, unknown> {
   id: string;
-  nama: string;
+  name: string;
   kategori?: string;
   logo_url?: string;
   teks_penandatangan?: string;
@@ -27,14 +27,14 @@ const saving = ref(false);
 const editingId = ref<string | null>(null);
 
 const form = reactive({
-  nama: '',
+  name: '',
   kategori: '',
   logo_url: '',
   teks_penandatangan: '',
 });
 
 const columns = computed(() => [
-  { key: 'nama', label: t('certificates.template.colName') },
+  { key: 'name', label: t('certificates.template.colName') },
   { key: 'kategori_nama', label: t('certificates.template.colCategory') },
   { key: 'aktif', label: t('certificates.template.colStatus') },
 ]);
@@ -45,7 +45,7 @@ const columns = computed(() => [
  * by its meaning in the reader's language.
  */
 const PLACEHOLDER_TOKENS = computed(() =>
-  (['nama', 'nomor', 'tanggal'] as const)
+  (['name', 'nomor', 'tanggal'] as const)
     .map((k) => `{{${k}}} (${t(`certificates.template.token.${k}`)})`)
     .join(', '),
 );
@@ -66,7 +66,7 @@ async function load() {
 
 function resetForm() {
   editingId.value = null;
-  form.nama = '';
+  form.name = '';
   form.kategori = '';
   form.logo_url = '';
   form.teks_penandatangan = '';
@@ -74,14 +74,14 @@ function resetForm() {
 
 function editTemplate(t: CertificateTemplate) {
   editingId.value = t.id;
-  form.nama = t.nama;
+  form.name = t.name;
   form.kategori = t.kategori || '';
   form.logo_url = t.logo_url || '';
   form.teks_penandatangan = t.teks_penandatangan || '';
 }
 
 async function save() {
-  if (!form.nama.trim()) return;
+  if (!form.name.trim()) return;
   saving.value = true;
   error.value = '';
   try {
@@ -118,7 +118,7 @@ onMounted(load);
             </span>
           </template>
           <template #actions="{ row }">
-            <button v-can="'sertifikat.update'" class="btn-outline text-xs" @click="editTemplate(row as CertificateTemplate)">
+            <button v-can="'certificate.update'" class="btn-outline text-xs" @click="editTemplate(row as CertificateTemplate)">
               {{ t('certificates.template.edit') }}
             </button>
           </template>
@@ -128,14 +128,14 @@ onMounted(load);
         </DataTable>
       </div>
 
-      <div v-can="'sertifikat.update'" class="card h-fit p-4">
+      <div v-can="'certificate.update'" class="card h-fit p-4">
         <h3 class="mb-3 font-medium text-slate-800">
           {{ editingId ? t('certificates.template.formTitleEdit') : t('certificates.template.formTitleNew') }}
         </h3>
         <div class="space-y-3">
           <div>
             <label class="label">{{ t('certificates.template.name') }}</label>
-            <input v-model="form.nama" class="input" :placeholder="t('certificates.template.namePlaceholder')" />
+            <input v-model="form.name" class="input" :placeholder="t('certificates.template.namePlaceholder')" />
           </div>
           <div>
             <label class="label">{{ t('certificates.template.category') }}</label>

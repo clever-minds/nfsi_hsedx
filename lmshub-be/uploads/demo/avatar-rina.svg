@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" role="img" aria-label="Rina Wijaya">
+  <defs>
+    <linearGradient id="a" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="hsl(306,62%,52%)"/>
+      <stop offset="100%" stop-color="hsl(351,68%,40%)"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#a)"/>
+  <circle cx="200" cy="152" r="62" fill="#ffffff" opacity="0.92"/>
+  <path d="M60 400c0-77 63-140 140-140s140 63 140 140z" fill="#ffffff" opacity="0.92"/>
+  <text x="200" y="172" font-family="'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="58" font-weight="700" fill="hsl(306,55%,32%)" text-anchor="middle">RW</text>
+</svg>

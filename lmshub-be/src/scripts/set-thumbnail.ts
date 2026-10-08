@@ -1,7 +1,7 @@
 import { pool } from '../core/db/pool';
 
 async function main() {
-  const res = await pool.query("SELECT id, nama_file, path_object_storage FROM media_assets WHERE nama_file ILIKE '%Biodata%' LIMIT 1");
+  const res = await pool.query("SELECT id, file_name, path_object_storage FROM media_assets WHERE file_name ILIKE '%Biodata%' LIMIT 1");
   console.log(JSON.stringify(res.rows));
   
   if (res.rows.length > 0) {

@@ -9,15 +9,15 @@ import DataTable from '@/components/ui/DataTable.vue';
 
 interface Badge {
   id: string;
-  nama: string;
-  deskripsi?: string;
+  name: string;
+  description?: string;
   ikon_url?: string;
   diraih?: boolean;
   diraih_at?: string;
 }
 interface LeaderboardRow extends Record<string, unknown> {
   peringkat: number;
-  nama: string;
+  name: string;
   poin: number;
 }
 
@@ -34,7 +34,7 @@ const error = ref('');
 
 const leaderboardColumns = computed(() => [
   { key: 'peringkat', label: t('certificates.badgesPage.colRank') },
-  { key: 'nama', label: t('certificates.badgesPage.colName') },
+  { key: 'name', label: t('certificates.badgesPage.colName') },
   { key: 'poin', label: t('certificates.badgesPage.colPoints') },
 ]);
 
@@ -53,7 +53,7 @@ interface StreakRow {
 async function loadBadges() {
   loadingBadges.value = true;
   try {
-    // BE tidak punya GET /badges?scope=me. Gabungkan katalog GET /badges (semua badge)
+    // BE tidak punya GET /badges?scope=me. Gabungkan catalog GET /badges (semua badge)
     // dengan GET /users/me/badges (badge yang sudah diraih pengguna) di sisi klien.
     const [catalogRes, earnedRes] = await Promise.all([
       apiGetFull<Badge[]>('/badges', { limit: 100 }),
@@ -143,7 +143,7 @@ onMounted(() => {
         :class="!b.diraih && 'opacity-40 grayscale'"
       >
         <div class="h-12 w-12 rounded-full bg-accent-100"></div>
-        <div class="text-xs font-medium text-slate-700">{{ b.nama }}</div>
+        <div class="text-xs font-medium text-slate-700">{{ b.name }}</div>
       </div>
     </div>
 

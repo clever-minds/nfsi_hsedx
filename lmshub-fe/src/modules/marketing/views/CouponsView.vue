@@ -25,7 +25,7 @@ interface Coupon extends Record<string, unknown> {
   minimum_pembelian: string | null;
   berlaku_mulai: string | null;
   berlaku_sampai: string | null;
-  is_aktif: boolean;
+  is_active: boolean;
 }
 
 const auth = useAuthStore();
@@ -56,7 +56,7 @@ const form = reactive({
   minimum_pembelian: '' as number | '',
   berlaku_mulai: '',
   berlaku_sampai: '',
-  is_aktif: true,
+  is_active: true,
 });
 
 const columns = computed(() => [
@@ -64,7 +64,7 @@ const columns = computed(() => [
   { key: 'nilai_potongan', label: t('coupons.colDiscount') },
   { key: 'kuota_terpakai', label: t('coupons.colUsage') },
   { key: 'berlaku_sampai', label: t('coupons.colWindow') },
-  { key: 'is_aktif', label: t('coupons.colStatus') },
+  { key: 'is_active', label: t('coupons.colStatus') },
 ]);
 
 /** `<input type="date">` memakai YYYY-MM-DD; API memakai ISO penuh. */
@@ -99,7 +99,7 @@ async function load() {
   try {
     const params: Record<string, unknown> = { limit: 100, sort: 'created_at', order: 'desc' };
     if (q.value.trim()) params.q = q.value.trim();
-    if (statusFilter.value) params['filter[is_aktif]'] = statusFilter.value;
+    if (statusFilter.value) params['filter[is_active]'] = statusFilter.value;
     const res = await apiGetFull<Coupon[]>('/coupons', params);
     rows.value = res.data ?? [];
   } catch (e) {
@@ -121,7 +121,7 @@ function resetForm() {
     minimum_pembelian: '',
     berlaku_mulai: '',
     berlaku_sampai: '',
-    is_aktif: true,
+    is_active: true,
   });
 }
 
@@ -141,7 +141,7 @@ function openEdit(c: Coupon) {
     minimum_pembelian: c.minimum_pembelian != null ? Number(c.minimum_pembelian) : '',
     berlaku_mulai: toDateInput(c.berlaku_mulai),
     berlaku_sampai: toDateInput(c.berlaku_sampai),
-    is_aktif: c.is_aktif,
+    is_active: c.is_active,
   });
   showForm.value = true;
 }
@@ -165,7 +165,7 @@ async function submit() {
     minimum_pembelian: form.minimum_pembelian === '' ? null : Number(form.minimum_pembelian),
     berlaku_mulai: fromDateInput(form.berlaku_mulai),
     berlaku_sampai: fromDateInput(form.berlaku_sampai, true),
-    is_aktif: form.is_aktif,
+    is_active: form.is_active,
   };
   try {
     if (editingId.value) await apiPut(`/coupons/${editingId.value}`, payload);
@@ -184,7 +184,7 @@ async function toggleAktif(c: Coupon) {
   busyId.value = c.id;
   error.value = '';
   try {
-    await apiPut(`/coupons/${c.id}`, { is_aktif: !c.is_aktif });
+    await apiPut(`/coupons/${c.id}`, { is_active: !c.is_active });
     await load();
   } catch (e) {
     error.value = errorMessage(e, t('coupons.saveFailed'));
@@ -254,7 +254,7 @@ onMounted(load);
         </div>
         <div class="flex items-end pb-1">
           <label class="label-inline">
-            <input v-model="form.is_aktif" type="checkbox" /> {{ t('coupons.active') }}
+            <input v-model="form.is_active" type="checkbox" /> {{ t('coupons.active') }}
           </label>
         </div>
         <div>
@@ -315,7 +315,7 @@ onMounted(load);
         <div v-if="isExpired(row as unknown as Coupon)" class="text-xs text-amber-600">{{ t('coupons.expired') }}</div>
       </template>
 
-      <template #cell:is_aktif="{ value }">
+      <template #cell:is_active="{ value }">
         <span
           class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
           :class="value ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'"
@@ -332,7 +332,7 @@ onMounted(load);
             :disabled="busyId === (row as unknown as Coupon).id"
             @click="toggleAktif(row as unknown as Coupon)"
           >
-            {{ (row as unknown as Coupon).is_aktif ? t('coupons.deactivate') : t('coupons.activate') }}
+            {{ (row as unknown as Coupon).is_active ? t('coupons.deactivate') : t('coupons.activate') }}
           </button>
           <button v-if="canUpdate" class="row-link" @click="openEdit(row as unknown as Coupon)">
             {{ t('common.action.edit') }}

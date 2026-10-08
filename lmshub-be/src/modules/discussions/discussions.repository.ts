@@ -4,7 +4,7 @@ import { PageParams } from '../../core/http/pagination';
 export interface ThreadRow {
   id: string;
   course_id: string;
-  judul: string;
+  title: string;
   dibuat_oleh: string;
   penulis_nama?: string; // di-join saat list/detail
   penulis_foto?: string | null;
@@ -178,10 +178,10 @@ export async function getThread(id: string): Promise<ThreadRow | null> {
   return queryOne<ThreadRow>(`SELECT * FROM discussion_threads WHERE id = $1 AND deleted_at IS NULL`, [id]);
 }
 
-export async function insertThread(data: { course_id: string; judul: string; dibuat_oleh: string }): Promise<ThreadRow> {
+export async function insertThread(data: { course_id: string; title: string; dibuat_oleh: string }): Promise<ThreadRow> {
   const row = await queryOne<ThreadRow>(
-    `INSERT INTO discussion_threads (course_id, judul, dibuat_oleh) VALUES ($1,$2,$3) RETURNING *`,
-    [data.course_id, data.judul, data.dibuat_oleh],
+    `INSERT INTO discussion_threads (course_id, title, dibuat_oleh) VALUES ($1,$2,$3) RETURNING *`,
+    [data.course_id, data.title, data.dibuat_oleh],
   );
   return row!;
 }

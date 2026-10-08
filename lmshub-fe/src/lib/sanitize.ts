@@ -3,12 +3,12 @@ import DOMPurify from 'dompurify';
 /**
  * Membersihkan HTML sebelum dirender lewat `v-html`.
  *
- * Isi materi teks ditulis instruktur dan disimpan apa adanya — backend tidak
- * menyanitasi apa pun. Tanpa pembersihan di sini, satu akun instruktur yang
+ * Isi materi text ditulis instructor dan disimpan apa adanya — backend tidak
+ * menyanitasi apa pun. Tanpa pembersihan di sini, satu akun instructor yang
  * jahat atau diretas bisa menanam `<script>` pada sebuah pelajaran, lalu skrip
- * itu berjalan di peramban setiap siswa yang membukanya.
+ * itu berjalan di peramban setiap student yang membukanya.
  *
- * Yang diizinkan sengaja dibatasi ke tag pemformatan teks: cukup untuk materi
+ * Yang diizinkan sengaja dibatasi ke tag pemformatan text: cukup untuk materi
  * yang ditulis rapi, tidak cukup untuk menjalankan apa pun. `target="_blank"`
  * dipasangkan `rel` oleh hook di bawah karena tautan materi mengarah keluar.
  */

@@ -33,6 +33,7 @@ The identifier field accepts an email address or a WhatsApp number.
 | `npm run migrate:up` / `migrate:down` | Migrate up / roll back one step |
 | `npm run seed` | Super admin + default branding. **The only seed for production** |
 | `npm run seed:demo` | Sample content — development only |
+| `npm run admin:set-email -- <current> <new>` | Change the super admin's sign-in email from the server (when you can no longer sign in) |
 | `npm run db:reset` | Drop, create, migrate, seed, seed demo — **development only, deletes everything** |
 | `npm test` | Unit tests (vitest) |
 | `npm run test:features` | End-to-end feature suite against a running server |

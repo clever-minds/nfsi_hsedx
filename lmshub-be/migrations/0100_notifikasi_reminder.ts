@@ -28,21 +28,21 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE notification_event_config (
       id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       jenis_event         citext NOT NULL,
-      nama                varchar(150) NOT NULL,
-      deskripsi           text,
+      name                varchar(150) NOT NULL,
+      description           text,
       role_penerima       jsonb NOT NULL DEFAULT '[]',
       kanal               jsonb NOT NULL DEFAULT '[]',
       template_judul      text NOT NULL,
       template_isi        text NOT NULL,
       butuh_respons       boolean NOT NULL DEFAULT false,
       is_kritikal         boolean NOT NULL DEFAULT false,
-      is_aktif            boolean NOT NULL DEFAULT true,
+      is_active            boolean NOT NULL DEFAULT true,
       created_at          timestamptz NOT NULL DEFAULT now(),
       updated_at          timestamptz NOT NULL DEFAULT now(),
       deleted_at          timestamptz,
       UNIQUE (jenis_event)
     );
-    CREATE INDEX notification_event_config_is_aktif_idx ON notification_event_config (is_aktif);
+    CREATE INDEX notification_event_config_is_aktif_idx ON notification_event_config (is_active);
     CREATE INDEX notification_event_config_role_gin_idx ON notification_event_config USING GIN (role_penerima);
     CREATE INDEX notification_event_config_kanal_gin_idx ON notification_event_config USING GIN (kanal);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON notification_event_config FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -53,7 +53,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE notifications (
       id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       jenis_event     citext NOT NULL REFERENCES notification_event_config(jenis_event) ON DELETE RESTRICT,
-      judul           text NOT NULL,
+      title           text NOT NULL,
       isi             text NOT NULL,
       payload         jsonb,
       source_type     varchar(50),
@@ -110,13 +110,13 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       sumber              reminder_sumber NOT NULL,
       source_id           uuid,
-      judul               varchar(200) NOT NULL,
-      deskripsi           text,
+      title               varchar(200) NOT NULL,
+      description           text,
       jatuh_tempo         timestamptz NOT NULL,
       pengulangan         reminder_pengulangan NOT NULL DEFAULT 'tidak',
       interval_kustom     interval,
       aturan_eskalasi     jsonb,
-      is_aktif            boolean NOT NULL DEFAULT true,
+      is_active            boolean NOT NULL DEFAULT true,
       next_run_at         timestamptz,
       created_by          uuid REFERENCES users(id) ON DELETE SET NULL,
       created_at          timestamptz NOT NULL DEFAULT now(),
@@ -127,7 +127,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE INDEX reminders_sumber_source_idx ON reminders (sumber, source_id);
     CREATE INDEX reminders_jatuh_tempo_idx ON reminders (jatuh_tempo);
     CREATE INDEX reminders_next_run_idx ON reminders (next_run_at);
-    CREATE INDEX reminders_is_aktif_idx ON reminders (is_aktif);
+    CREATE INDEX reminders_is_aktif_idx ON reminders (is_active);
     CREATE INDEX reminders_created_by_idx ON reminders (created_by);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON reminders FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
@@ -169,12 +169,12 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`
     CREATE TABLE announcements (
       id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      judul               varchar(200) NOT NULL,
+      title               varchar(200) NOT NULL,
       isi                 text NOT NULL,
       segmen              jsonb NOT NULL DEFAULT '[]',
       tanggal_mulai       timestamptz NOT NULL DEFAULT now(),
       tanggal_selesai     timestamptz,
-      is_aktif            boolean NOT NULL DEFAULT true,
+      is_active            boolean NOT NULL DEFAULT true,
       dibuat_oleh         uuid REFERENCES users(id) ON DELETE SET NULL,
       created_at          timestamptz NOT NULL DEFAULT now(),
       updated_at          timestamptz NOT NULL DEFAULT now(),
@@ -183,7 +183,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     );
     CREATE INDEX announcements_tanggal_mulai_idx ON announcements (tanggal_mulai);
     CREATE INDEX announcements_tanggal_selesai_idx ON announcements (tanggal_selesai);
-    CREATE INDEX announcements_is_aktif_idx ON announcements (is_aktif);
+    CREATE INDEX announcements_is_aktif_idx ON announcements (is_active);
     CREATE INDEX announcements_dibuat_oleh_idx ON announcements (dibuat_oleh);
     CREATE INDEX announcements_segmen_gin_idx ON announcements USING GIN (segmen);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON announcements FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -217,25 +217,25 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 
   // ── seed konfigurasi event contoh ──
   pgm.sql(`
-    INSERT INTO notification_event_config (jenis_event, nama, deskripsi, role_penerima, kanal, template_judul, template_isi, butuh_respons, is_kritikal) VALUES
-      ('siswa.mendaftar', 'Siswa Baru Mendaftar', 'Siswa baru mendaftar/checkout',
-        '["admin_ops","instruktur"]'::jsonb, '["in_app","email"]'::jsonb,
-        'Siswa baru mendaftar', '{{nama_siswa}} mendaftar pada kursus {{kursus}}.', false, false),
+    INSERT INTO notification_event_config (jenis_event, name, description, role_penerima, kanal, template_judul, template_isi, butuh_respons, is_kritikal) VALUES
+      ('student.mendaftar', 'Student Baru Mendaftar', 'Student baru mendaftar/checkout',
+        '["admin_ops","instructor"]'::jsonb, '["in_app","email"]'::jsonb,
+        'Student baru mendaftar', '{{nama_siswa}} mendaftar pada course {{course}}.', false, false),
       ('order.manual_masuk', 'Order Manual Masuk', 'Tanda jadi manual diinput marketing',
         '["admin_ops","direktur"]'::jsonb, '["in_app","email","whatsapp"]'::jsonb,
         'Tanda jadi manual masuk', 'Order {{nomor_order}} senilai {{nominal}} diinput manual oleh {{marketing}}.', false, true),
-      ('pembayaran.terverifikasi', 'Pembayaran Terverifikasi', 'Pembayaran/DP diverifikasi',
-        '["siswa"]'::jsonb, '["in_app","email","whatsapp"]'::jsonb,
-        'Pembayaran terverifikasi', 'Pembayaran order {{nomor_order}} sebesar {{nominal}} telah diverifikasi.', false, true),
-      ('tugas.dikumpulkan', 'Tugas Dikumpulkan', 'Submission tugas masuk',
-        '["instruktur","asisten"]'::jsonb, '["in_app"]'::jsonb,
-        'Tugas baru dikumpulkan', '{{nama_siswa}} mengumpulkan tugas {{tugas}}.', false, false),
+      ('payment.terverifikasi', 'Payment Terverifikasi', 'Payment/DP diverifikasi',
+        '["student"]'::jsonb, '["in_app","email","whatsapp"]'::jsonb,
+        'Payment terverifikasi', 'Payment order {{nomor_order}} sebesar {{nominal}} telah diverifikasi.', false, true),
+      ('assignment.dikumpulkan', 'Assignment Dikumpulkan', 'Submission assignment masuk',
+        '["instructor","asisten"]'::jsonb, '["in_app"]'::jsonb,
+        'Assignment baru dikumpulkan', '{{nama_siswa}} mengumpulkan assignment {{assignment}}.', false, false),
       ('nilai.dirilis', 'Nilai Dirilis', 'Nilai/feedback tersedia',
-        '["siswa"]'::jsonb, '["in_app","email"]'::jsonb,
-        'Nilai Anda telah dirilis', 'Nilai untuk {{asesmen}} telah tersedia.', false, false),
-      ('sertifikat.terbit', 'Sertifikat Terbit', 'Sertifikat kelulusan terbit',
-        '["siswa"]'::jsonb, '["in_app","email"]'::jsonb,
-        'Sertifikat Anda telah terbit', 'Sertifikat kursus {{kursus}} telah terbit, nomor {{nomor_sertifikat}}.', false, false),
+        '["student"]'::jsonb, '["in_app","email"]'::jsonb,
+        'Nilai Anda telah dirilis', 'Nilai untuk {{assessment}} telah tersedia.', false, false),
+      ('certificate.terbit', 'Certificate Terbit', 'Certificate kelulusan terbit',
+        '["student"]'::jsonb, '["in_app","email"]'::jsonb,
+        'Certificate Anda telah terbit', 'Certificate course {{course}} telah terbit, nomor {{certificate_number}}.', false, false),
       ('komisi.cair', 'Komisi Cair', 'Komisi marketing dicairkan',
         '["marketing"]'::jsonb, '["in_app","email","whatsapp"]'::jsonb,
         'Komisi Anda telah cair', 'Komisi sebesar {{nominal}} telah dicairkan.', false, true),
@@ -243,14 +243,14 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
         '["direktur"]'::jsonb, '["in_app","email"]'::jsonb,
         'Pengajuan refund baru', 'Refund order {{nomor_order}} senilai {{nominal}} menunggu approval.', true, true),
       ('live_session.h1', 'Reminder Live Session H-1', 'Reminder jadwal live H-1/H-1 jam',
-        '["siswa","instruktur"]'::jsonb, '["push","whatsapp"]'::jsonb,
-        'Kelas live akan segera dimulai', 'Sesi {{judul_sesi}} dimulai {{waktu_mulai}}.', false, false),
+        '["student","instructor"]'::jsonb, '["push","whatsapp"]'::jsonb,
+        'Kelas live akan segera dimulai', 'Sesi {{judul_sesi}} dimulai {{start_time}}.', false, false),
       ('tagihan.jatuh_tempo', 'Tagihan Jatuh Tempo', 'Reminder cicilan jatuh tempo',
-        '["siswa","admin_ops"]'::jsonb, '["in_app","whatsapp"]'::jsonb,
+        '["student","admin_ops"]'::jsonb, '["in_app","whatsapp"]'::jsonb,
         'Tagihan Anda akan jatuh tempo', 'Cicilan order {{nomor_order}} jatuh tempo {{jatuh_tempo}}.', false, false),
-      ('kelas.tidak_dilanjutkan', 'Kelas Tidak Dilanjutkan', 'Siswa tidak aktif belajar N hari',
-        '["siswa"]'::jsonb, '["push","email"]'::jsonb,
-        'Yuk lanjutkan belajarmu', 'Kamu belum melanjutkan kursus {{kursus}} selama beberapa hari.', false, false)
+      ('kelas.tidak_dilanjutkan', 'Kelas Tidak Dilanjutkan', 'Student tidak aktif belajar N hari',
+        '["student"]'::jsonb, '["push","email"]'::jsonb,
+        'Yuk lanjutkan belajarmu', 'Kamu belum melanjutkan course {{course}} selama beberapa hari.', false, false)
     ON CONFLICT (jenis_event) DO NOTHING;
   `);
 }

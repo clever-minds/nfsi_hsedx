@@ -7,15 +7,15 @@ import { fmtJam } from '@/lib/format';
 import PageHeader from '@/components/ui/PageHeader.vue';
 
 // Mengikuti kolom tabel calendar_events + kolom join. `sumber` memakai
-// kosakata BE ('live_session' | 'tugas' | 'kuis' | 'lainnya'); view ini
+// kosakata BE ('live_session' | 'assignment' | 'quiz' | 'lainnya'); view ini
 // sebelumnya membaca `tipe` dengan kosakata karangan sendiri, jadi legenda
 // tidak pernah cocok dan semua acara jatuh ke penanda default.
 interface CalendarEvent {
   id: string;
-  judul: string;
-  sumber: 'live_session' | 'tugas' | 'kuis' | 'lainnya' | string;
-  kursus_judul?: string | null;
-  waktu_mulai: string;
+  title: string;
+  sumber: 'live_session' | 'assignment' | 'quiz' | 'lainnya' | string;
+  course_title?: string | null;
+  start_time: string;
 }
 
 const { t } = useI18n();
@@ -26,8 +26,8 @@ const error = ref('');
 
 const legend = computed<Record<string, { label: string; mark: string; class: string }>>(() => ({
   live_session: { label: t('live.calendarPage.legend.live'), mark: '■', class: 'text-brand-600' },
-  tugas: { label: t('live.calendarPage.legend.tenggat'), mark: '▲', class: 'text-accent-500' },
-  kuis: { label: t('live.calendarPage.legend.ujian'), mark: '★', class: 'text-rose-500' },
+  assignment: { label: t('live.calendarPage.legend.tenggat'), mark: '▲', class: 'text-accent-500' },
+  quiz: { label: t('live.calendarPage.legend.ujian'), mark: '★', class: 'text-rose-500' },
 }));
 
 function startOfMonth(): string {
@@ -59,8 +59,8 @@ async function load() {
 // Tampilan agenda (list per tanggal) — mobile-first, bukan grid bulan penuh.
 const agenda = computed(() => {
   const byDate = new Map<string, CalendarEvent[]>();
-  for (const e of [...events.value].sort((a, b) => a.waktu_mulai.localeCompare(b.waktu_mulai))) {
-    const key = new Date(e.waktu_mulai).toLocaleDateString(currentLocaleDef().intl, {
+  for (const e of [...events.value].sort((a, b) => a.start_time.localeCompare(b.start_time))) {
+    const key = new Date(e.start_time).toLocaleDateString(currentLocaleDef().intl, {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -94,8 +94,8 @@ onMounted(load);
           <div v-for="e in items" :key="e.id" class="card flex items-center gap-3 p-3">
             <span :class="legend[e.sumber]?.class || 'text-slate-400'" class="text-lg">{{ legend[e.sumber]?.mark || '•' }}</span>
             <div class="min-w-0 flex-1">
-              <div class="truncate card-title">{{ e.judul }}</div>
-              <div class="text-xs text-slate-400">{{ e.kursus_judul || '—' }} · <span class="num">{{ fmtJam(e.waktu_mulai) }}</span></div>
+              <div class="truncate card-title">{{ e.title }}</div>
+              <div class="text-xs text-slate-400">{{ e.course_title || '—' }} · <span class="num">{{ fmtJam(e.start_time) }}</span></div>
             </div>
             <span class="text-xs text-slate-400">{{ legend[e.sumber]?.label || e.sumber }}</span>
           </div>

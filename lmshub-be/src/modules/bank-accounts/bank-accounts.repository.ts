@@ -9,20 +9,20 @@ export interface BankAccountRow {
   atas_nama: string;
   cabang: string | null;
   catatan: string | null;
-  is_aktif: boolean;
+  is_active: boolean;
   is_utama: boolean;
-  urutan: number;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 }
 
 export interface BankAccountFilters {
   q?: string;
-  is_aktif?: boolean;
+  is_active?: boolean;
 }
 
-/** Urutan baku: rekening utama dulu, lalu `urutan`, lalu nama bank. */
-const ORDER = `ORDER BY is_utama DESC, urutan ASC, nama_bank ASC`;
+/** Urutan baku: rekening utama dulu, lalu `sort_order`, lalu name bank. */
+const ORDER = `ORDER BY is_utama DESC, sort_order ASC, nama_bank ASC`;
 
 export async function list(p: PageParams, f: BankAccountFilters): Promise<{ rows: BankAccountRow[]; total: number }> {
   const where: string[] = ['deleted_at IS NULL'];
@@ -38,7 +38,7 @@ export async function list(p: PageParams, f: BankAccountFilters): Promise<{ rows
       f.q,
     );
   }
-  if (f.is_aktif !== undefined) add('is_aktif = $?', f.is_aktif);
+  if (f.is_active !== undefined) add('is_active = $?', f.is_active);
   const whereSql = where.join(' AND ');
 
   const rows = await query<BankAccountRow>(
@@ -52,9 +52,9 @@ export async function list(p: PageParams, f: BankAccountFilters): Promise<{ rows
   return { rows, total: Number(totalRow?.count ?? 0) };
 }
 
-/** Rekening aktif untuk checkout — tanpa paginasi, urutan sama dengan daftar admin. */
+/** Rekening aktif untuk checkout — tanpa paginasi, sort_order sama dengan daftar admin. */
 export async function listActive(): Promise<BankAccountRow[]> {
-  return query<BankAccountRow>(`SELECT * FROM bank_accounts WHERE deleted_at IS NULL AND is_aktif ${ORDER}`);
+  return query<BankAccountRow>(`SELECT * FROM bank_accounts WHERE deleted_at IS NULL AND is_active ${ORDER}`);
 }
 
 export async function detail(id: string): Promise<BankAccountRow | null> {
@@ -77,20 +77,20 @@ export interface BankAccountData {
   atas_nama: string;
   cabang: string | null;
   catatan: string | null;
-  is_aktif: boolean;
+  is_active: boolean;
   is_utama: boolean;
-  urutan: number;
+  sort_order: number;
 }
 
 /**
  * Simpan rekening. Bila baris ini ditandai utama, tanda utama pada baris lain dilepas
- * di transaksi yang sama — indeks unik parsial menolak dua baris utama sekaligus.
+ * di transaction yang sama — indeks unik parsial menolak dua baris utama sekaligus.
  */
 export async function insert(data: BankAccountData): Promise<{ id: string }> {
   return withTransaction(async (tx) => {
     if (data.is_utama) await tx.query(`UPDATE bank_accounts SET is_utama = false WHERE is_utama AND deleted_at IS NULL`);
     const res = await tx.query<{ id: string }>(
-      `INSERT INTO bank_accounts (nama_bank, nomor_rekening, atas_nama, cabang, catatan, is_aktif, is_utama, urutan)
+      `INSERT INTO bank_accounts (nama_bank, nomor_rekening, atas_nama, cabang, catatan, is_active, is_utama, sort_order)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
       [
         data.nama_bank,
@@ -98,9 +98,9 @@ export async function insert(data: BankAccountData): Promise<{ id: string }> {
         data.atas_nama,
         data.cabang,
         data.catatan,
-        data.is_aktif,
+        data.is_active,
         data.is_utama,
-        data.urutan,
+        data.sort_order,
       ],
     );
     return res.rows[0];

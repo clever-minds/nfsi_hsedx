@@ -38,7 +38,7 @@ export interface OrderListRow extends OrderRow {
 export interface OrderItemRow {
   id: string;
   order_id: string;
-  item_tipe: 'kursus' | 'bundle' | 'path' | 'langganan';
+  item_tipe: 'course' | 'bundle' | 'path' | 'langganan';
   course_id: string | null;
   learning_path_id: string | null;
   bundle_group_id: string | null;
@@ -74,12 +74,12 @@ export interface CouponRow {
   minimum_pembelian: string | null;
   berlaku_mulai: string | null;
   berlaku_sampai: string | null;
-  is_aktif: boolean;
+  is_active: boolean;
 }
 
 export interface CourseRow {
   id: string;
-  harga: string;
+  price: string;
   instructor_id: string;
 }
 
@@ -124,7 +124,7 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: OrderList
     where.push(
       `(b.nama_lengkap ILIKE $${i} OR b.email ILIKE $${i}
         OR EXISTS (SELECT 1 FROM order_items oi JOIN courses c ON c.id = oi.course_id
-                    WHERE oi.order_id = o.id AND c.judul ILIKE $${i}))`,
+                    WHERE oi.order_id = o.id AND c.title ILIKE $${i}))`,
     );
   }
 
@@ -143,13 +143,13 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: OrderList
             b.nama_lengkap AS pembeli_nama,
             b.email        AS pembeli_email,
             m.nama_lengkap AS marketing_nama,
-            first_item.judul AS kursus_nama,
+            first_item.title AS kursus_nama,
             COALESCE(item_count.n, 0) AS jumlah_item
        FROM orders o
        LEFT JOIN users b ON b.id = o.buyer_user_id
        LEFT JOIN users m ON m.id = o.marketing_user_id
        LEFT JOIN LATERAL (
-         SELECT c.judul
+         SELECT c.title
            FROM order_items oi
            JOIN courses c ON c.id = oi.course_id
           WHERE oi.order_id = o.id
@@ -275,11 +275,11 @@ export async function releaseCouponUsage(id: string, tx: PoolClient): Promise<vo
   await tx.query(`UPDATE coupons SET kuota_terpakai = GREATEST(kuota_terpakai - 1, 0) WHERE id = $1`, [id]);
 }
 
-// ── Katalog lookups (read-only, dari domain 02) ────────────
+// ── Catalog lookups (read-only, dari domain 02) ────────────
 
 export async function courseById(id: string, tx?: PoolClient): Promise<CourseRow | null> {
   const res = await runner(tx).query<CourseRow>(
-    `SELECT id, harga, instructor_id FROM courses WHERE id = $1 AND deleted_at IS NULL`,
+    `SELECT id, price, instructor_id FROM courses WHERE id = $1 AND deleted_at IS NULL`,
     [id],
   );
   return res.rows[0] ?? null;
@@ -350,7 +350,7 @@ export async function paymentById(id: string, tx?: PoolClient): Promise<PaymentR
 }
 
 /**
- * Cari pembayaran lewat referensi milik gateway. Dipakai webhook yang hanya
+ * Cari payment lewat referensi milik gateway. Dipakai webhook yang hanya
  * mengembalikan id miliknya sendiri (mis. PayPal order id) alih-alih `payments.id`.
  */
 export async function paymentByGatewayRef(ref: string, tx?: PoolClient): Promise<PaymentRow | null> {

@@ -12,17 +12,17 @@ export interface CouponRow {
   minimum_pembelian: string | null;
   berlaku_mulai: string | null;
   berlaku_sampai: string | null;
-  is_aktif: boolean;
+  is_active: boolean;
   created_at: string;
 }
 
 export interface Filters {
   q?: string;
-  is_aktif?: boolean;
+  is_active?: boolean;
 }
 
 const COLS = `id, kode, tipe_potongan, nilai_potongan, kuota_maksimal, kuota_terpakai,
-              minimum_pembelian, berlaku_mulai, berlaku_sampai, is_aktif, created_at`;
+              minimum_pembelian, berlaku_mulai, berlaku_sampai, is_active, created_at`;
 
 export async function list(p: PageParams, f: Filters): Promise<{ rows: CouponRow[]; total: number }> {
   const where: string[] = ['deleted_at IS NULL'];
@@ -32,7 +32,7 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: CouponRow
     where.push(clause.replace('$?', `$${params.length}`));
   };
   if (f.q) add('kode ILIKE $?', `%${f.q}%`);
-  if (f.is_aktif !== undefined) add('is_aktif = $?', f.is_aktif);
+  if (f.is_active !== undefined) add('is_active = $?', f.is_active);
 
   const whereSql = where.join(' AND ');
   const sortCol = ['kode', 'created_at', 'berlaku_sampai'].includes(p.sort ?? '') ? p.sort : 'created_at';
@@ -64,11 +64,11 @@ export async function insert(data: {
   minimum_pembelian: number | null;
   berlaku_mulai: string | null;
   berlaku_sampai: string | null;
-  is_aktif: boolean;
+  is_active: boolean;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
     `INSERT INTO coupons
-       (kode, tipe_potongan, nilai_potongan, kuota_maksimal, minimum_pembelian, berlaku_mulai, berlaku_sampai, is_aktif)
+       (kode, tipe_potongan, nilai_potongan, kuota_maksimal, minimum_pembelian, berlaku_mulai, berlaku_sampai, is_active)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
     [
       data.kode,
@@ -78,7 +78,7 @@ export async function insert(data: {
       data.minimum_pembelian,
       data.berlaku_mulai,
       data.berlaku_sampai,
-      data.is_aktif,
+      data.is_active,
     ],
   );
   return { id: row!.id };

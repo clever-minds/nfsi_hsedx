@@ -24,7 +24,7 @@ export async function baseCode(): Promise<string> {
 
 export interface PublicCurrency {
   kode: string;
-  nama: string;
+  name: string;
   simbol: string;
   rate: number;
   desimal: number;
@@ -39,7 +39,7 @@ export async function publicList(): Promise<{ base: string; switcher: boolean; c
 
   const currencies = rows.map((r) => ({
     kode: r.kode.toUpperCase(),
-    nama: r.nama,
+    name: r.name,
     simbol: r.simbol,
     // The base is pinned to 1 on the way out too, so a bad stored rate cannot
     // reach a price label even if it somehow got past the write path.
@@ -50,7 +50,7 @@ export async function publicList(): Promise<{ base: string; switcher: boolean; c
 
   // A store whose base is not in the table still has to be able to show prices.
   if (!currencies.some((c) => c.is_basis)) {
-    currencies.unshift({ kode: base, nama: base, simbol: '', rate: 1, desimal: 2, is_basis: true });
+    currencies.unshift({ kode: base, name: base, simbol: '', rate: 1, desimal: 2, is_basis: true });
   }
 
   return { base, switcher, currencies };
@@ -73,7 +73,7 @@ export async function create(actor: AuthContext, input: CreateCurrencyInput) {
   const row = await repo.insert({
     ...input,
     rate: input.kode === base ? 1 : input.rate,
-    is_aktif: input.kode === base ? true : input.is_aktif,
+    is_active: input.kode === base ? true : input.is_active,
   });
 
   await recordAudit({
@@ -101,12 +101,12 @@ export async function update(actor: AuthContext, id: string, input: UpdateCurren
         'currency.base_rate_fixed',
       );
     }
-    if (input.is_aktif === false) {
+    if (input.is_active === false) {
       throw AppError.badRequest('The base currency cannot be switched off', 'currency.base_must_stay_active');
     }
   }
 
-  const row = await repo.update(id, isBase ? { ...input, rate: 1, is_aktif: true } : input);
+  const row = await repo.update(id, isBase ? { ...input, rate: 1, is_active: true } : input);
   if (!row) throw AppError.notFound('Currency not found', 'currency.not_found');
 
   await recordAudit({
@@ -115,8 +115,8 @@ export async function update(actor: AuthContext, id: string, input: UpdateCurren
     action: 'update',
     entity: 'currencies',
     entityId: id,
-    before: { rate: before.rate, is_aktif: before.is_aktif },
-    after: { rate: row.rate, is_aktif: row.is_aktif },
+    before: { rate: before.rate, is_active: before.is_active },
+    after: { rate: row.rate, is_active: row.is_active },
   });
   invalidateSettingsCache();
   return row;

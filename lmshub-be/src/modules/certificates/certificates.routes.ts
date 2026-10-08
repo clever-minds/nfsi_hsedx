@@ -18,80 +18,80 @@ import * as ctrl from './certificates.controller';
 
 export const certificatesRouter = Router();
 
-// PUBLIC — verifikasi keaslian sertifikat, tanpa requireAuth, tanpa membocorkan data pribadi
+// PUBLIC — verifikasi keaslian certificate, tanpa requireAuth, tanpa membocorkan data pribadi
 certificatesRouter.get('/public/certificates/verify/:nomor', asyncHandler(ctrl.verify));
 
-// ── Sertifikat ──────────────────────────────────────────────
-certificatesRouter.get('/certificates', requireAuth(), requirePermission('sertifikat', 'view'), asyncHandler(ctrl.list));
-certificatesRouter.get('/certificates/:id', requireAuth(), requirePermission('sertifikat', 'view'), asyncHandler(ctrl.detail));
-// Data render desain sertifikat (pemilik/staf) — cek kepemilikan di service
-certificatesRouter.get('/certificates/:id/render', requireAuth(), requirePermission('sertifikat', 'view'), asyncHandler(ctrl.renderCert));
-// Self-service siswa: terbitkan sertifikat sendiri (own enrollment) tanpa sertifikat.update
+// ── Certificate ──────────────────────────────────────────────
+certificatesRouter.get('/certificates', requireAuth(), requirePermission('certificate', 'view'), asyncHandler(ctrl.list));
+certificatesRouter.get('/certificates/:id', requireAuth(), requirePermission('certificate', 'view'), asyncHandler(ctrl.detail));
+// Data render desain certificate (pemilik/staf) — cek kepemilikan di service
+certificatesRouter.get('/certificates/:id/render', requireAuth(), requirePermission('certificate', 'view'), asyncHandler(ctrl.renderCert));
+// Self-service student: terbitkan certificate sendiri (own enrollment) tanpa certificate.update
 certificatesRouter.post(
   '/enrollments/:enrollmentId/certificate/claim',
   requireAuth(),
-  requirePermission('sertifikat', 'view'),
+  requirePermission('certificate', 'view'),
   asyncHandler(ctrl.claim),
 );
 certificatesRouter.post(
   '/enrollments/:enrollmentId/graduation-evaluate',
   requireAuth(),
-  requirePermission('sertifikat', 'view'),
+  requirePermission('certificate', 'view'),
   asyncHandler(ctrl.evaluate),
 );
 certificatesRouter.post(
   '/certificates/:id/issue',
   requireAuth(),
-  requirePermission('sertifikat', 'update'),
+  requirePermission('certificate', 'update'),
   asyncHandler(ctrl.issue),
 );
 certificatesRouter.post(
   '/certificates/exception-issue',
   requireAuth(),
-  requirePermission('sertifikat', 'create'),
+  requirePermission('certificate', 'create'),
   validate(exceptionIssueSchema),
   asyncHandler(ctrl.exceptionIssue),
 );
 certificatesRouter.post(
   '/certificates/:id/reissue',
   requireAuth(),
-  requirePermission('sertifikat', 'update'),
+  requirePermission('certificate', 'update'),
   validate(reissueSchema),
   asyncHandler(ctrl.reissue),
 );
 certificatesRouter.post(
   '/certificates/:id/revoke',
   requireAuth(),
-  requirePermission('sertifikat', 'update'),
+  requirePermission('certificate', 'update'),
   validate(revokeSchema),
   asyncHandler(ctrl.revoke),
 );
 
-// ── Template sertifikat (admin) ────────────────────────────
+// ── Template certificate (admin) ────────────────────────────
 certificatesRouter.get(
   '/certificate-templates',
   requireAuth(),
-  requirePermission('sertifikat', 'view'),
+  requirePermission('certificate', 'view'),
   asyncHandler(ctrl.listTemplates),
 );
 certificatesRouter.post(
   '/certificate-templates',
   requireAuth(),
-  requirePermission('sertifikat', 'create'),
+  requirePermission('certificate', 'create'),
   validate(createTemplateSchema),
   asyncHandler(ctrl.createTemplate),
 );
 certificatesRouter.put(
   '/certificate-templates/:id',
   requireAuth(),
-  requirePermission('sertifikat', 'update'),
+  requirePermission('certificate', 'update'),
   validate(updateTemplateSchema),
   asyncHandler(ctrl.updateTemplate),
 );
 certificatesRouter.delete(
   '/certificate-templates/:id',
   requireAuth(),
-  requirePermission('sertifikat', 'delete'),
+  requirePermission('certificate', 'delete'),
   asyncHandler(ctrl.deleteTemplate),
 );
 

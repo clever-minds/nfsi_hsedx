@@ -16,7 +16,7 @@ import {
 import { HERO_URL, LESSON_VIDEO_URLS, avatarUrl, courseThumbnailUrl, installDemoMedia } from './demo-media';
 import { retireLegacyDemoData, retirementPlan, retirementRequested } from './demo-retire-legacy';
 import { refreshDemoTimeline } from './demo-timeline';
-import { installDemoTransactions } from './demo-transaksi';
+import { installDemoTransactions } from './demo-transaction';
 
 /**
  * DEMO SEEDER — a full, presentable catalogue for development and for the public
@@ -57,8 +57,8 @@ async function main() {
   const roleId = async (kode: string) =>
     (await one<{ id: string }>(`SELECT id FROM roles WHERE kode=$1`, [kode]))!.id;
 
-  const instructorRole = await roleId('instruktur');
-  const studentRole = await roleId('siswa');
+  const instructorRole = await roleId('instructor');
+  const studentRole = await roleId('student');
   const pass = await hashPassword('Demo12345!');
 
   // 0) Retire the previous Indonesian demo catalogue --------------------------
@@ -117,7 +117,7 @@ async function main() {
   // catalogue it reads as a $500,000 course on the new-course form.
   await q(
     `UPDATE settings SET nilai = '49'
-      WHERE key = 'harga.default_kursus' AND deleted_at IS NULL AND nilai = '500000'`,
+      WHERE key = 'price.default_kursus' AND deleted_at IS NULL AND nilai = '500000'`,
   );
 
   // 1) People ----------------------------------------------------------------
@@ -164,8 +164,8 @@ async function main() {
   const catIds: Record<string, string> = {};
   for (const c of CATEGORIES) {
     catIds[c.slug] = (await one<{ id: string }>(
-      `INSERT INTO categories (nama, slug, ikon) VALUES ($1,$2,$3)
-       ON CONFLICT (slug) WHERE deleted_at IS NULL DO UPDATE SET nama = EXCLUDED.nama, ikon = EXCLUDED.ikon
+      `INSERT INTO categories (name, slug, ikon) VALUES ($1,$2,$3)
+       ON CONFLICT (slug) WHERE deleted_at IS NULL DO UPDATE SET name = EXCLUDED.name, ikon = EXCLUDED.ikon
        RETURNING id`,
       [c.name, c.slug, c.icon],
     ))!.id;
@@ -181,15 +181,15 @@ async function main() {
     const lessonCount = sections.reduce((n, s) => n + s.lessons.length, 0);
 
     const row = await one<{ id: string }>(
-      `INSERT INTO courses (judul, slug, ringkasan, deskripsi, category_id, instructor_id, level, harga, harga_coret,
-                            status_publikasi, bahasa, rating_avg, rating_count, jumlah_siswa,
+      `INSERT INTO courses (title, slug, summary, description, category_id, instructor_id, level, price, strike_price,
+                            publication_status, language, rating_avg, rating_count, student_count,
                             durasi_total_menit, meta, published_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'terbit','en',$10,$11,$12,$13,$14, now() - interval '45 days')
        ON CONFLICT (slug) WHERE deleted_at IS NULL DO UPDATE SET
-         judul=EXCLUDED.judul, status_publikasi='terbit', harga=EXCLUDED.harga, harga_coret=EXCLUDED.harga_coret,
-         ringkasan=EXCLUDED.ringkasan, deskripsi=EXCLUDED.deskripsi, bahasa=EXCLUDED.bahasa,
+         title=EXCLUDED.title, publication_status='terbit', price=EXCLUDED.price, strike_price=EXCLUDED.strike_price,
+         summary=EXCLUDED.summary, description=EXCLUDED.description, language=EXCLUDED.language,
          rating_avg=EXCLUDED.rating_avg, rating_count=EXCLUDED.rating_count,
-         jumlah_siswa=EXCLUDED.jumlah_siswa, meta=EXCLUDED.meta, durasi_total_menit=EXCLUDED.durasi_total_menit,
+         student_count=EXCLUDED.student_count, meta=EXCLUDED.meta, durasi_total_menit=EXCLUDED.durasi_total_menit,
          category_id=EXCLUDED.category_id, instructor_id=EXCLUDED.instructor_id, level=EXCLUDED.level
        RETURNING id`,
       [
@@ -243,7 +243,7 @@ async function main() {
 
       for (const section of sections) {
         const sec = await one<{ id: string }>(
-          `INSERT INTO sections (course_id, judul, urutan) VALUES ($1,$2,$3) RETURNING id`,
+          `INSERT INTO sections (course_id, title, sort_order) VALUES ($1,$2,$3) RETURNING id`,
           [row!.id, section.title, sOrder],
         );
 
@@ -251,14 +251,14 @@ async function main() {
         for (const lessonTitle of section.lessons) {
           const minutes = 7 + ((lessonIndex * 5) % 12);
           const lesson = await one<{ id: string }>(
-            `INSERT INTO lessons (section_id, judul, tipe, urutan, durasi_menit, gratis_preview, wajib_selesai)
+            `INSERT INTO lessons (section_id, title, tipe, sort_order, duration_minutes, gratis_preview, must_complete)
              VALUES ($1,$2,'video',$3,$4,$5,true) RETURNING id`,
             // First lesson of the opening section is the free preview.
             [sec!.id, lessonTitle, lOrder, minutes, sOrder === 1 && lOrder === 1],
           );
 
           await q(
-            `INSERT INTO lesson_contents (lesson_id, tipe, urutan, url, durasi_detik)
+            `INSERT INTO lesson_contents (lesson_id, tipe, sort_order, url, duration_seconds)
              VALUES ($1,'video',0,$2,$3)`,
             // Locally hosted clips, alternated. Nothing here can be taken down by a third party.
             [lesson!.id, LESSON_VIDEO_URLS[lessonIndex % LESSON_VIDEO_URLS.length], minutes * 60],
@@ -285,14 +285,14 @@ async function main() {
 
     if (!hasQuiz) {
       const bank = await one<{ id: string }>(
-        `INSERT INTO question_banks (nama, course_id, deskripsi, created_by)
+        `INSERT INTO question_banks (name, course_id, description, created_by)
          VALUES ($1,$2,$3,$4) RETURNING id`,
         [`Question Bank — ${c.title}`, courseId, `Questions covering the material in ${c.title}.`, authorId],
       );
 
       const quiz = await one<{ id: string }>(
-        `INSERT INTO quizzes (course_id, judul, deskripsi, batas_waktu_menit, attempt_maksimal,
-                              passing_score, tampilkan_jawaban_setelah_selesai, is_aktif, total_poin)
+        `INSERT INTO quizzes (course_id, title, description, batas_waktu_menit, max_attempts,
+                              passing_score, tampilkan_jawaban_setelah_selesai, is_active, total_points)
          VALUES ($1,$2,'Check your understanding before moving on to the final project.',15,3,70,true,true,4)
          RETURNING id`,
         [courseId, `Final Quiz — ${c.title}`],
@@ -326,11 +326,11 @@ async function main() {
         );
         for (let o = 0; o < options.length; o++) {
           await q(
-            `INSERT INTO question_options (question_id, teks_opsi, is_benar, urutan) VALUES ($1,$2,$3,$4)`,
+            `INSERT INTO question_options (question_id, teks_opsi, is_benar, sort_order) VALUES ($1,$2,$3,$4)`,
             [question!.id, options[o], o === correctIndex, o + 1],
           );
         }
-        await q(`INSERT INTO quiz_questions (quiz_id, question_id, urutan) VALUES ($1,$2,$3)`, [
+        await q(`INSERT INTO quiz_questions (quiz_id, question_id, sort_order) VALUES ($1,$2,$3)`, [
           quiz!.id,
           question!.id,
           order++,
@@ -344,7 +344,7 @@ async function main() {
     );
     if (!hasAssignment) {
       await q(
-        `INSERT INTO assignments (course_id, judul, instruksi, tenggat_at, tipe_pengumpulan, poin_maksimal)
+        `INSERT INTO assignments (course_id, title, instructions, due_at, submission_type, poin_maksimal)
          VALUES ($1,$2,$3, now() + interval '14 days', 'file', 100)`,
         [
           courseId,
@@ -372,7 +372,7 @@ async function main() {
 
     const lessons = await pool.query<{ id: string }>(
       `SELECT l.id FROM lessons l JOIN sections s ON s.id=l.section_id
-        WHERE s.course_id=$1 AND l.deleted_at IS NULL ORDER BY s.urutan, l.urutan`,
+        WHERE s.course_id=$1 AND l.deleted_at IS NULL ORDER BY s.sort_order, l.sort_order`,
       [courseId],
     );
     const total = lessons.rows.length;
@@ -380,7 +380,7 @@ async function main() {
 
     for (let i = 0; i < done; i++) {
       await q(
-        `INSERT INTO lesson_progress (enrollment_id, lesson_id, status, posisi_detik, waktu_selesai)
+        `INSERT INTO lesson_progress (enrollment_id, lesson_id, status, position_seconds, waktu_selesai)
          VALUES ($1,$2,'selesai',600, now() - interval '1 day')
          ON CONFLICT (enrollment_id, lesson_id) DO UPDATE SET status='selesai'`,
         [enr!.id, lessons.rows[i].id],
@@ -388,12 +388,12 @@ async function main() {
     }
 
     await q(
-      `INSERT INTO course_progress (enrollment_id, persen_selesai, jumlah_lesson_selesai, total_lesson, last_accessed_at, completed_at)
+      `INSERT INTO course_progress (enrollment_id, progress_percent, completed_lessons_count, total_lesson, last_accessed_at, completed_at)
        VALUES ($1,$2::numeric,$3,$4, now(), CASE WHEN $2::numeric >= 100 THEN now() ELSE NULL END)
        ON CONFLICT (enrollment_id) DO UPDATE SET
-         persen_selesai=EXCLUDED.persen_selesai, jumlah_lesson_selesai=EXCLUDED.jumlah_lesson_selesai,
+         progress_percent=EXCLUDED.progress_percent, completed_lessons_count=EXCLUDED.completed_lessons_count,
          total_lesson=EXCLUDED.total_lesson,
-         completed_at=CASE WHEN EXCLUDED.persen_selesai >= 100 THEN COALESCE(course_progress.completed_at, now()) ELSE NULL END`,
+         completed_at=CASE WHEN EXCLUDED.progress_percent >= 100 THEN COALESCE(course_progress.completed_at, now()) ELSE NULL END`,
       [enr!.id, percent, done, total],
     );
     return enr!.id;
@@ -411,10 +411,10 @@ async function main() {
     const number = `LMS-${new Date().getFullYear()}-${enrId.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
 
     await q(
-      `INSERT INTO certificates (user_id, course_id, enrollment_id, status, nomor_sertifikat, kode_verifikasi, tanggal_terbit, diterbitkan_oleh)
+      `INSERT INTO certificates (user_id, course_id, enrollment_id, status, certificate_number, verification_code, tanggal_terbit, diterbitkan_oleh)
        SELECT $1,$2,$3,'terbit',$4,$5, now() - interval '5 days', $6
        WHERE NOT EXISTS (SELECT 1 FROM certificates WHERE enrollment_id=$3 AND is_revoked=false AND deleted_at IS NULL)
-         AND NOT EXISTS (SELECT 1 FROM certificates WHERE nomor_sertifikat = $4)`,
+         AND NOT EXISTS (SELECT 1 FROM certificates WHERE certificate_number = $4)`,
       [leadStudentId, courseIds[slug], enrId, number, `VERIF-${number}`, instructorUserIds.rina],
     );
   }
@@ -521,7 +521,7 @@ async function main() {
 
     for (const [slug, title, body, author, replies] of threads) {
       const th = await one<{ id: string }>(
-        `INSERT INTO discussion_threads (course_id, judul, dibuat_oleh) VALUES ($1,$2,$3) RETURNING id`,
+        `INSERT INTO discussion_threads (course_id, title, dibuat_oleh) VALUES ($1,$2,$3) RETURNING id`,
         [courseIds[slug], title, author],
       );
       await q(`INSERT INTO discussion_posts (thread_id, user_id, isi) VALUES ($1,$2,$3)`, [th!.id, author, body]);
@@ -537,7 +537,7 @@ async function main() {
 
     const firstLessons = await pool.query<{ id: string }>(
       `SELECT l.id FROM lessons l JOIN sections s ON s.id=l.section_id
-        WHERE s.course_id=$1 AND l.deleted_at IS NULL ORDER BY s.urutan, l.urutan LIMIT 3`,
+        WHERE s.course_id=$1 AND l.deleted_at IS NULL ORDER BY s.sort_order, l.sort_order LIMIT 3`,
       [courseIds['web-development-foundations']],
     );
 
@@ -575,8 +575,8 @@ async function main() {
     ];
     for (const [slug, title, host] of sessions) {
       await q(
-        `INSERT INTO live_sessions (course_id, judul, deskripsi, penyedia, url_join, host_user_id,
-                                    waktu_mulai, waktu_selesai, status, dibuat_oleh)
+        `INSERT INTO live_sessions (course_id, title, description, penyedia, url_join, host_user_id,
+                                    start_time, waktu_selesai, status, dibuat_oleh)
          VALUES ($1,$2,'A live session with your instructor. Bring questions.','zoom','https://zoom.us/j/demo',$3,
                  now() + interval '2 days', now() + interval '2 days' + interval '90 minutes',
                  'dijadwalkan',$3)`,
@@ -588,13 +588,13 @@ async function main() {
   // 10) Finance ----------------------------------------------------------------------
   // Both income and expenses: with expenses at zero the dashboard showed profit
   // identical to revenue, which looks like a broken calculation rather than a demo.
-  const categoryFor = async (kode: string, nama: string, jenis: 'pemasukan' | 'pengeluaran') =>
+  const categoryFor = async (kode: string, name: string, jenis: 'pemasukan' | 'pengeluaran') =>
     (await one<{ id: string }>(
-      `INSERT INTO kategori_biaya (kode, nama, jenis, deskripsi)
+      `INSERT INTO kategori_biaya (kode, name, jenis, description)
        VALUES ($1,$2,$3,$4)
-       ON CONFLICT (kode) WHERE deleted_at IS NULL DO UPDATE SET nama = EXCLUDED.nama
+       ON CONFLICT (kode) WHERE deleted_at IS NULL DO UPDATE SET name = EXCLUDED.name
        RETURNING id`,
-      [kode, nama, jenis, `${nama} (demo data)`],
+      [kode, name, jenis, `${name} (demo data)`],
     ))!.id;
 
   const hasFinance = await one(
@@ -616,7 +616,7 @@ async function main() {
       description: string,
     ) =>
       q(
-        `INSERT INTO financial_entries (jenis, kategori_id, course_id, nominal, tanggal, periode_bulan, periode_tahun, deskripsi, dicatat_oleh)
+        `INSERT INTO financial_entries (jenis, kategori_id, course_id, nominal, tanggal, periode_bulan, periode_tahun, description, dicatat_oleh)
          VALUES ($1,$2,$3,$4, CURRENT_DATE,
                  EXTRACT(MONTH FROM CURRENT_DATE)::smallint, EXTRACT(YEAR FROM CURRENT_DATE)::smallint,
                  $5,$6)`,

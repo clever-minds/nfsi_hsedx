@@ -32,7 +32,8 @@
     "bankAccounts": "बैंक खाते",
     "website": "वेबसाइट",
     "certificateTemplate": "प्रमाणपत्र टेम्पलेट",
-    "mediaLibrary": "मीडिया लाइब्रेरी"
+    "mediaLibrary": "मीडिया लाइब्रेरी",
+    "pages": "पेज"
   },
   "public": {
     "home": "होम",
@@ -62,6 +63,7 @@
     "newsletterHint": "कोर्स सुझाव और ऑफ़र सीधे अपने ईमेल पर पाएँ।",
     "emailPlaceholder": "ईमेल पता",
     "blurb": "ऑनलाइन कोर्स अकादमी — अनुभवी प्रशिक्षकों से नए कौशल सीखें, मूल्यांकन दें और प्रमाणपत्र पाएँ।",
-    "copyright": "© {year} {name} · {tagline}"
+    "copyright": "© {year} {name} · {tagline}",
+    "contact": "संपर्क"
   }
 }

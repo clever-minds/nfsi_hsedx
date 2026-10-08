@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ok, created } from '../../core/http/envelope';
+import { ok, created, noContent } from '../../core/http/envelope';
 import { parsePage, pageMeta } from '../../core/http/pagination';
 import { validated } from '../../core/validation/validate';
 import { AppError } from '../../core/http/AppError';
@@ -33,12 +33,22 @@ export async function getPublicPage(req: Request, res: Response) {
   return ok(res, await service.getPublicPage(req.params.slug));
 }
 
+// PUBLIC — daftar halaman terbit (untuk footer & sitemap), tanpa isi halaman
+export async function listPublicPages(_req: Request, res: Response) {
+  return ok(res, await service.listPublicPages());
+}
+
 export async function createPage(req: Request, res: Response) {
   return created(res, await service.createPage(auth(req), validated<CreatePageInput>(req)));
 }
 
 export async function updatePage(req: Request, res: Response) {
   return ok(res, await service.updatePage(auth(req), req.params.id, validated<UpdatePageInput>(req)));
+}
+
+export async function removePage(req: Request, res: Response) {
+  await service.removePage(auth(req), req.params.id);
+  return noContent(res);
 }
 
 // ── settings ─────────────────────────────────────────────────────────────
@@ -81,7 +91,7 @@ export async function listAuditLog(req: Request, res: Response) {
   return ok(res, rows, pageMeta(page.page, page.limit, total));
 }
 
-/** Metadata gateway pembayaran (label, status, URL webhook) untuk layar Pengaturan. */
+/** Metadata gateway payment (label, status, URL webhook) untuk layar Pengaturan. */
 export async function paymentGateways(_req: Request, res: Response) {
   return ok(res, await service.paymentGateways());
 }

@@ -22,7 +22,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     EXCEPTION WHEN duplicate_object THEN null; END $$;
   `);
   pgm.sql(`
-    DO $$ BEGIN CREATE TYPE calendar_event_sumber AS ENUM ('live_session','tugas','kuis','lainnya');
+    DO $$ BEGIN CREATE TYPE calendar_event_sumber AS ENUM ('live_session','assignment','quiz','lainnya');
     EXCEPTION WHEN duplicate_object THEN null; END $$;
   `);
 
@@ -32,12 +32,12 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       id                              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       course_id                       uuid REFERENCES courses(id) ON DELETE CASCADE,
       cohort_id                       uuid REFERENCES cohorts(id) ON DELETE CASCADE,
-      judul                           varchar(200) NOT NULL,
-      deskripsi                       text,
+      title                           varchar(200) NOT NULL,
+      description                       text,
       penyedia                        live_session_penyedia NOT NULL DEFAULT 'zoom',
       url_join                        text NOT NULL,
       host_user_id                    uuid NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
-      waktu_mulai                     timestamptz NOT NULL,
+      start_time                     timestamptz NOT NULL,
       waktu_selesai                   timestamptz NOT NULL,
       kapasitas_maks                  integer,
       toleransi_terlambat_menit       smallint NOT NULL DEFAULT 15,
@@ -47,14 +47,14 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       updated_at                      timestamptz NOT NULL DEFAULT now(),
       deleted_at                      timestamptz,
       CONSTRAINT live_sessions_cakupan_chk CHECK (course_id IS NOT NULL OR cohort_id IS NOT NULL),
-      CONSTRAINT live_sessions_waktu_chk CHECK (waktu_selesai > waktu_mulai),
+      CONSTRAINT live_sessions_waktu_chk CHECK (waktu_selesai > start_time),
       CONSTRAINT live_sessions_kapasitas_chk CHECK (kapasitas_maks IS NULL OR kapasitas_maks > 0)
     );
     CREATE INDEX live_sessions_course_idx ON live_sessions (course_id);
     CREATE INDEX live_sessions_cohort_idx ON live_sessions (cohort_id);
     CREATE INDEX live_sessions_penyedia_idx ON live_sessions (penyedia);
     CREATE INDEX live_sessions_host_idx ON live_sessions (host_user_id);
-    CREATE INDEX live_sessions_waktu_mulai_idx ON live_sessions (waktu_mulai);
+    CREATE INDEX live_sessions_waktu_mulai_idx ON live_sessions (start_time);
     CREATE INDEX live_sessions_waktu_selesai_idx ON live_sessions (waktu_selesai);
     CREATE INDEX live_sessions_status_idx ON live_sessions (status);
     CREATE INDEX live_sessions_dibuat_oleh_idx ON live_sessions (dibuat_oleh);
@@ -92,8 +92,8 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       live_session_id       uuid NOT NULL REFERENCES live_sessions(id) ON DELETE CASCADE,
       url                   text NOT NULL,
-      durasi_menit          integer,
-      ukuran_bytes          bigint,
+      duration_minutes          integer,
+      size_bytes          bigint,
       status_jadi_materi    boolean NOT NULL DEFAULT false,
       lesson_id             uuid REFERENCES lessons(id) ON DELETE SET NULL,
       retensi_hingga        timestamptz,
@@ -101,8 +101,8 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       created_at            timestamptz NOT NULL DEFAULT now(),
       updated_at            timestamptz NOT NULL DEFAULT now(),
       deleted_at            timestamptz,
-      CONSTRAINT recordings_durasi_chk CHECK (durasi_menit IS NULL OR durasi_menit >= 0),
-      CONSTRAINT recordings_ukuran_chk CHECK (ukuran_bytes IS NULL OR ukuran_bytes >= 0)
+      CONSTRAINT recordings_durasi_chk CHECK (duration_minutes IS NULL OR duration_minutes >= 0),
+      CONSTRAINT recordings_ukuran_chk CHECK (size_bytes IS NULL OR size_bytes >= 0)
     );
     CREATE INDEX recordings_live_session_idx ON recordings (live_session_id);
     CREATE INDEX recordings_status_jadi_materi_idx ON recordings (status_jadi_materi);
@@ -119,20 +119,20 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       sumber              calendar_event_sumber NOT NULL,
       source_id           uuid,
       course_id           uuid REFERENCES courses(id) ON DELETE CASCADE,
-      judul               varchar(200) NOT NULL,
-      waktu_mulai         timestamptz NOT NULL,
+      title               varchar(200) NOT NULL,
+      start_time         timestamptz NOT NULL,
       waktu_selesai       timestamptz,
       is_sepanjang_hari   boolean NOT NULL DEFAULT false,
       meta                jsonb,
       created_at          timestamptz NOT NULL DEFAULT now(),
       updated_at          timestamptz NOT NULL DEFAULT now(),
       deleted_at          timestamptz,
-      CONSTRAINT calendar_events_waktu_chk CHECK (waktu_selesai IS NULL OR waktu_selesai >= waktu_mulai)
+      CONSTRAINT calendar_events_waktu_chk CHECK (waktu_selesai IS NULL OR waktu_selesai >= start_time)
     );
     CREATE INDEX calendar_events_sumber_idx ON calendar_events (sumber);
     CREATE INDEX calendar_events_sumber_source_idx ON calendar_events (sumber, source_id);
     CREATE INDEX calendar_events_course_idx ON calendar_events (course_id);
-    CREATE INDEX calendar_events_waktu_mulai_idx ON calendar_events (waktu_mulai);
+    CREATE INDEX calendar_events_waktu_mulai_idx ON calendar_events (start_time);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON calendar_events FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
 }

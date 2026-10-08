@@ -55,62 +55,62 @@ assessmentsRouter.put(
 );
 assessmentsRouter.delete('/questions/:id', requirePermission('bank_soal', 'delete'), asyncHandler(ctrl.removeQuestion));
 
-// ── Kuis ───────────────────────────────────────────────
-assessmentsRouter.get('/quizzes', requirePermission('asesmen', 'view'), asyncHandler(ctrl.listQuizzes));
-assessmentsRouter.post('/quizzes', requirePermission('asesmen', 'create'), validate(createQuizSchema), asyncHandler(ctrl.createQuiz));
-assessmentsRouter.get('/quizzes/:id', requirePermission('asesmen', 'view'), asyncHandler(ctrl.quizDetail));
-assessmentsRouter.put('/quizzes/:id', requirePermission('asesmen', 'update'), validate(updateQuizSchema), asyncHandler(ctrl.updateQuiz));
-assessmentsRouter.delete('/quizzes/:id', requirePermission('asesmen', 'delete'), asyncHandler(ctrl.removeQuiz));
+// ── Quiz ───────────────────────────────────────────────
+assessmentsRouter.get('/quizzes', requirePermission('assessment', 'view'), asyncHandler(ctrl.listQuizzes));
+assessmentsRouter.post('/quizzes', requirePermission('assessment', 'create'), validate(createQuizSchema), asyncHandler(ctrl.createQuiz));
+assessmentsRouter.get('/quizzes/:id', requirePermission('assessment', 'view'), asyncHandler(ctrl.quizDetail));
+assessmentsRouter.put('/quizzes/:id', requirePermission('assessment', 'update'), validate(updateQuizSchema), asyncHandler(ctrl.updateQuiz));
+assessmentsRouter.delete('/quizzes/:id', requirePermission('assessment', 'delete'), asyncHandler(ctrl.removeQuiz));
 assessmentsRouter.put(
   '/quizzes/:id/questions',
-  requirePermission('asesmen', 'update'),
+  requirePermission('assessment', 'update'),
   validate(setQuizQuestionsSchema),
   asyncHandler(ctrl.setQuizQuestions),
 );
 
-// ── Tugas & Rubrik ───────────────────────────────────────
-assessmentsRouter.get('/assignments', requirePermission('asesmen', 'view'), asyncHandler(ctrl.listAssignments));
+// ── Assignment & Rubrik ───────────────────────────────────────
+assessmentsRouter.get('/assignments', requirePermission('assessment', 'view'), asyncHandler(ctrl.listAssignments));
 assessmentsRouter.post(
   '/assignments',
-  requirePermission('asesmen', 'create'),
+  requirePermission('assessment', 'create'),
   validate(createAssignmentSchema),
   asyncHandler(ctrl.createAssignment),
 );
-assessmentsRouter.get('/assignments/:id', requirePermission('asesmen', 'view'), asyncHandler(ctrl.assignmentDetail));
+assessmentsRouter.get('/assignments/:id', requirePermission('assessment', 'view'), asyncHandler(ctrl.assignmentDetail));
 assessmentsRouter.put(
   '/assignments/:id',
-  requirePermission('asesmen', 'update'),
+  requirePermission('assessment', 'update'),
   validate(updateAssignmentSchema),
   asyncHandler(ctrl.updateAssignment),
 );
-assessmentsRouter.delete('/assignments/:id', requirePermission('asesmen', 'delete'), asyncHandler(ctrl.removeAssignment));
+assessmentsRouter.delete('/assignments/:id', requirePermission('assessment', 'delete'), asyncHandler(ctrl.removeAssignment));
 assessmentsRouter.put(
   '/assignments/:id/rubric',
-  requirePermission('asesmen', 'update'),
+  requirePermission('assessment', 'update'),
   validate(upsertRubricSchema),
   asyncHandler(ctrl.upsertRubric),
 );
 
-// ── Attempts (siswa, Sendiri — enrollment aktif) ─────────
-assessmentsRouter.post('/quizzes/:id/attempts', requirePermission('asesmen', 'create'), asyncHandler(ctrl.startAttempt));
-assessmentsRouter.get('/attempts/:id', requirePermission('asesmen', 'view'), asyncHandler(ctrl.attemptDetail));
+// ── Attempts (student, Sendiri — enrollment aktif) ─────────
+assessmentsRouter.post('/quizzes/:id/attempts', requirePermission('assessment', 'create'), asyncHandler(ctrl.startAttempt));
+assessmentsRouter.get('/attempts/:id', requirePermission('assessment', 'view'), asyncHandler(ctrl.attemptDetail));
 assessmentsRouter.put(
   '/attempts/:id/answers',
-  requirePermission('asesmen', 'update'),
+  requirePermission('assessment', 'update'),
   validate(saveAnswerSchema),
   asyncHandler(ctrl.saveAnswer),
 );
-assessmentsRouter.post('/attempts/:id/submit', requirePermission('asesmen', 'update'), asyncHandler(ctrl.submitAttempt));
+assessmentsRouter.post('/attempts/:id/submit', requirePermission('assessment', 'update'), asyncHandler(ctrl.submitAttempt));
 
-// ── Assignment Submissions (siswa, Sendiri — enrollment aktif) ──
+// ── Assignment Submissions (student, Sendiri — enrollment aktif) ──
 assessmentsRouter.post(
   '/assignments/:id/submissions',
-  requirePermission('asesmen', 'create'),
+  requirePermission('assessment', 'create'),
   validate(submitAssignmentSchema),
   asyncHandler(ctrl.submitAssignment),
 );
 assessmentsRouter.get(
   '/assignments/:id/submissions',
-  requirePermission('asesmen', 'view'),
+  requirePermission('assessment', 'view'),
   asyncHandler(ctrl.listSubmissionsForAssignment),
 );

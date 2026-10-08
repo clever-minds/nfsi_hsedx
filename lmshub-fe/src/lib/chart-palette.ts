@@ -8,7 +8,7 @@
  * slot tanpa menjalankan ulang validasinya.
  *
  * Tiga slot terakhir kontrasnya di bawah 3:1 terhadap kartu putih, karena itu
- * setiap grafik yang memakainya wajib menampilkan nama dan angka sebagai teks
+ * setiap grafik yang memakainya wajib menampilkan name dan angka sebagai text
  * — bukan hanya warna. Lihat `DonutChart.vue`.
  */
 export const CHART_COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4'] as const;

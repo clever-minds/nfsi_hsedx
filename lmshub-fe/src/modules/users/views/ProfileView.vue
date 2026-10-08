@@ -84,6 +84,36 @@ async function saveProfile() {
   }
 }
 
+// ── Ganti email (hanya super admin) ──────────────────────
+// Akun lain diganti emailnya oleh admin di menu Users; super admin tidak punya
+// atasan, jadi ia menggantinya sendiri dengan konfirmasi password.
+const isSuperAdmin = computed(() => auth.roles.includes('super_admin'));
+const emailForm = ref({ email: '', password_saat_ini: '' });
+const showEmailForm = ref(false);
+const savingEmail = ref(false);
+const emailMsg = ref('');
+const emailError = ref('');
+
+async function changeEmail() {
+  emailMsg.value = '';
+  emailError.value = '';
+  savingEmail.value = true;
+  try {
+    await apiPatch('/users/me/email', {
+      email: emailForm.value.email.trim(),
+      password_saat_ini: emailForm.value.password_saat_ini,
+    });
+    await auth.fetchMe();
+    emailForm.value = { email: '', password_saat_ini: '' };
+    showEmailForm.value = false;
+    emailMsg.value = t('users.profile.emailChanged');
+  } catch (e) {
+    emailError.value = errorMessage(e, t('users.profile.emailChangeFailed'));
+  } finally {
+    savingEmail.value = false;
+  }
+}
+
 // ── Ganti password ───────────────────────────────────────
 const pwd = ref({ password_lama: '', password_baru: '', konfirmasi: '' });
 const savingPwd = ref(false);
@@ -175,10 +205,15 @@ async function changePassword() {
             <div>
               <label class="label">{{ t('users.profile.email') }}</label>
               <input :value="auth.user?.email ?? '—'" class="input bg-slate-50 text-slate-400" disabled />
-              <p v-if="auth.roles.includes('super_admin') || auth.roles.includes('admin')" class="mt-1 text-xs text-slate-400">
-                Email address cannot be changed for security reasons.
-              </p>
-              <p v-else class="mt-1 text-xs text-slate-400">{{ t('users.profile.emailLocked') }}</p>
+              <p v-if="!isSuperAdmin" class="mt-1 text-xs text-slate-400">{{ t('users.profile.emailLocked') }}</p>
+              <button
+                v-else
+                type="button"
+                class="mt-1 text-xs font-medium text-brand-600 hover:underline"
+                @click="showEmailForm = !showEmailForm"
+              >
+                {{ t('users.profile.changeEmail') }}
+              </button>
             </div>
             <div>
               <label class="label">{{ t('users.profile.accountStatus') }}</label>
@@ -191,6 +226,37 @@ async function changePassword() {
             <button class="btn-primary" :disabled="savingProfile">
               {{ savingProfile ? t('common.state.saving') : t('users.profile.saveChanges') }}
             </button>
+          </div>
+        </form>
+
+        <!-- Ganti email — super admin saja -->
+        <div v-if="emailMsg" class="alert-success">{{ emailMsg }}</div>
+        <form v-if="isSuperAdmin && showEmailForm" class="card p-6" @submit.prevent="changeEmail">
+          <h3 class="section-title">{{ t('users.profile.changeEmail') }}</h3>
+          <p class="mt-1 text-xs text-slate-400">{{ t('users.profile.changeEmailHint') }}</p>
+          <div class="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="label" for="new-email">{{ t('users.profile.newEmail') }}</label>
+              <input id="new-email" v-model="emailForm.email" class="input" type="email" required autocomplete="email" />
+            </div>
+            <div>
+              <label class="label" for="email-pwd">{{ t('users.profile.currentPassword') }}</label>
+              <input
+                id="email-pwd"
+                v-model="emailForm.password_saat_ini"
+                class="input"
+                type="password"
+                required
+                autocomplete="current-password"
+              />
+            </div>
+          </div>
+          <div v-if="emailError" class="mt-4 alert-error">{{ emailError }}</div>
+          <div class="mt-5 flex gap-2">
+            <button class="btn-primary" :disabled="savingEmail">
+              {{ savingEmail ? t('common.state.saving') : t('users.profile.saveEmail') }}
+            </button>
+            <button type="button" class="btn-outline" @click="showEmailForm = false">{{ t('common.action.cancel') }}</button>
           </div>
         </form>
 

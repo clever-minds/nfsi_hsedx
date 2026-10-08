@@ -10,7 +10,7 @@ import TablePagination from '@/components/ui/TablePagination.vue';
 
 interface CourseOption {
   id: string;
-  judul: string;
+  title: string;
 }
 
 interface UserOption {
@@ -21,7 +21,7 @@ interface UserOption {
 interface Enrollment extends Record<string, unknown> {
   id: string;
   siswa_nama?: string;
-  kursus_judul?: string;
+  course_title?: string;
   cohort_nama?: string;
   sumber?: string;
   status: string;
@@ -31,8 +31,8 @@ interface Enrollment extends Record<string, unknown> {
 
 interface Cohort extends Record<string, unknown> {
   id: string;
-  nama: string;
-  kursus_judul?: string;
+  name: string;
+  course_title?: string;
   kapasitas: number;
   terisi?: number;
   waitlist_count?: number;
@@ -67,7 +67,7 @@ const filterQuery = ref('');
 
 const enrollmentColumns = computed(() => [
   { key: 'siswa_nama', label: t('enrollment.colStudent') },
-  { key: 'kursus_judul', label: t('enrollment.colCourse') },
+  { key: 'course_title', label: t('enrollment.colCourse') },
   { key: 'sumber', label: t('enrollment.colSource') },
   { key: 'status', label: t('enrollment.colStatus') },
   { key: 'cohort_nama', label: t('enrollment.colCohort') },
@@ -123,7 +123,7 @@ const usersLoading = ref(false);
 async function loadUsers() {
   usersLoading.value = true;
   try {
-    const res = await apiGetFull<UserOption[]>('/users', { limit: 100, 'filter[role]': 'siswa' });
+    const res = await apiGetFull<UserOption[]>('/users', { limit: 100, 'filter[role]': 'student' });
     users.value = res.data ?? [];
   } catch (e) {
     users.value = [];
@@ -202,8 +202,8 @@ const cohortError = ref('');
 let cohortsLoaded = false;
 
 const cohortColumns = computed(() => [
-  { key: 'nama', label: t('enrollment.colCohortName') },
-  { key: 'kursus_judul', label: t('enrollment.colCourse') },
+  { key: 'name', label: t('enrollment.colCohortName') },
+  { key: 'course_title', label: t('enrollment.colCourse') },
   { key: 'kapasitas_label', label: t('enrollment.colCapacity') },
   { key: 'periode', label: t('enrollment.colPeriod') },
   { key: 'status', label: t('enrollment.colStatus') },
@@ -213,7 +213,7 @@ async function loadCohorts() {
   cohortLoading.value = true;
   cohortError.value = '';
   try {
-    // (list cohort per kursus), belum ada endpoint list-semua-cohort lintas kursus.
+    // (list cohort per course), belum ada endpoint list-semua-cohort lintas course.
     const res = await apiGetFull<Cohort[]>('/cohorts');
     cohorts.value = res.data ?? [];
   } catch (e) {
@@ -327,7 +327,7 @@ onMounted(() => {
             <label class="label">{{ t('enrollment.courseId') }}</label>
             <select v-model="assignForm.kursusId" class="input" :disabled="coursesLoading">
               <option value="">{{ t('common.action.choose') }}</option>
-              <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.judul }}</option>
+              <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.title }}</option>
             </select>
           </div>
           <div>
@@ -424,7 +424,7 @@ onMounted(() => {
 
       <div v-if="selectedCohort" class="card mt-4 p-4">
         <div class="flex items-center justify-between">
-          <h3 class="card-title">{{ t('enrollment.membersTitle', { name: selectedCohort.nama }) }}</h3>
+          <h3 class="card-title">{{ t('enrollment.membersTitle', { name: selectedCohort.name }) }}</h3>
           <button class="text-xs text-slate-400 hover:text-slate-600" @click="selectedCohort = null">
             {{ t('enrollment.close') }}
           </button>

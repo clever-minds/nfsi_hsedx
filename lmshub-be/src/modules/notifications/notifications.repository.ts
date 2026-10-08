@@ -6,15 +6,15 @@ import { PageParams } from '../../core/http/pagination';
 export interface EventConfigRow {
   id: string;
   jenis_event: string;
-  nama: string;
-  deskripsi: string | null;
+  name: string;
+  description: string | null;
   role_penerima: string[];
   kanal: string[];
   template_judul: string;
   template_isi: string;
   butuh_respons: boolean;
   is_kritikal: boolean;
-  is_aktif: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -47,7 +47,7 @@ export async function updateEventConfig(jenisEvent: string, fields: Record<strin
 export interface NotificationRow {
   id: string;
   jenis_event: string;
-  judul: string;
+  title: string;
   isi: string;
   payload: unknown;
   source_type: string | null;
@@ -67,18 +67,18 @@ export interface NotificationInboxRow extends NotificationRow {
 
 export async function insertNotification(data: {
   jenis_event: string;
-  judul: string;
+  title: string;
   isi: string;
   payload: unknown;
   source_type: string | null;
   source_id: string | null;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO notifications (jenis_event, judul, isi, payload, source_type, source_id)
+    `INSERT INTO notifications (jenis_event, title, isi, payload, source_type, source_id)
      VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
     [
       data.jenis_event,
-      data.judul,
+      data.title,
       data.isi,
       data.payload === undefined ? null : JSON.stringify(data.payload),
       data.source_type,
@@ -124,7 +124,7 @@ export async function listInboxForUser(
 
   const whereSql = where.join(' AND ');
   const rows = await query<NotificationInboxRow>(
-    `SELECT n.id, n.jenis_event, n.judul, n.isi, n.payload, n.source_type, n.source_id, n.waktu,
+    `SELECT n.id, n.jenis_event, n.title, n.isi, n.payload, n.source_type, n.source_id, n.waktu,
             nr.id AS recipient_id, nr.kanal, nr.status_dibaca, nr.waktu_dibaca,
             nr.status_direspons, nr.waktu_direspons, nr.isi_respons
        FROM notification_recipients nr
@@ -173,12 +173,12 @@ export interface ReminderRow {
   id: string;
   sumber: string;
   source_id: string | null;
-  judul: string;
-  deskripsi: string | null;
+  title: string;
+  description: string | null;
   jatuh_tempo: string;
   pengulangan: string;
   aturan_eskalasi: unknown;
-  is_aktif: boolean;
+  is_active: boolean;
   next_run_at: string | null;
   created_by: string | null;
   created_at: string;
@@ -201,21 +201,21 @@ export interface ReminderTrackingRow {
 export async function insertReminder(data: {
   sumber: string;
   source_id: string | null;
-  judul: string;
-  deskripsi: string | null;
+  title: string;
+  description: string | null;
   jatuh_tempo: string;
   pengulangan: string;
   aturan_eskalasi: unknown;
   created_by: string | null;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO reminders (sumber, source_id, judul, deskripsi, jatuh_tempo, pengulangan, aturan_eskalasi, created_by)
+    `INSERT INTO reminders (sumber, source_id, title, description, jatuh_tempo, pengulangan, aturan_eskalasi, created_by)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
     [
       data.sumber,
       data.source_id,
-      data.judul,
-      data.deskripsi,
+      data.title,
+      data.description,
       data.jatuh_tempo,
       data.pengulangan,
       data.aturan_eskalasi === undefined ? null : JSON.stringify(data.aturan_eskalasi),
@@ -307,12 +307,12 @@ export async function markReminderResponded(
 
 export interface AnnouncementRow {
   id: string;
-  judul: string;
+  title: string;
   isi: string;
   segmen: unknown;
   tanggal_mulai: string;
   tanggal_selesai: string | null;
-  is_aktif: boolean;
+  is_active: boolean;
   dibuat_oleh: string | null;
   created_at: string;
 }
@@ -330,24 +330,24 @@ export async function listAnnouncements(p: PageParams): Promise<{ rows: Announce
 }
 
 export async function insertAnnouncement(data: {
-  judul: string;
+  title: string;
   isi: string;
   segmen: unknown;
   tanggal_mulai: string;
   tanggal_selesai: string | null;
-  is_aktif: boolean;
+  is_active: boolean;
   dibuat_oleh: string;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO announcements (judul, isi, segmen, tanggal_mulai, tanggal_selesai, is_aktif, dibuat_oleh)
+    `INSERT INTO announcements (title, isi, segmen, tanggal_mulai, tanggal_selesai, is_active, dibuat_oleh)
      VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
     [
-      data.judul,
+      data.title,
       data.isi,
       JSON.stringify(data.segmen),
       data.tanggal_mulai,
       data.tanggal_selesai,
-      data.is_aktif,
+      data.is_active,
       data.dibuat_oleh,
     ],
   );

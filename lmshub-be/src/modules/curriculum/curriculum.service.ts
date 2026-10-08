@@ -17,7 +17,7 @@ const ADMIN_ROLES = ['super_admin', 'direktur', 'ketua', 'pembina', 'admin_ops']
 const isSuper = (actor: AuthContext) => actor.roles.includes('super_admin');
 const isAdmin = (actor: AuthContext) => actor.roles.some((r) => ADMIN_ROLES.includes(r));
 
-/** Row-level "Sendiri": instruktur hanya boleh mengelola kurikulum kursus miliknya. */
+/** Row-level "Sendiri": instructor hanya boleh mengelola kurikulum course miliknya. */
 async function assertOwnsCourse(actor: AuthContext, courseId: string): Promise<void> {
   if (isSuper(actor) || isAdmin(actor)) return;
   const instructorId = await repo.courseInstructorId(courseId);
@@ -41,12 +41,12 @@ export async function createSection(actor: AuthContext, courseId: string, input:
   if (!exists) throw AppError.notFound('Course not found', 'course.not_found');
   await assertOwnsCourse(actor, courseId);
 
-  const urutan = input.urutan ?? (await repo.nextSectionUrutan(courseId));
+  const sort_order = input.sort_order ?? (await repo.nextSectionUrutan(courseId));
   const { id } = await repo.insertSection({
     course_id: courseId,
-    judul: input.judul,
-    urutan,
-    deskripsi: input.deskripsi ?? null,
+    title: input.title,
+    sort_order,
+    description: input.description ?? null,
   });
   await recordAudit({
     userId: actor.userId,
@@ -65,9 +65,9 @@ export async function updateSection(actor: AuthContext, id: string, input: Updat
   await assertOwnsCourse(actor, section.course_id);
 
   const fields: Record<string, unknown> = {};
-  if (input.judul !== undefined) fields.judul = input.judul;
-  if (input.urutan !== undefined) fields.urutan = input.urutan;
-  if (input.deskripsi !== undefined) fields.deskripsi = input.deskripsi;
+  if (input.title !== undefined) fields.title = input.title;
+  if (input.sort_order !== undefined) fields.sort_order = input.sort_order;
+  if (input.description !== undefined) fields.description = input.description;
 
   await repo.updateSection(id, fields);
   await recordAudit({
@@ -120,16 +120,16 @@ export async function createLesson(actor: AuthContext, sectionId: string, input:
   if (!section) throw AppError.notFound('Section not found', 'section.not_found');
   await assertOwnsCourse(actor, section.course_id);
 
-  const urutan = input.urutan ?? (await repo.nextLessonUrutan(sectionId));
+  const sort_order = input.sort_order ?? (await repo.nextLessonUrutan(sectionId));
   const { id } = await repo.insertLesson({
     section_id: sectionId,
-    judul: input.judul,
+    title: input.title,
     tipe: input.tipe,
-    urutan,
-    durasi_menit: input.durasi_menit ?? null,
+    sort_order,
+    duration_minutes: input.duration_minutes ?? null,
     gratis_preview: input.gratis_preview ?? false,
     drip_release_at: input.drip_release_at ?? null,
-    wajib_selesai: input.wajib_selesai ?? true,
+    must_complete: input.must_complete ?? true,
   });
   await recordAudit({
     userId: actor.userId,
@@ -157,13 +157,13 @@ export async function updateLesson(actor: AuthContext, id: string, input: Update
   }
 
   const fields: Record<string, unknown> = {};
-  if (input.judul !== undefined) fields.judul = input.judul;
+  if (input.title !== undefined) fields.title = input.title;
   if (input.tipe !== undefined) fields.tipe = input.tipe;
-  if (input.urutan !== undefined) fields.urutan = input.urutan;
-  if (input.durasi_menit !== undefined) fields.durasi_menit = input.durasi_menit;
+  if (input.sort_order !== undefined) fields.sort_order = input.sort_order;
+  if (input.duration_minutes !== undefined) fields.duration_minutes = input.duration_minutes;
   if (input.gratis_preview !== undefined) fields.gratis_preview = input.gratis_preview;
   if (input.drip_release_at !== undefined) fields.drip_release_at = input.drip_release_at;
-  if (input.wajib_selesai !== undefined) fields.wajib_selesai = input.wajib_selesai;
+  if (input.must_complete !== undefined) fields.must_complete = input.must_complete;
   if (input.section_id !== undefined) fields.section_id = input.section_id;
 
   await repo.updateLesson(id, fields);
@@ -220,20 +220,20 @@ export async function createContent(actor: AuthContext, lessonId: string, input:
   if (!courseId) throw AppError.notFound('Lesson not found', 'lesson.not_found');
   await assertOwnsCourse(actor, courseId);
 
-  const urutan = input.urutan ?? (await repo.nextContentUrutan(lessonId));
+  const sort_order = input.sort_order ?? (await repo.nextContentUrutan(lessonId));
   const { id } = await repo.insertContent({
     lesson_id: lessonId,
     tipe: input.tipe,
-    urutan,
+    sort_order,
     body: input.body ?? null,
     media_asset_id: input.media_asset_id ?? null,
     url: input.url ?? null,
     scorm_manifest_url: input.scorm_manifest_url ?? null,
-    durasi_detik: input.durasi_detik ?? null,
+    duration_seconds: input.duration_seconds ?? null,
   });
   await recordAudit({
     userId: actor.userId,
-    module: 'konten',
+    module: 'content',
     action: 'create_content',
     entity: 'lesson_contents',
     entityId: id,
@@ -251,17 +251,17 @@ export async function updateContent(actor: AuthContext, id: string, input: Updat
 
   const fields: Record<string, unknown> = {};
   if (input.tipe !== undefined) fields.tipe = input.tipe;
-  if (input.urutan !== undefined) fields.urutan = input.urutan;
+  if (input.sort_order !== undefined) fields.sort_order = input.sort_order;
   if (input.body !== undefined) fields.body = input.body;
   if (input.media_asset_id !== undefined) fields.media_asset_id = input.media_asset_id;
   if (input.url !== undefined) fields.url = input.url;
   if (input.scorm_manifest_url !== undefined) fields.scorm_manifest_url = input.scorm_manifest_url;
-  if (input.durasi_detik !== undefined) fields.durasi_detik = input.durasi_detik;
+  if (input.duration_seconds !== undefined) fields.duration_seconds = input.duration_seconds;
 
   await repo.updateContent(id, fields);
   await recordAudit({
     userId: actor.userId,
-    module: 'konten',
+    module: 'content',
     action: 'update_content',
     entity: 'lesson_contents',
     entityId: id,
@@ -278,5 +278,5 @@ export async function removeContent(actor: AuthContext, id: string) {
   if (!courseId) throw AppError.notFound('Course not found', 'course.not_found');
   await assertOwnsCourse(actor, courseId);
   await repo.softDeleteContent(id);
-  await recordAudit({ userId: actor.userId, module: 'konten', action: 'delete_content', entity: 'lesson_contents', entityId: id });
+  await recordAudit({ userId: actor.userId, module: 'content', action: 'delete_content', entity: 'lesson_contents', entityId: id });
 }

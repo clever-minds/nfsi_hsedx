@@ -11,16 +11,16 @@ import TablePagination from '@/components/ui/TablePagination.vue';
 
 interface Certificate {
   id: string;
-  nomor_sertifikat: string | null;
+  certificate_number: string | null;
   course_id: string;
-  kursus_judul?: string | null;
+  course_title?: string | null;
   status: string;
   tanggal_terbit?: string | null;
 }
 interface Enrollment {
   id: string;
   course_id: string;
-  kursus_judul?: string;
+  course_title?: string;
   status: string;
 }
 
@@ -39,7 +39,7 @@ async function load() {
   error.value = '';
   try {
     // Keduanya WAJIB difilter ke pengguna yang login — lihat catatan sama di
-    // MyCoursesView. Tanpa ini, "Sertifikat Saya" menampilkan sertifikat milik
+    // MyCoursesView. Tanpa ini, "Certificate Saya" menampilkan certificate milik
     // pengguna lain kepada siapa pun yang izinnya luas.
     const uid = auth.user?.id;
     const [cRes, eRes] = await Promise.all([
@@ -59,7 +59,7 @@ async function load() {
 
 /**
  * Dipotong di klien: kedua daftar diambil sekali (batas 100 dari BE) lalu
- * disaring — `hasCert` butuh daftar sertifikat **utuh** untuk menandai kursus
+ * disaring — `hasCert` butuh daftar certificate **utuh** untuk menandai course
  * yang sudah terbit, jadi memaginasi di server akan membuat tanda itu meleset
  * pada halaman kedua dan seterusnya.
  *
@@ -80,6 +80,21 @@ const claimShown = computed(() =>
 );
 const hasCert = (courseId: string) => certificates.value.some((c) => c.course_id === courseId && c.status === 'terbit');
 
+/**
+ * Certificate terkunci karena ujian akhir: sebutkan ujiannya, skor terbaik, dan
+ * nilai lulusnya — "persyaratan belum terpenuhi" saja tidak memberi tahu student
+ * apa yang harus dilakukan.
+ */
+function examLockMessage(e: unknown): string | null {
+  const err = (e as { response?: { data?: { error?: { key?: string; details?: unknown } } } }).response?.data?.error;
+  if (err?.key !== 'certificate.final_exam_not_passed') return null;
+  const u = (err.details as { ujian_akhir?: { title?: string; passing_score_val?: number; skor_terbaik_persen?: number | null } })?.ujian_akhir;
+  if (!u) return null;
+  return u.skor_terbaik_persen == null
+    ? t('certificates.my.examNotTaken', { exam: u.title ?? '', pass: u.passing_score_val ?? '' })
+    : t('certificates.my.examNotPassed', { exam: u.title ?? '', score: u.skor_terbaik_persen, pass: u.passing_score_val ?? '' });
+}
+
 async function terbitkan(enr: Enrollment) {
   claiming.value = enr.id;
   claimMsg.value[enr.id] = '';
@@ -87,7 +102,7 @@ async function terbitkan(enr: Enrollment) {
     const cert = await apiPost<{ id: string }>(`/enrollments/${enr.id}/certificate/claim`, {});
     router.push(`/d/certificates/view/${cert.id}`);
   } catch (e) {
-    claimMsg.value[enr.id] = errorMessage(e, t('certificates.my.claimFailed'));
+    claimMsg.value[enr.id] = examLockMessage(e) ?? errorMessage(e, t('certificates.my.claimFailed'));
   } finally {
     claiming.value = null;
   }
@@ -114,8 +129,8 @@ onMounted(load);
           <div v-for="c in issuedShown" :key="c.id" class="card flex flex-col gap-3 p-4">
           <div class="flex h-24 items-center justify-center rounded-lg bg-gradient-to-br from-brand-100 to-amber-100 text-3xl text-brand-700">❖</div>
           <div>
-            <div class="line-clamp-1 font-medium text-slate-800">{{ c.kursus_judul || t('certificates.my.course') }}</div>
-            <div class="num text-xs text-slate-400">{{ c.nomor_sertifikat }}</div>
+            <div class="line-clamp-1 font-medium text-slate-800">{{ c.course_title || t('certificates.my.course') }}</div>
+            <div class="num text-xs text-slate-400">{{ c.certificate_number }}</div>
             <StatusChip status="terbit" />
           </div>
             <RouterLink :to="`/d/certificates/view/${c.id}`" class="btn-primary mt-auto justify-center">
@@ -140,7 +155,7 @@ onMounted(load);
         <div class="divide-y divide-slate-100">
           <div v-for="e in claimShown" :key="e.id" class="flex items-center justify-between gap-3 p-4">
           <div>
-            <div class="font-medium text-slate-800">{{ e.kursus_judul || t('certificates.my.course') }}</div>
+            <div class="font-medium text-slate-800">{{ e.course_title || t('certificates.my.course') }}</div>
             <div class="text-xs text-slate-400">{{ t('certificates.my.learningStatus', { status: statusLabel(e.status) }) }}</div>
             <div v-if="claimMsg[e.id]" class="mt-1 text-xs text-amber-600">{{ claimMsg[e.id] }}</div>
           </div>

@@ -9,24 +9,24 @@ import TablePagination from '@/components/ui/TablePagination.vue';
 import StatusChip from '@/components/ui/StatusChip.vue';
 import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
 
-type TipeFile = 'video' | 'gambar' | 'dokumen' | 'audio';
+type TipeFile = 'video' | 'gambar' | 'document' | 'audio';
 type StatusTranscode = 'menunggu' | 'memproses' | 'selesai' | 'gagal';
 
 interface MediaAsset extends Record<string, unknown> {
   id: string;
-  tipe_file: TipeFile;
-  nama_file: string;
+  file_type: TipeFile;
+  file_name: string;
   path_object_storage: string;
   mime_type: string | null;
-  ukuran_bytes: number | null;
+  size_bytes: number | null;
   status_transcode: StatusTranscode;
-  durasi_detik: number | null;
+  duration_seconds: number | null;
   created_at: string;
 }
 
 const { t } = useI18n();
 
-const TIPE_OPTIONS: TipeFile[] = ['video', 'gambar', 'dokumen', 'audio'];
+const TIPE_OPTIONS: TipeFile[] = ['video', 'gambar', 'document', 'audio'];
 const STATUS_OPTIONS: StatusTranscode[] = ['menunggu', 'memproses', 'selesai', 'gagal'];
 
 const tipeLabel = (tipe: TipeFile) => t(`content.mediaType.${tipe}`);
@@ -49,15 +49,15 @@ const showForm = ref(false);
 const saving = ref(false);
 
 const form = reactive({
-  tipe_file: 'video' as TipeFile,
-  nama_file: '',
+  file_type: 'video' as TipeFile,
+  file_name: '',
   path_object_storage: '',
 });
 
 const columns = computed(() => [
-  { key: 'nama_file', label: t('content.media.colName') },
-  { key: 'tipe_file', label: t('content.media.colType') },
-  { key: 'ukuran_bytes', label: t('content.media.colSize') },
+  { key: 'file_name', label: t('content.media.colName') },
+  { key: 'file_type', label: t('content.media.colType') },
+  { key: 'size_bytes', label: t('content.media.colSize') },
   { key: 'status_transcode', label: t('content.media.colStatus') },
 ]);
 
@@ -75,7 +75,7 @@ async function load() {
       page: page.value,
       limit,
       q: q.value || undefined,
-      'filter[tipe_file]': tipeFilter.value || undefined,
+      'filter[file_type]': tipeFilter.value || undefined,
       'filter[status_transcode]': statusFilter.value || undefined,
     });
     rows.value = res.data ?? [];
@@ -94,16 +94,16 @@ function search() {
 }
 
 async function createAsset() {
-  if (!form.nama_file.trim() || !form.path_object_storage.trim()) return;
+  if (!form.file_name.trim() || !form.path_object_storage.trim()) return;
   saving.value = true;
   error.value = '';
   try {
     await apiPost('/media', {
-      tipe_file: form.tipe_file,
-      nama_file: form.nama_file.trim(),
+      file_type: form.file_type,
+      file_name: form.file_name.trim(),
       path_object_storage: form.path_object_storage.trim(),
     });
-    form.nama_file = '';
+    form.file_name = '';
     form.path_object_storage = '';
     showForm.value = false;
     await load();
@@ -138,8 +138,8 @@ async function removeAsset(id: string) {
   }
 }
 
-async function onUploaded(asset: { nama_file: string }) {
-  notice.value = t('content.media.uploaded', { name: asset.nama_file });
+async function onUploaded(asset: { file_name: string }) {
+  notice.value = t('content.media.uploaded', { name: asset.file_name });
   page.value = 1;
   await load();
 }
@@ -152,7 +152,7 @@ onMounted(load);
   <div>
     <PageHeader :title="t('content.media.title')" :subtitle="t('content.media.subtitle')">
       <template #actions>
-        <div v-can="'konten.create'" class="flex flex-wrap items-start gap-2">
+        <div v-can="'content.create'" class="flex flex-wrap items-start gap-2">
           <MediaUploadButton @uploaded="onUploaded" />
           <button class="btn-outline" @click="showForm = !showForm">
             {{ showForm ? t('common.action.cancel') : t('content.media.add') }}
@@ -161,16 +161,16 @@ onMounted(load);
       </template>
     </PageHeader>
 
-    <div v-if="showForm" v-can="'konten.create'" class="card mb-4 grid gap-3 p-4 sm:grid-cols-3">
+    <div v-if="showForm" v-can="'content.create'" class="card mb-4 grid gap-3 p-4 sm:grid-cols-3">
       <div>
         <label class="label">{{ t('content.media.fieldType') }}</label>
-        <select v-model="form.tipe_file" class="input">
+        <select v-model="form.file_type" class="input">
           <option v-for="tf in TIPE_OPTIONS" :key="tf" :value="tf">{{ tipeLabel(tf) }}</option>
         </select>
       </div>
       <div>
         <label class="label">{{ t('content.media.fieldName') }}</label>
-        <input v-model="form.nama_file" class="input" :placeholder="t('content.media.fieldNamePlaceholder')" />
+        <input v-model="form.file_name" class="input" :placeholder="t('content.media.fieldNamePlaceholder')" />
       </div>
       <div>
         <label class="label">{{ t('content.media.fieldPath') }}</label>
@@ -200,13 +200,13 @@ onMounted(load);
         </select>
         <button class="btn-outline" @click="search">{{ t('common.action.search') }}</button>
       </template>
-      <template #cell:tipe_file="{ value }">{{ tipeLabel(value as TipeFile) }}</template>
-      <template #cell:ukuran_bytes="{ value }">{{ formatSize(value as number | null) }}</template>
+      <template #cell:file_type="{ value }">{{ tipeLabel(value as TipeFile) }}</template>
+      <template #cell:size_bytes="{ value }">{{ formatSize(value as number | null) }}</template>
       <template #cell:status_transcode="{ row }">
         <div class="flex items-center gap-2">
           <StatusChip :status="String((row as unknown as MediaAsset).status_transcode)" />
           <select
-            v-can="'konten.update'"
+            v-can="'content.update'"
             class="input w-auto py-0.5 text-xs"
             :value="(row as unknown as MediaAsset).status_transcode"
             :disabled="busyId === (row as unknown as MediaAsset).id"
@@ -218,7 +218,7 @@ onMounted(load);
       </template>
       <template #actions="{ row }">
         <button
-          v-can="'konten.delete'"
+          v-can="'content.delete'"
           class="row-link row-link-danger"
           :disabled="busyId === (row as unknown as MediaAsset).id"
           @click="removeAsset((row as unknown as MediaAsset).id)"

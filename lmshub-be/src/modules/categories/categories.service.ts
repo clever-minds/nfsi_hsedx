@@ -25,7 +25,7 @@ export async function publicList() {
 
 export async function publicDetail(slug: string) {
   const c = await repo.bySlug(slug);
-  if (!c || !c.is_aktif) throw AppError.notFound('Category not found', 'category.not_found');
+  if (!c || !c.is_active) throw AppError.notFound('Category not found', 'category.not_found');
   return c;
 }
 
@@ -36,17 +36,17 @@ export async function detail(id: string) {
 }
 
 export async function create(actor: AuthContext, input: CreateCategoryInput) {
-  const slug = slugify(input.slug ?? input.nama);
+  const slug = slugify(input.slug ?? input.name);
   const existing = await repo.bySlug(slug);
   if (existing) throw AppError.conflict('That category slug is already in use', 'category.slug_taken');
 
   const { id } = await repo.insert({
-    nama: input.nama,
+    name: input.name,
     slug,
-    deskripsi: input.deskripsi ?? null,
+    description: input.description ?? null,
     ikon: input.ikon ?? null,
-    urutan: input.urutan ?? 0,
-    is_aktif: input.is_aktif ?? true,
+    sort_order: input.sort_order ?? 0,
+    is_active: input.is_active ?? true,
   });
   await recordAudit({
     userId: actor.userId,
@@ -62,17 +62,17 @@ export async function create(actor: AuthContext, input: CreateCategoryInput) {
 export async function update(actor: AuthContext, id: string, input: UpdateCategoryInput) {
   const before = await detail(id);
   const fields: Record<string, unknown> = {};
-  if (input.nama !== undefined) fields.nama = input.nama;
+  if (input.name !== undefined) fields.name = input.name;
   if (input.slug !== undefined) {
     const slug = slugify(input.slug);
     const existing = await repo.bySlug(slug);
     if (existing && existing.id !== id) throw AppError.conflict('That category slug is already in use', 'category.slug_taken');
     fields.slug = slug;
   }
-  if (input.deskripsi !== undefined) fields.deskripsi = input.deskripsi;
+  if (input.description !== undefined) fields.description = input.description;
   if (input.ikon !== undefined) fields.ikon = input.ikon;
-  if (input.urutan !== undefined) fields.urutan = input.urutan;
-  if (input.is_aktif !== undefined) fields.is_aktif = input.is_aktif;
+  if (input.sort_order !== undefined) fields.sort_order = input.sort_order;
+  if (input.is_active !== undefined) fields.is_active = input.is_active;
 
   await repo.update(id, fields);
   await recordAudit({
@@ -81,7 +81,7 @@ export async function update(actor: AuthContext, id: string, input: UpdateCatego
     action: 'update',
     entity: 'categories',
     entityId: id,
-    before: { nama: before.nama, slug: before.slug, is_aktif: before.is_aktif },
+    before: { name: before.name, slug: before.slug, is_active: before.is_active },
     after: input,
   });
   return repo.detail(id);
@@ -113,11 +113,11 @@ export async function tagDetail(id: string) {
 }
 
 export async function tagCreate(actor: AuthContext, input: CreateTagInput) {
-  const slug = slugify(input.slug ?? input.nama);
+  const slug = slugify(input.slug ?? input.name);
   const existing = await repo.tagBySlug(slug);
   if (existing) throw AppError.conflict('That tag slug is already in use', 'tag.slug_taken');
 
-  const { id } = await repo.insertTag({ nama: input.nama, slug });
+  const { id } = await repo.insertTag({ name: input.name, slug });
   await recordAudit({ userId: actor.userId, module: 'kategori', action: 'create_tag', entity: 'tags', entityId: id, after: input });
   return repo.detailTag(id);
 }
@@ -125,7 +125,7 @@ export async function tagCreate(actor: AuthContext, input: CreateTagInput) {
 export async function tagUpdate(actor: AuthContext, id: string, input: UpdateTagInput) {
   const before = await tagDetail(id);
   const fields: Record<string, unknown> = {};
-  if (input.nama !== undefined) fields.nama = input.nama;
+  if (input.name !== undefined) fields.name = input.name;
   if (input.slug !== undefined) {
     const slug = slugify(input.slug);
     const existing = await repo.tagBySlug(slug);

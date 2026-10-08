@@ -10,7 +10,7 @@ const isSuper = (actor: AuthContext) => actor.roles.includes('super_admin');
 const isElevated = (actor: AuthContext) =>
   isSuper(actor) || actor.roles.some((r) => ['admin_ops', 'direktur', 'ketua', 'pembina'].includes(r));
 
-/** Bobot komponen (kuis/tugas) belum tersedia (courses.bobot_komponen di luar cakupan domain 03/04) —
+/** Bobot komponen (quiz/assignment) belum tersedia (courses.bobot_komponen di luar cakupan domain 03/04) —
  * pakai rata-rata sederhana antar komponen & ambang lulus default sampai domain pengaturan (12) tersedia. */
 const DEFAULT_PASSING_SCORE = 70;
 
@@ -20,7 +20,7 @@ async function assertCourseOwnership(actor: AuthContext, courseId: string) {
   if (!owns) throw AppError.forbidden('This is outside the courses you manage', 'scope.course_out_of_scope');
 }
 
-/** Antrian penilaian: staf melihat semua, instruktur/asisten hanya kursus miliknya. */
+/** Antrian penilaian: staf melihat semua, instructor/asisten hanya course miliknya. */
 export async function listSubmissions(
   actor: AuthContext,
   p: { limit: number; offset: number },
@@ -68,8 +68,8 @@ function gradeSingleAnswer(
       return { skor: Math.round(poin * fraction * 100) / 100, isBenar: fraction === 1, manual: false };
     }
     case 'isian_singkat': {
-      const teks = typeof j.teks === 'string' ? j.teks.trim().toLowerCase() : '';
-      const isBenar = options.some((o) => o.is_benar && o.teks_opsi.trim().toLowerCase() === teks);
+      const text = typeof j.text === 'string' ? j.text.trim().toLowerCase() : '';
+      const isBenar = options.some((o) => o.is_benar && o.teks_opsi.trim().toLowerCase() === text);
       return { skor: isBenar ? poin : 0, isBenar, manual: false };
     }
     case 'esai':
@@ -82,7 +82,7 @@ function gradeSingleAnswer(
 /**
  * Auto-grade objektif saat attempt disubmit (dipanggil dari `assessments.service`).
  * Tipe esai/upload_file selalu masuk antrean manual (`attempt_answers.dinilai_manual=true`),
- * status attempt tetap `dikumpulkan` sampai dinilai manual oleh instruktur/TA.
+ * status attempt tetap `dikumpulkan` sampai dinilai manual oleh instructor/TA.
  */
 export async function autoGradeAttempt(attemptId: string): Promise<void> {
   const attempt = await assessmentsRepo.attemptDetail(attemptId);
@@ -120,7 +120,7 @@ export async function autoGradeAttempt(attemptId: string): Promise<void> {
       await assessmentsRepo.updateAttempt(attemptId, { status: 'dinilai', skor: totalSkor }, tx);
       const existing = await repo.findGradeBySource('quiz', attemptId);
       if (existing) {
-        await repo.updateGrade(existing.id, { skor: totalSkor, skor_maksimal: Number(quiz.total_poin), dinilai_at: new Date() }, tx);
+        await repo.updateGrade(existing.id, { skor: totalSkor, skor_maksimal: Number(quiz.total_points), dinilai_at: new Date() }, tx);
       } else {
         await repo.insertGrade(
           {
@@ -128,7 +128,7 @@ export async function autoGradeAttempt(attemptId: string): Promise<void> {
             sumber_tipe: 'quiz',
             sumber_id: attemptId,
             skor: totalSkor,
-            skor_maksimal: Number(quiz.total_poin) || 1,
+            skor_maksimal: Number(quiz.total_points) || 1,
             feedback: null,
             dinilai_oleh: null, // NULL = auto-grade sistem
           },
@@ -142,7 +142,7 @@ export async function autoGradeAttempt(attemptId: string): Promise<void> {
   if (!butuhManual) await recalcGradebook(attempt.enrollment_id);
 }
 
-// ── Manual grading (submission tugas) ───────────────────
+// ── Manual grading (submission assignment) ───────────────────
 
 export async function getSubmissionGrade(actor: AuthContext, submissionId: string) {
   const submission = await assessmentsRepo.submissionDetail(submissionId);
@@ -151,7 +151,7 @@ export async function getSubmissionGrade(actor: AuthContext, submissionId: strin
   if (!assignment) throw AppError.notFound('Assignment not found', 'assignment.not_found');
   if (!isElevated(actor)) {
     const owns = await repo.isCourseOwnedByInstructor(assignment.course_id, actor.userId);
-    const isOwnerStudent = submission.enrollment_id && actor.roles.includes('siswa');
+    const isOwnerStudent = submission.enrollment_id && actor.roles.includes('student');
     if (!owns && !isOwnerStudent) throw AppError.forbidden('This is outside your scope', 'scope.out_of_scope');
   }
   const grade = await repo.findGradeBySource('assignment', submissionId);
@@ -225,7 +225,7 @@ export async function requestRevision(actor: AuthContext, submissionId: string, 
     entityId: submissionId,
     reason: input.catatan,
   });
-  // Siswa kembali ke status "Belum" secara efektif melalui `submissions.status='revisi_diminta'`
+  // Student kembali ke status "Belum" secara efektif melalui `submissions.status='revisi_diminta'`
   // (siklus submit ulang dikelola modul assessments — `resubmit()` menaikkan `revisi_ke`).
   return assessmentsRepo.submissionDetail(submissionId);
 }
@@ -249,7 +249,7 @@ export async function releaseGrade(actor: AuthContext, gradeId: string, _input: 
     before: { rilis_at: null },
     after: { rilis_at: released.rilis_at },
   });
-  // Catatan: pemberitahuan rilis nilai ke siswa ditangani modul notifikasi,
+  // Catatan: pemberitahuan rilis nilai ke student ditangani modul notifikasi,
   // bukan di sini — lihat domain 14-notifikasi-reminder.
   return released;
 }

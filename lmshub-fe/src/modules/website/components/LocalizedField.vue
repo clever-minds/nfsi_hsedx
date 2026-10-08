@@ -4,14 +4,14 @@ import { useI18n } from 'vue-i18n';
 import type { Localized, LocaleKey } from '@/lib/site-content';
 
 /**
- * Satu field teks yang punya nilai per bahasa.
+ * Satu field text yang punya nilai per language.
  *
  * Bahasa yang sedang disunting ditentukan dari luar (satu pemilih untuk seluruh
  * halaman) alih-alih tab per field: halaman Website punya puluhan field, dan
  * tab di masing-masingnya membuat admin harus mengulang klik yang sama berkali
  * -kali untuk menerjemahkan satu halaman.
  *
- * Placeholder diisi teks bawaan aplikasi, sehingga terlihat jelas apa yang akan
+ * Placeholder diisi text bawaan aplikasi, sehingga terlihat jelas apa yang akan
  * tampil bila field ini dibiarkan kosong.
  */
 const props = withDefaults(

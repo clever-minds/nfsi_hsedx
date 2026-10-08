@@ -7,21 +7,21 @@ import { PageParams } from '../../core/http/pagination';
 export interface KategoriBiayaRow {
   id: string;
   kode: string;
-  nama: string;
+  name: string;
   jenis: 'pemasukan' | 'pengeluaran';
   is_system: boolean;
 }
 
 export async function getKategoriBiaya(id: string): Promise<KategoriBiayaRow | null> {
   return queryOne<KategoriBiayaRow>(
-    `SELECT id, kode, nama, jenis, is_system FROM kategori_biaya WHERE id = $1 AND deleted_at IS NULL`,
+    `SELECT id, kode, name, jenis, is_system FROM kategori_biaya WHERE id = $1 AND deleted_at IS NULL`,
     [id],
   );
 }
 
 export async function listKategoriBiaya(): Promise<KategoriBiayaRow[]> {
   return query<KategoriBiayaRow>(
-    `SELECT id, kode, nama, jenis, is_system FROM kategori_biaya WHERE deleted_at IS NULL ORDER BY jenis, nama`,
+    `SELECT id, kode, name, jenis, is_system FROM kategori_biaya WHERE deleted_at IS NULL ORDER BY jenis, name`,
   );
 }
 
@@ -38,7 +38,7 @@ export interface FinancialEntryRow {
   tanggal: string;
   periode_bulan: number;
   periode_tahun: number;
-  deskripsi: string | null;
+  description: string | null;
   dicatat_oleh: string;
   sumber_type: string | null;
   sumber_id: string | null;
@@ -71,8 +71,8 @@ export async function listFinancialEntries(
 
   const whereSql = where.join(' AND ');
   const rows = await query<FinancialEntryRow>(
-    `SELECT fe.id, fe.jenis, fe.kategori_id, kb.nama AS kategori_nama, fe.course_id, fe.nominal, fe.bukti,
-            fe.tanggal, fe.periode_bulan, fe.periode_tahun, fe.deskripsi, fe.dicatat_oleh,
+    `SELECT fe.id, fe.jenis, fe.kategori_id, kb.name AS kategori_nama, fe.course_id, fe.nominal, fe.bukti,
+            fe.tanggal, fe.periode_bulan, fe.periode_tahun, fe.description, fe.dicatat_oleh,
             fe.sumber_type, fe.sumber_id, fe.created_at
        FROM financial_entries fe
        JOIN kategori_biaya kb ON kb.id = fe.kategori_id
@@ -97,12 +97,12 @@ export async function insertFinancialEntry(data: {
   tanggal: string;
   periode_bulan: number;
   periode_tahun: number;
-  deskripsi: string | null;
+  description: string | null;
   dicatat_oleh: string;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
     `INSERT INTO financial_entries
-       (jenis, kategori_id, course_id, nominal, bukti, tanggal, periode_bulan, periode_tahun, deskripsi, dicatat_oleh)
+       (jenis, kategori_id, course_id, nominal, bukti, tanggal, periode_bulan, periode_tahun, description, dicatat_oleh)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
     [
       data.jenis,
@@ -113,7 +113,7 @@ export async function insertFinancialEntry(data: {
       data.tanggal,
       data.periode_bulan,
       data.periode_tahun,
-      data.deskripsi,
+      data.description,
       data.dicatat_oleh,
     ],
   );
@@ -156,7 +156,7 @@ export async function cashflowByPeriod(f: { dari?: string; sampai?: string }): P
 /**
  * Bentuk baris payout yang dikirim ke klien.
  *
- * Nama field di sini mengikuti apa yang dibaca klien, bukan nama kolom mentah.
+ * Nama field di sini mengikuti apa yang dibaca klien, bukan name kolom mentah.
  * Query di bawah yang memberi alias — pola yang sama dipakai modul dashboard.
  *
  * Hasil `query()` tidak diperiksa saat runtime, jadi antarmuka ini adalah satu-
@@ -178,7 +178,7 @@ export interface PayoutRow {
 
 export interface PayoutFilters {
   status?: string;
-  instructorId?: string; // scoping: instruktur hanya lihat miliknya
+  instructorId?: string; // scoping: instructor hanya lihat miliknya
 }
 
 export async function listPayouts(p: PageParams, f: PayoutFilters): Promise<{ rows: PayoutRow[]; total: number }> {
@@ -213,7 +213,7 @@ export async function listPayouts(p: PageParams, f: PayoutFilters): Promise<{ ro
 }
 
 /**
- * Total nominal payout yang menunggu persetujuan, memakai scoping instruktur
+ * Total nominal payout yang menunggu persetujuan, memakai scoping instructor
  * yang sama dengan `listPayouts`.
  *
  * Dihitung di database, bukan dari baris yang terkirim: halaman hanya memuat 20
@@ -236,7 +236,7 @@ export async function sumPendingPayouts(f: PayoutFilters): Promise<number> {
   return Number(row?.jumlah ?? 0);
 }
 
-/** Resolve instructor_profiles.id dari user id (null bila bukan instruktur). */
+/** Resolve instructor_profiles.id dari user id (null bila bukan instructor). */
 export async function instructorProfileIdByUser(userId: string): Promise<string | null> {
   const row = await queryOne<{ id: string }>(
     `SELECT id FROM instructor_profiles WHERE user_id = $1`,
@@ -245,7 +245,7 @@ export async function instructorProfileIdByUser(userId: string): Promise<string 
   return row?.id ?? null;
 }
 
-/** Saldo revenue share yang belum masuk payout untuk seorang instruktur (profile id). */
+/** Saldo revenue share yang belum masuk payout untuk seorang instructor (profile id). */
 export async function availableSharesByInstructor(
   instructorProfileId: string,
 ): Promise<{ nominal: number; jumlah: number }> {
@@ -258,7 +258,7 @@ export async function availableSharesByInstructor(
   return { nominal: Number(row?.nominal ?? 0), jumlah: Number(row?.jumlah ?? 0) };
 }
 
-/** Buat payout dari seluruh revenue share tersedia milik instruktur (transaksi). */
+/** Buat payout dari seluruh revenue share tersedia milik instructor (transaction). */
 export interface CreatedPayout {
   id: string;
   total_nominal: string;
@@ -305,7 +305,7 @@ export async function getPayout(id: string, tx?: PoolClient): Promise<PayoutRow 
   return res.rows[0] ?? null;
 }
 
-/** Ambil payout dengan row-lock dalam transaksi (cegah approve/disburse ganda bersamaan). */
+/** Ambil payout dengan row-lock dalam transaction (cegah approve/disburse ganda bersamaan). */
 export async function getPayoutForUpdate(tx: PoolClient, id: string): Promise<PayoutRow | null> {
   const res = await tx.query<PayoutRow>(
     `SELECT * FROM instructor_payouts WHERE id = $1 AND deleted_at IS NULL FOR UPDATE`,
@@ -343,12 +343,12 @@ export async function markPayoutPaid(tx: PoolClient, id: string): Promise<void> 
 
 export interface ReportSnapshotRow {
   id: string;
-  judul: string;
-  jenis_laporan: 'keuangan' | 'operasional' | 'kursus';
+  title: string;
+  jenis_laporan: 'keuangan' | 'operasional' | 'course';
   periode_mulai: string;
   periode_selesai: string;
   data: unknown;
-  status_publikasi: 'draft' | 'dipublikasi' | 'diarsip';
+  publication_status: 'draft' | 'dipublikasi' | 'diarsip';
   created_at: string;
 }
 

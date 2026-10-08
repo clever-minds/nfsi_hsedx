@@ -1,19 +1,19 @@
 import type { MigrationBuilder } from 'node-pg-migrate';
 
 /**
- * Beri `kategori.view` kepada instruktur dan asisten.
+ * Beri `kategori.view` kepada instructor dan asisten.
  *
- * Editor kursus mengisi dropdown kategorinya dari `GET /categories`, yang
+ * Editor course mengisi dropdown kategorinya dari `GET /categories`, yang
  * dijaga `requirePermission('kategori','view')`. Matriks awal (0019) tidak
- * pernah memberi modul `kategori` kepada instruktur, padahal instruktur
- * memegang `kursus.create` — jadi mereka bisa membuka form kursus tapi
+ * pernah memberi modul `kategori` kepada instructor, padahal instructor
+ * memegang `course.create` — jadi mereka bisa membuka form course tapi
  * dropdown kategorinya selalu kosong (403 yang ditelan diam-diam di frontend),
- * dan `category_id` wajib diisi. Hasilnya instruktur tidak pernah bisa
- * menyimpan kursus sama sekali.
+ * dan `category_id` wajib diisi. Hasilnya instructor tidak pernah bisa
+ * menyimpan course sama sekali.
  *
  * Hanya `view`: siapa yang boleh membuat/mengubah kategori tidak berubah.
  */
-const ROLES = ['instruktur', 'asisten'];
+const ROLES = ['instructor', 'asisten'];
 
 export async function up(pgm: MigrationBuilder): Promise<void> {
   for (const kode of ROLES) {

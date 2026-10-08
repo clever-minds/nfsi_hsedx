@@ -8,12 +8,12 @@ const auth = (req: Request) => {
   return req.auth;
 };
 
-export async function siswa(req: Request, res: Response) {
-  return ok(res, await service.siswa(auth(req)));
+export async function student(req: Request, res: Response) {
+  return ok(res, await service.student(auth(req)));
 }
 
-export async function instruktur(req: Request, res: Response) {
-  return ok(res, await service.instruktur(auth(req)));
+export async function instructor(req: Request, res: Response) {
+  return ok(res, await service.instructor(auth(req)));
 }
 
 export async function admin(req: Request, res: Response) {

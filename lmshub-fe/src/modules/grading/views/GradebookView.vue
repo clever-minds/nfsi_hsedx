@@ -10,7 +10,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 
 interface AssessmentColumn {
   id: string;
-  judul: string;
+  title: string;
 }
 interface StudentRow {
   siswa_id: string;
@@ -21,16 +21,16 @@ interface StudentRow {
   disesuaikan?: boolean;
 }
 interface GradebookData {
-  kursus_judul?: string;
-  asesmen?: AssessmentColumn[];
-  siswa?: StudentRow[];
+  course_title?: string;
+  assessment?: AssessmentColumn[];
+  student?: StudentRow[];
   passing_score?: number;
   rata_rata?: number;
   median?: number;
 }
 interface CourseOption {
   id: string;
-  judul: string;
+  title: string;
 }
 interface GradebookRow extends Record<string, unknown> {
   siswa_nama: string;
@@ -54,8 +54,8 @@ async function loadCourses() {
   coursesLoading.value = true;
   try {
     // limit dinaikkan: ini pengisi dropdown, bukan tabel. Tanpa ini BE memakai
-    // default 20, jadi pengajar dengan lebih dari 20 kursus terbit tidak bisa
-    // memilih kursus ke-21 dan seterusnya di gradebook.
+    // default 20, jadi pengajar dengan lebih dari 20 course terbit tidak bisa
+    // memilih course ke-21 dan seterusnya di gradebook.
     const res = await apiGetFull<CourseOption[]>('/courses', { status: 'terbit,diperbarui', limit: 100 });
     courses.value = res.data ?? [];
   } catch {
@@ -85,19 +85,19 @@ function selectCourse(id: string) {
 
 const columns = computed(() => [
   { key: 'siswa_nama', label: t('grading.gradebook.colStudent') },
-  ...(data.value?.asesmen ?? []).map((a) => ({ key: a.id, label: a.judul })),
+  ...(data.value?.assessment ?? []).map((a) => ({ key: a.id, label: a.title })),
   { key: 'nilai_akhir', label: t('grading.gradebook.colFinal') },
   { key: 'status', label: t('grading.gradebook.colStatus') },
 ]);
 
 const rows = computed<GradebookRow[]>(() =>
-  (data.value?.siswa ?? []).map((s) => {
+  (data.value?.student ?? []).map((s) => {
     const rec: GradebookRow = {
       siswa_nama: s.siswa_nama,
       nilai_akhir: s.nilai_akhir ?? '—',
       status: s.status || 'berjalan',
     };
-    (data.value?.asesmen ?? []).forEach((a) => {
+    (data.value?.assessment ?? []).forEach((a) => {
       rec[a.id] = s.scores?.[a.id] ?? t('grading.gradebook.notGraded');
     });
     if (s.disesuaikan) rec.status = t('grading.gradebook.adjusted', { status: rec.status });
@@ -127,8 +127,8 @@ onMounted(() => {
     <PageHeader
       :title="t('grading.gradebook.title')"
       :subtitle="
-        data?.kursus_judul
-          ? t('grading.gradebook.subtitleWith', { course: data.kursus_judul })
+        data?.course_title
+          ? t('grading.gradebook.subtitleWith', { course: data.course_title })
           : t('grading.gradebook.subtitle')
       "
     >
@@ -144,7 +144,7 @@ onMounted(() => {
       <div v-if="coursesLoading" class="mt-3 text-sm text-slate-400">{{ t('grading.gradebook.loadingCourses') }}</div>
       <div v-else-if="!courses.length" class="mt-3 text-sm text-slate-400">{{ t('grading.gradebook.noCourses') }}</div>
       <div v-else class="mt-3 flex flex-wrap gap-2">
-        <button v-for="c in courses" :key="c.id" class="btn-outline" @click="selectCourse(c.id)">{{ c.judul }}</button>
+        <button v-for="c in courses" :key="c.id" class="btn-outline" @click="selectCourse(c.id)">{{ c.title }}</button>
       </div>
     </div>
 

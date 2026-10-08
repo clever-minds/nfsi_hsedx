@@ -38,8 +38,12 @@ const BASE_URL = resolveBaseUrl();
 export function assetUrl(p: string | null | undefined): string {
   if (!p) return '';
   if (/^https?:\/\//.test(p)) return p;
-  if (/^https?:\/\//.test(BASE_URL)) return new URL(BASE_URL).origin + p;
-  return p;
+  
+  // Ensure leading slash for uploads path if missing
+  const normalizedPath = p.startsWith('uploads/') ? '/' + p : p;
+
+  if (/^https?:\/\//.test(BASE_URL)) return new URL(BASE_URL).origin + normalizedPath;
+  return normalizedPath;
 }
 
 let accessToken: string | null = localStorage.getItem('access_token');
@@ -178,6 +182,10 @@ export function errorMessage(err: unknown, fallback?: string): string {
 
   const fromServer = serverError?.message;
   if (fromServer) return fromServer;
+  // 413 hampir selalu datang dari reverse proxy (Nginx `client_max_body_size`),
+  // bukan dari aplikasi — tanpa body JSON. Pesan umum "upload gagal" membuat
+  // admin mencari masalah di tempat yang salah, jadi sebut penyebabnya.
+  if (ax.response?.status === 413) return t('common.error.payloadTooLarge');
   if (fallback) return fallback;
 
   const status = ax.response?.status;

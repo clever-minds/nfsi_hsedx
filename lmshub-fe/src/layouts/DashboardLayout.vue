@@ -29,7 +29,7 @@ function itemVisible(n: { permission?: string; roles?: string[]; hideForRoles?: 
   return true;
 }
 
-// Label diterjemahkan di sini (bukan di config) agar ikut berubah saat ganti bahasa.
+// Label diterjemahkan di sini (bukan di config) agar ikut berubah saat ganti language.
 const visibleSections = computed(() =>
   navSections
     .map((s) => ({
@@ -116,8 +116,8 @@ const tahun = new Date().getFullYear();
       </div>
 
       <div class="ms-auto flex items-center gap-1 pe-4 sm:gap-2">
-        <!-- CTA buat kursus (hanya instruktur/admin yang punya izin membuat) -->
-        <RouterLink v-if="auth.can('kursus.create')" to="/d/courses/new" class="btn-primary hidden py-2 lg:inline-flex">
+        <!-- CTA buat course (hanya instructor/admin yang punya izin membuat) -->
+        <RouterLink v-if="auth.can('course.create')" to="/d/courses/new" class="btn-primary hidden py-2 lg:inline-flex">
           {{ t('nav.header.newCourse') }}
         </RouterLink>
 
@@ -156,7 +156,7 @@ const tahun = new Date().getFullYear();
       class="fixed bottom-0 start-0 top-16 z-30 flex w-64 transform flex-col border-e border-slate-200 bg-white transition-transform duration-200"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'"
     >
-      <!-- Navigasi berkelompok dengan judul seksi -->
+      <!-- Navigasi berkelompok dengan title seksi -->
       <nav class="flex-1 overflow-y-auto py-3">
         <div v-for="section in visibleSections" :key="section.title" class="mb-1">
           <div class="px-5 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">

@@ -17,7 +17,7 @@ import { OrderRow } from './orders.repository';
 import * as marketingService from '../marketing/marketing.service';
 import { CheckoutInput, ManualOrderInput, OrderItemInput, PayInput, RefundInput, VerifyPaymentInput } from './orders.validation';
 
-// Finansial: fallback revenue share instruktur (README §"revenue share 60:40") bila
+// Finansial: fallback revenue share instructor (README §"revenue share 60:40") bila
 // `instructor_profiles.revenue_share_percent` (override) tidak diisi. Final via `settings` (domain 12).
 const DEFAULT_INSTRUCTOR_SHARE_PERCENT = 60;
 // Timeout checkout default (menit) — placeholder sampai `settings.checkout_timeout_minutes` tersedia (domain 12).
@@ -33,10 +33,10 @@ const isDirektur = (actor: AuthContext) => actor.roles.includes('super_admin') |
 /**
  * Metode luar-jaringan yang boleh dicatat lewat `POST /orders/:id/pay`.
  *
- * Endpoint itu hanya MENCATAT klaim pembayaran; tidak ada uang yang berpindah
+ * Endpoint itu hanya MENCATAT klaim payment; tidak ada uang yang berpindah
  * di dalamnya. Karena itu setiap catatan masuk sebagai `menunggu_verifikasi`
- * dan baru melunasi order setelah seseorang ber-izin `pembayaran.update`
- * menyetujuinya di layar Transaksi.
+ * dan baru melunasi order setelah seseorang ber-izin `payment.update`
+ * menyetujuinya di layar Transaction.
  *
  * Metode gateway (kartu, VA, e-wallet, QRIS) sengaja TIDAK ada di daftar ini.
  * Untuk metode tersebut satu-satunya bukti uang sudah masuk adalah webhook
@@ -55,11 +55,11 @@ function periodeNow(): string {
 // ── Penyusunan item & kupon ──────────────────────────────────
 
 /**
- * Tipe item yang harganya DIPASOK KLIEN, bukan diturunkan dari katalog.
+ * Tipe item yang harganya DIPASOK KLIEN, bukan diturunkan dari catalog.
  *
- * Untuk `kursus`, `bundle` dan `path`, `resolveItems()` membaca harga dari basis
+ * Untuk `course`, `bundle` dan `path`, `resolveItems()` membaca price dari basis
  * data dan mengabaikan apa pun yang dikirim pembeli. `langganan` belum punya
- * katalog paket tersendiri, jadi harganya datang dari request.
+ * catalog paket tersendiri, jadi harganya datang dari request.
  *
  * Himpunan ini ada supaya keputusan "total nol boleh dipercaya" (lihat
  * `checkout()`) tidak pernah lepas sinkron dari kenyataan di `resolveItems()`.
@@ -68,7 +68,7 @@ function periodeNow(): string {
  */
 export const TIPE_HARGA_DARI_KLIEN = new Set<OrderItemInput['item_tipe']>(['langganan']);
 
-/** Seluruh harga order ini diturunkan server dari katalog? */
+/** Seluruh price order ini diturunkan server dari catalog? */
 export const hargaSepenuhnyaDariKatalog = (items: OrderItemInput[]): boolean =>
   items.every((i) => !TIPE_HARGA_DARI_KLIEN.has(i.item_tipe));
 
@@ -87,17 +87,17 @@ async function resolveItems(items: OrderItemInput[]): Promise<ResolvedItem[]> {
   const resolved: ResolvedItem[] = [];
   for (const item of items) {
     let hargaSatuan = 0;
-    if (item.item_tipe === 'kursus' || item.item_tipe === 'bundle') {
+    if (item.item_tipe === 'course' || item.item_tipe === 'bundle') {
       const course = await repo.courseById(item.course_id!);
       if (!course) throw AppError.badRequest(`Course ${item.course_id} was not found`, 'course.not_found');
-      hargaSatuan = Number(course.harga);
+      hargaSatuan = Number(course.price);
     } else if (item.item_tipe === 'path') {
       const path = await repo.learningPathById(item.learning_path_id!);
       if (!path) throw AppError.badRequest(`Learning path ${item.learning_path_id} was not found`, 'learning_path.not_found');
       if (path.harga_bundle == null) throw AppError.badRequest('This learning path is not sold as a bundle', 'learning_path.not_sold_as_bundle');
       hargaSatuan = Number(path.harga_bundle);
     } else {
-      // langganan: belum ada katalog paket terpisah — harga dipasok klien,
+      // langganan: belum ada catalog paket terpisah — price dipasok klien,
       // divalidasi non-negatif oleh Zod. Tercatat di TIPE_HARGA_DARI_KLIEN;
       // menambah cabang serupa di sini WAJIB menambah tipenya ke sana.
       hargaSatuan = item.harga_satuan ?? 0;
@@ -120,7 +120,7 @@ async function resolveItems(items: OrderItemInput[]): Promise<ResolvedItem[]> {
 async function applyCoupon(kode: string | undefined, subtotal: number): Promise<{ coupon_id: string | null; diskon: number }> {
   if (!kode) return { coupon_id: null, diskon: 0 };
   const coupon = await repo.couponByKode(kode);
-  if (!coupon || !coupon.is_aktif) throw AppError.badRequest('This coupon is not valid', 'coupon.invalid');
+  if (!coupon || !coupon.is_active) throw AppError.badRequest('This coupon is not valid', 'coupon.invalid');
   const now = new Date();
   if (coupon.berlaku_mulai && new Date(coupon.berlaku_mulai) > now) throw AppError.badRequest('This coupon is not valid yet', 'coupon.not_yet_valid');
   if (coupon.berlaku_sampai && new Date(coupon.berlaku_sampai) < now) throw AppError.badRequest('This coupon has expired', 'coupon.expired');
@@ -180,21 +180,21 @@ async function buildOrder(
 }
 
 /**
- * Boleh langsung diberi akses tanpa pembayaran?
+ * Boleh langsung diberi akses tanpa payment?
  *
- * Dua keadaan sah membuat sebuah order bernilai nol: kursus yang memang
+ * Dua keadaan sah membuat sebuah order bernilai nol: course yang memang
  * dipasang gratis, dan kupon yang memotong habis seluruh tagihan. Keduanya
  * dijanjikan Buku 3 dan keduanya sebelumnya buntu — `pay-gateway` menolak
  * dengan `order.free_no_payment`, `pay` menuntut nominal positif, dan
- * `recomputeOrderStatus` hanya melunasi bila `total > 0`. Akibatnya kursus
+ * `recomputeOrderStatus` hanya melunasi bila `total > 0`. Akibatnya course
  * gratis tidak bisa didaftari sama sekali.
  *
  * Syaratnya sengaja DUA, bukan sekadar `total === 0`:
  *
  *  1. totalnya benar-benar nol, dan
- *  2. seluruh harga di order itu diturunkan server dari katalog.
+ *  2. seluruh price di order itu diturunkan server dari catalog.
  *
- * Syarat kedua yang menahan penyalahgunaan. Harga `kursus`/`bundle`/`path`
+ * Syarat kedua yang menahan penyalahgunaan. Harga `course`/`bundle`/`path`
  * dibaca dari basis data dan input klien diabaikan, jadi pembeli tidak bisa
  * memaksa nol. Tetapi `langganan` harganya dipasok request — tanpa syarat kedua,
  * satu baris langganan berharga 0 cukup untuk mencetak order berstatus lunas
@@ -204,10 +204,10 @@ function bolehLangsungAktif(order: OrderRow, items: OrderItemInput[]): boolean {
   return Number(order.total) === 0 && hargaSepenuhnyaDariKatalog(items);
 }
 
-// ── Checkout online (siswa) ──────────────────────────────────
+// ── Checkout online (student) ──────────────────────────────────
 
 export async function checkout(actor: AuthContext, input: CheckoutInput) {
-  // Order bernilai nol diaktifkan di transaksi yang sama dengan pembuatannya,
+  // Order bernilai nol diaktifkan di transaction yang sama dengan pembuatannya,
   // supaya tidak pernah ada keadaan antara "order gratis dibuat" dan "aksesnya
   // diberikan" yang bisa gagal di tengah jalan.
   const order = await withTransaction(async (tx) => {
@@ -225,14 +225,14 @@ export async function checkout(actor: AuthContext, input: CheckoutInput) {
       await recordAudit(
         {
           userId: actor.userId,
-          module: 'transaksi',
+          module: 'transaction',
           action: 'checkout_gratis',
           entity: 'orders',
           entityId: o.id,
           after: {
             total: 0,
             // Dua sebab sah sebuah order bernilai nol; dicatat supaya laporan
-            // bisa memisahkan kursus gratis dari kupon potong-habis.
+            // bisa memisahkan course gratis dari kupon potong-habis.
             sebab: Number(o.subtotal) > 0 ? 'kupon_100_persen' : 'kursus_gratis',
           },
         },
@@ -244,7 +244,7 @@ export async function checkout(actor: AuthContext, input: CheckoutInput) {
 
   await recordAudit({
     userId: actor.userId,
-    module: 'transaksi',
+    module: 'transaction',
     action: 'checkout',
     entity: 'orders',
     entityId: order.id,
@@ -274,7 +274,7 @@ export async function createManual(actor: AuthContext, input: ManualOrderInput) 
   );
   await recordAudit({
     userId: actor.userId,
-    module: 'transaksi',
+    module: 'transaction',
     action: 'create_manual',
     entity: 'orders',
     entityId: order.id,
@@ -321,12 +321,12 @@ async function activateOrderOnLunas(tx: PoolClient, order: OrderRow, actorId: st
   const periode = periodeNow();
 
   for (const item of items) {
-    if (item.item_tipe === 'kursus' || item.item_tipe === 'bundle') {
+    if (item.item_tipe === 'course' || item.item_tipe === 'bundle') {
       if (!item.course_id) continue;
       const course = await repo.courseById(item.course_id, tx);
       if (!course) continue;
 
-      // revenue share instruktur:lembaga dari harga efektif (setelah kupon)
+      // revenue share instructor:lembaga dari price efektif (setelah kupon)
       const efektif = round2(Number(item.subtotal) * ratio);
       const instructorProfile = await repo.instructorProfileById(course.instructor_id, tx);
       const persen = instructorProfile?.revenue_share_percent != null
@@ -354,8 +354,8 @@ async function activateOrderOnLunas(tx: PoolClient, order: OrderRow, actorId: st
       for (const courseId of courseIds) {
         await repo.insertEnrollment({ user_id: order.buyer_user_id, course_id: courseId, sumber: 'path', order_item_id: item.id }, tx);
       }
-      // Catatan: bagi hasil per-kursus pada jalur ini diagregasi lintas
-      // instruktur oleh modul laporan, bukan di sini — lihat domain 05/09.
+      // Catatan: bagi hasil per-course pada jalur ini diagregasi lintas
+      // instructor oleh modul laporan, bukan di sini — lihat domain 05/09.
     }
     // item_tipe='langganan': aktivasi subscriptions/memberships di luar cakupan modul orders/marketing ini.
   }
@@ -368,7 +368,7 @@ async function activateOrderOnLunas(tx: PoolClient, order: OrderRow, actorId: st
   await recordAudit(
     {
       userId: actorId,
-      module: 'pembayaran',
+      module: 'payment',
       action: 'order_lunas',
       entity: 'orders',
       entityId: order.id,
@@ -392,7 +392,7 @@ async function recomputeOrderStatus(tx: PoolClient, orderId: string, actorId: st
   }
 }
 
-// ── Pembayaran luar-jaringan: transfer bank / tunai (finansial) ──
+// ── Payment luar-jaringan: transfer bank / tunai (finansial) ──
 
 export async function pay(actor: AuthContext, orderId: string, input: PayInput) {
   const order = await loadOrderScoped(actor, orderId);
@@ -429,7 +429,7 @@ export async function pay(actor: AuthContext, orderId: string, input: PayInput) 
     await recordAudit(
       {
         userId: actor.userId,
-        module: 'pembayaran',
+        module: 'payment',
         action: 'pay',
         entity: 'payments',
         entityId: payment.id,
@@ -443,10 +443,10 @@ export async function pay(actor: AuthContext, orderId: string, input: PayInput) 
   return { payment: result, order: await detail(actor, orderId) };
 }
 
-// ── Pembayaran via gateway (finansial) ─────────────────────
+// ── Payment via gateway (finansial) ─────────────────────
 //
-// Tujuh gateway didukung (Stripe, PayPal, Razorpay, Paystack, Flutterwave,
-// Mollie, Midtrans). Adapter-nya ada di `core/payment/providers`; modul ini
+// Delapan gateway didukung (Stripe, PayPal, Razorpay, Paystack, Flutterwave,
+// Mollie, Midtrans, Easebuzz). Adapter-nya ada di `core/payment/providers`; modul ini
 // hanya memutuskan kapan sebuah order menjadi lunas. Order HANYA lunas lewat
 // webhook — redirect balik dari browser tidak pernah dianggap bukti bayar.
 
@@ -458,7 +458,7 @@ async function storeCurrency(): Promise<string> {
   return (code || 'IDR').toUpperCase();
 }
 
-/** Konfigurasi pembayaran untuk FE: gateway yang aktif + rekening transfer manual. */
+/** Konfigurasi payment untuk FE: gateway yang aktif + rekening transfer manual. */
 export async function paymentConfig() {
   // Kredensial gateway kini datang dari Pengaturan (env hanya cadangan), jadi
   // cache-nya harus terisi sebelum daftar gateway dibangun.
@@ -512,13 +512,13 @@ export async function paymentConfig() {
 }
 
 /**
- * Mulai pembayaran gateway: buat payment pending, lalu sesi checkout di provider.
+ * Mulai payment gateway: buat payment pending, lalu sesi checkout di provider.
  * `payments.id` dikirim sebagai referensi sehingga webhook bisa menemukannya lagi.
  *
  * Bila belum ada gateway terkonfigurasi, checkout DITOLAK. Dulu jalur itu
  * melunasi order begitu saja "supaya alur bisa diuji" — dan karena seluruh
  * kredensial gateway bersifat opsional, itulah keadaan setiap instalasi baru:
- * toko yang baru dipasang membagikan kursus berbayar secara cuma-cuma sampai
+ * toko yang baru dipasang membagikan course berbayar secara cuma-cuma sampai
  * pemiliknya memasang gateway. Auto-settle kini harus dinyalakan sendiri lewat
  * `PAYMENT_DEV_AUTOSETTLE=true` dan tidak bisa hidup di `NODE_ENV=production`.
  */
@@ -580,7 +580,7 @@ export async function payGateway(actor: AuthContext, orderId: string, providerId
       tx,
     );
     await recordAudit(
-      { userId: actor.userId, module: 'pembayaran', action: 'gateway_init', entity: 'payments', entityId: p.id, after: { metode, nominal: total } },
+      { userId: actor.userId, module: 'payment', action: 'gateway_init', entity: 'payments', entityId: p.id, after: { metode, nominal: total } },
       tx,
     );
     return p;
@@ -641,7 +641,7 @@ export async function payGateway(actor: AuthContext, orderId: string, providerId
 
 /**
  * Handler webhook gateway (dipanggil TANPA auth — diverifikasi oleh adapter).
- * Idempoten: pembayaran yang sudah terverifikasi diabaikan.
+ * Idempoten: payment yang sudah terverifikasi diabaikan.
  */
 export async function handleGatewayWebhook(providerId: string, req: WebhookRequest) {
   await ensurePaymentSettings();
@@ -668,7 +668,7 @@ export async function handleGatewayWebhook(providerId: string, req: WebhookReque
 
   if (!payment) return { ok: true, note: 'payment not found — ignored' };
 
-  // Gateway lain tidak boleh menyelesaikan pembayaran milik gateway ini.
+  // Gateway lain tidak boleh menyelesaikan payment milik gateway ini.
   if (payment.metode !== provider.id) {
     logger.warn(
       { provider: provider.id, payment: payment.id, metode: payment.metode },
@@ -695,7 +695,7 @@ export async function handleGatewayWebhook(providerId: string, req: WebhookReque
       );
       await recomputeOrderStatus(tx, payment.order_id, null);
       await recordAudit(
-        { userId: null, module: 'pembayaran', action: 'gateway_settlement', entity: 'payments', entityId: payment.id, after: { provider: provider.id, note: event.note } },
+        { userId: null, module: 'payment', action: 'gateway_settlement', entity: 'payments', entityId: payment.id, after: { provider: provider.id, note: event.note } },
         tx,
       );
     });
@@ -707,7 +707,7 @@ export async function handleGatewayWebhook(providerId: string, req: WebhookReque
         tx,
       );
       await recordAudit(
-        { userId: null, module: 'pembayaran', action: 'gateway_failed', entity: 'payments', entityId: payment.id, after: { provider: provider.id, note: event.note } },
+        { userId: null, module: 'payment', action: 'gateway_failed', entity: 'payments', entityId: payment.id, after: { provider: provider.id, note: event.note } },
         tx,
       );
     });
@@ -717,13 +717,13 @@ export async function handleGatewayWebhook(providerId: string, req: WebhookReque
   return { ok: true, outcome: event.outcome };
 }
 
-// ── Verifikasi pembayaran manual (admin_ops) (finansial) ──
+// ── Verifikasi payment manual (admin_ops) (finansial) ──
 
 export async function verify(actor: AuthContext, orderId: string, input: VerifyPaymentInput) {
   const order = await repo.findById(orderId);
   if (!order) throw AppError.notFound('Order not found', 'order.not_found');
-  // `payment_id` opsional: layar Transaksi menyetujui sebuah order, bukan sebuah
-  // baris pembayaran, dan hampir semua order hanya punya satu klaim yang
+  // `payment_id` opsional: layar Transaction menyetujui sebuah order, bukan sebuah
+  // baris payment, dan hampir semua order hanya punya satu klaim yang
   // menunggu. Bila ternyata ada lebih dari satu, minta penyebutnya secara
   // eksplisit alih-alih menebak yang mana.
   let payment;
@@ -753,7 +753,7 @@ export async function verify(actor: AuthContext, orderId: string, input: VerifyP
     await recordAudit(
       {
         userId: actor.userId,
-        module: 'pembayaran',
+        module: 'payment',
         action: `verify_${input.aksi}`,
         entity: 'payments',
         entityId: payment.id,

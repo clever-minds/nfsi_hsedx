@@ -10,7 +10,7 @@ import type { DonutSegment } from '@/lib/chart-palette';
  * dibatasi enam segmen — di atas itu perbedaan sudut jadi tidak terbaca.
  *
  * Warna melekat pada segmen lewat `color` yang dikirim pemanggil, bukan pada
- * urutan tampil; jadi ketika suatu status naik-turun peringkat, warnanya tidak
+ * sort_order tampil; jadi ketika suatu status naik-turun peringkat, warnanya tidak
  * ikut berpindah. Nama dan angka selalu tampil di legenda, sehingga identitas
  * tidak pernah bergantung pada warna saja.
  */
@@ -90,7 +90,7 @@ const pct = (n: number) => `${n.toFixed(n < 10 ? 1 : 0)}%`;
       </div>
     </div>
 
-    <!-- Legenda: nama + jumlah + persentase, jadi warna bukan satu-satunya penanda -->
+    <!-- Legenda: name + jumlah + persentase, jadi warna bukan satu-satunya penanda -->
     <ul class="w-full min-w-0 flex-1 space-y-2">
       <li
         v-for="a in arcs"

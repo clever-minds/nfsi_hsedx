@@ -14,7 +14,9 @@
     "issue": "Issue Certificate",
     "processing": "Processing…",
     "loadFailed": "Failed to load data",
-    "claimFailed": "Cannot be issued yet"
+    "claimFailed": "Cannot be issued yet",
+    "examNotTaken": "Pass the final exam “{exam}” (minimum {pass}%) to unlock this certificate.",
+    "examNotPassed": "Your best score in “{exam}” is {score}% — {pass}% is needed to unlock this certificate."
   },
   "viewer": {
     "back": "← Back",
@@ -65,7 +67,7 @@
     "loadFailed": "Failed to load certificate templates",
     "saveFailed": "Failed to save the template",
     "token": {
-      "nama": "student name",
+      "name": "student name",
       "nomor": "certificate number",
       "tanggal": "issue date"
     }

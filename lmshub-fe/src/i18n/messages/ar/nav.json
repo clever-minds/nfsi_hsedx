@@ -32,7 +32,8 @@
     "bankAccounts": "الحسابات البنكية",
     "website": "الموقع",
     "certificateTemplate": "قالب الشهادة",
-    "mediaLibrary": "مكتبة الوسائط"
+    "mediaLibrary": "مكتبة الوسائط",
+    "pages": "الصفحات"
   },
   "public": {
     "home": "الرئيسية",
@@ -62,6 +63,7 @@
     "newsletterHint": "احصل على ترشيحات الدورات والعروض مباشرةً في بريدك.",
     "emailPlaceholder": "البريد الإلكتروني",
     "blurb": "منصّة أكاديمية للدورات عبر الإنترنت — تعلّم مهارات جديدة من مدرّبين ذوي خبرة، وأنجز التقييمات، واحصل على شهادات.",
-    "copyright": "© {year} {name} · {tagline}"
+    "copyright": "© {year} {name} · {tagline}",
+    "contact": "اتصل بنا"
   }
 }

@@ -106,7 +106,7 @@ async function save(item: SettingItem) {
   savedKey.value = null;
   error.value = '';
 
-  // Setting JSON dikirim sebagai teks JSON sekaligus objek, agar kolom `nilai`
+  // Setting JSON dikirim sebagai text JSON sekaligus objek, agar kolom `nilai`
   // dan `nilai_json` di backend tidak saling bertentangan.
   let nilai = item.nilai;
   let nilaiJson: unknown;
@@ -127,7 +127,7 @@ async function save(item: SettingItem) {
 
   try {
     await apiPut(`/settings/${item.key}`, nilaiJson === undefined ? { nilai } : { nilai, nilai_json: nilaiJson });
-    // Mata uang memengaruhi seluruh harga — terapkan tanpa perlu muat ulang.
+    // Mata uang memengaruhi seluruh price — terapkan tanpa perlu muat ulang.
     if (item.key === 'currency.code') appConfig.setCurrency(nilai);
     savedKey.value = item.key;
     successMsg.value = t('settings.saved');
@@ -328,7 +328,7 @@ onBeforeUnmount(() => observer?.disconnect());
                 </div>
               </div>
 
-              <!-- Kontrol satu baris: dropdown / angka / boolean / teks / JSON -->
+              <!-- Kontrol satu baris: dropdown / angka / boolean / text / JSON -->
               <div v-else class="flex flex-wrap items-start gap-2">
                 <div class="flex min-w-0 flex-1 items-center gap-2">
                   <!-- Dropdown dengan pencarian: daftar mata uang bisa panjang,

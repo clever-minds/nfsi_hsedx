@@ -1,40 +1,48 @@
 import { z } from 'zod';
 
 // ── content_pages ────────────────────────────────────────────────────────
+const slugSchema = z
+  .string()
+  .min(2)
+  .max(150)
+  .regex(/^[a-z0-9-]+$/, 'A slug may contain only lowercase letters, digits and hyphens');
+
+const metaSeoSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  og_image: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+});
+
+/**
+ * Isi halaman dikirim sebagai HTML (`konten_html`) dari editor Admin Panel dan
+ * disanitasi di server sebelum disimpan. `content` (JSON bebas) tetap diterima
+ * demi klien lama; bila berisi `html`, bagian itu ikut disanitasi.
+ */
+const kontenHtmlSchema = z.string().max(200_000);
+
 export const createPageSchema = z.object({
-  slug: z
-    .string()
-    .min(2)
-    .max(150)
-    .regex(/^[a-z0-9-]+$/, 'A slug may contain only lowercase letters, digits and hyphens'),
-  judul: z.string().min(2).max(200),
-  konten: z.unknown().optional(),
+  slug: slugSchema,
+  title: z.string().min(2).max(200),
+  content: z.unknown().optional(),
+  konten_html: kontenHtmlSchema.optional(),
   tipe: z.enum(['tentang', 'faq', 'kebijakan', 'halaman']).default('halaman'),
   status: z.enum(['draft', 'terbit', 'arsip']).default('draft'),
-  meta_seo: z
-    .object({
-      title: z.string().optional(),
-      description: z.string().optional(),
-      og_image: z.string().optional(),
-      keywords: z.array(z.string()).optional(),
-    })
-    .optional(),
+  tampil_di_footer: z.boolean().default(false),
+  urutan_footer: z.number().int().min(0).max(999).default(0),
+  meta_seo: metaSeoSchema.optional(),
 });
 
 export const updatePageSchema = z.object({
-  judul: z.string().min(2).max(200).optional(),
-  konten: z.unknown().optional(),
+  slug: slugSchema.optional(),
+  title: z.string().min(2).max(200).optional(),
+  content: z.unknown().optional(),
+  konten_html: kontenHtmlSchema.optional(),
   tipe: z.enum(['tentang', 'faq', 'kebijakan', 'halaman']).optional(),
   status: z.enum(['draft', 'terbit', 'arsip']).optional(),
-  meta_seo: z
-    .object({
-      title: z.string().optional(),
-      description: z.string().optional(),
-      og_image: z.string().optional(),
-      keywords: z.array(z.string()).optional(),
-    })
-    .nullable()
-    .optional(),
+  tampil_di_footer: z.boolean().optional(),
+  urutan_footer: z.number().int().min(0).max(999).optional(),
+  meta_seo: metaSeoSchema.nullable().optional(),
 });
 
 // ── settings ─────────────────────────────────────────────────────────────

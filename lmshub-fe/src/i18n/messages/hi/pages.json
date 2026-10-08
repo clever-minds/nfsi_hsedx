@@ -1,0 +1,63 @@
+{
+  "editor": {
+    "linkPrompt": "लिंक पता (https://…, /pages/…, mailto:…)",
+    "bold": "बोल्ड",
+    "italic": "इटैलिक",
+    "underline": "रेखांकन",
+    "paragraph": "अनुच्छेद",
+    "bulletList": "बुलेट सूची",
+    "numberList": "क्रमांकित सूची",
+    "quote": "उद्धरण",
+    "link": "लिंक जोड़ें",
+    "clear": "फ़ॉर्मेटिंग हटाएँ",
+    "htmlMode": "HTML",
+    "visualMode": "विज़ुअल"
+  },
+  "public": {
+    "notFoundTitle": "पेज नहीं मिला",
+    "notFoundText": "यह पेज मौजूद नहीं है या अभी प्रकाशित नहीं हुआ है।",
+    "backHome": "होम पर वापस जाएँ"
+  },
+  "admin": {
+    "title": "पेज",
+    "subtitle": "About, Help Center, Privacy, Terms और Contact जैसे स्थिर पेज। “फ़ुटर में दिखाएँ” वाले पेज फ़ुटर के Support कॉलम में आते हैं।",
+    "add": "नया पेज",
+    "formTitleNew": "नया पेज",
+    "formTitleEdit": "पेज संपादित करें",
+    "colTitle": "शीर्षक",
+    "colStatus": "स्थिति",
+    "colFooter": "फ़ुटर",
+    "colUpdated": "अपडेट",
+    "slug": "पता (slug)",
+    "slugHint": "छोटे अक्षर, अंक और हाइफ़न। बदलने पर पुराने पते वाले लिंक टूट जाएँगे।",
+    "type": "प्रकार",
+    "statusHint": "केवल प्रकाशित पेज ही आगंतुक खोल सकते हैं।",
+    "showInFooter": "फ़ुटर में दिखाएँ",
+    "footerOrder": "फ़ुटर क्रम",
+    "content": "सामग्री",
+    "contentHint": "सहेजते समय स्क्रिप्ट, एम्बेडेड फ़्रेम और असुरक्षित लिंक अपने-आप हटा दिए जाते हैं।",
+    "view": "देखें",
+    "open": "खोलें",
+    "publish": "प्रकाशित करें",
+    "unpublish": "अप्रकाशित करें",
+    "empty": "अभी कोई पेज नहीं।",
+    "saved": "पेज सहेजा गया।",
+    "loadFailed": "पेज लोड नहीं हो सके।",
+    "saveFailed": "पेज सहेजा नहीं जा सका।",
+    "deleteFailed": "पेज हटाया नहीं जा सका।",
+    "confirmDelete": "पेज “{title}” हटाएँ? इसके लिंक काम करना बंद कर देंगे।",
+    "titleRequired": "कम से कम 2 अक्षरों का शीर्षक दर्ज करें।",
+    "slugInvalid": "पते में केवल छोटे अक्षर, अंक और हाइफ़न हो सकते हैं (2–150 अक्षर)।"
+  },
+  "tipe": {
+    "tentang": "परिचय",
+    "faq": "FAQ / सहायता",
+    "kebijakan": "नीति",
+    "halaman": "सामान्य पेज"
+  },
+  "status": {
+    "draft": "ड्राफ़्ट",
+    "terbit": "प्रकाशित",
+    "arsip": "संग्रहीत"
+  }
+}

@@ -19,7 +19,7 @@ export const enrollmentsRouter = Router();
 enrollmentsRouter.use(requireAuth());
 
 // ── Enrollments ─────────────────────────────────────────
-// GET otomatis ter-scope ke "kursus saya" untuk siswa (row-level di service).
+// GET otomatis ter-scope ke "course saya" untuk student (row-level di service).
 enrollmentsRouter.get('/enrollments', requirePermission('enrollment', 'view'), asyncHandler(ctrl.list));
 enrollmentsRouter.post(
   '/enrollments',
@@ -40,6 +40,8 @@ enrollmentsRouter.post(
   validate(revokeEnrollmentSchema),
   asyncHandler(ctrl.revoke),
 );
+// Ulang course (reset progres). Student: miliknya sendiri & bila course mengizinkan — dicek di service.
+enrollmentsRouter.post('/enrollments/:id/restart', requirePermission('enrollment', 'view'), asyncHandler(ctrl.restart));
 enrollmentsRouter.post(
   '/enrollments/bulk-import',
   requirePermission('enrollment', 'create'),
@@ -48,7 +50,7 @@ enrollmentsRouter.post(
 );
 
 // ── Cohorts ─────────────────────────────────────────────
-// Daftar semua cohort lintas kursus (admin) — WAJIB sebelum '/cohorts/:id...' agar tidak tertangkap :id.
+// Daftar semua cohort lintas course (admin) — WAJIB sebelum '/cohorts/:id...' agar tidak tertangkap :id.
 enrollmentsRouter.get('/cohorts', requirePermission('cohort', 'view'), asyncHandler(ctrl.listAllCohorts));
 enrollmentsRouter.get('/courses/:courseId/cohorts', requirePermission('cohort', 'view'), asyncHandler(ctrl.listCohorts));
 enrollmentsRouter.post(

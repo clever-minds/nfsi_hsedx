@@ -11,8 +11,8 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 interface SubmissionItem extends Record<string, unknown> {
   id: string;
   siswa_nama?: string;
-  kursus_judul?: string;
-  jenis?: string; // kuis | tugas | esai
+  course_title?: string;
+  jenis?: string; // quiz | assignment | esai
   judul_asesmen?: string;
   tanggal_kumpul?: string;
   status: string;
@@ -20,7 +20,7 @@ interface SubmissionItem extends Record<string, unknown> {
 
 interface RubricCriteria {
   id: string;
-  nama: string;
+  name: string;
   bobot?: number;
   skorMaks?: number;
 }
@@ -51,7 +51,7 @@ const columns = computed(() => [
   { key: 'siswa_nama', label: t('grading.queue.colStudent') },
   { key: 'judul_asesmen', label: t('grading.queue.colAssessment') },
   { key: 'jenis', label: t('grading.queue.colType') },
-  { key: 'kursus_judul', label: t('grading.queue.colCourse') },
+  { key: 'course_title', label: t('grading.queue.colCourse') },
   { key: 'tanggal_kumpul', label: t('grading.queue.colSubmittedAt') },
   { key: 'status', label: t('grading.queue.colStatus') },
 ]);
@@ -115,7 +115,7 @@ async function openGrading(row: SubmissionItem) {
   feedback.value = '';
   gradeId.value = null;
   try {
-    // Respons berisi baris mentah `{ submission, grade }` tanpa join. Nama siswa
+    // Respons berisi baris mentah `{ submission, grade }` tanpa join. Nama student
     // diambil dari baris antrean yang sudah dimuat, dan rubrik belum ikut di sini —
     // karena itu panel penilaian memakai input nilai keseluruhan bila rubrik kosong.
     const detail = await apiGet<{
@@ -164,7 +164,7 @@ async function saveGrade() {
       ...(rubric.value.length
         ? {
             rubrik: rubric.value.map((c) => ({
-              nama: c.nama,
+              name: c.name,
               skor: scores[c.id] ?? 0,
               skor_maks: c.skorMaks ?? 100,
             })),
@@ -278,7 +278,7 @@ onMounted(loadQueue);
           <div v-if="rubric.length" class="mt-2 space-y-2">
             <div v-for="c in rubric" :key="c.id" class="flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2">
               <div>
-                <div class="text-sm text-slate-700">{{ c.nama }}</div>
+                <div class="text-sm text-slate-700">{{ c.name }}</div>
                 <div class="text-xs text-slate-400">
                   {{ t('grading.queue.weight', { weight: c.bobot ?? Math.round(100 / rubric.length), max: c.skorMaks ?? 100 }) }}
                 </div>

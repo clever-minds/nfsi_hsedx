@@ -54,7 +54,7 @@ const topbarTampil = computed(
 /** Kolom tautan footer; kosong berarti memakai dua kolom bawaan. */
 const KOLOM_BAWAAN = computed(() => [
   {
-    judul: t('nav.footer.explore'),
+    title: t('nav.footer.explore'),
     tautan: [
       { label: t('nav.item.catalog'), url: '/courses' },
       { label: t('nav.public.instructors'), url: '/instructors' },
@@ -63,20 +63,25 @@ const KOLOM_BAWAAN = computed(() => [
     ],
   },
   {
-    judul: t('nav.footer.support'),
-    tautan: [
-      { label: t('nav.footer.aboutUs'), url: '#' },
-      { label: t('nav.footer.helpCenter'), url: '#' },
-      { label: t('nav.footer.privacyPolicy'), url: '#' },
-      { label: t('nav.footer.terms'), url: '#' },
-    ],
+    title: t('nav.footer.support'),
+    // Halaman yang dikelola di Website → Pages. Backend lama yang belum punya
+    // daftar halaman tetap mendapat tautan ke slug bawaan, bukan `#`.
+    tautan: site.halamanFooter.length
+      ? site.halamanFooter.map((p) => ({ label: p.title, url: `/pages/${p.slug}` }))
+      : [
+          { label: t('nav.footer.aboutUs'), url: '/pages/about-us' },
+          { label: t('nav.footer.helpCenter'), url: '/pages/help-center' },
+          { label: t('nav.footer.privacyPolicy'), url: '/pages/privacy-policy' },
+          { label: t('nav.footer.terms'), url: '/pages/terms-and-conditions' },
+          { label: t('nav.footer.contact'), url: '/pages/contact' },
+        ],
   },
 ]);
 
 const KOLOM = computed(() =>
   site.footer.kolom.length
     ? site.footer.kolom.map((k) => ({
-        judul: pickText(k.judul),
+        title: pickText(k.title),
         tautan: k.tautan.map((l) => ({ label: pickText(l.label, l.url), url: safeHref(l.url) })),
       }))
     : KOLOM_BAWAAN.value,
@@ -85,8 +90,8 @@ const KOLOM = computed(() =>
 const tahun = new Date().getFullYear();
 
 /**
- * Baris hak cipta, dengan tiga tingkat kemunduran: teks dari menu Website →
- * baris footer dari Pengaturan merek → teks bawaan aplikasi.
+ * Baris hak cipta, dengan tiga tingkat kemunduran: text dari menu Website →
+ * baris footer dari Pengaturan merek → text bawaan aplikasi.
  */
 const copyright = computed(() => {
   const dariSite = pickText(site.footer.copyright);
@@ -107,8 +112,8 @@ const copyright = computed(() => {
           <Icon name="phone" :size="13" /> <span class="num">{{ telepon }}</span>
         </span>
         <div class="ms-auto flex items-center gap-3">
-          <!-- <CurrencySwitcher variant="dark" /> -->
-          <!-- <LocaleSwitcher variant="dark" /> -->
+          <CurrencySwitcher variant="dark" />
+          <LocaleSwitcher variant="dark" />
           <a
             v-for="s in site.sosialAktif"
             :key="s.platform"
@@ -159,9 +164,9 @@ const copyright = computed(() => {
         </div>
 
         <div class="ms-auto flex items-center gap-2">
-          <!-- Pemilih bahasa juga di header agar terlihat di mobile (topbar tersembunyi) -->
-          <!-- <CurrencySwitcher class="md:hidden" :show-label="false" /> -->
-          <!-- <LocaleSwitcher class="md:hidden" :show-label="false" /> -->
+          <!-- Pemilih language juga di header agar terlihat di mobile (topbar tersembunyi) -->
+          <CurrencySwitcher class="md:hidden" :show-label="false" />
+          <LocaleSwitcher class="md:hidden" :show-label="false" />
           <template v-if="auth.isAuthenticated">
             <RouterLink to="/d" class="btn-primary rounded-full py-2">{{ t('nav.header.goToDashboard') }}</RouterLink>
           </template>
@@ -225,7 +230,7 @@ const copyright = computed(() => {
         <div>
           <BrandMark tone="dark" />
           <p class="mt-4 text-sm leading-relaxed text-slate-400">
-            {{ pickText(site.footer.deskripsi, t('nav.footer.blurb')) }}
+            {{ pickText(site.footer.description, t('nav.footer.blurb')) }}
           </p>
           <div v-if="site.footer.tampilkan_sosial && site.sosialAktif.length" class="mt-4 flex items-center gap-3">
             <a
@@ -243,7 +248,7 @@ const copyright = computed(() => {
         </div>
 
         <div v-for="(kol, i) in KOLOM" :key="i">
-          <h4 class="text-sm font-semibold uppercase tracking-wider text-white">{{ kol.judul }}</h4>
+          <h4 class="text-sm font-semibold uppercase tracking-wider text-white">{{ kol.title }}</h4>
           <ul class="mt-4 space-y-2.5 text-sm">
             <li v-for="(tautan, j) in kol.tautan" :key="j">
               <RouterLink v-if="internal(tautan.url)" :to="tautan.url" class="transition hover:text-brand-400">
@@ -256,10 +261,10 @@ const copyright = computed(() => {
 
         <div v-if="site.footer.newsletter.aktif">
           <h4 class="text-sm font-semibold uppercase tracking-wider text-white">
-            {{ pickText(site.footer.newsletter.judul, t('nav.footer.newsletter')) }}
+            {{ pickText(site.footer.newsletter.title, t('nav.footer.newsletter')) }}
           </h4>
           <p class="mt-4 text-sm text-slate-400">
-            {{ pickText(site.footer.newsletter.teks, t('nav.footer.newsletterHint')) }}
+            {{ pickText(site.footer.newsletter.text, t('nav.footer.newsletterHint')) }}
           </p>
           <form class="mt-4 flex overflow-hidden rounded-full bg-white/5 ring-1 ring-white/10 focus-within:ring-brand-400" @submit.prevent>
             <input

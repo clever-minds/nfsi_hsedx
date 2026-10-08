@@ -31,7 +31,7 @@
     "email": "ईमेल",
     "emailPlaceholder": "name{'@'}email.com",
     "whatsapp": "व्हाट्सऐप नंबर",
-    "whatsappPlaceholder": "98xxxxxxxx",
+    "whatsappPlaceholder": "08xxxxxxxxxx",
     "initialPassword": "प्रारंभिक पासवर्ड",
     "passwordPlaceholder": "कम से कम 8 अक्षर",
     "status": "स्थिति",
@@ -77,6 +77,13 @@
     "mismatch": "पासवर्ड की पुष्टि मेल नहीं खाती।",
     "passwordChanged": "आपका पासवर्ड बदल दिया गया।",
     "passwordFailed": "पासवर्ड नहीं बदला जा सका",
-    "changePassword": "पासवर्ड बदलें"
+    "changePassword": "पासवर्ड बदलें",
+    "changeEmail": "ईमेल बदलें",
+    "changeEmailHint": "इसी पते से आप साइन इन करते हैं। मौजूदा पासवर्ड से पुष्टि करें; नया पता किसी अन्य खाते का नहीं होना चाहिए।",
+    "newEmail": "नया ईमेल पता",
+    "currentPassword": "मौजूदा पासवर्ड",
+    "saveEmail": "नया ईमेल सहेजें",
+    "emailChanged": "ईमेल बदल गया। अगली बार साइन इन के लिए नया पता उपयोग करें।",
+    "emailChangeFailed": "ईमेल बदला नहीं जा सका।"
   }
 }

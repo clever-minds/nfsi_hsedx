@@ -79,13 +79,13 @@ const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
 /** Account verification email, linking to the frontend's verify page. Signed with the site's own name. */
-export async function sendVerificationEmail(to: string, nama: string, token: string): Promise<{ sent: boolean }> {
+export async function sendVerificationEmail(to: string, name: string, token: string): Promise<{ sent: boolean }> {
   const link = `${env.PUBLIC_WEB_URL.replace(/\/$/, '')}/verify-email?token=${encodeURIComponent(token)}`;
   const site = escapeHtml((await getSetting('brand.nama_aplikasi', '')).trim() || 'LMS Hub');
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto">
       <h2 style="color:#164031">Verify your email — ${site}</h2>
-      <p>Hi ${escapeHtml(nama)},</p>
+      <p>Hi ${escapeHtml(name)},</p>
       <p>Thanks for signing up. Click the button below to verify your email address:</p>
       <p><a href="${link}" style="background:#164031;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Verify email</a></p>
       <p style="color:#6a7a70;font-size:13px">Or open this link: <br>${link}</p>

@@ -4,25 +4,25 @@ import { PageParams } from '../../core/http/pagination';
 /** Baris tabel `categories`. */
 export interface CategoryRow {
   id: string;
-  nama: string;
+  name: string;
   slug: string;
-  deskripsi: string | null;
+  description: string | null;
   ikon: string | null;
-  urutan: number;
-  is_aktif: boolean;
+  sort_order: number;
+  is_active: boolean;
   created_at: string;
 }
 
 export interface CategoryFilters {
   q?: string;
-  is_aktif?: boolean;
+  is_active?: boolean;
 }
 
 /**
- * Baris untuk layar kelola kategori. `jumlah_kursus` menghitung SEMUA kursus
+ * Baris untuk layar kelola kategori. `jumlah_kursus` menghitung SEMUA course
  * yang belum dihapus, bukan hanya yang terbit: yang menahan penghapusan
  * kategori adalah foreign key `courses.category_id` (ON DELETE RESTRICT), dan
- * kursus draf pun menahannya. Angka yang hanya menghitung kursus terbit akan
+ * course draf pun menahannya. Angka yang hanya menghitung course terbit akan
  * menampilkan "0" pada kategori yang tetap menolak dihapus.
  */
 export interface CategoryListRow extends CategoryRow {
@@ -32,7 +32,7 @@ export interface CategoryListRow extends CategoryRow {
 /** Baris `tags`. */
 export interface TagRow {
   id: string;
-  nama: string;
+  name: string;
   slug: string;
   created_at: string;
 }
@@ -49,14 +49,14 @@ export async function list(p: PageParams, f: CategoryFilters): Promise<{ rows: C
     params.push(val);
     where.push(clause.replace('$?', `$${params.length}`));
   };
-  if (f.q) add('nama ILIKE $?', `%${f.q}%`);
-  if (f.is_aktif !== undefined) add('is_aktif = $?', f.is_aktif);
+  if (f.q) add('name ILIKE $?', `%${f.q}%`);
+  if (f.is_active !== undefined) add('is_active = $?', f.is_active);
 
   const whereSql = where.join(' AND ');
-  const sortCol = ['nama', 'urutan', 'created_at'].includes(p.sort ?? '') ? p.sort : 'urutan';
+  const sortCol = ['name', 'sort_order', 'created_at'].includes(p.sort ?? '') ? p.sort : 'sort_order';
 
   const rows = await query<CategoryListRow>(
-    `SELECT id, nama, slug, deskripsi, ikon, urutan, is_aktif, created_at,
+    `SELECT id, name, slug, description, ikon, sort_order, is_active, created_at,
             (SELECT COUNT(*)::int FROM courses c
               WHERE c.category_id = categories.id AND c.deleted_at IS NULL) AS jumlah_kursus
        FROM categories
@@ -72,22 +72,22 @@ export async function list(p: PageParams, f: CategoryFilters): Promise<{ rows: C
   return { rows, total: Number(totalRow?.count ?? 0) };
 }
 
-/** PUBLIK — hanya kategori aktif + jumlah kursus terbit, untuk katalog pra-login. */
+/** PUBLIK — hanya kategori aktif + jumlah course terbit, untuk catalog pra-login. */
 export async function publicList(): Promise<Array<CategoryRow & { jumlah_kursus: number }>> {
   return query<CategoryRow & { jumlah_kursus: number }>(
-    `SELECT cat.id, cat.nama, cat.slug, cat.deskripsi, cat.ikon, cat.urutan, cat.is_aktif, cat.created_at,
+    `SELECT cat.id, cat.name, cat.slug, cat.description, cat.ikon, cat.sort_order, cat.is_active, cat.created_at,
             (SELECT COUNT(*)::int FROM courses c
               WHERE c.category_id = cat.id AND c.deleted_at IS NULL
-                AND c.status_publikasi IN ('terbit','diperbarui')) AS jumlah_kursus
+                AND c.publication_status IN ('terbit','diperbarui')) AS jumlah_kursus
        FROM categories cat
-      WHERE cat.deleted_at IS NULL AND cat.is_aktif = true
-      ORDER BY cat.urutan ASC`,
+      WHERE cat.deleted_at IS NULL AND cat.is_active = true
+      ORDER BY cat.sort_order ASC`,
   );
 }
 
 export async function detail(id: string): Promise<CategoryRow | null> {
   return queryOne<CategoryRow>(
-    `SELECT id, nama, slug, deskripsi, ikon, urutan, is_aktif, created_at
+    `SELECT id, name, slug, description, ikon, sort_order, is_active, created_at
        FROM categories WHERE id = $1 AND deleted_at IS NULL`,
     [id],
   );
@@ -95,24 +95,24 @@ export async function detail(id: string): Promise<CategoryRow | null> {
 
 export async function bySlug(slug: string): Promise<CategoryRow | null> {
   return queryOne<CategoryRow>(
-    `SELECT id, nama, slug, deskripsi, ikon, urutan, is_aktif, created_at
+    `SELECT id, name, slug, description, ikon, sort_order, is_active, created_at
        FROM categories WHERE slug = $1 AND deleted_at IS NULL`,
     [slug],
   );
 }
 
 export async function insert(data: {
-  nama: string;
+  name: string;
   slug: string;
-  deskripsi: string | null;
+  description: string | null;
   ikon: string | null;
-  urutan: number;
-  is_aktif: boolean;
+  sort_order: number;
+  is_active: boolean;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO categories (nama, slug, deskripsi, ikon, urutan, is_aktif)
+    `INSERT INTO categories (name, slug, description, ikon, sort_order, is_active)
      VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
-    [data.nama, data.slug, data.deskripsi, data.ikon, data.urutan, data.is_aktif],
+    [data.name, data.slug, data.description, data.ikon, data.sort_order, data.is_active],
   );
   return row!;
 }
@@ -142,13 +142,13 @@ export async function listTags(p: PageParams, f: TagFilters): Promise<{ rows: Ta
   const params: unknown[] = [];
   if (f.q) {
     params.push(`%${f.q}%`);
-    where.push(`nama ILIKE $${params.length}`);
+    where.push(`name ILIKE $${params.length}`);
   }
   const whereSql = where.join(' AND ');
-  const sortCol = ['nama', 'created_at'].includes(p.sort ?? '') ? p.sort : 'nama';
+  const sortCol = ['name', 'created_at'].includes(p.sort ?? '') ? p.sort : 'name';
 
   const rows = await query<TagRow>(
-    `SELECT id, nama, slug, created_at
+    `SELECT id, name, slug, created_at
        FROM tags
       WHERE ${whereSql}
       ORDER BY ${sortCol} ${p.order}
@@ -159,22 +159,22 @@ export async function listTags(p: PageParams, f: TagFilters): Promise<{ rows: Ta
   return { rows, total: Number(totalRow?.count ?? 0) };
 }
 
-/** PUBLIK — seluruh tag aktif, untuk filter katalog pra-login. */
+/** PUBLIK — seluruh tag aktif, untuk filter catalog pra-login. */
 export async function publicListTags(): Promise<TagRow[]> {
-  return query<TagRow>(`SELECT id, nama, slug, created_at FROM tags WHERE deleted_at IS NULL ORDER BY nama ASC`);
+  return query<TagRow>(`SELECT id, name, slug, created_at FROM tags WHERE deleted_at IS NULL ORDER BY name ASC`);
 }
 
 export async function detailTag(id: string): Promise<TagRow | null> {
-  return queryOne<TagRow>(`SELECT id, nama, slug, created_at FROM tags WHERE id = $1 AND deleted_at IS NULL`, [id]);
+  return queryOne<TagRow>(`SELECT id, name, slug, created_at FROM tags WHERE id = $1 AND deleted_at IS NULL`, [id]);
 }
 
 export async function tagBySlug(slug: string): Promise<TagRow | null> {
-  return queryOne<TagRow>(`SELECT id, nama, slug, created_at FROM tags WHERE slug = $1 AND deleted_at IS NULL`, [slug]);
+  return queryOne<TagRow>(`SELECT id, name, slug, created_at FROM tags WHERE slug = $1 AND deleted_at IS NULL`, [slug]);
 }
 
-export async function insertTag(data: { nama: string; slug: string }): Promise<{ id: string }> {
-  const row = await queryOne<{ id: string }>(`INSERT INTO tags (nama, slug) VALUES ($1,$2) RETURNING id`, [
-    data.nama,
+export async function insertTag(data: { name: string; slug: string }): Promise<{ id: string }> {
+  const row = await queryOne<{ id: string }>(`INSERT INTO tags (name, slug) VALUES ($1,$2) RETURNING id`, [
+    data.name,
     data.slug,
   ]);
   return row!;

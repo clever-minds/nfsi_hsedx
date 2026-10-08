@@ -22,6 +22,13 @@ siteContentRouter.post(
   validate(uploadSiteAssetSchema),
   asyncHandler(ctrl.uploadAsset),
 );
+// Gambar hero sebagai byte mentah (≤5MB), dialirkan ke disk — sama seperti Media Library.
+siteContentRouter.post(
+  '/asset/hero/upload',
+  requireAuth(),
+  requirePermission('pengaturan', 'update'),
+  asyncHandler(ctrl.uploadHero),
+);
 siteContentRouter.delete(
   '/asset/:jenis',
   requireAuth(),

@@ -10,6 +10,7 @@ import {
   verifySchema,
   updateMeSchema,
   changeMyPasswordSchema,
+  changeMyEmailSchema,
   uploadMyPhotoSchema,
 } from './users.validation';
 import * as ctrl from './users.controller';
@@ -18,7 +19,7 @@ export const usersRouter = Router();
 
 usersRouter.use(requireAuth());
 
-// Katalog roles & permissions (untuk UI checklist)
+// Catalog roles & permissions (untuk UI checklist)
 usersRouter.get('/_roles', requirePermission('role', 'view'), asyncHandler(ctrl.roles));
 usersRouter.get('/_permissions', requirePermission('role', 'view'), asyncHandler(ctrl.permissionsCatalog));
 
@@ -28,6 +29,7 @@ usersRouter.post('/', requirePermission('pengguna', 'create'), validate(createUs
 // ── Self-service (profil & password milik sendiri) — WAJIB sebelum '/:id' ──
 usersRouter.patch('/me', validate(updateMeSchema), asyncHandler(ctrl.updateMe));
 usersRouter.patch('/me/password', validate(changeMyPasswordSchema), asyncHandler(ctrl.changeMyPassword));
+usersRouter.patch('/me/email', validate(changeMyEmailSchema), asyncHandler(ctrl.changeMyEmail));
 usersRouter.post('/me/photo', validate(uploadMyPhotoSchema), asyncHandler(ctrl.uploadMyPhoto));
 
 usersRouter.get('/:id', requirePermission('pengguna', 'view'), asyncHandler(ctrl.detail));

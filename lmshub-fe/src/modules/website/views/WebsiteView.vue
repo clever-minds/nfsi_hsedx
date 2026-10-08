@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { apiDelete, apiGet, apiPost, apiPut, assetUrl, errorMessage } from '@/lib/api';
+import { apiDelete, apiGet, apiPut, apiUpload, assetUrl, errorMessage } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 import { useSiteContentStore } from '@/stores/siteContent';
 import {
@@ -20,7 +20,7 @@ import LocalizedField from '../components/LocalizedField.vue';
  *
  * Disimpan per blok, bukan per field: tombol simpan ada di tiap kartu dan
  * mengirim seluruh isi kartu itu. Alasannya ada di sisi backend — daftar
- * (sosmed, kolom footer, urutan seksi) tidak bisa dipangkas lewat penyimpanan
+ * (sosmed, kolom footer, sort_order seksi) tidak bisa dipangkas lewat penyimpanan
  * sebagian, karena tidak ada cara menyatakan "elemen ini dihapus".
  */
 const auth = useAuthStore();
@@ -29,17 +29,16 @@ const { t } = useI18n();
 const canEdit = auth.can('pengaturan.update');
 
 /** Bahasa yang sedang disunting — berlaku untuk semua field di halaman ini. */
-const bahasa = ref<LocaleKey>('en');
+const language = ref<LocaleKey>('en');
 
 const draft = ref<SiteContent>(structuredClone(DEFAULT_SITE_CONTENT));
 const loading = ref(true);
 const error = ref('');
-const successMsg = ref('');
 const savingKey = ref('');
 const savedKey = ref('');
 const activeGroup = ref('kontak');
 
-/** Urutan kartu; sekaligus urutan item di panel navigasi kiri. */
+/** Urutan kartu; sekaligus sort_order item di panel navigasi kiri. */
 const GROUPS = ['kontak', 'sosial', 'menu', 'hero', 'sections', 'footer'] as const;
 type GroupKey = (typeof GROUPS)[number];
 
@@ -81,11 +80,7 @@ async function save(key: GroupKey) {
     // Terapkan ke store agar header/footer di layar ini pun langsung ikut.
     site.patch(key, nilai as never);
     savedKey.value = key;
-    successMsg.value = t('website.saved');
-    setTimeout(() => {
-      if (savedKey.value === key) savedKey.value = '';
-      successMsg.value = '';
-    }, 3000);
+    setTimeout(() => (savedKey.value === key ? (savedKey.value = '') : null), 1500);
   } catch (e) {
     error.value = errorMessage(e, t('website.saveFailed'));
   } finally {
@@ -106,7 +101,7 @@ function tambahMenu() {
   draft.value.menu.push({ label: kosong(), url: '/', aktif: true });
 }
 function tambahKolom() {
-  draft.value.footer.kolom.push({ judul: kosong(), tautan: [{ label: kosong(), url: '/' }] });
+  draft.value.footer.kolom.push({ title: kosong(), tautan: [{ label: kosong(), url: '/' }] });
 }
 function tambahTautan(i: number) {
   draft.value.footer.kolom[i].tautan.push({ label: kosong(), url: '/' });
@@ -121,11 +116,19 @@ function geser<T>(arr: T[], dari: number, arah: -1 | 1) {
 
 // ── Gambar hero ────────────────────────────────────────────────────────────
 
-const MAX_BYTES = 2 * 1024 * 1024;
+/** Sama dengan batas backend (`HERO_MAX_BYTES`). */
+const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
 const heroInput = ref<HTMLInputElement | null>(null);
 const uploading = ref(false);
+const uploadPct = ref(0);
 
+/**
+ * Unggah langsung sebagai byte mentah (mekanisme Media Library), bukan data
+ * URL base64 di dalam JSON. Jalur lama membengkakkan berkas ±33% sehingga foto
+ * hero biasa ditolak — sering oleh batas 1MB bawaan Nginx sebelum sampai ke
+ * aplikasi.
+ */
 async function pilihGambar(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
@@ -143,22 +146,13 @@ async function pilihGambar(event: Event) {
   }
 
   uploading.value = true;
+  uploadPct.value = 0;
   try {
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error(t('website.hero.readFailed')));
-      reader.readAsDataURL(file);
-    });
-    const res = await apiPost<{ url: string }>('/site-content/asset', {
-      jenis: 'hero',
-      data_base64: dataUrl,
-      mime_type: file.type,
+    const res = await apiUpload<{ url: string }>('/site-content/asset/hero/upload', file, (p) => {
+      uploadPct.value = p;
     });
     draft.value.hero.gambar_url = res.url;
     site.patch('hero', draft.value.hero);
-    successMsg.value = 'File berhasil diunggah';
-    setTimeout(() => { successMsg.value = ''; }, 3000);
   } catch (e) {
     error.value = errorMessage(e, t('website.hero.uploadFailed'));
   } finally {
@@ -233,13 +227,6 @@ onBeforeUnmount(() => observer?.disconnect());
 
     <template v-else>
       <div v-if="error" class="mb-4 alert-error">{{ error }}</div>
-      
-      <!-- Toast/Floating Message -->
-      <div v-if="successMsg" class="fixed bottom-6 end-6 z-50 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-xl flex items-center gap-2">
-        <Icon name="check-circle" :size="18" />
-        {{ successMsg }}
-      </div>
-
       <p v-if="!canEdit" class="mb-4 alert-warning">
         {{ t('website.readOnly') }}
       </p>
@@ -261,7 +248,7 @@ onBeforeUnmount(() => observer?.disconnect());
             </button>
           </nav>
 
-          <!-- Pemilih bahasa berlaku untuk seluruh field teks di halaman ini -->
+          <!-- Pemilih language berlaku untuk seluruh field text di halaman ini -->
           <div class="card p-3">
             <div class="mb-2 text-xs font-medium text-slate-500">{{ t('website.editingLanguage') }}</div>
             <div class="flex flex-wrap gap-1.5">
@@ -270,8 +257,8 @@ onBeforeUnmount(() => observer?.disconnect());
                 :key="l"
                 type="button"
                 class="rounded px-2.5 py-1 text-xs font-medium uppercase transition"
-                :class="bahasa === l ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                @click="bahasa = l"
+                :class="language === l ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                @click="language = l"
               >
                 {{ l }}
               </button>
@@ -281,7 +268,7 @@ onBeforeUnmount(() => observer?.disconnect());
         </div>
 
         <div class="min-w-0">
-          <!-- Pemilih bahasa versi layar sempit -->
+          <!-- Pemilih language versi layar sempit -->
           <div class="card mb-6 flex flex-wrap items-center gap-2 p-3 lg:hidden">
             <span class="text-xs font-medium text-slate-500">{{ t('website.editingLanguage') }}</span>
             <button
@@ -289,8 +276,8 @@ onBeforeUnmount(() => observer?.disconnect());
               :key="l"
               type="button"
               class="rounded px-2.5 py-1 text-xs font-medium uppercase transition"
-              :class="bahasa === l ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-600'"
-              @click="bahasa = l"
+              :class="language === l ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-600'"
+              @click="language = l"
             >
               {{ l }}
             </button>
@@ -304,7 +291,7 @@ onBeforeUnmount(() => observer?.disconnect());
             <div class="mt-4 space-y-4 border-t border-slate-100 pt-4">
               <LocalizedField
                 v-model="draft.kontak.alamat"
-                :locale="bahasa"
+                :locale="language"
                 :label="t('website.kontak.address')"
                 :disabled="!canEdit"
               />
@@ -377,7 +364,7 @@ onBeforeUnmount(() => observer?.disconnect());
                   <div class="min-w-[10rem] flex-1">
                     <LocalizedField
                       v-model="m.label"
-                      :locale="bahasa"
+                      :locale="language"
                       :label="t('website.menu.label')"
                       :disabled="!canEdit"
                     />
@@ -425,7 +412,7 @@ onBeforeUnmount(() => observer?.disconnect());
             <div class="mt-4 space-y-4 border-t border-slate-100 pt-4">
               <LocalizedField
                 v-model="draft.hero.badge"
-                :locale="bahasa"
+                :locale="language"
                 :label="t('website.hero.badge')"
                 :fallback="t('catalog.landing.hero.badge')"
                 :disabled="!canEdit"
@@ -436,21 +423,21 @@ onBeforeUnmount(() => observer?.disconnect());
                 <div class="grid gap-3 sm:grid-cols-3">
                   <LocalizedField
                     v-model="draft.hero.judul_pre"
-                    :locale="bahasa"
+                    :locale="language"
                     :label="t('website.hero.titlePre')"
                     :fallback="t('catalog.landing.hero.titlePre')"
                     :disabled="!canEdit"
                   />
                   <LocalizedField
                     v-model="draft.hero.judul_highlight"
-                    :locale="bahasa"
+                    :locale="language"
                     :label="t('website.hero.titleHighlight')"
                     :fallback="t('catalog.landing.hero.titleHighlight')"
                     :disabled="!canEdit"
                   />
                   <LocalizedField
                     v-model="draft.hero.judul_post"
-                    :locale="bahasa"
+                    :locale="language"
                     :label="t('website.hero.titlePost')"
                     :fallback="t('catalog.landing.hero.titlePost')"
                     :disabled="!canEdit"
@@ -460,7 +447,7 @@ onBeforeUnmount(() => observer?.disconnect());
 
               <LocalizedField
                 v-model="draft.hero.subjudul"
-                :locale="bahasa"
+                :locale="language"
                 :label="t('website.hero.subtitle')"
                 :fallback="t('catalog.landing.hero.subtitle')"
                 multiline
@@ -484,7 +471,7 @@ onBeforeUnmount(() => observer?.disconnect());
                   <input ref="heroInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="pilihGambar" />
                   <button class="btn-outline btn-sm" :disabled="uploading" @click="heroInput?.click()">
                     <Icon name="download" :size="14" class="rotate-180" />
-                    {{ uploading ? t('common.state.uploading') : t('website.hero.replace') }}
+                    {{ uploading ? `${t('common.state.uploading')} ${uploadPct}%` : t('website.hero.replace') }}
                   </button>
                   <button v-if="draft.hero.gambar_url" class="btn-outline btn-sm text-rose-600" :disabled="uploading" @click="hapusGambar">
                     {{ t('common.action.remove') }}
@@ -505,7 +492,7 @@ onBeforeUnmount(() => observer?.disconnect());
                 </div>
                 <LocalizedField
                   v-model="draft.hero.rating_teks"
-                  :locale="bahasa"
+                  :locale="language"
                   :label="t('website.hero.ratingText')"
                   :fallback="t('catalog.landing.hero.ratingSuffix')"
                   :disabled="!canEdit"
@@ -570,23 +557,23 @@ onBeforeUnmount(() => observer?.disconnect());
                   </template>
                 </div>
 
-                <!-- Judul seksi bisa ditimpa; kosong = pakai teks bawaan -->
+                <!-- Judul seksi bisa ditimpa; kosong = pakai text bawaan -->
                 <div v-if="s.aktif" class="mt-3 grid gap-3 border-t border-slate-100 pt-3 sm:grid-cols-3">
                   <LocalizedField
                     v-model="s.badge"
-                    :locale="bahasa"
+                    :locale="language"
                     :label="t('website.sections.badge')"
                     :disabled="!canEdit"
                   />
                   <LocalizedField
-                    v-model="s.judul"
-                    :locale="bahasa"
+                    v-model="s.title"
+                    :locale="language"
                     :label="t('website.sections.heading')"
                     :disabled="!canEdit"
                   />
                   <LocalizedField
                     v-model="s.subjudul"
-                    :locale="bahasa"
+                    :locale="language"
                     :label="t('website.sections.subheading')"
                     :disabled="!canEdit"
                   />
@@ -606,8 +593,8 @@ onBeforeUnmount(() => observer?.disconnect());
 
             <div class="mt-4 space-y-4 border-t border-slate-100 pt-4">
               <LocalizedField
-                v-model="draft.footer.deskripsi"
-                :locale="bahasa"
+                v-model="draft.footer.description"
+                :locale="language"
                 :label="t('website.footer.blurb')"
                 :fallback="t('nav.footer.blurb')"
                 multiline
@@ -632,8 +619,8 @@ onBeforeUnmount(() => observer?.disconnect());
                   <div class="flex items-end gap-2">
                     <div class="min-w-0 flex-1">
                       <LocalizedField
-                        v-model="kol.judul"
-                        :locale="bahasa"
+                        v-model="kol.title"
+                        :locale="language"
                         :label="t('website.footer.columnTitle')"
                         :disabled="!canEdit"
                       />
@@ -653,7 +640,7 @@ onBeforeUnmount(() => observer?.disconnect());
                       <div class="min-w-[9rem] flex-1">
                         <LocalizedField
                           v-model="tautan.label"
-                          :locale="bahasa"
+                          :locale="language"
                           :label="t('website.footer.linkLabel')"
                           :disabled="!canEdit"
                         />
@@ -687,15 +674,15 @@ onBeforeUnmount(() => observer?.disconnect());
                 </label>
                 <div v-if="draft.footer.newsletter.aktif" class="grid gap-3 sm:grid-cols-2">
                   <LocalizedField
-                    v-model="draft.footer.newsletter.judul"
-                    :locale="bahasa"
+                    v-model="draft.footer.newsletter.title"
+                    :locale="language"
                     :label="t('website.footer.newsletterTitle')"
                     :fallback="t('nav.footer.newsletter')"
                     :disabled="!canEdit"
                   />
                   <LocalizedField
-                    v-model="draft.footer.newsletter.teks"
-                    :locale="bahasa"
+                    v-model="draft.footer.newsletter.text"
+                    :locale="language"
                     :label="t('website.footer.newsletterText')"
                     :fallback="t('nav.footer.newsletterHint')"
                     :disabled="!canEdit"
@@ -710,7 +697,7 @@ onBeforeUnmount(() => observer?.disconnect());
                 </label>
                 <LocalizedField
                   v-model="draft.footer.copyright"
-                  :locale="bahasa"
+                  :locale="language"
                   :label="t('website.footer.copyright')"
                   :hint="t('website.footer.copyrightHint')"
                   :disabled="!canEdit"

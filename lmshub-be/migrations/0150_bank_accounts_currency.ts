@@ -4,14 +4,14 @@ import { MigrationBuilder } from 'node-pg-migrate';
  * Tiga perubahan pada konfigurasi global:
  *
  * A. `bank_accounts` — rekening tujuan transfer manual naik dari tiga baris `settings`
- * (bank.nama / bank.nomor_rekening / bank.atas_nama) menjadi master data. Alasannya
+ * (bank.name / bank.nomor_rekening / bank.atas_nama) menjadi master data. Alasannya
  * satu: settings hanya bisa menyimpan SATU rekening, sedangkan lembaga lazim punya
  * beberapa (BCA + Mandiri, atau rekening terpisah per unit). Baris lama dipindahkan
  * apa adanya menjadi rekening pertama supaya checkout yang berjalan tidak kehilangan
  * tujuan transfer, lalu baris settings-nya dihapus.
  *
  * B. `currency.code` — mata uang tampilan dipilih di Pengaturan, bukan lagi hard-coded
- * 'IDR' di helper format. is_public karena katalog pra-login juga menampilkan harga.
+ * 'IDR' di helper format. is_public karena catalog pra-login juga menampilkan price.
  *
  * C. `notifikasi.default_kanal` dihapus dari settings. Kanal per-event sudah diatur di
  * Notifikasi → Preferensi (tabel event config), jadi baris ini duplikat yang
@@ -28,9 +28,9 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       atas_nama     text NOT NULL,
       cabang        text,
       catatan       text,
-      is_aktif      boolean NOT NULL DEFAULT true,
+      is_active      boolean NOT NULL DEFAULT true,
       is_utama      boolean NOT NULL DEFAULT false,
-      urutan        integer NOT NULL DEFAULT 0,
+      sort_order        integer NOT NULL DEFAULT 0,
       created_at    timestamptz NOT NULL DEFAULT now(),
       updated_at    timestamptz NOT NULL DEFAULT now(),
       deleted_at    timestamptz
@@ -51,7 +51,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       WHERE is_utama AND deleted_at IS NULL;
   `);
 
-  pgm.sql(`CREATE INDEX bank_accounts_aktif ON bank_accounts (is_aktif, urutan) WHERE deleted_at IS NULL;`);
+  pgm.sql(`CREATE INDEX bank_accounts_aktif ON bank_accounts (is_active, sort_order) WHERE deleted_at IS NULL;`);
 
   pgm.sql(`
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON bank_accounts
@@ -60,22 +60,22 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 
   // Pindahkan rekening yang sudah ada di settings agar checkout tidak kosong.
   pgm.sql(`
-    INSERT INTO bank_accounts (nama_bank, nomor_rekening, atas_nama, is_aktif, is_utama, urutan)
+    INSERT INTO bank_accounts (nama_bank, nomor_rekening, atas_nama, is_active, is_utama, sort_order)
     SELECT
-      COALESCE(NULLIF((SELECT nilai FROM settings WHERE key = 'bank.nama' AND deleted_at IS NULL), ''), 'Bank'),
+      COALESCE(NULLIF((SELECT nilai FROM settings WHERE key = 'bank.name' AND deleted_at IS NULL), ''), 'Bank'),
       COALESCE(NULLIF((SELECT nilai FROM settings WHERE key = 'bank.nomor_rekening' AND deleted_at IS NULL), ''), '-'),
       COALESCE(NULLIF((SELECT nilai FROM settings WHERE key = 'bank.atas_nama' AND deleted_at IS NULL), ''), '-'),
       true, true, 0
     WHERE EXISTS (SELECT 1 FROM settings WHERE key = 'bank.nomor_rekening' AND deleted_at IS NULL AND NULLIF(nilai, '') IS NOT NULL);
   `);
 
-  pgm.sql(`DELETE FROM settings WHERE key IN ('bank.nama', 'bank.nomor_rekening', 'bank.atas_nama');`);
+  pgm.sql(`DELETE FROM settings WHERE key IN ('bank.name', 'bank.nomor_rekening', 'bank.atas_nama');`);
 
   // ── B. Mata uang tampilan ──
   pgm.sql(`
-    INSERT INTO settings (key, grup, label, tipe_nilai, nilai, satuan, is_public, deskripsi) VALUES
+    INSERT INTO settings (key, grup, label, tipe_nilai, nilai, satuan, is_public, description) VALUES
       ('currency.code', 'currency', 'Mata Uang', 'string', 'IDR', NULL, true,
-       'Mata uang untuk semua harga yang ditampilkan')
+       'Mata uang untuk semua price yang ditampilkan')
     ON CONFLICT (key) WHERE deleted_at IS NULL DO NOTHING;
   `);
 
@@ -88,18 +88,18 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 export async function down(pgm: MigrationBuilder): Promise<void> {
   // Kembalikan rekening utama ke settings sebelum tabelnya dibuang.
   pgm.sql(`
-    INSERT INTO settings (key, grup, label, tipe_nilai, nilai, satuan, is_public, deskripsi)
+    INSERT INTO settings (key, grup, label, tipe_nilai, nilai, satuan, is_public, description)
     SELECT * FROM (
-      SELECT 'bank.nama' AS key, 'bank' AS grup, 'Nama Bank' AS label, 'string' AS tipe_nilai,
-             (SELECT nama_bank FROM bank_accounts WHERE deleted_at IS NULL ORDER BY is_utama DESC, urutan LIMIT 1) AS nilai,
-             NULL::text AS satuan, true AS is_public, 'Nama bank tujuan transfer manual' AS deskripsi
+      SELECT 'bank.name' AS key, 'bank' AS grup, 'Nama Bank' AS label, 'string' AS tipe_nilai,
+             (SELECT nama_bank FROM bank_accounts WHERE deleted_at IS NULL ORDER BY is_utama DESC, sort_order LIMIT 1) AS nilai,
+             NULL::text AS satuan, true AS is_public, 'Nama bank tujuan transfer manual' AS description
       UNION ALL
       SELECT 'bank.nomor_rekening', 'bank', 'Nomor Rekening', 'string',
-             (SELECT nomor_rekening FROM bank_accounts WHERE deleted_at IS NULL ORDER BY is_utama DESC, urutan LIMIT 1),
+             (SELECT nomor_rekening FROM bank_accounts WHERE deleted_at IS NULL ORDER BY is_utama DESC, sort_order LIMIT 1),
              NULL, true, 'Nomor rekening tujuan'
       UNION ALL
       SELECT 'bank.atas_nama', 'bank', 'Atas Nama', 'string',
-             (SELECT atas_nama FROM bank_accounts WHERE deleted_at IS NULL ORDER BY is_utama DESC, urutan LIMIT 1),
+             (SELECT atas_nama FROM bank_accounts WHERE deleted_at IS NULL ORDER BY is_utama DESC, sort_order LIMIT 1),
              NULL, true, 'Nama pemilik rekening'
     ) s
     WHERE s.nilai IS NOT NULL
@@ -107,7 +107,7 @@ export async function down(pgm: MigrationBuilder): Promise<void> {
   `);
 
   pgm.sql(`
-    INSERT INTO settings (key, grup, label, tipe_nilai, nilai, satuan, is_public, deskripsi) VALUES
+    INSERT INTO settings (key, grup, label, tipe_nilai, nilai, satuan, is_public, description) VALUES
       ('notifikasi.default_kanal', 'notifikasi', 'Kanal Default Notifikasi', 'json', '["in_app","whatsapp"]', NULL, false,
        'Kanal default event (domain 10)')
     ON CONFLICT (key) WHERE deleted_at IS NULL DO NOTHING;

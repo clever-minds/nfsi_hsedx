@@ -1,10 +1,10 @@
 /**
- * Bentuk konten halaman publik dan cara membacanya.
+ * Bentuk content halaman publik dan cara membacanya.
  *
- * Backend menyimpan teks sebagai objek per bahasa yang boleh setengah terisi.
- * Kosong bukan berarti "tampilkan kosong", melainkan "pakai teks bawaan
- * aplikasi" — dan teks bawaan itu ada di katalog i18n, lengkap empat bahasa.
- * Semua pembacaan karena itu lewat `pickText()`, yang selalu diberi teks
+ * Backend menyimpan text sebagai objek per language yang boleh setengah terisi.
+ * Kosong bukan berarti "tampilkan kosong", melainkan "pakai text bawaan
+ * aplikasi" — dan text bawaan itu ada di catalog i18n, lengkap empat language.
+ * Semua pembacaan karena itu lewat `pickText()`, yang selalu diberi text
  * bawaan sebagai argumen terakhir.
  */
 import { currentLocale } from '@/i18n';
@@ -31,7 +31,7 @@ export interface SectionItem {
   key: string;
   aktif: boolean;
   badge: Localized;
-  judul: Localized;
+  title: Localized;
   subjudul: Localized;
 }
 export interface FooterTautan {
@@ -39,7 +39,7 @@ export interface FooterTautan {
   url: string;
 }
 export interface FooterKolom {
-  judul: Localized;
+  title: Localized;
   tautan: FooterTautan[];
 }
 
@@ -64,16 +64,16 @@ export interface SiteContent {
   };
   sections: SectionItem[];
   footer: {
-    deskripsi: Localized;
+    description: Localized;
     kolom: FooterKolom[];
-    newsletter: { aktif: boolean; judul: Localized; teks: Localized };
+    newsletter: { aktif: boolean; title: Localized; text: Localized };
     copyright: Localized;
     tampilkan_sosial: boolean;
   };
 }
 
-/** Seksi yang boleh diurutkan & dimatikan; harus sama dengan katalog backend. */
-export const SECTION_KEYS = ['kategori', 'benefit', 'featured', 'stats', 'instruktur', 'cta'] as const;
+/** Seksi yang boleh diurutkan & dimatikan; harus sama dengan catalog backend. */
+export const SECTION_KEYS = ['kategori', 'benefit', 'featured', 'stats', 'instructor', 'cta'] as const;
 
 /** Platform sosmed yang punya ikon di aplikasi. */
 export const SOSIAL_PLATFORMS = [
@@ -108,23 +108,23 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     tampilkan_kartu_siswa: true,
     tampilkan_kartu_kursus: true,
   },
-  sections: SECTION_KEYS.map((key) => ({ key, aktif: true, badge: kosong(), judul: kosong(), subjudul: kosong() })),
+  sections: SECTION_KEYS.map((key) => ({ key, aktif: true, badge: kosong(), title: kosong(), subjudul: kosong() })),
   footer: {
-    deskripsi: kosong(),
+    description: kosong(),
     kolom: [],
-    newsletter: { aktif: true, judul: kosong(), teks: kosong() },
+    newsletter: { aktif: true, title: kosong(), text: kosong() },
     copyright: kosong(),
     tampilkan_sosial: true,
   },
 };
 
 /**
- * Teks untuk bahasa yang sedang aktif.
+ * Teks untuk language yang sedang aktif.
  *
- * Urutan: bahasa aktif → Inggris (bahasa dasar sistem) → teks bawaan aplikasi.
- * Langkah tengahnya penting: admin yang hanya mengisi satu bahasa tetap ingin
+ * Urutan: language aktif → Inggris (language dasar sistem) → text bawaan aplikasi.
+ * Langkah tengahnya penting: admin yang hanya mengisi satu language tetap ingin
  * isian itu terlihat oleh pengunjung berbahasa lain, bukan tergantikan diam-diam
- * oleh teks contoh.
+ * oleh text contoh.
  */
 export function pickText(nilai: Localized | undefined, bawaan = ''): string {
   if (!nilai) return bawaan;
@@ -134,7 +134,7 @@ export function pickText(nilai: Localized | undefined, bawaan = ''): string {
   return en || bawaan;
 }
 
-/** True bila ada minimal satu bahasa terisi — dipakai untuk memutuskan override. */
+/** True bila ada minimal satu language terisi — dipakai untuk memutuskan override. */
 export function adaTeks(nilai: Localized | undefined): boolean {
   return !!nilai && LOCALE_KEYS.some((l) => (nilai[l] ?? '').trim());
 }

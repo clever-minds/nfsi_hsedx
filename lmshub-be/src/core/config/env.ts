@@ -22,7 +22,7 @@ export const MIN_SECRET_LENGTH = 32;
  * Rahasia yang tidak pernah boleh dipakai di produksi.
  *
  * Mencocokkan nilai bawaan skema saja tidak cukup: pembeli menyalin
- * `.env.example`, dan berkas itu berisi teks pancingannya sendiri. Guard yang
+ * `.env.example`, dan berkas itu berisi text pancingannya sendiri. Guard yang
  * hanya tahu nilai bawaan skema akan diam untuk setiap instalasi yang persis
  * mengikuti petunjuk pemasangan — persis kasus yang ingin dicegah.
  *
@@ -87,7 +87,7 @@ const schema = z.object({
   PORT: z.coerce.number().default(4000),
   APP_URL: z.string().default('http://localhost:4000'),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
-  // URL FE publik (untuk QR verifikasi sertifikat, link verifikasi email)
+  // URL FE publik (untuk QR verifikasi certificate, link verifikasi email)
   PUBLIC_WEB_URL: z.string().default('http://localhost:5173'),
   // Largest file the Media Library accepts in one upload, in megabytes. The
   // reverse proxy must allow at least this much (Nginx `client_max_body_size`).
@@ -146,6 +146,11 @@ const schema = z.object({
   RAZORPAY_KEY_SECRET: z.string().optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
 
+  // Easebuzz (India)
+  EASEBUZZ_KEY: z.string().optional(),
+  EASEBUZZ_SALT: z.string().optional(),
+  EASEBUZZ_ENV: z.string().optional(), // 'test' or 'prod'
+
   // Paystack (Nigeria, Ghana, South Africa)
   PAYSTACK_SECRET_KEY: z.string().optional(),
   PAYSTACK_PUBLIC_KEY: z.string().optional(),
@@ -163,10 +168,10 @@ const schema = z.object({
   PAYMENT_RETURN_URL: z.string().optional(),
   PAYMENT_CANCEL_URL: z.string().optional(),
 
-  // Auto-settle pembayaran TANPA gateway. Hanya untuk mencoba alur beli di
+  // Auto-settle payment TANPA gateway. Hanya untuk mencoba alur beli di
   // lokal; harus dinyalakan sendiri dan ditolak mentah-mentah di produksi
   // (lihat guard di bawah). Instalasi baru mendapat `false`, sehingga toko yang
-  // belum mengonfigurasi gateway mana pun tidak membagikan kursus berbayar.
+  // belum mengonfigurasi gateway mana pun tidak membagikan course berbayar.
   PAYMENT_DEV_AUTOSETTLE: z
     .string()
     .default('false')
@@ -208,9 +213,9 @@ export const isProd = env.NODE_ENV === 'production';
  */
 if (isProd) {
   const lemah: string[] = [];
-  const cek = (nama: string, nilai: string) => {
+  const cek = (name: string, nilai: string) => {
     const alasan = alasanRahasiaLemah(nilai);
-    if (alasan) lemah.push(`   • ${nama} — ${alasan}`);
+    if (alasan) lemah.push(`   • ${name} — ${alasan}`);
   };
 
   cek('JWT_ACCESS_SECRET', env.JWT_ACCESS_SECRET);
@@ -234,7 +239,7 @@ if (isProd) {
     process.exit(1);
   }
 
-  // Auto-settle pembayaran adalah alat bantu pengembangan. Kalaupun sebuah
+  // Auto-settle payment adalah alat bantu pengembangan. Kalaupun sebuah
   // instalasi produksi mewarisi flag itu dari .env pengembangan, jangan jalan.
   if (env.PAYMENT_DEV_AUTOSETTLE) {
     console.error(

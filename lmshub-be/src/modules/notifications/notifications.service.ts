@@ -37,7 +37,7 @@ export async function updateEventConfig(actor: AuthContext, jenisEvent: string, 
 // ── Helper lintas modul ──────────────────────────────────────────────────
 
 export interface NotifyPayload {
-  judul: string;
+  title: string;
   isi: string;
   data?: unknown;
   sourceType?: string;
@@ -59,7 +59,7 @@ export async function notify(userIds: string[], jenis: string, payload: NotifyPa
 
   const notification = await repo.insertNotification({
     jenis_event: jenis,
-    judul: payload.judul,
+    title: payload.title,
     isi: payload.isi,
     payload: payload.data ?? null,
     source_type: payload.sourceType ?? null,
@@ -104,8 +104,8 @@ export async function createReminder(actor: AuthContext, input: CreateReminderIn
   const { id } = await repo.insertReminder({
     sumber: input.sumber,
     source_id: input.source_id ?? null,
-    judul: input.judul,
-    deskripsi: input.deskripsi ?? null,
+    title: input.title,
+    description: input.description ?? null,
     jatuh_tempo: input.jatuh_tempo,
     pengulangan: input.pengulangan,
     aturan_eskalasi: input.aturan_eskalasi ?? null,
@@ -118,7 +118,7 @@ export async function createReminder(actor: AuthContext, input: CreateReminderIn
     action: 'create_reminder',
     entity: 'reminders',
     entityId: id,
-    after: { sumber: input.sumber, judul: input.judul, penerima: input.penerima.length },
+    after: { sumber: input.sumber, title: input.title, penerima: input.penerima.length },
   });
   return { id };
 }
@@ -145,12 +145,12 @@ export async function listAnnouncements(p: PageParams) {
 
 export async function createAnnouncement(actor: AuthContext, input: CreateAnnouncementInput) {
   const { id } = await repo.insertAnnouncement({
-    judul: input.judul,
+    title: input.title,
     isi: input.isi,
     segmen: input.segmen,
     tanggal_mulai: input.tanggal_mulai ?? new Date().toISOString(),
     tanggal_selesai: input.tanggal_selesai ?? null,
-    is_aktif: input.is_aktif,
+    is_active: input.is_active,
     dibuat_oleh: actor.userId,
   });
   await recordAudit({
@@ -159,7 +159,7 @@ export async function createAnnouncement(actor: AuthContext, input: CreateAnnoun
     action: 'create_announcement',
     entity: 'announcements',
     entityId: id,
-    after: { judul: input.judul, segmen: input.segmen },
+    after: { title: input.title, segmen: input.segmen },
   });
   return { id };
 }

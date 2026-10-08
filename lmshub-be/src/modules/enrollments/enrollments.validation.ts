@@ -30,14 +30,14 @@ export const bulkImportSchema = z.object({
 });
 
 export const createCohortSchema = z.object({
-  nama: z.string().min(2).max(150),
+  name: z.string().min(2).max(150),
   tanggal_mulai: z.string().datetime(),
   tanggal_selesai: z.string().datetime().nullable().optional(),
   kuota_maksimal: z.number().int().positive().nullable().optional(),
 });
 
 export const updateCohortSchema = z.object({
-  nama: z.string().min(2).max(150).optional(),
+  name: z.string().min(2).max(150).optional(),
   tanggal_mulai: z.string().datetime().optional(),
   tanggal_selesai: z.string().datetime().nullable().optional(),
   kuota_maksimal: z.number().int().positive().nullable().optional(),

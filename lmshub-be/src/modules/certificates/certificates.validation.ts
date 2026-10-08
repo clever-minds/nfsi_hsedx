@@ -1,23 +1,23 @@
 import { z } from 'zod';
 
 export const createTemplateSchema = z.object({
-  nama: z.string().min(2).max(150),
-  deskripsi: z.string().max(2000).optional(),
+  name: z.string().min(2).max(150),
+  description: z.string().max(2000).optional(),
   layout: z.record(z.unknown()),
   category_id: z.string().uuid().optional(),
   course_id: z.string().uuid().optional(),
   is_default: z.boolean().default(false),
-  is_aktif: z.boolean().default(true),
+  is_active: z.boolean().default(true),
 });
 
 export const updateTemplateSchema = z.object({
-  nama: z.string().min(2).max(150).optional(),
-  deskripsi: z.string().max(2000).nullable().optional(),
+  name: z.string().min(2).max(150).optional(),
+  description: z.string().max(2000).nullable().optional(),
   layout: z.record(z.unknown()).optional(),
   category_id: z.string().uuid().nullable().optional(),
   course_id: z.string().uuid().nullable().optional(),
   is_default: z.boolean().optional(),
-  is_aktif: z.boolean().optional(),
+  is_active: z.boolean().optional(),
 });
 
 export const issueSchema = z.object({
@@ -40,11 +40,11 @@ export const reissueSchema = z.object({
 
 export const createBadgeSchema = z.object({
   kode: z.string().min(2).max(60),
-  nama: z.string().min(2).max(150),
-  deskripsi: z.string().max(2000).optional(),
+  name: z.string().min(2).max(150),
+  description: z.string().max(2000).optional(),
   kriteria: z.record(z.unknown()),
   icon_url: z.string().max(500).optional(),
-  is_aktif: z.boolean().default(true),
+  is_active: z.boolean().default(true),
 });
 
 export const awardBadgeSchema = z.object({
@@ -58,7 +58,7 @@ export const awardPointsSchema = z.object({
   jumlah: z.number().int().positive(),
   sumber_type: z.enum(['lesson_progress', 'quiz_attempt', 'streak', 'badge', 'manual_admin']).optional(),
   sumber_id: z.string().uuid().optional(),
-  deskripsi: z.string().max(500).optional(),
+  description: z.string().max(500).optional(),
 });
 
 export const leaderboardSnapshotSchema = z.object({

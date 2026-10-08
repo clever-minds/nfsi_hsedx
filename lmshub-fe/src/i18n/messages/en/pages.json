@@ -1,0 +1,63 @@
+{
+  "editor": {
+    "linkPrompt": "Link address (https://…, /pages/…, mailto:…)",
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "paragraph": "Paragraph",
+    "bulletList": "Bulleted list",
+    "numberList": "Numbered list",
+    "quote": "Quote",
+    "link": "Insert link",
+    "clear": "Clear formatting",
+    "htmlMode": "HTML",
+    "visualMode": "Visual"
+  },
+  "public": {
+    "notFoundTitle": "Page not found",
+    "notFoundText": "This page does not exist or has not been published yet.",
+    "backHome": "Back to home"
+  },
+  "admin": {
+    "title": "Pages",
+    "subtitle": "Static pages such as About, Help Center, Privacy, Terms and Contact. Pages marked “Show in footer” appear in the footer Support column.",
+    "add": "New page",
+    "formTitleNew": "New page",
+    "formTitleEdit": "Edit page",
+    "colTitle": "Title",
+    "colStatus": "Status",
+    "colFooter": "Footer",
+    "colUpdated": "Updated",
+    "slug": "Address (slug)",
+    "slugHint": "Lowercase letters, digits and hyphens. Changing it breaks links that already point to the old address.",
+    "type": "Type",
+    "statusHint": "Only published pages can be opened by visitors.",
+    "showInFooter": "Show in footer",
+    "footerOrder": "Footer order",
+    "content": "Content",
+    "contentHint": "Scripts, embedded frames and unsafe links are removed automatically when the page is saved.",
+    "view": "View",
+    "open": "Open",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "empty": "No pages yet.",
+    "saved": "Page saved.",
+    "loadFailed": "Could not load the pages.",
+    "saveFailed": "Could not save the page.",
+    "deleteFailed": "Could not delete the page.",
+    "confirmDelete": "Delete the page “{title}”? Links to it will stop working.",
+    "titleRequired": "Enter a title of at least 2 characters.",
+    "slugInvalid": "The address may contain only lowercase letters, digits and hyphens (2–150 characters)."
+  },
+  "tipe": {
+    "tentang": "About",
+    "faq": "FAQ / Help",
+    "kebijakan": "Policy",
+    "halaman": "General page"
+  },
+  "status": {
+    "draft": "Draft",
+    "terbit": "Published",
+    "arsip": "Archived"
+  }
+}

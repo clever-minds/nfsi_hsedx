@@ -32,7 +32,8 @@
     "bankAccounts": "Bank accounts",
     "website": "Website",
     "certificateTemplate": "Certificate Template",
-    "mediaLibrary": "Media Library"
+    "mediaLibrary": "Media Library",
+    "pages": "Pages"
   },
   "public": {
     "home": "Home",
@@ -62,6 +63,7 @@
     "newsletterHint": "Get course recommendations and promos straight to your inbox.",
     "emailPlaceholder": "Email address",
     "blurb": "An online course academy — learn new skills from experienced instructors, take assessments, and earn certificates.",
-    "copyright": "© {year} {name} · {tagline}"
+    "copyright": "© {year} {name} · {tagline}",
+    "contact": "Contact"
   }
 }

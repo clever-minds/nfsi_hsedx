@@ -9,11 +9,11 @@ const runner = (tx?: PoolClient) => tx ?? pool;
 export interface MarketingCategoryRow {
   id: string;
   kode: string;
-  nama: string;
+  name: string;
   target_default: string;
   target_satuan: string;
   rate_komisi_default: string;
-  is_aktif: boolean;
+  is_active: boolean;
 }
 
 export interface AffiliateProfileRow {
@@ -39,10 +39,10 @@ export interface ReferralLinkRow {
   agen_user_id: string;
   kode: string;
   url_target: string;
-  judul: string | null;
+  title: string | null;
   jumlah_kunjungan: string;
   jumlah_konversi: string;
-  is_aktif: boolean;
+  is_active: boolean;
   expires_at: string | null;
   created_at: string;
 }
@@ -78,7 +78,7 @@ export interface CommissionRow {
   created_at: string;
 }
 
-// ── Marketing categories (read-only di sini, master di domain katalog) ──
+// ── Marketing categories (read-only di sini, master di domain catalog) ──
 
 export async function categoryByKode(kode: string): Promise<MarketingCategoryRow | null> {
   return queryOne<MarketingCategoryRow>(`SELECT * FROM marketing_categories WHERE kode = $1 AND deleted_at IS NULL`, [
@@ -174,12 +174,12 @@ export async function updateAffiliateProfile(id: string, fields: Record<string, 
 // ── Referral links ──────────────────────────────────────────
 
 export async function insertReferralLink(
-  data: { agen_user_id: string; kode: string; url_target: string; judul: string | null; expires_at: Date | null },
+  data: { agen_user_id: string; kode: string; url_target: string; title: string | null; expires_at: Date | null },
 ): Promise<ReferralLinkRow> {
   const row = await queryOne<ReferralLinkRow>(
-    `INSERT INTO referral_links (agen_user_id, kode, url_target, judul, expires_at)
+    `INSERT INTO referral_links (agen_user_id, kode, url_target, title, expires_at)
      VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-    [data.agen_user_id, data.kode, data.url_target, data.judul, data.expires_at],
+    [data.agen_user_id, data.kode, data.url_target, data.title, data.expires_at],
   );
   return row!;
 }

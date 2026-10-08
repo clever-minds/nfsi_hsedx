@@ -57,7 +57,7 @@ async function main() {
   let instructorProfile = await one<{ id: string }>(`SELECT id FROM instructor_profiles LIMIT 1`);
   if (!instructorProfile) {
     // We need an instructor profile. So create a user and an instructor profile.
-    const role = await one<{ id: string }>(`SELECT id FROM roles WHERE kode = 'instruktur'`);
+    const role = await one<{ id: string }>(`SELECT id FROM roles WHERE kode = 'instructor'`);
     if (!role) throw new Error('Instructor role not found');
     
     let instructor = await one<{ id: string }>(`SELECT id FROM users WHERE role_id = $1 LIMIT 1`, [role.id]);
@@ -82,19 +82,19 @@ async function main() {
     let cat = await one<{ id: string }>(`SELECT id FROM categories WHERE slug = $1`, [c.categorySlug]);
     if (!cat) {
       cat = await one<{ id: string }>(
-        `INSERT INTO categories (nama, slug, ikon) VALUES ($1,$2,$3) RETURNING id`,
+        `INSERT INTO categories (name, slug, ikon) VALUES ($1,$2,$3) RETURNING id`,
         [c.categoryName, c.categorySlug, c.icon]
       );
     }
     if (!cat) continue;
 
     const row = await one<{ id: string }>(
-      `INSERT INTO courses (judul, slug, ringkasan, deskripsi, category_id, instructor_id, level, harga, harga_coret,
-                            status_publikasi, bahasa, rating_avg, rating_count, jumlah_siswa,
+      `INSERT INTO courses (title, slug, summary, description, category_id, instructor_id, level, price, strike_price,
+                            publication_status, language, rating_avg, rating_count, student_count,
                             durasi_total_menit, meta, published_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'terbit','en', 4.5, 10, 50, $10, $11, now())
        ON CONFLICT (slug) WHERE deleted_at IS NULL DO UPDATE SET
-         judul=EXCLUDED.judul, harga=EXCLUDED.harga, category_id=EXCLUDED.category_id, meta=EXCLUDED.meta, level=EXCLUDED.level
+         title=EXCLUDED.title, price=EXCLUDED.price, category_id=EXCLUDED.category_id, meta=EXCLUDED.meta, level=EXCLUDED.level
        RETURNING id`,
       [
         c.title,
@@ -123,7 +123,7 @@ async function main() {
 
     // Create a section
     const sec = await one<{ id: string }>(
-      `INSERT INTO sections (course_id, judul, urutan) VALUES ($1,$2,$3) RETURNING id`,
+      `INSERT INTO sections (course_id, title, sort_order) VALUES ($1,$2,$3) RETURNING id`,
       [row.id, 'Core Training Modules', 1]
     );
 
@@ -133,14 +133,14 @@ async function main() {
     let lOrder = 1;
     for (const lessonTitle of c.learn) {
       const lesson = await one<{ id: string }>(
-        `INSERT INTO lessons (section_id, judul, tipe, urutan, durasi_menit, gratis_preview, wajib_selesai)
+        `INSERT INTO lessons (section_id, title, tipe, sort_order, duration_minutes, gratis_preview, must_complete)
          VALUES ($1,$2,'video',$3,$4,$5,true) RETURNING id`,
         [sec.id, lessonTitle, lOrder, 15, c.price === 0 || lOrder === 1]
       );
 
       if (lesson) {
         await pool.query(
-          `INSERT INTO lesson_contents (lesson_id, tipe, urutan, url, durasi_detik)
+          `INSERT INTO lesson_contents (lesson_id, tipe, sort_order, url, duration_seconds)
            VALUES ($1,'video',0,$2,$3)`,
           [lesson.id, YOUTUBE_URLS[lOrder % YOUTUBE_URLS.length], 900]
         );

@@ -28,13 +28,13 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE marketing_categories (
       id                      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       kode                    citext NOT NULL,
-      nama                    varchar(100) NOT NULL,
-      deskripsi               text,
+      name                    varchar(100) NOT NULL,
+      description               text,
       target_default          numeric(18,2) NOT NULL DEFAULT 0,
       target_satuan           varchar(20) NOT NULL DEFAULT 'rupiah',
       rate_komisi_default     numeric(5,2) NOT NULL DEFAULT 0,
-      urutan                  smallint NOT NULL DEFAULT 0,
-      is_aktif                boolean NOT NULL DEFAULT true,
+      sort_order                  smallint NOT NULL DEFAULT 0,
+      is_active                boolean NOT NULL DEFAULT true,
       is_system               boolean NOT NULL DEFAULT false,
       created_at              timestamptz NOT NULL DEFAULT now(),
       updated_at              timestamptz NOT NULL DEFAULT now(),
@@ -44,7 +44,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       CONSTRAINT marketing_categories_rate_chk CHECK (rate_komisi_default >= 0 AND rate_komisi_default <= 100)
     );
     CREATE UNIQUE INDEX marketing_categories_kode_uq ON marketing_categories (kode) WHERE deleted_at IS NULL;
-    CREATE INDEX marketing_categories_is_aktif_idx ON marketing_categories (is_aktif);
+    CREATE INDEX marketing_categories_is_aktif_idx ON marketing_categories (is_active);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON marketing_categories FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
 
@@ -88,10 +88,10 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       agen_user_id        uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       kode                citext NOT NULL,
       url_target          text NOT NULL,
-      judul               varchar(150),
+      title               varchar(150),
       jumlah_kunjungan    bigint NOT NULL DEFAULT 0,
       jumlah_konversi     bigint NOT NULL DEFAULT 0,
-      is_aktif            boolean NOT NULL DEFAULT true,
+      is_active            boolean NOT NULL DEFAULT true,
       expires_at          timestamptz,
       created_at          timestamptz NOT NULL DEFAULT now(),
       updated_at          timestamptz NOT NULL DEFAULT now(),
@@ -101,7 +101,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     );
     CREATE UNIQUE INDEX referral_links_kode_uq ON referral_links (kode) WHERE deleted_at IS NULL;
     CREATE INDEX referral_links_agen_idx ON referral_links (agen_user_id);
-    CREATE INDEX referral_links_is_aktif_idx ON referral_links (is_aktif);
+    CREATE INDEX referral_links_is_aktif_idx ON referral_links (is_active);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON referral_links FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
 
@@ -192,7 +192,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 
   // ── seed 4 kategori marketing ──
   pgm.sql(`
-    INSERT INTO marketing_categories (kode, nama, deskripsi, target_default, target_satuan, rate_komisi_default, is_system) VALUES
+    INSERT INTO marketing_categories (kode, name, description, target_default, target_satuan, rate_komisi_default, is_system) VALUES
       ('mahasiswa', 'Mahasiswa', 'Target dasar (entry)', 10000000, 'rupiah', 20.00, true),
       ('umum', 'Umum', 'Target menengah', 25000000, 'rupiah', 20.00, true),
       ('profesional', 'Profesional', 'Target tinggi, agen berpengalaman', 50000000, 'rupiah', 20.00, true),

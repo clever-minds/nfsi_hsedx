@@ -57,9 +57,9 @@ export async function create(actor: AuthContext, input: CreateBankAccountInput) 
     atas_nama: input.atas_nama,
     cabang: input.cabang ?? null,
     catatan: input.catatan ?? null,
-    is_aktif: input.is_aktif ?? true,
+    is_active: input.is_active ?? true,
     is_utama: isUtama,
-    urutan: input.urutan ?? 0,
+    sort_order: input.sort_order ?? 0,
   });
   await recordAudit({
     userId: actor.userId,
@@ -81,7 +81,7 @@ export async function update(actor: AuthContext, id: string, input: UpdateBankAc
     await assertNoDuplicate(namaBank, nomor, id);
   }
   // Rekening utama harus tetap bisa dipakai; menonaktifkannya akan mengosongkan checkout.
-  if (input.is_aktif === false && before.is_utama) {
+  if (input.is_active === false && before.is_utama) {
     throw AppError.conflict('The primary account cannot be deactivated. Make another account primary first', 'bank_account.primary_cannot_deactivate');
   }
 
@@ -91,9 +91,9 @@ export async function update(actor: AuthContext, id: string, input: UpdateBankAc
     atas_nama: input.atas_nama,
     cabang: input.cabang,
     catatan: input.catatan,
-    is_aktif: input.is_aktif,
+    is_active: input.is_active,
     is_utama: input.is_utama,
-    urutan: input.urutan,
+    sort_order: input.sort_order,
   });
 
   // Melepas tanda utama tanpa menunjuk pengganti akan membuat checkout tidak
@@ -116,7 +116,7 @@ export async function remove(actor: AuthContext, id: string) {
   const before = await detail(id);
   const aktif = await repo.listActive();
   // Jangan sampai transfer manual kehilangan seluruh tujuannya.
-  if (before.is_aktif && aktif.length <= 1) {
+  if (before.is_active && aktif.length <= 1) {
     throw AppError.conflict('At least one bank account must stay active', 'bank_account.keep_one_active');
   }
 

@@ -77,7 +77,7 @@ export async function listQuizzes(req: Request, res: Response) {
 }
 
 export async function quizDetail(req: Request, res: Response) {
-  return ok(res, await service.quizDetail(auth(req), req.params.id));
+  return ok(res, await service.quizDetailForEditor(auth(req), req.params.id));
 }
 
 export async function createQuiz(req: Request, res: Response) {
@@ -125,7 +125,7 @@ export async function upsertRubric(req: Request, res: Response) {
   return ok(res, await service.upsertRubric(auth(req), req.params.id, validated<UpsertRubricInput>(req)));
 }
 
-// ── Attempts (siswa) ──────────────────────────────────────
+// ── Attempts (student) ──────────────────────────────────────
 
 export async function startAttempt(req: Request, res: Response) {
   return created(res, await service.startAttempt(auth(req), req.params.id));

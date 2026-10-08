@@ -2,32 +2,39 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { apiGet, apiGetFull, apiPost, apiPut, errorMessage, assetUrl } from '@/lib/api';
+import { apiGet, apiGetFull, apiPost, apiPut, errorMessage } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 import { useCurrencyStore } from '@/stores/currency';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import StatusChip from '@/components/ui/StatusChip.vue';
-import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
+import RichTextEditor from '@/components/ui/RichTextEditor.vue';
 
 interface CourseDetail {
   id: string;
-  judul: string;
+  title: string;
   slug: string;
-  ringkasan: string | null;
-  deskripsi: string | null;
+  summary: string | null;
+  description: string | null;
   category_id: string;
   level: string;
-  harga: string;
-  harga_coret: string | null;
-  bahasa: string;
-  status_publikasi: string;
+  price: string;
+  strike_price: string | null;
+  language: string;
+  publication_status: string;
   instructor_nama?: string | null;
-  thumbnail_media_id?: string | null;
-  meta?: { thumbnail_url?: string } | null;
+  final_exam_quiz_id?: string | null;
+  allow_restart?: boolean;
+}
+interface QuizOption {
+  id: string;
+  title: string;
+  passing_score: string | null;
+  max_attempts: number;
+  is_active: boolean;
 }
 interface Category {
   id: string;
-  nama: string;
+  name: string;
 }
 
 const STATUS_CHAIN = ['draf', 'dalam_review', 'terbit', 'diperbarui', 'diarsip'];
@@ -38,19 +45,18 @@ const { t } = useI18n();
 
 const courseId = computed(() => route.params.id as string | undefined);
 const isEdit = computed(() => !!courseId.value);
-const tab = ref<'info' | 'kurikulum'>('info');
+const tab = ref<'info' | 'kurikulum' | 'kelulusan'>(route.query.tab === 'completion' ? 'kelulusan' : 'info');
 
 const form = reactive({
-  judul: '',
+  title: '',
   slug: '',
   category_id: '',
   level: 'pemula' as 'pemula' | 'menengah' | 'mahir',
-  harga: 0,
-  harga_coret: undefined as number | undefined,
-  ringkasan: '',
-  deskripsi: '',
-  bahasa: 'en',
-  thumbnail_media_id: undefined as string | undefined,
+  price: 0,
+  strike_price: undefined as number | undefined,
+  summary: '',
+  description: '',
+  language: 'id',
 });
 
 const currentStatus = ref('draf');
@@ -59,18 +65,17 @@ const categories = ref<Category[]>([]);
 const canManageCategories = useAuthStore().can('kategori.create');
 // Harga disimpan dalam mata uang basis, bukan Rupiah. Labelnya dulu menuliskan
 // "(IDR)" secara harfiah di keempat berkas terjemahan, jadi pemasangan yang
-// memakai mata uang lain melihat kolom harga yang salah namanya.
+// memakai mata uang lain melihat kolom price yang salah namanya.
 const currency = useCurrencyStore();
 const loading = ref(true);
 const saving = ref(false);
 const busy = ref(false);
 const error = ref('');
 const notice = ref('');
-const previewUrl = ref('');
 
 /**
  * Kegagalan di sini sengaja tidak membatalkan pemuatan halaman — editor tetap
- * berguna untuk menyunting kursus yang sudah ada. Tapi daftar yang kosong
+ * berguna untuk menyunting course yang sudah ada. Tapi daftar yang kosong
  * berarti `category_id` (wajib) tidak bisa diisi, jadi templatenya menjelaskan
  * hal itu di bawah dropdown alih-alih membiarkannya kosong tanpa sebab.
  */
@@ -84,19 +89,53 @@ async function loadCategories() {
 
 async function loadCourse(id: string) {
   const c = await apiGet<CourseDetail>(`/courses/${id}`);
-  form.judul = c.judul;
+  form.title = c.title;
   form.slug = c.slug;
   form.category_id = c.category_id;
   form.level = c.level as typeof form.level;
-  form.harga = Number(c.harga);
-  form.harga_coret = c.harga_coret ? Number(c.harga_coret) : undefined;
-  form.ringkasan = c.ringkasan ?? '';
-  form.deskripsi = c.deskripsi ?? '';
-  form.bahasa = c.bahasa;
-  form.thumbnail_media_id = c.thumbnail_media_id ?? undefined;
-  previewUrl.value = c.meta?.thumbnail_url ? assetUrl(c.meta.thumbnail_url) : '';
-  currentStatus.value = c.status_publikasi;
+  form.price = Number(c.price);
+  form.strike_price = c.strike_price ? Number(c.strike_price) : undefined;
+  form.summary = c.summary ?? '';
+  form.description = c.description ?? '';
+  form.language = c.language;
+  currentStatus.value = c.publication_status;
   instructorNama.value = c.instructor_nama ?? '';
+  rules.final_exam_quiz_id = c.final_exam_quiz_id ?? '';
+  rules.allow_restart = !!c.allow_restart;
+}
+
+// ── Kelulusan & certificate ───────────────────────────────────────────────
+// Disimpan lewat endpoint tersendiri: mengubah aturan kelulusan tidak boleh
+// memindahkan course Terbit ke "Diperbarui" dan menunggu review ulang.
+const rules = reactive({ final_exam_quiz_id: '', allow_restart: false });
+const quizzes = ref<QuizOption[]>([]);
+const savingRules = ref(false);
+const selectedExam = computed(() => quizzes.value.find((q) => q.id === rules.final_exam_quiz_id) ?? null);
+
+async function loadQuizzes(id: string) {
+  try {
+    quizzes.value = (await apiGetFull<QuizOption[]>('/quizzes', { 'filter[course_id]': id }).then((r) => r.data ?? [])) as QuizOption[];
+  } catch {
+    quizzes.value = [];
+  }
+}
+
+async function saveRules() {
+  if (!courseId.value) return;
+  savingRules.value = true;
+  error.value = '';
+  notice.value = '';
+  try {
+    await apiPut(`/courses/${courseId.value}/completion-rules`, {
+      final_exam_quiz_id: rules.final_exam_quiz_id || null,
+      allow_restart: rules.allow_restart,
+    });
+    notice.value = t('courses.completion.saved');
+  } catch (e) {
+    error.value = errorMessage(e, t('courses.completion.saveFailed'));
+  } finally {
+    savingRules.value = false;
+  }
 }
 
 onMounted(async () => {
@@ -104,7 +143,7 @@ onMounted(async () => {
   error.value = '';
   try {
     await loadCategories();
-    if (courseId.value) await loadCourse(courseId.value);
+    if (courseId.value) await Promise.all([loadCourse(courseId.value), loadQuizzes(courseId.value)]);
     else if (categories.value.length) form.category_id = categories.value[0].id;
   } catch (e) {
     error.value = errorMessage(e, t('courses.editor.loadFailed'));
@@ -118,16 +157,15 @@ async function submit() {
   saving.value = true;
   try {
     const payload = {
-      judul: form.judul,
+      title: form.title,
       slug: form.slug || undefined,
       category_id: form.category_id,
       level: form.level,
-      harga: Number(form.harga),
-      harga_coret: form.harga_coret ? Number(form.harga_coret) : undefined,
-      ringkasan: form.ringkasan || undefined,
-      deskripsi: form.deskripsi || undefined,
-      bahasa: form.bahasa,
-      thumbnail_media_id: form.thumbnail_media_id || undefined,
+      price: Number(form.price),
+      strike_price: form.strike_price ? Number(form.strike_price) : undefined,
+      summary: form.summary || undefined,
+      description: form.description || undefined,
+      language: form.language,
     };
     if (isEdit.value && courseId.value) {
       await apiPut(`/courses/${courseId.value}`, payload);
@@ -157,19 +195,12 @@ async function transition(action: 'submit' | 'publish' | 'archive') {
     busy.value = false;
   }
 }
-
-function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }) {
-  form.thumbnail_media_id = asset.id;
-  if (asset.path_object_storage) {
-    previewUrl.value = assetUrl(asset.path_object_storage);
-  }
-}
 </script>
 
 <template>
   <div>
     <PageHeader
-      :title="isEdit ? form.judul || t('courses.editor.titleEdit') : t('courses.editor.titleNew')"
+      :title="isEdit ? form.title || t('courses.editor.titleEdit') : t('courses.editor.titleNew')"
       :subtitle="t('courses.editor.subtitle')"
     >
       <template #actions>
@@ -201,15 +232,23 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
         >
           {{ t('courses.editor.tabCurriculum') }}
         </button>
+        <button
+          class="tab-item"
+          :class="{ 'tab-item-active': tab === 'kelulusan' }"
+          @click="tab = 'kelulusan'"
+        >
+          {{ t('courses.completion.tab') }}
+        </button>
       </div>
 
-
+      <p v-if="error" class="mb-4 alert-error">{{ error }}</p>
+      <p v-if="notice" class="mb-4 alert-success">{{ notice }}</p>
 
       <div v-if="tab === 'info'" class="space-y-6">
         <form class="card grid gap-4 p-5 sm:grid-cols-2" @submit.prevent="submit">
           <div class="sm:col-span-2">
             <label class="label">{{ t('courses.editor.fieldTitle') }}</label>
-            <input v-model="form.judul" class="input" required :placeholder="t('courses.editor.fieldTitlePlaceholder')" />
+            <input v-model="form.title" class="input" required :placeholder="t('courses.editor.fieldTitlePlaceholder')" />
           </div>
           <div>
             <label class="label">{{ t('courses.editor.fieldSlug') }}</label>
@@ -218,7 +257,7 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
           <div>
             <label class="label">{{ t('courses.editor.fieldCategory') }}</label>
             <select v-model="form.category_id" class="input" required>
-              <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.nama }}</option>
+              <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
             </select>
             <!-- Tautan hanya untuk yang boleh membuat kategori; sisanya diarahkan
                  ke admin, bukan ke halaman yang akan menolak mereka. -->
@@ -242,47 +281,28 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
           </div>
           <div>
             <label class="label">{{ t('courses.editor.fieldLanguage') }}</label>
-            <input v-model="form.bahasa" class="input" maxlength="10" />
+            <input v-model="form.language" class="input" maxlength="10" />
           </div>
           <div>
             <label class="label">{{ t('courses.editor.fieldPrice', { currency: currency.base }) }}</label>
-            <input v-model.number="form.harga" class="input" type="number" min="0" />
+            <input v-model.number="form.price" class="input" type="number" min="0" />
           </div>
           <div>
             <label class="label">{{ t('courses.editor.fieldStrikePrice') }}</label>
-            <input v-model.number="form.harga_coret" class="input" type="number" min="0" />
+            <input v-model.number="form.strike_price" class="input" type="number" min="0" />
           </div>
           <div class="sm:col-span-2">
             <label class="label">{{ t('courses.editor.fieldSummary') }}</label>
-            <textarea v-model="form.ringkasan" class="input" rows="2" maxlength="500"></textarea>
-          </div>
-          <div class="sm:col-span-2 border-t border-slate-100 pt-4">
-            <label class="label">Course Thumbnail (Optional)</label>
-            <div class="flex items-center gap-3">
-              <img v-if="previewUrl" :src="previewUrl" class="h-16 w-24 object-cover rounded-lg border border-slate-200" alt="Thumbnail Preview" />
-              <MediaUploadButton
-                accept="image/jpeg,image/png,image/webp"
-                label="Upload New Thumbnail"
-                @uploaded="onThumbnailUploaded"
-              />
-              <span v-if="form.thumbnail_media_id" class="text-sm font-medium text-green-600">
-                Thumbnail selected!
-              </span>
-            </div>
-            <p class="text-xs text-slate-500 mt-1">Upload a cover image for your course. It will automatically be selected.</p>
+            <textarea v-model="form.summary" class="input" rows="2" maxlength="500"></textarea>
           </div>
           <div class="sm:col-span-2">
             <label class="label">{{ t('courses.editor.fieldDescription') }}</label>
-            <textarea v-model="form.deskripsi" class="input" rows="5"></textarea>
+            <RichTextEditor v-model="form.description" class="mt-1" />
           </div>
           <div v-if="isEdit" class="text-xs text-slate-400 sm:col-span-2">
             {{ t('courses.editor.instructor', { name: instructorNama || '—' }) }}
           </div>
 
-          <div class="sm:col-span-2">
-            <p v-if="error" class="mb-4 alert-error">{{ error }}</p>
-            <p v-if="notice" class="mb-4 alert-success">{{ notice }}</p>
-          </div>
           <div class="flex flex-wrap gap-2 sm:col-span-2">
             <button class="btn-primary" type="submit" :disabled="saving">
               {{ saving ? t('common.state.saving') : t('common.action.save') }}
@@ -294,7 +314,7 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
         <div v-if="isEdit" class="card flex flex-wrap gap-2 p-5">
           <button
             v-if="currentStatus === 'draf'"
-            v-can="'kursus.update'"
+            v-can="'course.update'"
             class="btn-outline"
             :disabled="busy"
             @click="transition('submit')"
@@ -303,7 +323,7 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
           </button>
           <button
             v-if="['dalam_review', 'diperbarui'].includes(currentStatus)"
-            v-can="'kursus.update'"
+            v-can="'course.update'"
             class="btn-outline"
             :disabled="busy"
             @click="transition('publish')"
@@ -312,12 +332,62 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
           </button>
           <button
             v-if="currentStatus !== 'diarsip'"
-            v-can="'kursus.update'"
+            v-can="'course.update'"
             class="btn-outline"
             :disabled="busy"
             @click="transition('archive')"
           >
             {{ t('courses.list.archive') }}
+          </button>
+        </div>
+      </div>
+
+      <div v-else-if="tab === 'kelulusan' && isEdit && courseId" class="card space-y-5 p-5">
+        <div>
+          <h3 class="section-title">{{ t('courses.completion.title') }}</h3>
+          <p class="mt-1 text-sm text-slate-500">{{ t('courses.completion.intro') }}</p>
+        </div>
+
+        <div>
+          <label class="label" for="final-exam">{{ t('courses.completion.finalExam') }}</label>
+          <select id="final-exam" v-model="rules.final_exam_quiz_id" class="input max-w-lg">
+            <option value="">{{ t('courses.completion.noExam') }}</option>
+            <option v-for="q in quizzes" :key="q.id" :value="q.id">
+              {{ q.title }}{{ q.is_active ? '' : ` (${t('courses.completion.inactive')})` }}
+            </option>
+          </select>
+          <p class="mt-1 text-xs text-slate-400">{{ t('courses.completion.finalExamHint') }}</p>
+          <p v-if="selectedExam" class="mt-2 text-sm text-slate-600">
+            {{
+              t('courses.completion.examSummary', {
+                pass: selectedExam.passing_score != null ? Number(selectedExam.passing_score) : t('courses.completion.defaultPass'),
+                attempts: selectedExam.max_attempts ? selectedExam.max_attempts : t('courses.completion.unlimited'),
+              })
+            }}
+            <RouterLink :to="{ name: 'quiz-edit', params: { id: selectedExam.id } }" class="ms-1 font-medium text-brand-600 hover:underline">
+              {{ t('courses.completion.editExam') }}
+            </RouterLink>
+          </p>
+          <p v-if="!quizzes.length" class="mt-2 text-sm text-slate-500">
+            {{ t('courses.completion.noQuizzes') }}
+            <RouterLink :to="{ name: 'quiz-create', query: { course: courseId } }" class="ms-1 font-medium text-brand-600 hover:underline">
+              {{ t('courses.completion.createExam') }}
+            </RouterLink>
+          </p>
+        </div>
+
+        <div>
+          <label class="label-inline">
+            <input v-model="rules.allow_restart" type="checkbox" /> {{ t('courses.completion.allowRestart') }}
+          </label>
+          <p class="ms-6 mt-1 text-xs text-slate-400">{{ t('courses.completion.allowRestartHint') }}</p>
+        </div>
+
+        <p class="rounded bg-slate-50 px-3 py-2 text-xs text-slate-500">{{ t('courses.completion.globalHint') }}</p>
+
+        <div>
+          <button v-can="'course.update'" class="btn-primary" :disabled="savingRules" @click="saveRules">
+            {{ savingRules ? t('common.state.saving') : t('common.action.save') }}
           </button>
         </div>
       </div>

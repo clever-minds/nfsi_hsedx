@@ -6,7 +6,7 @@
  * Mixed-language demo data made the catalogue look untranslated even though the
  * UI itself is fully localised into four languages.
  *
- * Stored into `courses.ringkasan`, `courses.deskripsi` and `courses.meta`.
+ * Stored into `courses.summary`, `courses.description` and `courses.meta`.
  */
 
 export interface CourseContent {

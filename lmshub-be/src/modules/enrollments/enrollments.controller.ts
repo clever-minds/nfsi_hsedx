@@ -48,6 +48,10 @@ export async function revoke(req: Request, res: Response) {
   return ok(res, await service.revoke(auth(req), req.params.id, validated<RevokeEnrollmentInput>(req)));
 }
 
+export async function restart(req: Request, res: Response) {
+  return ok(res, await service.restart(auth(req), req.params.id));
+}
+
 export async function bulkImport(req: Request, res: Response) {
   return created(res, await service.bulkImport(auth(req), validated<BulkImportInput>(req)));
 }

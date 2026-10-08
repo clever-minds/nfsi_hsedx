@@ -14,7 +14,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     EXCEPTION WHEN duplicate_object THEN null; END $$;
   `);
   pgm.sql(`
-    DO $$ BEGIN CREATE TYPE laporan_jenis AS ENUM ('keuangan','operasional','kursus');
+    DO $$ BEGIN CREATE TYPE laporan_jenis AS ENUM ('keuangan','operasional','course');
     EXCEPTION WHEN duplicate_object THEN null; END $$;
   `);
   pgm.sql(`
@@ -27,10 +27,10 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE kategori_biaya (
       id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       kode            citext NOT NULL,
-      nama            varchar(100) NOT NULL,
+      name            varchar(100) NOT NULL,
       jenis           financial_entry_arah NOT NULL,
       is_system       boolean NOT NULL DEFAULT false,
-      deskripsi       text,
+      description       text,
       created_at      timestamptz NOT NULL DEFAULT now(),
       updated_at      timestamptz NOT NULL DEFAULT now(),
       deleted_at      timestamptz
@@ -52,7 +52,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       tanggal             date NOT NULL,
       periode_bulan       smallint NOT NULL,
       periode_tahun       smallint NOT NULL,
-      deskripsi           text,
+      description           text,
       dicatat_oleh        uuid NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
       sumber_type         varchar(30),
       sumber_id           uuid,
@@ -81,13 +81,13 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`
     CREATE TABLE report_snapshots (
       id                      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      judul                   varchar(200) NOT NULL,
+      title                   varchar(200) NOT NULL,
       jenis_laporan           laporan_jenis NOT NULL,
       periode_mulai           date NOT NULL,
       periode_selesai         date NOT NULL,
       data                    jsonb NOT NULL,
       course_id               uuid REFERENCES courses(id) ON DELETE SET NULL,
-      status_publikasi        laporan_status_publikasi NOT NULL DEFAULT 'draft',
+      publication_status        laporan_status_publikasi NOT NULL DEFAULT 'draft',
       dipublikasi_oleh        uuid REFERENCES users(id) ON DELETE SET NULL,
       tanggal_publikasi       timestamptz,
       dibuat_oleh             uuid NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -96,14 +96,14 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       deleted_at              timestamptz,
       CONSTRAINT report_snapshots_periode_chk CHECK (periode_selesai >= periode_mulai),
       CONSTRAINT report_snapshots_publikasi_chk CHECK (
-        status_publikasi <> 'dipublikasi' OR (dipublikasi_oleh IS NOT NULL AND tanggal_publikasi IS NOT NULL)
+        publication_status <> 'dipublikasi' OR (dipublikasi_oleh IS NOT NULL AND tanggal_publikasi IS NOT NULL)
       )
     );
     CREATE INDEX report_snapshots_jenis_idx ON report_snapshots (jenis_laporan);
     CREATE INDEX report_snapshots_periode_mulai_idx ON report_snapshots (periode_mulai);
     CREATE INDEX report_snapshots_periode_selesai_idx ON report_snapshots (periode_selesai);
     CREATE INDEX report_snapshots_course_idx ON report_snapshots (course_id);
-    CREATE INDEX report_snapshots_status_idx ON report_snapshots (status_publikasi);
+    CREATE INDEX report_snapshots_status_idx ON report_snapshots (publication_status);
     CREATE INDEX report_snapshots_dipublikasi_oleh_idx ON report_snapshots (dipublikasi_oleh);
     CREATE INDEX report_snapshots_dibuat_oleh_idx ON report_snapshots (dibuat_oleh);
     CREATE INDEX report_snapshots_data_gin_idx ON report_snapshots USING GIN (data);
@@ -135,10 +135,10 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 
   // ── seed kategori biaya sistem ──
   pgm.sql(`
-    INSERT INTO kategori_biaya (kode, nama, jenis, is_system) VALUES
-      ('penjualan_kursus', 'Penjualan Kursus', 'pemasukan', true),
+    INSERT INTO kategori_biaya (kode, name, jenis, is_system) VALUES
+      ('penjualan_kursus', 'Penjualan Course', 'pemasukan', true),
       ('langganan', 'Langganan/Membership', 'pemasukan', true),
-      ('payout_instruktur', 'Payout Instruktur', 'pengeluaran', true),
+      ('payout_instruktur', 'Payout Instructor', 'pengeluaran', true),
       ('komisi_marketing', 'Komisi Marketing', 'pengeluaran', true),
       ('refund', 'Refund', 'pengeluaran', true),
       ('operasional', 'Operasional', 'pengeluaran', true),

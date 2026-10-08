@@ -4,11 +4,11 @@ import { fmtTanggalPanjang } from '@/lib/format';
 import { useAppConfigStore } from '@/stores/appConfig';
 
 export interface CertData {
-  nama: string;
-  kursus: string;
-  instruktur?: string | null;
-  nomor_sertifikat?: string | null;
-  kode_verifikasi?: string | null;
+  name: string;
+  course: string;
+  instructor?: string | null;
+  certificate_number?: string | null;
+  verification_code?: string | null;
   qr_code_url?: string | null;
   tanggal_terbit?: string | null;
   verify_url?: string | null;
@@ -26,10 +26,10 @@ const appConfig = useAppConfigStore();
         <!-- Body Content -->
         <div class="cert-body">
           <p class="lead">This is to inform that</p>
-          <div class="nama">Mr. / Mrs. / Ms. {{ cert.nama }}</div>
+          <div class="name">Mr. / Mrs. / Ms. {{ cert.name }}</div>
           
           <p class="lead mt-4">has successfully completed the certification course titled</p>
-          <div class="kursus">{{ cert.kursus }}</div>
+          <div class="course">{{ cert.course }}</div>
           
           <p class="desc mt-4">
             The participant has fulfilled all the requirements and standards of the course and is hereby
@@ -49,7 +49,7 @@ const appConfig = useAppConfigStore();
 
         <!-- Certificate ID placed at the bottom center/left where the background says VALID CERTIFICATE ID -->
         <div class="cert-id">
-          {{ cert.nomor_sertifikat || '—' }}
+          {{ cert.certificate_number || '—' }}
         </div>
 
         <!-- QR Code -->
@@ -104,13 +104,13 @@ const appConfig = useAppConfigStore();
 .mt-4 {
   margin-top: 16px;
 }
-.nama {
+.name {
   font-size: 18px;
   font-weight: 700;
   color: #000;
   margin: 0 0 15px 0;
 }
-.kursus {
+.course {
   font-size: 24px;
   font-weight: 800;
   color: #000;

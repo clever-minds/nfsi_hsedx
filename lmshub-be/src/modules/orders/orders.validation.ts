@@ -2,18 +2,18 @@ import { z } from 'zod';
 
 export const orderItemSchema = z
   .object({
-    item_tipe: z.enum(['kursus', 'bundle', 'path', 'langganan']),
+    item_tipe: z.enum(['course', 'bundle', 'path', 'langganan']),
     course_id: z.string().uuid().optional(),
     learning_path_id: z.string().uuid().optional(),
     bundle_group_id: z.string().uuid().optional(),
     kuantitas: z.number().int().positive().default(1),
-    // dipakai hanya untuk item_tipe='langganan' (belum ada katalog paket langganan tersendiri)
+    // dipakai hanya untuk item_tipe='langganan' (belum ada catalog paket langganan tersendiri)
     harga_satuan: z.number().nonnegative().optional(),
     meta: z.record(z.unknown()).optional(),
   })
   .refine(
     (d) =>
-      (['kursus', 'bundle'].includes(d.item_tipe) && !!d.course_id) ||
+      (['course', 'bundle'].includes(d.item_tipe) && !!d.course_id) ||
       (d.item_tipe === 'path' && !!d.learning_path_id) ||
       (d.item_tipe === 'langganan' && !d.course_id && !d.learning_path_id),
     { message: 'That combination of item_tipe and item reference is not valid', path: ['item_tipe'] },
@@ -34,7 +34,7 @@ export const manualOrderSchema = z.object({
 });
 
 /**
- * Pencatatan pembayaran luar-jaringan. Hanya metode yang uangnya dipastikan oleh
+ * Pencatatan payment luar-jaringan. Hanya metode yang uangnya dipastikan oleh
  * manusia yang boleh lewat sini; hasilnya selalu `menunggu_verifikasi`.
  * Kartu/VA/e-wallet/QRIS ditangani `POST /orders/:id/pay-gateway` dan dilunasi
  * oleh webhook provider.
@@ -48,7 +48,7 @@ export const paySchema = z.object({
 });
 
 export const verifyPaymentSchema = z.object({
-  /** Kosongkan bila order hanya punya satu pembayaran yang menunggu verifikasi. */
+  /** Kosongkan bila order hanya punya satu payment yang menunggu verifikasi. */
   payment_id: z.string().uuid().optional(),
   aksi: z.enum(['verify', 'reject']),
   catatan_verifikasi: z.string().max(500).optional(),

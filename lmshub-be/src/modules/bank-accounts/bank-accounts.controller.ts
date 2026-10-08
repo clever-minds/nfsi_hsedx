@@ -15,7 +15,7 @@ export async function list(req: Request, res: Response) {
   const page = parsePage(req);
   const filters = {
     q: req.query.q as string | undefined,
-    is_aktif: req.query['filter[is_aktif]'] !== undefined ? req.query['filter[is_aktif]'] === 'true' : undefined,
+    is_active: req.query['filter[is_active]'] !== undefined ? req.query['filter[is_active]'] === 'true' : undefined,
   };
   const { rows, total } = await service.list(page, filters);
   return ok(res, rows, pageMeta(page.page, page.limit, total));

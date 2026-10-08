@@ -27,7 +27,7 @@ export async function create(actor: AuthContext, input: CreateCouponInput) {
     minimum_pembelian: input.minimum_pembelian ?? null,
     berlaku_mulai: input.berlaku_mulai ?? null,
     berlaku_sampai: input.berlaku_sampai ?? null,
-    is_aktif: input.is_aktif ?? true,
+    is_active: input.is_active ?? true,
   });
   await recordAudit({
     userId: actor.userId,
@@ -55,7 +55,7 @@ export async function update(actor: AuthContext, id: string, input: UpdateCoupon
   if (input.minimum_pembelian !== undefined) fields.minimum_pembelian = input.minimum_pembelian;
   if (input.berlaku_mulai !== undefined) fields.berlaku_mulai = input.berlaku_mulai;
   if (input.berlaku_sampai !== undefined) fields.berlaku_sampai = input.berlaku_sampai;
-  if (input.is_aktif !== undefined) fields.is_aktif = input.is_aktif;
+  if (input.is_active !== undefined) fields.is_active = input.is_active;
 
   // Kuota baru yang lebih kecil dari pemakaian akan membuat kupon langsung mati
   // tanpa penjelasan di layar mana pun. Tolak di sini selagi sebabnya jelas.
@@ -73,7 +73,7 @@ export async function update(actor: AuthContext, id: string, input: UpdateCoupon
     action: 'update',
     entity: 'coupons',
     entityId: id,
-    before: { kode: before.kode, nilai_potongan: before.nilai_potongan, is_aktif: before.is_aktif },
+    before: { kode: before.kode, nilai_potongan: before.nilai_potongan, is_active: before.is_active },
     after: input,
   });
   return repo.detail(id);

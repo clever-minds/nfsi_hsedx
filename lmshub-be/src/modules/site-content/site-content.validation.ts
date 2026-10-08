@@ -2,17 +2,17 @@ import { z } from 'zod';
 import { SECTION_KEYS } from './site-content.defaults';
 
 /**
- * Setiap blok konten divalidasi utuh, bukan per field.
+ * Setiap blok content divalidasi utuh, bukan per field.
  *
  * `PUT /site-content/:key` selalu menerima objek lengkap dan menggantikan isi
- * baris. Menyimpan sebagian akan membuat daftar (sosmed, kolom footer, urutan
+ * baris. Menyimpan sebagian akan membuat daftar (sosmed, kolom footer, sort_order
  * seksi) mustahil dipangkas — tidak ada cara menyatakan "hapus elemen ini"
  * lewat penggabungan.
  */
 
 const BAHASA = ['en', 'id', 'ar', 'hi'] as const;
 
-/** Teks per bahasa; bahasa yang kosong berarti jatuh ke teks bawaan aplikasi. */
+/** Teks per language; language yang kosong berarti jatuh ke text bawaan aplikasi. */
 const localized = z
   .object(Object.fromEntries(BAHASA.map((l) => [l, z.string().max(2000).optional()])) as Record<
     (typeof BAHASA)[number],
@@ -79,30 +79,30 @@ export const sectionsSchema = z
       key: z.enum(SECTION_KEYS),
       aktif: z.boolean().default(true),
       badge: localized,
-      judul: localized,
+      title: localized,
       subjudul: localized,
     }),
   )
-  // Urutan array = urutan tampil. Duplikat ditolak supaya satu seksi tidak
+  // Urutan array = sort_order tampil. Duplikat ditolak supaya satu seksi tidak
   // digambar dua kali dengan pengaturan yang berbeda.
   .refine((rows) => new Set(rows.map((r) => r.key)).size === rows.length, {
     message: 'A section may not appear more than once',
   });
 
 export const footerSchema = z.object({
-  deskripsi: localized,
+  description: localized,
   kolom: z
     .array(
       z.object({
-        judul: localized,
+        title: localized,
         tautan: z.array(z.object({ label: localized, url: url })).max(12),
       }),
     )
     .max(4),
   newsletter: z.object({
     aktif: z.boolean().default(true),
-    judul: localized,
-    teks: localized,
+    title: localized,
+    text: localized,
   }),
   copyright: localized,
   tampilkan_sosial: z.boolean().default(true),

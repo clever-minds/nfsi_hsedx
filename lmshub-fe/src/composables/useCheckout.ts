@@ -4,7 +4,7 @@ import { t } from '@/i18n';
 import { paySnap } from '@/lib/payments';
 
 export interface CheckoutItem {
-  item_tipe: 'kursus' | 'bundle' | 'path' | 'langganan';
+  item_tipe: 'course' | 'bundle' | 'path' | 'langganan';
   course_id?: string;
   learning_path_id?: string;
 }
@@ -48,7 +48,7 @@ export type CheckoutStatus = 'idle' | 'sukses' | 'pending' | 'batal' | 'menunggu
 /**
  * Alur beli: buat order → bayar.
  *
- * - 'transfer': catat pembayaran manual, admin yang mengonfirmasi.
+ * - 'transfer': catat payment manual, admin yang mengonfirmasi.
  * - Midtrans: popup Snap, pembeli tetap di halaman.
  * - Gateway lain: backend mengembalikan URL checkout dan kita mengalihkan
  *   browser ke sana. Order tetap dilunasi oleh webhook, bukan oleh kepulangan
@@ -69,8 +69,8 @@ export function useCheckout() {
     try {
       const order = await apiPost<OrderResp>('/orders', { items, coupon_kode: opts.couponKode });
 
-      // Order bernilai nol — kursus gratis, atau kupon yang memotong habis —
-      // sudah diaktifkan backend di dalam transaksi pembuatannya. Tidak ada yang
+      // Order bernilai nol — course gratis, atau kupon yang memotong habis —
+      // sudah diaktifkan backend di dalam transaction pembuatannya. Tidak ada yang
       // perlu dibayar, dan meneruskannya ke jalur gateway justru berakhir
       // `order.free_no_payment`.
       if (order.status === 'akses_aktif') {

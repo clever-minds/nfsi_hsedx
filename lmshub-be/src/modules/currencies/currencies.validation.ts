@@ -10,7 +10,7 @@ const kode = z
 
 const body = z.object({
   kode,
-  nama: z.string().trim().min(1).max(80),
+  name: z.string().trim().min(1).max(80),
   simbol: z.string().trim().max(8).default(''),
   /**
    * How many of this currency equal one unit of the base currency.
@@ -19,8 +19,8 @@ const body = z.object({
    */
   rate: z.coerce.number().positive('Rate must be greater than zero'),
   desimal: z.coerce.number().int().min(0).max(4).default(2),
-  is_aktif: z.boolean().default(true),
-  urutan: z.coerce.number().int().min(0).default(0),
+  is_active: z.boolean().default(true),
+  sort_order: z.coerce.number().int().min(0).default(0),
 });
 
 // Skema datar, memvalidasi `req.body` langsung — sama seperti modul lain.

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-export const lessonTipeEnum = z.enum(['video', 'teks', 'pdf', 'kuis', 'tugas', 'live_class', 'scorm', 'embed']);
-export const kontenTipeEnum = z.enum(['video', 'teks', 'pdf', 'embed', 'scorm']);
+export const lessonTipeEnum = z.enum(['video', 'text', 'pdf', 'quiz', 'assignment', 'live_class', 'scorm', 'embed']);
+export const kontenTipeEnum = z.enum(['video', 'text', 'pdf', 'embed', 'scorm']);
 
 /**
  * Alamat isi pelajaran: URL http(s) penuh, ATAU path relatif terhadap akar
@@ -23,40 +23,40 @@ const contentUrl = z
 
 // ── Sections ─────────────────────────────────────────
 export const createSectionSchema = z.object({
-  judul: z.string().min(2).max(200),
-  urutan: z.number().int().min(0).optional(),
-  deskripsi: z.string().max(2000).optional(),
+  title: z.string().min(2).max(200),
+  sort_order: z.number().int().min(0).optional(),
+  description: z.string().max(2000).optional(),
 });
 
 export const updateSectionSchema = z.object({
-  judul: z.string().min(2).max(200).optional(),
-  urutan: z.number().int().min(0).optional(),
-  deskripsi: z.string().max(2000).nullable().optional(),
+  title: z.string().min(2).max(200).optional(),
+  sort_order: z.number().int().min(0).optional(),
+  description: z.string().max(2000).nullable().optional(),
 });
 
 export const reorderSectionsSchema = z.object({
-  items: z.array(z.object({ id: z.string().uuid(), urutan: z.number().int().min(0) })).min(1),
+  items: z.array(z.object({ id: z.string().uuid(), sort_order: z.number().int().min(0) })).min(1),
 });
 
 // ── Lessons ──────────────────────────────────────────
 export const createLessonSchema = z.object({
-  judul: z.string().min(2).max(200),
+  title: z.string().min(2).max(200),
   tipe: lessonTipeEnum.default('video'),
-  urutan: z.number().int().min(0).optional(),
-  durasi_menit: z.number().int().min(0).optional(),
+  sort_order: z.number().int().min(0).optional(),
+  duration_minutes: z.number().int().min(0).optional(),
   gratis_preview: z.boolean().optional(),
   drip_release_at: z.string().datetime().nullable().optional(),
-  wajib_selesai: z.boolean().optional(),
+  must_complete: z.boolean().optional(),
 });
 
 export const updateLessonSchema = z.object({
-  judul: z.string().min(2).max(200).optional(),
+  title: z.string().min(2).max(200).optional(),
   tipe: lessonTipeEnum.optional(),
-  urutan: z.number().int().min(0).optional(),
-  durasi_menit: z.number().int().min(0).nullable().optional(),
+  sort_order: z.number().int().min(0).optional(),
+  duration_minutes: z.number().int().min(0).nullable().optional(),
   gratis_preview: z.boolean().optional(),
   drip_release_at: z.string().datetime().nullable().optional(),
-  wajib_selesai: z.boolean().optional(),
+  must_complete: z.boolean().optional(),
   section_id: z.string().uuid().optional(),
 });
 
@@ -65,7 +65,7 @@ export const reorderLessonsSchema = z.object({
     .array(
       z.object({
         id: z.string().uuid(),
-        urutan: z.number().int().min(0),
+        sort_order: z.number().int().min(0),
         section_id: z.string().uuid().optional(),
       }),
     )
@@ -75,22 +75,22 @@ export const reorderLessonsSchema = z.object({
 // ── Lesson Contents ──────────────────────────────────
 export const createContentSchema = z.object({
   tipe: kontenTipeEnum,
-  urutan: z.number().int().min(0).optional(),
+  sort_order: z.number().int().min(0).optional(),
   body: z.string().optional(),
   media_asset_id: z.string().uuid().optional(),
   url: contentUrl.optional(),
   scorm_manifest_url: contentUrl.optional(),
-  durasi_detik: z.number().int().min(0).optional(),
+  duration_seconds: z.number().int().min(0).optional(),
 });
 
 export const updateContentSchema = z.object({
   tipe: kontenTipeEnum.optional(),
-  urutan: z.number().int().min(0).optional(),
+  sort_order: z.number().int().min(0).optional(),
   body: z.string().nullable().optional(),
   media_asset_id: z.string().uuid().nullable().optional(),
   url: contentUrl.nullable().optional(),
   scorm_manifest_url: contentUrl.nullable().optional(),
-  durasi_detik: z.number().int().min(0).nullable().optional(),
+  duration_seconds: z.number().int().min(0).nullable().optional(),
 });
 
 export type CreateSectionInput = z.infer<typeof createSectionSchema>;

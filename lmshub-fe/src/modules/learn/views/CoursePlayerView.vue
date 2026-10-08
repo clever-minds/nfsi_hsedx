@@ -7,28 +7,41 @@ import { fmtAngka, fmtPersen, fmtRelatif, initialsOf } from '@/lib/format';
 import { sanitizeHtml } from '@/lib/sanitize';
 import Icon from '@/components/ui/Icon.vue';
 import CourseReviews from '@/modules/catalog/components/CourseReviews.vue';
+import CourseAssessmentsTab from '@/modules/learn/components/CourseAssessmentsTab.vue';
 
 interface Lesson {
   id: string;
-  judul: string;
+  title: string;
   tipe?: string;
   durasi?: number;
   selesai?: boolean;
   terkunci?: boolean;
   drip_info?: string;
   video_url?: string;
-  konten?: string;
+  content?: string;
   allow_download?: boolean;
+  contents?: Array<{
+    id: string;
+    tipe: string;
+    body?: string;
+    url?: string;
+  }>;
 }
 interface Section {
   id?: string;
-  judul: string;
+  title: string;
   lessons?: Lesson[];
 }
 interface CourseCurriculum {
   id: string;
-  judul: string;
+  title: string;
+  enrollment_id?: string | null;
+  enrollment_status?: string | null;
   progress_percent?: number;
+  /** Course mengizinkan student mengulang dari nol. */
+  allow_restart?: boolean;
+  /** Ujian akhir yang membuka certificate; null = tanpa ujian. */
+  ujian_akhir?: { quiz_id: string; title: string } | null;
   sections?: Section[];
 }
 interface Note {
@@ -86,6 +99,7 @@ function youtubeEmbed(url?: string): string | null {
   const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
   return m ? `https://www.youtube.com/embed/${m[1]}` : null;
 }
+const courseQuizzes = ref<any[]>([]);
 
 const allLessons = computed<Lesson[]>(() => (course.value?.sections ?? []).flatMap((s) => s.lessons ?? []));
 const currentLesson = computed<Lesson | null>(() => allLessons.value.find((l) => l.id === currentLessonId.value) ?? null);
@@ -99,13 +113,50 @@ const progressPercent = computed(() => {
   const done = allLessons.value.filter((l) => l.selesai).length;
   return Math.round((done / total) * 100);
 });
-const certificateEligible = computed(() => progressPercent.value >= 100);
+
+const currentQuizId = computed(() => {
+  if (currentLesson.value?.tipe !== 'quiz') return null;
+  const q = courseQuizzes.value.find(q => q.lesson_id === currentLesson.value?.id || q.title === currentLesson.value?.title);
+  return q?.id || null;
+});
+
+const certificateEligible = computed(() => {
+  if (finalExam.value) {
+    return course.value?.enrollment_status === 'lulus';
+  }
+  return progressPercent.value >= 100;
+});
+const finalExam = computed(() => course.value?.ujian_akhir ?? null);
+
+const regularSections = computed(() => {
+  return course.value?.sections?.filter(s => s.lessons && s.lessons.length > 0) || [];
+});
+
+// ── Ulang course ─────────────────────────────────────────
+const restarting = ref(false);
+async function restartCourse() {
+  if (!course.value?.enrollment_id) return;
+  if (!window.confirm(t('learn.player.restartConfirm'))) return;
+  restarting.value = true;
+  error.value = '';
+  try {
+    await apiPost(`/enrollments/${course.value.enrollment_id}/restart`, {});
+    await load();
+  } catch (e) {
+    error.value = errorMessage(e, t('learn.player.restartFailed'));
+  } finally {
+    restarting.value = false;
+  }
+}
 
 async function load() {
   loading.value = true;
   error.value = '';
   try {
     course.value = await apiGet<CourseCurriculum>(`/courses/${courseId}/learn`);
+    const qRes = await apiGetFull<any[]>('/quizzes').catch(() => ({ data: [] }));
+    courseQuizzes.value = (qRes.data ?? []).filter((q: any) => q.course_id === courseId);
+    
     const firstUnfinished = allLessons.value.find((l) => !l.selesai && !l.terkunci);
     currentLessonId.value = (firstUnfinished ?? allLessons.value[0])?.id ?? null;
     if (currentLessonId.value) await loadSidePanels(currentLessonId.value);
@@ -262,11 +313,11 @@ onMounted(load);
         {{ sidebarOpen ? t('learn.player.closeCurriculum') : t('learn.player.openCurriculum') }}
       </button>
       <aside class="card max-h-[32rem] overflow-y-auto p-3" :class="sidebarOpen ? 'block' : 'hidden lg:block'">
-        <h2 class="mb-2 px-1 text-lg font-medium text-slate-900">{{ course.judul }}</h2>
-        <div v-for="(s, si) in course.sections || []" :key="si" class="mb-2">
-          <div class="px-1 py-1 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ s.judul }}</div>
+        <h2 class="mb-2 px-1 text-lg font-medium text-slate-900">{{ course.title }}</h2>
+        <div v-for="(s, si) in regularSections" :key="si" class="mb-2">
+          <div class="px-1 py-1 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ s.title }}</div>
           <button
-            v-for="l in s.lessons || []"
+            v-for="l in s.lessons"
             :key="l.id"
             class="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-start text-sm transition"
             :class="[
@@ -278,10 +329,11 @@ onMounted(load);
             @click="selectLesson(l)"
           >
             <span>{{ l.terkunci ? '🔒' : l.selesai ? '✅' : l.id === currentLessonId ? '▶' : '○' }}</span>
-            <span class="flex-1 truncate">{{ l.judul }}</span>
+            <span class="flex-1 truncate">{{ l.title }}</span>
             <span v-if="l.durasi" class="text-xs text-slate-400">{{ fmtAngka(l.durasi) }}{{ t('learn.player.minShort') }}</span>
           </button>
         </div>
+
       </aside>
 
       <!-- Konten utama -->
@@ -289,10 +341,22 @@ onMounted(load);
         <div v-if="certificateEligible" class="card mb-4 flex flex-wrap items-center justify-between gap-3 border-accent-500/40 bg-accent-500/5 p-4">
           <div>
             <div class="font-medium text-accent-600">{{ t('learn.player.congratsTitle') }}</div>
-            <p class="text-sm text-slate-500">{{ t('learn.player.congratsText') }}</p>
+            <p class="text-sm text-slate-500">
+              {{ finalExam ? t('learn.player.congratsExamText', { exam: finalExam.title }) : t('learn.player.congratsText') }}
+            </p>
           </div>
-          <div class="flex gap-2">
+          <div class="flex flex-wrap gap-2">
             <button class="btn-outline" @click="activeTab = 'ulasan'">{{ t('learn.player.writeReview') }}</button>
+            <button v-if="course?.allow_restart" class="btn-outline" :disabled="restarting" @click="restartCourse">
+              {{ t('learn.player.restart') }}
+            </button>
+            <RouterLink
+              v-if="finalExam"
+              :to="{ name: 'quiz-attempt', params: { quizId: finalExam.quiz_id } }"
+              class="btn-primary"
+            >
+              {{ t('learn.player.takeFinalExam') }}
+            </RouterLink>
             <RouterLink to="/d/certificates" class="btn-primary bg-accent-500 hover:bg-accent-600">
               {{ t('learn.player.viewCertificate') }}
             </RouterLink>
@@ -300,41 +364,99 @@ onMounted(load);
         </div>
 
         <div v-if="currentLesson" class="card p-4">
-          <h1 class="text-xl font-medium text-slate-900">{{ currentLesson.judul }}</h1>
+          <h1 class="text-xl font-medium text-slate-900">{{ currentLesson.title }}</h1>
 
-          <div v-if="!currentLesson.tipe || currentLesson.tipe === 'video'" class="mt-3 overflow-hidden rounded-lg bg-black">
-            <iframe
-              v-if="youtubeEmbed(currentLesson.video_url)"
-              :key="currentLesson.id"
-              :src="youtubeEmbed(currentLesson.video_url)!"
-              class="aspect-video w-full"
-              :title="t('learn.player.videoTitle')"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-            ></iframe>
-            <!-- assetUrl(): berkas video yang diunggah tersimpan sebagai path
-                 relatif (/uploads/...). Tanpa ini path tersebut dicari di origin
-                 frontend, padahal yang menyajikannya adalah API — pemasangan
-                 dengan domain terpisah (lms.example.com + api.example.com) akan
-                 selalu gagal memutar video milik pembeli sendiri. -->
-            <video
-              v-else
-              ref="videoEl"
-              class="aspect-video w-full"
-              controls
-              :src="assetUrl(currentLesson.video_url)"
-              @timeupdate="handleTimeUpdate"
-              @ended="handleEnded"
-            >
-              {{ t('learn.player.noVideoSupport') }}
-            </video>
+          <div v-if="currentLesson.contents && currentLesson.contents.length > 0" class="mt-3 space-y-6">
+            <div v-for="c in currentLesson.contents" :key="c.id">
+              <div v-if="c.tipe === 'video' || c.tipe === 'embed' || (!c.tipe && currentLesson.tipe === 'video')" class="overflow-hidden rounded-lg bg-black">
+                <iframe
+                  v-if="youtubeEmbed(c.url)"
+                  :src="youtubeEmbed(c.url)!"
+                  class="aspect-video w-full"
+                  :title="t('learn.player.videoTitle')"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                ></iframe>
+                <video
+                  v-else-if="c.tipe === 'video' || (!c.tipe && currentLesson.tipe === 'video')"
+                  class="aspect-video w-full"
+                  controls
+                  :src="assetUrl(c.url)"
+                  @timeupdate="handleTimeUpdate"
+                  @ended="handleEnded"
+                >
+                  {{ t('learn.player.noVideoSupport') }}
+                </video>
+                <iframe
+                  v-else
+                  :src="assetUrl(c.url)"
+                  class="w-full h-[600px] rounded border border-slate-200"
+                  frameborder="0"
+                ></iframe>
+              </div>
+              <div v-else-if="c.tipe === 'text'" class="prose-page max-w-none text-sm text-slate-700">
+                <div v-if="c.body" v-html="sanitizeHtml(c.body)"></div>
+              </div>
+              <div v-else-if="c.tipe === 'pdf'" class="mt-3 flex flex-col items-center">
+                <iframe v-if="c.url" :src="assetUrl(c.url)" class="w-full h-[600px] rounded border border-slate-200 mb-2" frameborder="0"></iframe>
+                <a v-if="c.url" :href="assetUrl(c.url)" target="_blank" class="text-sm text-brand-600 hover:underline font-medium">Open PDF in new tab</a>
+              </div>
+              <div v-else class="rounded-lg bg-slate-50 p-6 text-center text-sm text-slate-500">
+                {{ t('learn.player.otherType', { type: c.tipe }) }}
+              </div>
+            </div>
           </div>
-          <!-- eslint-disable-next-line vue/no-v-html -- isi dilewatkan sanitizeHtml() lebih dulu; lihat src/lib/sanitize.ts -->
-          <div v-else-if="currentLesson.tipe === 'teks'" class="prose mt-3 max-w-none text-sm text-slate-700" v-html="sanitizeHtml(currentLesson.konten)"></div>
-          <div v-else class="mt-3 rounded-lg bg-slate-50 p-6 text-center text-sm text-slate-500">
-            {{ t('learn.player.otherType', { type: currentLesson.tipe }) }}
-          </div>
+          <!-- Fallback for older data without contents array -->
+          <template v-else>
+            <div v-if="!currentLesson.tipe || currentLesson.tipe === 'video'" class="mt-3 overflow-hidden rounded-lg bg-black">
+              <iframe
+                v-if="youtubeEmbed(currentLesson.video_url)"
+                :key="currentLesson.id"
+                :src="youtubeEmbed(currentLesson.video_url)!"
+                class="aspect-video w-full"
+                :title="t('learn.player.videoTitle')"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              ></iframe>
+              <video
+                v-else
+                ref="videoEl"
+                class="aspect-video w-full"
+                controls
+                :src="assetUrl(currentLesson.video_url)"
+                @timeupdate="handleTimeUpdate"
+                @ended="handleEnded"
+              >
+                {{ t('learn.player.noVideoSupport') }}
+              </video>
+            </div>
+            <!-- eslint-disable-next-line vue/no-v-html -- isi dilewatkan sanitizeHtml() lebih dulu; lihat src/lib/sanitize.ts -->
+            <div v-else-if="currentLesson.tipe === 'text'" class="prose-page mt-3 max-w-none text-sm text-slate-700">
+              <div v-if="currentLesson.content" v-html="sanitizeHtml(currentLesson.content)"></div>
+              <iframe v-else-if="currentLesson.video_url" :src="assetUrl(currentLesson.video_url)" class="w-full h-[600px] rounded border border-slate-200" frameborder="0"></iframe>
+            </div>
+            <div v-else-if="currentLesson.tipe === 'pdf' && currentLesson.video_url" class="mt-3 flex flex-col items-center">
+              <iframe :src="assetUrl(currentLesson.video_url)" class="w-full h-[600px] rounded border border-slate-200 mb-2" frameborder="0"></iframe>
+              <a :href="assetUrl(currentLesson.video_url)" target="_blank" class="text-sm text-brand-600 hover:underline font-medium">Open PDF in new tab</a>
+            </div>
+            <div v-else-if="currentLesson.tipe === 'quiz'" class="mt-3 rounded-lg bg-slate-50 p-6 flex flex-col items-center text-center">
+              <div class="mb-4 text-slate-600 text-sm">
+                {{ t('learn.player.otherType', { type: currentLesson.tipe }) }}
+              </div>
+              <RouterLink
+                v-if="currentQuizId"
+                :to="{ name: 'quiz-attempt', params: { quizId: currentQuizId } }"
+                class="btn-primary"
+              >
+                {{ t('assessments.list.takeQuiz', 'Take Quiz') }}
+              </RouterLink>
+            </div>
+            <div v-else class="mt-3 rounded-lg bg-slate-50 p-6 text-center text-sm text-slate-500">
+              {{ t('learn.player.otherType', { type: currentLesson.tipe }) }}
+            </div>
+          </template>
 
           <div class="mt-4 flex flex-wrap items-center gap-2">
             <button class="btn-primary" :disabled="currentLesson.selesai || markingComplete" @click="markComplete">
@@ -362,6 +484,11 @@ onMounted(load);
           </div>
         </div>
         <div v-else class="empty-state">{{ t('learn.player.noLessons') }}</div>
+
+        <!-- Quizzes & Exams (Assessments Table) -->
+        <div class="card mt-4 p-4">
+          <CourseAssessmentsTab :course-id="courseId" />
+        </div>
 
         <!-- Tabs bawah: Catatan / Tanya-Jawab / Ulasan -->
         <div class="card mt-4">
@@ -490,7 +617,7 @@ onMounted(load);
           </div>
 
           <!-- ULASAN -->
-          <div v-else class="p-4">
+          <div v-else-if="activeTab === 'ulasan'" class="p-4">
             <CourseReviews :course-id="courseId" />
           </div>
         </div>

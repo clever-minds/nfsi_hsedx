@@ -5,12 +5,12 @@ export interface LiveSessionRow {
   id: string;
   course_id: string | null;
   cohort_id: string | null;
-  judul: string;
-  deskripsi: string | null;
+  title: string;
+  description: string | null;
   penyedia: 'zoom' | 'bbb' | 'meet';
   url_join: string;
   host_user_id: string;
-  waktu_mulai: string;
+  start_time: string;
   waktu_selesai: string;
   kapasitas_maks: number | null;
   toleransi_terlambat_menit: number;
@@ -38,8 +38,8 @@ export interface RecordingRow {
   id: string;
   live_session_id: string;
   url: string;
-  durasi_menit: number | null;
-  ukuran_bytes: string | null;
+  duration_minutes: number | null;
+  size_bytes: string | null;
   status_jadi_materi: boolean;
   lesson_id: string | null;
   retensi_hingga: string | null;
@@ -49,35 +49,35 @@ export interface RecordingRow {
 }
 
 /**
- * Baris daftar sesi = kolom tabel + kolom turunan dari join. Nama kursus dan
+ * Baris daftar sesi = kolom tabel + kolom turunan dari join. Nama course dan
  * host tidak ada di `live_sessions`; keduanya wajib di-join, kalau tidak klien
  * hanya menerima id dan menampilkan "—".
  */
 export interface LiveSessionListRow extends LiveSessionRow {
-  kursus_judul: string | null;
+  course_title: string | null;
   host_nama: string | null;
   jumlah_hadir: number;
 }
 
 export interface CalendarEventRow {
   id: string;
-  sumber: 'live_session' | 'tugas' | 'kuis' | 'lainnya';
+  sumber: 'live_session' | 'assignment' | 'quiz' | 'lainnya';
   source_id: string | null;
   course_id: string | null;
-  judul: string;
-  waktu_mulai: string;
+  title: string;
+  start_time: string;
   waktu_selesai: string | null;
   is_sepanjang_hari: boolean;
   meta: unknown;
-  kursus_judul: string | null;
+  course_title: string | null;
 }
 
 export interface ListFilters {
   course_id?: string;
   cohort_id?: string;
   status?: string;
-  studentUserId?: string | null; // batasi ke sesi kursus yang diikuti siswa
-  instructorUserId?: string | null; // batasi ke sesi kursus/host miliknya
+  studentUserId?: string | null; // batasi ke sesi course yang diikuti student
+  instructorUserId?: string | null; // batasi ke sesi course/host miliknya
 }
 
 export async function list(p: PageParams, f: ListFilters): Promise<{ rows: LiveSessionListRow[]; total: number }> {
@@ -87,7 +87,7 @@ export async function list(p: PageParams, f: ListFilters): Promise<{ rows: LiveS
     params.push(val);
     where.push(clause.replace('$?', `$${params.length}`));
   };
-  // ganti tiap kemunculan $? dengan placeholder posisi berbeda, sesuai urutan value
+  // ganti tiap kemunculan $? dengan placeholder posisi berbeda, sesuai sort_order value
   const addMulti = (clause: string, vals: unknown[]) => {
     let sql = clause;
     for (const v of vals) {
@@ -115,13 +115,13 @@ export async function list(p: PageParams, f: ListFilters): Promise<{ rows: LiveS
     );
   }
   const whereSql = where.join(' AND ');
-  const sortCol = ['waktu_mulai', 'status', 'created_at'].includes(p.sort ?? '') ? p.sort : 'waktu_mulai';
+  const sortCol = ['start_time', 'status', 'created_at'].includes(p.sort ?? '') ? p.sort : 'start_time';
 
-  // LEFT JOIN, bukan JOIN: sesi boleh tidak terikat kursus (course_id nullable),
+  // LEFT JOIN, bukan JOIN: sesi boleh tidak terikat course (course_id nullable),
   // dan INNER JOIN akan membuangnya dari daftar.
   const rows = await query<LiveSessionListRow>(
     `SELECT ls.*,
-            c.judul AS kursus_judul,
+            c.title AS course_title,
             u.nama_lengkap AS host_nama,
             (SELECT COUNT(*)::int FROM session_attendance sa WHERE sa.live_session_id = ls.id) AS jumlah_hadir
        FROM live_sessions ls
@@ -146,12 +146,12 @@ export async function detail(id: string): Promise<LiveSessionRow | null> {
 export async function insert(data: {
   course_id: string | null;
   cohort_id: string | null;
-  judul: string;
-  deskripsi: string | null;
+  title: string;
+  description: string | null;
   penyedia: string;
   url_join: string;
   host_user_id: string;
-  waktu_mulai: string;
+  start_time: string;
   waktu_selesai: string;
   kapasitas_maks: number | null;
   toleransi_terlambat_menit: number;
@@ -159,18 +159,18 @@ export async function insert(data: {
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
     `INSERT INTO live_sessions
-       (course_id, cohort_id, judul, deskripsi, penyedia, url_join, host_user_id,
-        waktu_mulai, waktu_selesai, kapasitas_maks, toleransi_terlambat_menit, dibuat_oleh)
+       (course_id, cohort_id, title, description, penyedia, url_join, host_user_id,
+        start_time, waktu_selesai, kapasitas_maks, toleransi_terlambat_menit, dibuat_oleh)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
     [
       data.course_id,
       data.cohort_id,
-      data.judul,
-      data.deskripsi,
+      data.title,
+      data.description,
       data.penyedia,
       data.url_join,
       data.host_user_id,
-      data.waktu_mulai,
+      data.start_time,
       data.waktu_selesai,
       data.kapasitas_maks,
       data.toleransi_terlambat_menit,
@@ -293,15 +293,15 @@ export async function batchMarkAbsen(liveSessionId: string, courseId: string | n
 export async function insertRecording(data: {
   live_session_id: string;
   url: string;
-  durasi_menit: number | null;
-  ukuran_bytes: number | null;
+  duration_minutes: number | null;
+  size_bytes: number | null;
   retensi_hingga: string | null;
   diunggah_oleh: string | null;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO recordings (live_session_id, url, durasi_menit, ukuran_bytes, retensi_hingga, diunggah_oleh)
+    `INSERT INTO recordings (live_session_id, url, duration_minutes, size_bytes, retensi_hingga, diunggah_oleh)
      VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
-    [data.live_session_id, data.url, data.durasi_menit, data.ukuran_bytes, data.retensi_hingga, data.diunggah_oleh],
+    [data.live_session_id, data.url, data.duration_minutes, data.size_bytes, data.retensi_hingga, data.diunggah_oleh],
   );
   return row!;
 }
@@ -327,8 +327,8 @@ export async function upsertCalendarEvent(data: {
   sumber: string;
   source_id: string;
   course_id: string | null;
-  judul: string;
-  waktu_mulai: string;
+  title: string;
+  start_time: string;
   waktu_selesai: string | null;
 }): Promise<void> {
   const existing = await queryOne<{ id: string }>(
@@ -337,16 +337,16 @@ export async function upsertCalendarEvent(data: {
   );
   if (existing) {
     await query(
-      `UPDATE calendar_events SET course_id = $3, judul = $4, waktu_mulai = $5, waktu_selesai = $6, updated_at = now()
+      `UPDATE calendar_events SET course_id = $3, title = $4, start_time = $5, waktu_selesai = $6, updated_at = now()
         WHERE id = $1 AND sumber = $2`,
-      [existing.id, data.sumber, data.course_id, data.judul, data.waktu_mulai, data.waktu_selesai],
+      [existing.id, data.sumber, data.course_id, data.title, data.start_time, data.waktu_selesai],
     );
     return;
   }
   await query(
-    `INSERT INTO calendar_events (sumber, source_id, course_id, judul, waktu_mulai, waktu_selesai)
+    `INSERT INTO calendar_events (sumber, source_id, course_id, title, start_time, waktu_selesai)
      VALUES ($1,$2,$3,$4,$5,$6)`,
-    [data.sumber, data.source_id, data.course_id, data.judul, data.waktu_mulai, data.waktu_selesai],
+    [data.sumber, data.source_id, data.course_id, data.title, data.start_time, data.waktu_selesai],
   );
 }
 
@@ -366,15 +366,15 @@ export async function aggregateCalendar(
     where.push(clause.replace('$?', `$${params.length}`));
   };
   if (filters.course_id) add('ce.course_id = $?', filters.course_id);
-  if (filters.from) add('ce.waktu_mulai >= $?', filters.from);
-  if (filters.to) add('ce.waktu_mulai <= $?', filters.to);
+  if (filters.from) add('ce.start_time >= $?', filters.from);
+  if (filters.to) add('ce.start_time <= $?', filters.to);
 
   return query<CalendarEventRow>(
-    `SELECT ce.*, c.judul AS kursus_judul
+    `SELECT ce.*, c.title AS course_title
        FROM calendar_events ce
        LEFT JOIN courses c ON c.id = ce.course_id
       WHERE ${where.join(' AND ')}
-      ORDER BY ce.waktu_mulai ASC`,
+      ORDER BY ce.start_time ASC`,
     params,
   );
 }

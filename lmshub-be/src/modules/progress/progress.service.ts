@@ -8,7 +8,7 @@ const PERSEN_SELESAI_PENUH = 100;
 
 const isSuper = (actor: AuthContext) => actor.permissions.has('*');
 
-/** Cari enrollment siswa yang masih punya akses (terdaftar/aktif) untuk sebuah kursus. */
+/** Cari enrollment student yang masih punya akses (terdaftar/aktif) untuk sebuah course. */
 async function requireOwnEnrollment(actor: AuthContext, courseId: string) {
   const e = await enrollmentsRepo.findActiveByUserCourse(actor.userId, courseId);
   if (!e || !['terdaftar', 'aktif'].includes(e.status)) {
@@ -28,14 +28,14 @@ async function recalcCourseProgress(enrollmentId: string, courseId: string) {
 
   const cp = await repo.upsertCourseProgress({
     enrollment_id: enrollmentId,
-    persen_selesai: persen,
-    jumlah_lesson_selesai: selesai,
+    progress_percent: persen,
+    completed_lessons_count: selesai,
     total_lesson: wajib,
     completed,
   });
 
   if (completed && persen >= PERSEN_SELESAI_PENUH) {
-    // Sertifikat tidak diterbitkan di sini. Kelayakan dievaluasi saat siswa
+    // Certificate tidak diterbitkan di sini. Kelayakan dievaluasi saat student
     // mengklaim (POST /enrollments/:id/certificate/claim), karena syaratnya
     // menggabungkan progres, nilai, dan kehadiran — dua di antaranya bisa
     // berubah setelah pelajaran terakhir ditandai selesai.
@@ -54,13 +54,13 @@ export async function updateLessonProgress(actor: AuthContext, lessonId: string,
 
   const existing = await repo.findLessonProgress(enrollment.id, lessonId);
   const status = input.status ?? existing?.status ?? 'sedang';
-  const posisi = input.posisi_detik ?? existing?.posisi_detik ?? 0;
+  const posisi = input.position_seconds ?? existing?.position_seconds ?? 0;
 
   const lp = await repo.upsertLessonProgress({
     enrollment_id: enrollment.id,
     lesson_id: lessonId,
     status,
-    posisi_detik: posisi,
+    position_seconds: posisi,
   });
 
   const courseProgress = await recalcCourseProgress(enrollment.id, lesson.course_id);
@@ -68,9 +68,9 @@ export async function updateLessonProgress(actor: AuthContext, lessonId: string,
 }
 
 /**
- * Tampilan belajar untuk siswa ter-enroll: kurikulum lengkap + status progres tiap lesson.
+ * Tampilan belajar untuk student ter-enroll: kurikulum lengkap + status progres tiap lesson.
  * Berbeda dari GET /courses/:id (manajemen) — endpoint ini di-scope ke enrollment milik sendiri
- * dan tetap bisa diakses setelah kursus selesai (review materi).
+ * dan tetap bisa diakses setelah course selesai (review materi).
  */
 export async function learnView(actor: AuthContext, courseId: string) {
   const course = await repo.learnCourse(courseId);
@@ -79,10 +79,10 @@ export async function learnView(actor: AuthContext, courseId: string) {
   const enrollment = await enrollmentsRepo.findActiveByUserCourse(actor.userId, courseId);
   const terdaftar = !!enrollment && ['terdaftar', 'aktif', 'selesai'].includes(enrollment.status);
 
-  // Super admin dan instruktur pengampu boleh membuka isi kursus tanpa menjadi
-  // siswa. Tanpa jalan ini, tab Tanya-Jawab mati total bagi mereka: daftar
+  // Super admin dan instructor pengampu boleh membuka isi course tanpa menjadi
+  // student. Tanpa jalan ini, tab Tanya-Jawab mati total bagi mereka: daftar
   // materi tidak pernah termuat, sehingga tidak ada yang bisa dimoderasi.
-  // Mereka melihat struktur kursus dengan progres nol — bukan progres siapa pun.
+  // Mereka melihat struktur course dengan progres nol — bukan progres siapa pun.
   const staf = terdaftar ? false : isSuper(actor) || (await repo.isCourseInstructor(courseId, actor.userId));
 
   if (!terdaftar && !staf) {
@@ -97,19 +97,31 @@ export async function learnView(actor: AuthContext, courseId: string) {
     throw AppError.forbidden('Your access to this course has expired', 'course.access_expired');
   }
 
-  const [sections, lessons, lessonProgress, courseProgress] = await Promise.all([
+  const [sections, lessons, allContents, lessonProgress, courseProgress] = await Promise.all([
     repo.learnSections(courseId),
     repo.learnLessons(courseId),
+    repo.learnLessonContents(courseId),
     enrollment ? repo.lessonProgressOfEnrollment(enrollment.id) : Promise.resolve([]),
     enrollment ? repo.getCourseProgress(enrollment.id) : Promise.resolve(null),
   ]);
 
   const progressByLesson = new Map(lessonProgress.map((lp) => [lp.lesson_id, lp]));
+  const contentsByLesson = new Map<string, Array<{ id: string; tipe: string; body: string | undefined; url: string | undefined }>>();
+  for (const c of allContents) {
+    if (!contentsByLesson.has(c.lesson_id)) contentsByLesson.set(c.lesson_id, []);
+    contentsByLesson.get(c.lesson_id)!.push({
+      id: c.id,
+      tipe: c.tipe,
+      body: c.content_body ?? undefined,
+      url: c.content_url ?? undefined,
+    });
+  }
+
   const now = new Date();
 
   const sectionsOut = sections.map((s) => ({
     id: s.id,
-    judul: s.judul,
+    title: s.title,
     lessons: lessons
       .filter((l) => l.section_id === s.id)
       .map((l) => {
@@ -117,28 +129,33 @@ export async function learnView(actor: AuthContext, courseId: string) {
         const terkunci = !!l.drip_release_at && new Date(l.drip_release_at) > now;
         return {
           id: l.id,
-          judul: l.judul,
+          title: l.title,
           tipe: l.tipe,
-          durasi: l.durasi_menit,
-          wajib_selesai: l.wajib_selesai,
+          durasi: l.duration_minutes,
+          must_complete: l.must_complete,
           selesai: lp?.status === 'selesai',
-          posisi_detik: lp?.posisi_detik ?? 0,
+          position_seconds: lp?.position_seconds ?? 0,
           terkunci,
           drip_info: terkunci
             ? `Available on ${new Date(l.drip_release_at!).toLocaleDateString('en-US', { dateStyle: 'medium' })}`
             : undefined,
           video_url: l.content_url ?? undefined,
-          konten: l.content_body ?? undefined,
+          content: l.content_body ?? undefined,
+          contents: contentsByLesson.get(l.id) ?? [],
         };
       }),
   }));
 
   return {
     id: course.id,
-    judul: course.judul,
+    title: course.title,
     enrollment_id: enrollment?.id ?? null,
     enrollment_status: enrollment?.status ?? null,
-    progress_percent: Number(courseProgress?.persen_selesai ?? 0),
+    progress_percent: Number(courseProgress?.progress_percent ?? 0),
+    /** Student boleh mengulang course ini dari nol (POST /enrollments/:id/restart). */
+    allow_restart: course.allow_restart,
+    /** Ujian akhir yang membuka certificate; null = tanpa ujian. */
+    ujian_akhir: course.final_exam_quiz_id ? { quiz_id: course.final_exam_quiz_id, title: course.final_exam_title } : null,
     sections: sectionsOut,
   };
 }
@@ -150,8 +167,8 @@ export async function getCourseProgress(actor: AuthContext, courseId: string) {
   return (
     cp ?? {
       enrollment_id: enrollment.id,
-      persen_selesai: '0',
-      jumlah_lesson_selesai: 0,
+      progress_percent: '0',
+      completed_lessons_count: 0,
       total_lesson: 0,
       last_accessed_at: null,
       completed_at: null,
@@ -219,7 +236,7 @@ export async function createBookmark(actor: AuthContext, lessonId: string, input
   const { id } = await repo.insertBookmark({
     enrollment_id: enrollment.id,
     lesson_id: lessonId,
-    posisi_detik: input.posisi_detik ?? null,
+    position_seconds: input.position_seconds ?? null,
     catatan: input.catatan ?? null,
   });
   return repo.findBookmark(id);

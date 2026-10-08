@@ -9,6 +9,7 @@ import { PageParams } from '../../core/http/pagination';
 import * as repo from './users.repository';
 import {
   ChangeMyPasswordInput,
+  ChangeMyEmailInput,
   CreateUserInput,
   SetPermissionsInput,
   UpdateMeInput,
@@ -46,7 +47,7 @@ async function levelOf(userId: string): Promise<number> {
  * kecil makin tinggi. Aturannya satu kalimat: Anda hanya boleh memberikan peran
  * yang berada di bawah peran Anda sendiri, dan tidak pernah kepada diri sendiri.
  *
- * Tanpa ini, medan `role_kode` pada `PUT /users/:id` menerima nama peran apa pun
+ * Tanpa ini, medan `role_kode` pada `PUT /users/:id` menerima name peran apa pun
  * dan menuliskannya begitu saja. Karena seseorang berhak menyunting datanya
  * sendiri, satu akun staf ber-izin `pengguna.update` cukup mengirimkan
  * `{"role_kode":"super_admin"}` ke record miliknya untuk menjadi super admin —
@@ -306,6 +307,49 @@ export async function changeMyPassword(actor: AuthContext, input: ChangeMyPasswo
     entity: 'users',
     entityId: actor.userId,
   });
+}
+
+/**
+ * Ganti email akun sendiri.
+ *
+ * Hanya super admin: akun lain diganti emailnya oleh admin lewat Users, karena
+ * email adalah identitas login dan alamat pemulihan password. Super admin tidak
+ * punya atasan yang bisa melakukannya, jadi ia mengganti sendiri — dengan
+ * konfirmasi password saat ini supaya sesi yang tertinggal terbuka tidak cukup
+ * untuk mengambil alih akun.
+ *
+ * Password salah dibalas 400, bukan 401: 401 membuat frontend menganggap sesi
+ * habis dan mengeluarkan pengguna.
+ */
+export async function changeMyEmail(actor: AuthContext, input: ChangeMyEmailInput) {
+  if (!isSuper(actor)) {
+    throw AppError.forbidden('Only a super admin can change their own email — ask an administrator', 'user.email_change_requires_super_admin');
+  }
+  const before = await repo.detail(actor.userId);
+  if (!before) throw AppError.notFound('User not found', 'user.not_found');
+
+  const row = await repo.passwordHashById(actor.userId);
+  if (!row?.password_hash || !(await verifyPassword(input.password_saat_ini, row.password_hash))) {
+    throw AppError.badRequest('Your current password is incorrect', 'auth.current_password_wrong');
+  }
+  if ((before.email ?? '').toLowerCase() === input.email) {
+    throw AppError.badRequest('That is already your email address', 'user.email_unchanged');
+  }
+  if (await repo.emailTakenByOther(input.email, actor.userId)) {
+    throw AppError.conflict('That email address is already used by another account', 'user.email_taken');
+  }
+
+  await repo.updateEmail(actor.userId, input.email);
+  await recordAudit({
+    userId: actor.userId,
+    module: 'pengguna',
+    action: 'change_email',
+    entity: 'users',
+    entityId: actor.userId,
+    before: { email: before.email },
+    after: { email: input.email },
+  });
+  return repo.detail(actor.userId);
 }
 
 export async function roles() {

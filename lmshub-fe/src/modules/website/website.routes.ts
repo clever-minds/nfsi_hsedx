@@ -9,4 +9,12 @@ export const websiteRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/website/views/WebsiteView.vue'),
     meta: { permission: 'pengaturan.view', title: 'Website' },
   },
+  {
+    // Halaman statis (About, Help Center, Privacy, Terms, Contact, …) yang
+    // ditautkan footer. Izin `pengaturan` — sama dengan backend.
+    path: 'website/pages',
+    name: 'website-pages',
+    component: () => import('@/modules/website/views/PagesView.vue'),
+    meta: { permission: 'pengaturan.view', title: 'Pages' },
+  },
 ];

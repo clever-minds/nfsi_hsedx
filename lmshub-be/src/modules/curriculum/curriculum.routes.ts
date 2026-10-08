@@ -73,23 +73,23 @@ curriculumRouter.put(
 );
 curriculumRouter.delete('/lessons/:id', requirePermission('kurikulum', 'delete'), asyncHandler(ctrl.removeLesson));
 
-// ── Lesson Contents (permission 'konten', bukan 'kurikulum': isi pelajaran
-// dikelola tim konten yang belum tentu boleh mengubah struktur kurikulum) ──
+// ── Lesson Contents (permission 'content', bukan 'kurikulum': isi pelajaran
+// dikelola tim content yang belum tentu boleh mengubah struktur kurikulum) ──
 curriculumRouter.get(
   '/lessons/:lessonId/contents',
-  requirePermission('konten', 'view'),
+  requirePermission('content', 'view'),
   asyncHandler(ctrl.listContents),
 );
 curriculumRouter.post(
   '/lessons/:lessonId/contents',
-  requirePermission('konten', 'create'),
+  requirePermission('content', 'create'),
   validate(createContentSchema),
   asyncHandler(ctrl.createContent),
 );
 curriculumRouter.put(
   '/contents/:id',
-  requirePermission('konten', 'update'),
+  requirePermission('content', 'update'),
   validate(updateContentSchema),
   asyncHandler(ctrl.updateContent),
 );
-curriculumRouter.delete('/contents/:id', requirePermission('konten', 'delete'), asyncHandler(ctrl.removeContent));
+curriculumRouter.delete('/contents/:id', requirePermission('content', 'delete'), asyncHandler(ctrl.removeContent));

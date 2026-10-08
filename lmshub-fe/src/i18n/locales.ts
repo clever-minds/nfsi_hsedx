@@ -1,5 +1,5 @@
 /**
- * Daftar bahasa yang didukung aplikasi.
+ * Daftar language yang didukung aplikasi.
  *
  * `code`   — kode yang dipakai vue-i18n & disimpan di localStorage.
  * `intl`   — BCP-47 tag untuk Intl.NumberFormat / Intl.DateTimeFormat.
@@ -8,14 +8,14 @@
  */
 export interface LocaleDef {
   code: SupportedLocale;
-  /** Nama bahasa dalam bahasa itu sendiri (dipakai di language switcher). */
+  /** Nama language dalam language itu sendiri (dipakai di language switcher). */
   native: string;
-  /** Nama bahasa dalam bahasa Inggris (untuk aria-label & tooltip). */
+  /** Nama language dalam language Inggris (untuk aria-label & tooltip). */
   english: string;
   dir: 'ltr' | 'rtl';
-  /** Tag Intl untuk tanggal & teks. */
+  /** Tag Intl untuk tanggal & text. */
   intl: string;
-  /** Tag Intl khusus angka — Arab dipaksa angka Latin agar harga tetap terbaca. */
+  /** Tag Intl khusus angka — Arab dipaksa angka Latin agar price tetap terbaca. */
   intlNumber: string;
   /** Emoji bendera sebagai penanda visual ringan (tanpa aset gambar). */
   flag: string;
@@ -53,7 +53,7 @@ export function isSupportedLocale(v: unknown): v is SupportedLocale {
   return typeof v === 'string' && (SUPPORTED_LOCALES as readonly string[]).includes(v);
 }
 
-/** Cocokkan preferensi browser ke bahasa yang didukung (mis. "id-ID" → "id"). */
+/** Match browser preferences to supported language (e.g. "en-US" → "en"). */
 export function detectBrowserLocale(): SupportedLocale {
   if (typeof navigator === 'undefined') return DEFAULT_LOCALE;
   for (const tag of navigator.languages ?? [navigator.language]) {

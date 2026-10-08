@@ -8,7 +8,7 @@ export const createFinancialEntrySchema = z.object({
   nominal: z.number().nonnegative(),
   bukti: z.string().max(500).optional(),
   tanggal: z.string().date(),
-  deskripsi: z.string().max(1000).optional(),
+  description: z.string().max(1000).optional(),
 });
 
 // ── instructor_payouts ───────────────────────────────────────────────────

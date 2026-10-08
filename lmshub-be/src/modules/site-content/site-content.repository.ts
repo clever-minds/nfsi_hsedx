@@ -20,7 +20,7 @@ export async function getByKey(key: string): Promise<SiteContentRow | null> {
   );
 }
 
-/** Simpan blok konten; baris dibuat bila belum ada (halaman baru pertama kali diubah). */
+/** Simpan blok content; baris dibuat bila belum ada (halaman baru pertama kali diubah). */
 export async function upsert(key: string, nilai: unknown): Promise<SiteContentRow> {
   const row = await queryOne<SiteContentRow>(
     `INSERT INTO site_content (key, nilai) VALUES ($1, $2::jsonb)

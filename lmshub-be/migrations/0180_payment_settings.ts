@@ -102,7 +102,7 @@ function insert(pgm: MigrationBuilder, rows: Row[]): void {
     .join(',\n      ');
 
   pgm.sql(`
-    INSERT INTO settings (key, grup, label, tipe_nilai, nilai, is_public, is_encrypted, deskripsi) VALUES
+    INSERT INTO settings (key, grup, label, tipe_nilai, nilai, is_public, is_encrypted, description) VALUES
       ${values}
     ON CONFLICT (key) WHERE deleted_at IS NULL DO NOTHING;
   `);

@@ -8,20 +8,20 @@ import Icon from '@/components/ui/Icon.vue';
 
 const { t } = useI18n();
 
-/** Kartu kursus ala DreamsLMS — dipakai landing, katalog, dan detail instruktur. */
+/** Kartu course ala DreamsLMS — dipakai landing, catalog, dan detail instructor. */
 const props = defineProps<{
   course: {
     slug: string;
-    judul: string;
-    harga: number | string;
-    harga_coret?: number | string | null;
+    title: string;
+    price: number | string;
+    strike_price?: number | string | null;
     level?: string;
     category_nama?: string | null;
     instructor_nama?: string | null;
     instructor_foto?: string | null;
     rating_avg?: string | number | null;
     rating_count?: number | null;
-    jumlah_siswa?: number | null;
+    student_count?: number | null;
     durasi_total_menit?: number | null;
     meta?: { thumbnail_url?: string } | null;
   };
@@ -34,13 +34,13 @@ const inisial = computed(() =>
   (props.course.instructor_nama ?? '?').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase(),
 );
 const diskon = computed(() => {
-  const h = Number(props.course.harga);
-  const c = Number(props.course.harga_coret ?? 0);
+  const h = Number(props.course.price);
+  const c = Number(props.course.strike_price ?? 0);
   return c > h && h > 0 ? Math.round(((c - h) / c) * 100) : 0;
 });
 
 // DEBUG LOG: See what the thumbnail URL is
-console.log(`Course [${props.course.judul}] thumbnail URL:`, props.course.meta?.thumbnail_url);
+console.log(`Course [${props.course.title}] thumbnail URL:`, props.course.meta?.thumbnail_url);
 </script>
 
 <template>
@@ -50,7 +50,7 @@ console.log(`Course [${props.course.judul}] thumbnail URL:`, props.course.meta?.
       <img
         v-if="course.meta?.thumbnail_url"
         :src="assetUrl(course.meta.thumbnail_url)"
-        :alt="course.judul"
+        :alt="course.title"
         loading="lazy"
         class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
       />
@@ -74,7 +74,7 @@ console.log(`Course [${props.course.judul}] thumbnail URL:`, props.course.meta?.
       </div>
 
       <h3 class="mt-2.5 line-clamp-2 font-semibold leading-snug text-slate-900 group-hover:text-brand-500">
-        {{ course.judul }}
+        {{ course.title }}
       </h3>
 
       <div class="mt-2 flex items-center gap-1 text-xs">
@@ -83,15 +83,15 @@ console.log(`Course [${props.course.judul}] thumbnail URL:`, props.course.meta?.
         <span class="text-slate-400">
           ({{ fmtAngka(course.rating_count ?? 0) }} {{ t('common.unit.review', Number(course.rating_count ?? 0)) }})
         </span>
-        <span v-if="course.jumlah_siswa" class="ms-auto text-slate-400">
-          {{ fmtAngka(course.jumlah_siswa) }} {{ t('common.unit.student', Number(course.jumlah_siswa)) }}
+        <span v-if="course.student_count" class="ms-auto text-slate-400">
+          {{ fmtAngka(course.student_count) }} {{ t('common.unit.student', Number(course.student_count)) }}
         </span>
       </div>
 
       <div class="mt-auto flex items-center justify-between border-t border-slate-100 pt-3">
         <div>
-          <span class="text-lg font-bold text-brand-500">{{ fmtHarga(course.harga) }}</span>
-          <span v-if="diskon" class="ms-1.5 text-xs text-slate-400 line-through">{{ fmtHarga(course.harga_coret!) }}</span>
+          <span class="text-lg font-bold text-brand-500">{{ fmtHarga(course.price) }}</span>
+          <span v-if="diskon" class="ms-1.5 text-xs text-slate-400 line-through">{{ fmtHarga(course.strike_price!) }}</span>
         </div>
         <span class="flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-medium text-white transition group-hover:bg-brand-500">
           {{ t('catalog.card.viewCourse') }} <Icon name="arrow-right" :size="11" class="rtl-flip" />

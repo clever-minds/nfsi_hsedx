@@ -15,7 +15,7 @@ export interface GradeRow {
   dinilai_oleh: string | null;
   dinilai_at: string | null;
   /**
-   * Waktu nilai dirilis ke siswa. Null berarti sudah dinilai tetapi belum
+   * Waktu nilai dirilis ke student. Null berarti sudah dinilai tetapi belum
    * terlihat — itulah yang memungkinkan satu angkatan dinilai lalu dibuka
    * bersamaan. Setelah terisi, nilai terkunci: perubahan hanya lewat endpoint
    * penyesuaian yang mencatat alasan ke audit log.
@@ -145,7 +145,7 @@ export async function courseIdForEnrollment(enrollmentId: string): Promise<strin
   return row?.course_id ?? null;
 }
 
-/** Cek instruktur pemilik kursus terkait sebuah enrollment (row-level grading/gradebook). */
+/** Cek instructor pemilik course terkait sebuah enrollment (row-level grading/gradebook). */
 export async function isCourseOwnedByInstructor(courseId: string, userId: string): Promise<boolean> {
   const row = await queryOne<{ ok: boolean }>(
     `SELECT EXISTS(
@@ -157,7 +157,7 @@ export async function isCourseOwnedByInstructor(courseId: string, userId: string
   return row?.ok ?? false;
 }
 
-// ── Antrian penilaian (submissions lintas kursus) ──────────────
+// ── Antrian penilaian (submissions lintas course) ──────────────
 export interface SubmissionQueueRow {
   id: string;
   status: string;
@@ -167,7 +167,7 @@ export interface SubmissionQueueRow {
   siswa_nama: string;
   judul_asesmen: string;
   course_id: string;
-  kursus_judul: string;
+  course_title: string;
 }
 
 export async function listSubmissionsQueue(
@@ -186,9 +186,9 @@ export async function listSubmissionsQueue(
   }
   const whereSql = where.join(' AND ');
   const rows = await query<SubmissionQueueRow>(
-    `SELECT s.id, s.status, 'tugas' AS jenis, s.dikumpulkan_at AS tanggal_kumpul, s.revisi_ke,
-            u.nama_lengkap AS siswa_nama, a.judul AS judul_asesmen,
-            c.id AS course_id, c.judul AS kursus_judul
+    `SELECT s.id, s.status, 'assignment' AS jenis, s.dikumpulkan_at AS tanggal_kumpul, s.revisi_ke,
+            u.nama_lengkap AS siswa_nama, a.title AS judul_asesmen,
+            c.id AS course_id, c.title AS course_title
        FROM submissions s
        JOIN enrollments e ON e.id = s.enrollment_id
        JOIN users u ON u.id = e.user_id

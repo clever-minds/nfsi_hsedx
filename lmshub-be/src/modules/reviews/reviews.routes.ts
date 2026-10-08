@@ -7,10 +7,10 @@ import * as ctrl from './reviews.controller';
 
 export const reviewsRouter = Router();
 
-// PUBLIK — ringkasan rating + daftar ulasan (dikonsumsi halaman detail kursus)
+// PUBLIK — summary rating + daftar ulasan (dikonsumsi halaman detail course)
 reviewsRouter.get('/courses/:courseId/reviews', asyncHandler(ctrl.publicReviews));
 
-// Terproteksi — ulasan milik sendiri & buat/ubah ulasan (siswa ter-enroll)
+// Terproteksi — ulasan milik sendiri & buat/ubah ulasan (student ter-enroll)
 reviewsRouter.get('/courses/:courseId/reviews/me', requireAuth(), asyncHandler(ctrl.myReview));
 reviewsRouter.post(
   '/courses/:courseId/reviews',

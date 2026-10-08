@@ -98,7 +98,7 @@ onMounted(load);
         <div>
           <label class="label">{{ t('audit.module') }}</label>
           <!-- A list, not free text: the filter matches stored module codes
-               (`transaksi`), which a person reading English labels cannot guess. -->
+               (`transaction`), which a person reading English labels cannot guess. -->
           <select v-model="filters.module" class="input w-auto" @change="search">
             <option value="">{{ t('audit.allModules') }}</option>
             <option v-for="m in moduleOptions" :key="m" :value="m">{{ moduleLabel(m) }}</option>

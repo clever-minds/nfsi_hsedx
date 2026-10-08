@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n';
 import { LOCALE_LIST, LOCALES, setLocale, type SupportedLocale } from '@/i18n';
 
 /**
- * Akses locale aktif + daftar bahasa untuk komponen pemilih bahasa.
+ * Akses locale aktif + daftar language untuk komponen pemilih language.
  * `isRtl` berguna untuk membalik ikon arah (panah, chevron) yang tidak
  * tercakup oleh CSS logical properties.
  */

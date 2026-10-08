@@ -4,7 +4,7 @@ export const lessonProgressStatusEnum = z.enum(['belum', 'sedang', 'selesai']);
 
 export const updateLessonProgressSchema = z.object({
   status: lessonProgressStatusEnum.optional(),
-  posisi_detik: z.number().int().min(0).optional(),
+  position_seconds: z.number().int().min(0).optional(),
 });
 
 export const createNoteSchema = z.object({
@@ -18,7 +18,7 @@ export const updateNoteSchema = z.object({
 });
 
 export const createBookmarkSchema = z.object({
-  posisi_detik: z.number().int().min(0).nullable().optional(),
+  position_seconds: z.number().int().min(0).nullable().optional(),
   catatan: z.string().max(200).nullable().optional(),
 });
 

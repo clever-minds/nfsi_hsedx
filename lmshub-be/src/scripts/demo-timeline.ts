@@ -96,7 +96,7 @@ async function refreshEnrollments(): Promise<void> {
   await pool.query(
     `UPDATE course_progress cp
         SET last_accessed_at = GREATEST(e.created_at, now() - interval '2 days'),
-            completed_at = CASE WHEN cp.persen_selesai >= 100
+            completed_at = CASE WHEN cp.progress_percent >= 100
                                 THEN e.created_at + interval '12 days' ELSE NULL END
        FROM enrollments e
       WHERE cp.enrollment_id = e.id`,
@@ -179,7 +179,7 @@ async function refreshLiveSessions(): Promise<void> {
   // attendance roll and the published recording were never visible on a demo.
   await pool.query(
     `WITH ordered AS (
-       SELECT id, row_number() OVER (ORDER BY waktu_mulai, id) AS n
+       SELECT id, row_number() OVER (ORDER BY start_time, id) AS n
          FROM live_sessions
         WHERE deleted_at IS NULL
      ),
@@ -198,7 +198,7 @@ async function refreshLiveSessions(): Promise<void> {
          FROM ordered
      )
      UPDATE live_sessions ls
-        SET waktu_mulai   = p.mulai,
+        SET start_time   = p.mulai,
             waktu_selesai = p.mulai + interval '90 minutes',
             status = (CASE WHEN p.n = 1 THEN 'rekaman_tersedia'
                            WHEN p.n = 2 THEN 'selesai'

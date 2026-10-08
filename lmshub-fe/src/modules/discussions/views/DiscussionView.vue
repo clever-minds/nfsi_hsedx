@@ -7,11 +7,11 @@ import { fmtAngka, fmtRelatif, initialsOf } from '@/lib/format';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Icon from '@/components/ui/Icon.vue';
 
-interface CourseOpt { id: string; judul: string }
-interface LessonOpt { id: string; judul: string; section: string }
+interface CourseOpt { id: string; title: string }
+interface LessonOpt { id: string; title: string; section: string }
 interface Thread {
   id: string;
-  judul: string;
+  title: string;
   penulis_nama?: string;
   penulis_foto?: string | null;
   jumlah_post?: number;
@@ -36,25 +36,25 @@ const auth = useAuthStore();
 const { t } = useI18n();
 const tab = ref<'forum' | 'qa'>('forum');
 
-// ── Pilihan kursus (dropdown, gabungan enrollment siswa + kursus instruktur) ──
+// ── Pilihan course (dropdown, gabungan enrollment student + course instructor) ──
 const courses = ref<CourseOpt[]>([]);
 const selectedCourse = ref('');
 
 async function loadCourses() {
   const map = new Map<string, string>();
-  // Kursus yang diikuti (siswa) — sumber utama.
-  const enr = await apiGetFull<Array<{ course_id: string; kursus_judul: string; status: string }>>('/enrollments', { limit: 100 })
+  // Course yang diikuti (student) — sumber utama.
+  const enr = await apiGetFull<Array<{ course_id: string; course_title: string; status: string }>>('/enrollments', { limit: 100 })
     .then((r) => r.data ?? [])
     .catch(() => []);
-  for (const e of enr) if (['terdaftar', 'aktif', 'selesai'].includes(e.status)) map.set(e.course_id, e.kursus_judul);
-  // Kursus yang dikelola (instruktur/admin).
-  if (auth.can('kursus.create')) {
-    const mine = await apiGetFull<Array<{ id: string; judul: string }>>('/courses', { limit: 100 })
+  for (const e of enr) if (['terdaftar', 'aktif', 'selesai'].includes(e.status)) map.set(e.course_id, e.course_title);
+  // Course yang dikelola (instructor/admin).
+  if (auth.can('course.create')) {
+    const mine = await apiGetFull<Array<{ id: string; title: string }>>('/courses', { limit: 100 })
       .then((r) => r.data ?? [])
       .catch(() => []);
-    for (const c of mine) map.set(c.id, c.judul);
+    for (const c of mine) map.set(c.id, c.title);
   }
-  courses.value = [...map.entries()].map(([id, judul]) => ({ id, judul }));
+  courses.value = [...map.entries()].map(([id, title]) => ({ id, title }));
   if (!selectedCourse.value && courses.value.length) selectedCourse.value = courses.value[0].id;
 }
 
@@ -98,7 +98,7 @@ async function createThread() {
   if (!newThreadTitle.value.trim() || !selectedCourse.value) return;
   try {
     await apiPost(`/discussions/courses/${selectedCourse.value}/threads`, {
-      judul: newThreadTitle.value.trim(),
+      title: newThreadTitle.value.trim(),
       isi: newThreadBody.value.trim() || undefined,
     });
     newThreadTitle.value = '';
@@ -135,11 +135,11 @@ async function loadLessons() {
   selectedLesson.value = '';
   if (!selectedCourse.value) return;
   try {
-    const data = await apiGet<{ sections?: Array<{ judul: string; lessons?: Array<{ id: string; judul: string }> }> }>(
+    const data = await apiGet<{ sections?: Array<{ title: string; lessons?: Array<{ id: string; title: string }> }> }>(
       `/courses/${selectedCourse.value}/learn`,
     );
     lessons.value = (data.sections ?? []).flatMap((s) =>
-      (s.lessons ?? []).map((l) => ({ id: l.id, judul: l.judul, section: s.judul })),
+      (s.lessons ?? []).map((l) => ({ id: l.id, title: l.title, section: s.title })),
     );
     if (lessons.value.length) selectedLesson.value = lessons.value[0].id;
   } catch {
@@ -196,7 +196,7 @@ async function upvote(q: Question) {
   }
 }
 
-// Saat kursus berganti, muat ulang thread & pelajaran.
+// Saat course berganti, muat ulang thread & pelajaran.
 watch(selectedCourse, () => {
   loadThreads();
   loadLessons().then(loadQa);
@@ -245,7 +245,7 @@ onMounted(async () => {
       </button>
     </div>
 
-    <!-- Toolbar: pemilih kursus (dan materi saat tab Q&A) dalam satu kartu.
+    <!-- Toolbar: pemilih course (dan materi saat tab Q&A) dalam satu kartu.
          Ikon berada di dalam field lewat `.input-icon-wrap`, bukan melayang
          di sebelahnya. -->
     <div v-if="courses.length" class="card mb-4 flex flex-wrap items-end gap-3 p-4">
@@ -254,7 +254,7 @@ onMounted(async () => {
         <div class="input-icon-wrap py-2">
           <Icon name="book-open" :size="16" />
           <select v-model="selectedCourse">
-            <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.judul }}</option>
+            <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.title }}</option>
           </select>
         </div>
       </div>
@@ -265,7 +265,7 @@ onMounted(async () => {
           <select v-model="selectedLesson">
             <option v-if="!lessons.length" value="">{{ t('discussions.qa.noLessons') }}</option>
             <optgroup v-for="grp in [...new Set(lessons.map((l) => l.section))]" :key="grp" :label="grp">
-              <option v-for="l in lessons.filter((x) => x.section === grp)" :key="l.id" :value="l.id">{{ l.judul }}</option>
+              <option v-for="l in lessons.filter((x) => x.section === grp)" :key="l.id" :value="l.id">{{ l.title }}</option>
             </optgroup>
           </select>
         </div>
@@ -307,7 +307,7 @@ onMounted(async () => {
           >
             <div class="flex items-center gap-2">
               <span v-if="thread.is_pinned" :title="t('discussions.forum.pinned')">📌</span>
-              <span class="line-clamp-1 font-medium text-slate-800">{{ thread.judul }}</span>
+              <span class="line-clamp-1 font-medium text-slate-800">{{ thread.title }}</span>
             </div>
             <div class="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
               <span>{{ thread.penulis_nama || '—' }}</span>
@@ -329,7 +329,7 @@ onMounted(async () => {
           </div>
         </div>
         <div v-else class="card p-5">
-          <h2 class="text-xl font-medium text-slate-900">{{ activeThread.judul }}</h2>
+          <h2 class="text-xl font-medium text-slate-900">{{ activeThread.title }}</h2>
           <div class="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
             <span>{{ activeThread.penulis_nama || '—' }}</span><span>·</span><span>{{ fmtRelatif(activeThread.created_at) }}</span>
           </div>

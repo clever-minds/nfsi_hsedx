@@ -31,7 +31,7 @@
     "email": "Email",
     "emailPlaceholder": "name{'@'}email.com",
     "whatsapp": "WhatsApp No.",
-    "whatsappPlaceholder": "98xxxxxxxx",
+    "whatsappPlaceholder": "08xxxxxxxxxx",
     "initialPassword": "Initial Password",
     "passwordPlaceholder": "At least 8 characters",
     "status": "Status",
@@ -77,6 +77,13 @@
     "mismatch": "The password confirmation does not match.",
     "passwordChanged": "Your password was changed.",
     "passwordFailed": "Failed to change the password",
-    "changePassword": "Change Password"
+    "changePassword": "Change Password",
+    "changeEmail": "Change email",
+    "changeEmailHint": "This is the address you sign in with. Confirm with your current password; the new address must not belong to another account.",
+    "newEmail": "New email address",
+    "currentPassword": "Current password",
+    "saveEmail": "Save new email",
+    "emailChanged": "Email changed. Use the new address the next time you sign in.",
+    "emailChangeFailed": "Could not change the email."
   }
 }

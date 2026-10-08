@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const rubricScoreSchema = z.object({
-  nama: z.string().min(1).max(150),
+  name: z.string().min(1).max(150),
   skor: z.number().min(0),
   skor_maks: z.number().min(0),
   catatan: z.string().optional(),

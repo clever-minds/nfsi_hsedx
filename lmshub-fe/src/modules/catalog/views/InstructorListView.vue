@@ -7,7 +7,7 @@ import Icon from '@/components/ui/Icon.vue';
 
 const { t } = useI18n();
 
-interface Instruktur {
+interface Instructor {
   id: string;
   nama_lengkap: string;
   foto_profil: string | null;
@@ -20,7 +20,7 @@ interface Instruktur {
   sosial_media?: Record<string, string> | null;
 }
 
-const instructors = ref<Instruktur[]>([]);
+const instructors = ref<Instructor[]>([]);
 const loading = ref(true);
 
 const SOSMED = [
@@ -32,7 +32,7 @@ const SOSMED = [
 ];
 
 onMounted(async () => {
-  const res = await apiGetFull<Instruktur[]>('/instructors/public', { limit: 48 }).catch(() => null);
+  const res = await apiGetFull<Instructor[]>('/instructors/public', { limit: 48 }).catch(() => null);
   instructors.value = res?.data ?? [];
   loading.value = false;
 });

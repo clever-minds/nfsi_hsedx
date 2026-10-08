@@ -2,7 +2,7 @@
  * Util format tampilan — sadar-locale dan sadar-mata-uang.
  *
  * Locale diambil dari vue-i18n; mata uang dari setting `currency.code` yang
- * dimuat store appConfig. Jadi bahasa mengatur CARA menulis angka (pemisah
+ * dimuat store appConfig. Jadi language mengatur CARA menulis angka (pemisah
  * ribuan, posisi simbol) dan setting mengatur MATA UANG-nya.
  *
  * Sejak dukungan multi-mata-uang: setiap nilai yang disimpan berada dalam mata
@@ -34,7 +34,7 @@ function activeCurrency(): string {
  * Mata uang tampilan beserta kursnya.
  *
  * Jatuh ke basis (kurs 1) bila store mata uang belum siap — dipanggil sangat
- * awal, dan harga yang gagal render lebih buruk daripada harga dalam mata uang
+ * awal, dan price yang gagal render lebih buruk daripada price dalam mata uang
  * bawaan.
  */
 function displayCurrency(): { kode: string; rate: number; desimal?: number } {
@@ -197,9 +197,9 @@ export function fmtNamaBulan(bulan: number): string {
   return dateFmt('mn', { month: 'long' }).format(new Date(2000, bulan - 1, 1));
 }
 
-/** Inisial nama untuk avatar fallback. */
-export function initialsOf(nama?: string | null): string {
-  const parts = (nama ?? '?').trim().split(/\s+/).filter(Boolean);
+/** Inisial name untuk avatar fallback. */
+export function initialsOf(name?: string | null): string {
+  const parts = (name ?? '?').trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return '?';
   return parts
     .slice(0, 2)
@@ -210,7 +210,7 @@ export function initialsOf(nama?: string | null): string {
 
 /**
  * Waktu relatif ("5 min ago", "3 hari lagi", "منذ ٣ أيام") lewat
- * Intl.RelativeTimeFormat — otomatis benar untuk keempat bahasa.
+ * Intl.RelativeTimeFormat — otomatis benar untuk keempat language.
  */
 export function fmtRelatif(s?: string | Date | null): string {
   const d = toDate(s);
@@ -238,7 +238,7 @@ export function fmtDurasi(detik?: number | string | null): string {
   return `${fmtAngka(sisa)}${t('common.unit.secondShort')}`;
 }
 
-/** Durasi dalam menit → "2j 15m" (dipakai untuk durasi kursus dari BE). */
+/** Durasi dalam menit → "2j 15m" (dipakai untuk durasi course dari BE). */
 export function fmtDurasiMenit(menit?: number | string | null): string {
   return fmtDurasi(Number(menit ?? 0) * 60);
 }

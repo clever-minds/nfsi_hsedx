@@ -12,9 +12,9 @@ async function main() {
 
   for (const c of NEW_CATEGORIES) {
     const res = await pool.query<{ id: string }>(
-      `INSERT INTO categories (nama, slug, ikon) VALUES ($1, $2, $3)
+      `INSERT INTO categories (name, slug, ikon) VALUES ($1, $2, $3)
        ON CONFLICT (slug) WHERE deleted_at IS NULL 
-       DO UPDATE SET nama = EXCLUDED.nama, ikon = EXCLUDED.ikon
+       DO UPDATE SET name = EXCLUDED.name, ikon = EXCLUDED.ikon
        RETURNING id`,
       [c.name, c.slug, c.icon]
     );

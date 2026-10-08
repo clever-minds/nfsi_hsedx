@@ -12,20 +12,20 @@ import CourseCard from '@/components/ui/CourseCard.vue';
 interface Course {
   id: string;
   slug: string;
-  judul: string;
-  harga: number;
-  harga_coret?: number | null;
+  title: string;
+  price: number;
+  strike_price?: number | null;
   level?: string;
   category_nama?: string;
   instructor_nama?: string;
   instructor_foto?: string | null;
   rating_avg?: string | number | null;
   rating_count?: number;
-  jumlah_siswa?: number;
+  student_count?: number;
   meta?: { thumbnail_url?: string } | null;
 }
-interface Kategori { id: string; nama: string; slug: string; ikon?: string | null; jumlah_kursus: number }
-interface Instruktur {
+interface Kategori { id: string; name: string; slug: string; ikon?: string | null; jumlah_kursus: number }
+interface Instructor {
   id: string;
   nama_lengkap: string;
   foto_profil: string | null;
@@ -43,8 +43,8 @@ const site = useSiteContentStore();
 /**
  * Teks & susunan halaman ini dikelola lewat menu Website di admin.
  *
- * Setiap pembacaan diberi teks bawaan sebagai cadangan: field yang belum
- * pernah diisi tetap tampil dalam bahasa pengunjung, bukan kosong.
+ * Setiap pembacaan diberi text bawaan sebagai cadangan: field yang belum
+ * pernah diisi tetap tampil dalam language pengunjung, bukan kosong.
  */
 const hero = computed(() => site.hero);
 const heroGambar = computed(() => assetUrl(site.hero.gambar_url));
@@ -53,11 +53,11 @@ const heroGambar = computed(() => assetUrl(site.hero.gambar_url));
 const urutanSeksi = computed(() => site.sectionsAktif);
 
 const badgeSeksi = (key: string, bawaan: string) => pickText(site.section(key)?.badge, bawaan);
-const judulSeksi = (key: string, bawaan: string) => pickText(site.section(key)?.judul, bawaan);
+const judulSeksi = (key: string, bawaan: string) => pickText(site.section(key)?.title, bawaan);
 const subjudulSeksi = (key: string, bawaan: string) => pickText(site.section(key)?.subjudul, bawaan);
 const courses = ref<Course[]>([]);
 const categories = ref<Kategori[]>([]);
-const instructors = ref<Instruktur[]>([]);
+const instructors = ref<Instructor[]>([]);
 const totalKursus = ref(0);
 
 const q = ref('');
@@ -72,7 +72,7 @@ function cari() {
   });
 }
 
-// Kunci i18n, bukan teks — supaya blok keunggulan ikut berganti bahasa.
+// Kunci i18n, bukan text — supaya blok keunggulan ikut berganti language.
 const BENEFIT = [
   { icon: 'users', key: 'expert' },
   { icon: 'award', key: 'certificate' },
@@ -83,7 +83,7 @@ onMounted(async () => {
   const [c, cat, ins] = await Promise.all([
     apiGetFull<Course[]>('/courses/public', { limit: 8 }).catch(() => null),
     apiGetFull<Kategori[]>('/categories/public').catch(() => null),
-    apiGetFull<Instruktur[]>('/instructors/public', { limit: 4 }).catch(() => null),
+    apiGetFull<Instructor[]>('/instructors/public', { limit: 4 }).catch(() => null),
   ]);
   courses.value = c?.data ?? [];
   totalKursus.value = Number((c?.meta as Record<string, unknown> | null)?.total ?? courses.value.length);
@@ -126,7 +126,7 @@ onMounted(async () => {
               <Icon name="grid" :size="14" class="text-slate-400" />
               <select v-model="kategoriDipilih" class="max-w-[9rem] bg-transparent text-sm text-slate-600 outline-none">
                 <option value="">{{ t('catalog.landing.hero.allCategories') }}</option>
-                <option v-for="k in categories" :key="k.id" :value="k.slug">{{ k.nama }}</option>
+                <option v-for="k in categories" :key="k.id" :value="k.slug">{{ k.name }}</option>
               </select>
             </div>
             <input
@@ -219,7 +219,7 @@ onMounted(async () => {
             >
               <span class="grid h-14 w-14 place-items-center rounded-2xl bg-slate-50 text-2xl transition group-hover:bg-brand-50">{{ k.ikon || '📚' }}</span>
               <div>
-                <div class="text-sm font-semibold text-slate-800 group-hover:text-brand-500">{{ k.nama }}</div>
+                <div class="text-sm font-semibold text-slate-800 group-hover:text-brand-500">{{ k.name }}</div>
                 <div class="mt-0.5 text-xs text-slate-400">{{ t('catalog.landing.categories.count', { n: fmtAngka(k.jumlah_kursus) }) }}</div>
               </div>
             </RouterLink>
@@ -291,13 +291,13 @@ onMounted(async () => {
       </section>
 
       <!-- ── INSTRUKTUR TERBAIK ─────────────────────────────────────── -->
-      <section v-else-if="s.key === 'instruktur'" class="mx-auto max-w-7xl px-4 py-16">
+      <section v-else-if="s.key === 'instructor'" class="mx-auto max-w-7xl px-4 py-16">
         <div class="text-center">
           <span class="inline-block rounded-full bg-brand-50 px-4 py-1.5 text-xs font-semibold text-brand-500">
-            {{ badgeSeksi('instruktur', t('catalog.landing.instructors.badge')) }}
+            {{ badgeSeksi('instructor', t('catalog.landing.instructors.badge')) }}
           </span>
-          <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">{{ judulSeksi('instruktur', t('catalog.landing.instructors.title')) }}</h2>
-          <p class="mx-auto mt-2 max-w-xl text-sm text-slate-500">{{ subjudulSeksi('instruktur', t('catalog.landing.instructors.subtitle')) }}</p>
+          <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">{{ judulSeksi('instructor', t('catalog.landing.instructors.title')) }}</h2>
+          <p class="mx-auto mt-2 max-w-xl text-sm text-slate-500">{{ subjudulSeksi('instructor', t('catalog.landing.instructors.subtitle')) }}</p>
         </div>
         <div v-if="instructors.length" class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <RouterLink

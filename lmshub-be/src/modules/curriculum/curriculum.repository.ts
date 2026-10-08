@@ -3,9 +3,9 @@ import { query, queryOne } from '../../core/db/pool';
 export interface SectionRow {
   id: string;
   course_id: string;
-  judul: string;
-  urutan: number;
-  deskripsi: string | null;
+  title: string;
+  sort_order: number;
+  description: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -13,13 +13,13 @@ export interface SectionRow {
 export interface LessonRow {
   id: string;
   section_id: string;
-  judul: string;
+  title: string;
   tipe: string;
-  urutan: number;
-  durasi_menit: number | null;
+  sort_order: number;
+  duration_minutes: number | null;
   gratis_preview: boolean;
   drip_release_at: string | null;
-  wajib_selesai: boolean;
+  must_complete: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -28,12 +28,12 @@ export interface LessonContentRow {
   id: string;
   lesson_id: string;
   tipe: string;
-  urutan: number;
+  sort_order: number;
   body: string | null;
   media_asset_id: string | null;
   url: string | null;
   scorm_manifest_url: string | null;
-  durasi_detik: number | null;
+  duration_seconds: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -46,8 +46,8 @@ export async function courseExists(courseId: string): Promise<boolean> {
   return row?.ok ?? false;
 }
 
-/** `courses.instructor_id` pemilik kursus — dipakai guard row-level "Sendiri" untuk instruktur. */
-/** Kembalikan USER id instruktur pemilik kursus (courses.instructor_id → instructor_profiles.user_id). */
+/** `courses.instructor_id` pemilik course — dipakai guard row-level "Sendiri" untuk instructor. */
+/** Kembalikan USER id instructor pemilik course (courses.instructor_id → instructor_profiles.user_id). */
 export async function courseInstructorId(courseId: string): Promise<string | null> {
   const row = await queryOne<{ user_id: string }>(
     `SELECT ip.user_id
@@ -62,15 +62,15 @@ export async function courseInstructorId(courseId: string): Promise<string | nul
 // ── Sections ─────────────────────────────────────────
 export async function listSections(courseId: string): Promise<SectionRow[]> {
   return query<SectionRow>(
-    `SELECT id, course_id, judul, urutan, deskripsi, created_at, updated_at
-       FROM sections WHERE course_id = $1 AND deleted_at IS NULL ORDER BY urutan ASC`,
+    `SELECT id, course_id, title, sort_order, description, created_at, updated_at
+       FROM sections WHERE course_id = $1 AND deleted_at IS NULL ORDER BY sort_order ASC`,
     [courseId],
   );
 }
 
 export async function sectionDetail(id: string): Promise<SectionRow | null> {
   return queryOne<SectionRow>(
-    `SELECT id, course_id, judul, urutan, deskripsi, created_at, updated_at
+    `SELECT id, course_id, title, sort_order, description, created_at, updated_at
        FROM sections WHERE id = $1 AND deleted_at IS NULL`,
     [id],
   );
@@ -78,13 +78,13 @@ export async function sectionDetail(id: string): Promise<SectionRow | null> {
 
 export async function insertSection(data: {
   course_id: string;
-  judul: string;
-  urutan: number;
-  deskripsi: string | null;
+  title: string;
+  sort_order: number;
+  description: string | null;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO sections (course_id, judul, urutan, deskripsi) VALUES ($1,$2,$3,$4) RETURNING id`,
-    [data.course_id, data.judul, data.urutan, data.deskripsi],
+    `INSERT INTO sections (course_id, title, sort_order, description) VALUES ($1,$2,$3,$4) RETURNING id`,
+    [data.course_id, data.title, data.sort_order, data.description],
   );
   return row!;
 }
@@ -102,30 +102,30 @@ export async function softDeleteSection(id: string): Promise<void> {
 
 export async function nextSectionUrutan(courseId: string): Promise<number> {
   const row = await queryOne<{ next: number }>(
-    `SELECT COALESCE(MAX(urutan), -1) + 1 AS next FROM sections WHERE course_id = $1 AND deleted_at IS NULL`,
+    `SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM sections WHERE course_id = $1 AND deleted_at IS NULL`,
     [courseId],
   );
   return row?.next ?? 0;
 }
 
-export async function reorderSections(items: Array<{ id: string; urutan: number }>): Promise<void> {
+export async function reorderSections(items: Array<{ id: string; sort_order: number }>): Promise<void> {
   for (const item of items) {
-    await query(`UPDATE sections SET urutan = $2 WHERE id = $1`, [item.id, item.urutan]);
+    await query(`UPDATE sections SET sort_order = $2 WHERE id = $1`, [item.id, item.sort_order]);
   }
 }
 
 // ── Lessons ──────────────────────────────────────────
 export async function listLessonsBySection(sectionId: string): Promise<LessonRow[]> {
   return query<LessonRow>(
-    `SELECT id, section_id, judul, tipe, urutan, durasi_menit, gratis_preview, drip_release_at, wajib_selesai, created_at, updated_at
-       FROM lessons WHERE section_id = $1 AND deleted_at IS NULL ORDER BY urutan ASC`,
+    `SELECT id, section_id, title, tipe, sort_order, duration_minutes, gratis_preview, drip_release_at, must_complete, created_at, updated_at
+       FROM lessons WHERE section_id = $1 AND deleted_at IS NULL ORDER BY sort_order ASC`,
     [sectionId],
   );
 }
 
 export async function lessonDetail(id: string): Promise<LessonRow | null> {
   return queryOne<LessonRow>(
-    `SELECT id, section_id, judul, tipe, urutan, durasi_menit, gratis_preview, drip_release_at, wajib_selesai, created_at, updated_at
+    `SELECT id, section_id, title, tipe, sort_order, duration_minutes, gratis_preview, drip_release_at, must_complete, created_at, updated_at
        FROM lessons WHERE id = $1 AND deleted_at IS NULL`,
     [id],
   );
@@ -133,26 +133,26 @@ export async function lessonDetail(id: string): Promise<LessonRow | null> {
 
 export async function insertLesson(data: {
   section_id: string;
-  judul: string;
+  title: string;
   tipe: string;
-  urutan: number;
-  durasi_menit: number | null;
+  sort_order: number;
+  duration_minutes: number | null;
   gratis_preview: boolean;
   drip_release_at: string | null;
-  wajib_selesai: boolean;
+  must_complete: boolean;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO lessons (section_id, judul, tipe, urutan, durasi_menit, gratis_preview, drip_release_at, wajib_selesai)
+    `INSERT INTO lessons (section_id, title, tipe, sort_order, duration_minutes, gratis_preview, drip_release_at, must_complete)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
     [
       data.section_id,
-      data.judul,
+      data.title,
       data.tipe,
-      data.urutan,
-      data.durasi_menit,
+      data.sort_order,
+      data.duration_minutes,
       data.gratis_preview,
       data.drip_release_at,
-      data.wajib_selesai,
+      data.must_complete,
     ],
   );
   return row!;
@@ -171,24 +171,24 @@ export async function softDeleteLesson(id: string): Promise<void> {
 
 export async function nextLessonUrutan(sectionId: string): Promise<number> {
   const row = await queryOne<{ next: number }>(
-    `SELECT COALESCE(MAX(urutan), -1) + 1 AS next FROM lessons WHERE section_id = $1 AND deleted_at IS NULL`,
+    `SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM lessons WHERE section_id = $1 AND deleted_at IS NULL`,
     [sectionId],
   );
   return row?.next ?? 0;
 }
 
 export async function reorderLessons(
-  items: Array<{ id: string; urutan: number; section_id?: string }>,
+  items: Array<{ id: string; sort_order: number; section_id?: string }>,
 ): Promise<void> {
   for (const item of items) {
     if (item.section_id) {
-      await query(`UPDATE lessons SET urutan = $2, section_id = $3 WHERE id = $1`, [
+      await query(`UPDATE lessons SET sort_order = $2, section_id = $3 WHERE id = $1`, [
         item.id,
-        item.urutan,
+        item.sort_order,
         item.section_id,
       ]);
     } else {
-      await query(`UPDATE lessons SET urutan = $2 WHERE id = $1`, [item.id, item.urutan]);
+      await query(`UPDATE lessons SET sort_order = $2 WHERE id = $1`, [item.id, item.sort_order]);
     }
   }
 }
@@ -206,15 +206,15 @@ export async function courseIdOfLesson(lessonId: string): Promise<string | null>
 // ── Lesson Contents ──────────────────────────────────
 export async function listContents(lessonId: string): Promise<LessonContentRow[]> {
   return query<LessonContentRow>(
-    `SELECT id, lesson_id, tipe, urutan, body, media_asset_id, url, scorm_manifest_url, durasi_detik, created_at, updated_at
-       FROM lesson_contents WHERE lesson_id = $1 AND deleted_at IS NULL ORDER BY urutan ASC`,
+    `SELECT id, lesson_id, tipe, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds, created_at, updated_at
+       FROM lesson_contents WHERE lesson_id = $1 AND deleted_at IS NULL ORDER BY sort_order ASC`,
     [lessonId],
   );
 }
 
 export async function contentDetail(id: string): Promise<LessonContentRow | null> {
   return queryOne<LessonContentRow>(
-    `SELECT id, lesson_id, tipe, urutan, body, media_asset_id, url, scorm_manifest_url, durasi_detik, created_at, updated_at
+    `SELECT id, lesson_id, tipe, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds, created_at, updated_at
        FROM lesson_contents WHERE id = $1 AND deleted_at IS NULL`,
     [id],
   );
@@ -223,25 +223,25 @@ export async function contentDetail(id: string): Promise<LessonContentRow | null
 export async function insertContent(data: {
   lesson_id: string;
   tipe: string;
-  urutan: number;
+  sort_order: number;
   body: string | null;
   media_asset_id: string | null;
   url: string | null;
   scorm_manifest_url: string | null;
-  durasi_detik: number | null;
+  duration_seconds: number | null;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO lesson_contents (lesson_id, tipe, urutan, body, media_asset_id, url, scorm_manifest_url, durasi_detik)
+    `INSERT INTO lesson_contents (lesson_id, tipe, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
     [
       data.lesson_id,
       data.tipe,
-      data.urutan,
+      data.sort_order,
       data.body,
       data.media_asset_id,
       data.url,
       data.scorm_manifest_url,
-      data.durasi_detik,
+      data.duration_seconds,
     ],
   );
   return row!;
@@ -260,7 +260,7 @@ export async function softDeleteContent(id: string): Promise<void> {
 
 export async function nextContentUrutan(lessonId: string): Promise<number> {
   const row = await queryOne<{ next: number }>(
-    `SELECT COALESCE(MAX(urutan), -1) + 1 AS next FROM lesson_contents WHERE lesson_id = $1 AND deleted_at IS NULL`,
+    `SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM lesson_contents WHERE lesson_id = $1 AND deleted_at IS NULL`,
     [lessonId],
   );
   return row?.next ?? 0;

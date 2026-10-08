@@ -11,6 +11,6 @@ export const contentRoutes: RouteRecordRaw[] = [
     path: 'media',
     name: 'content-media',
     component: () => import('@/modules/content/views/MediaLibraryView.vue'),
-    meta: { permission: 'konten.view', title: 'Media Library' },
+    meta: { permission: 'content.view', title: 'Media Library' },
   },
 ];

@@ -20,7 +20,7 @@ export const easebuzzProvider: PaymentProvider = {
   },
 
   publicConfig() {
-    return null; // Easebuzz initiates from backend
+    return {}; // Easebuzz initiates from backend
   },
 
   supportedCurrencies() {

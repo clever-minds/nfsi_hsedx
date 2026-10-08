@@ -77,6 +77,7 @@ const busy = ref(false);
 const error = ref('');
 const notice = ref('');
 const previewUrl = ref('');
+const courseMeta = ref<any>({});
 
 /**
  * Kegagalan di sini sengaja tidak membatalkan pemuatan halaman — editor tetap
@@ -106,7 +107,8 @@ async function loadCourse(id: string) {
   currentStatus.value = c.publication_status;
   instructorNama.value = c.instructor_nama ?? '';
   form.thumbnail_media_id = c.thumbnail_media_id ?? undefined;
-  previewUrl.value = c.meta?.thumbnail_url ? assetUrl(c.meta.thumbnail_url) : '';
+  courseMeta.value = c.meta || {};
+  previewUrl.value = courseMeta.value.thumbnail_url ? assetUrl(courseMeta.value.thumbnail_url) : '';
   rules.final_exam_quiz_id = c.final_exam_quiz_id ?? '';
   rules.allow_restart = !!c.allow_restart;
 }
@@ -174,6 +176,7 @@ async function submit() {
       description: form.description || undefined,
       language: form.language,
       thumbnail_media_id: form.thumbnail_media_id || undefined,
+      meta: courseMeta.value,
     };
     if (isEdit.value && courseId.value) {
       await apiPut(`/courses/${courseId.value}`, payload);
@@ -207,6 +210,7 @@ async function transition(action: 'submit' | 'publish' | 'archive') {
 function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }) {
   form.thumbnail_media_id = asset.id;
   if (asset.path_object_storage) {
+    courseMeta.value.thumbnail_url = asset.path_object_storage;
     previewUrl.value = assetUrl(asset.path_object_storage);
   }
 }

@@ -8,7 +8,7 @@ import { useCurrencyStore } from '@/stores/currency';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import StatusChip from '@/components/ui/StatusChip.vue';
 import RichTextEditor from '@/components/ui/RichTextEditor.vue';
-import MediaUploadButton from '@/components/ui/MediaUploadButton.vue';
+import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
 
 interface CourseDetail {
   id: string;

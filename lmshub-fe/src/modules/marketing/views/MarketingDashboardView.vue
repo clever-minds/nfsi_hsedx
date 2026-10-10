@@ -13,14 +13,14 @@ interface Lead {
   name: string;
   kontak?: string;
   minat_kursus?: string;
-  nilai_estimasi?: number;
-  catatan?: string;
+  value_estimasi?: number;
+  notes?: string;
   stage: string; // lead | prospek | closing
 }
 interface Commission {
   id: string;
   order_kode?: string;
-  nominal: number;
+  amount: number;
   rate?: number;
   status: string;
 }
@@ -28,20 +28,20 @@ interface ReferralLink {
   id: string;
   kode: string;
   url?: string;
-  kunjungan?: number;
-  konversi?: number;
+  visit?: number;
+  conversion?: number;
 }
 interface LeaderboardRow {
   id: string;
   name: string;
   total_closing?: number;
-  total_komisi?: number;
+  total_commission?: number;
 }
 
 const auth = useAuthStore();
 const { t } = useI18n();
 
-const STAGE_KEYS = ['lead', 'prospek', 'closing'] as const;
+const STAGE_KEYS = ['lead', 'prospect', 'closing'] as const;
 const STAGES = computed(() => STAGE_KEYS.map((key) => ({ key, label: t(`marketing.stage.${key}`) })));
 
 const leads = ref<Lead[]>([]);
@@ -57,7 +57,7 @@ const copied = ref(false);
 const kpi = reactive({ targetClosing: 0, tercapaiClosing: 0, komisiBulan: 0, komisiCair: 0 });
 
 const showAddLead = ref(false);
-const newLead = reactive({ name: '', kontak: '', minat_kursus: '', nilai_estimasi: 0 });
+const newLead = reactive({ name: '', kontak: '', minat_kursus: '', value_estimasi: 0 });
 const addingLead = ref(false);
 
 function columnFor(stage: string): Lead[] {
@@ -65,14 +65,14 @@ function columnFor(stage: string): Lead[] {
 }
 
 const komisiBulanDisplay = computed(
-  () => kpi.komisiBulan || commissions.value.reduce((s, c) => s + Number(c.nominal || 0), 0),
+  () => kpi.komisiBulan || commissions.value.reduce((s, c) => s + Number(c.amount || 0), 0),
 );
 const komisiCairDisplay = computed(
   () =>
     kpi.komisiCair ||
     commissions.value
-      .filter((c) => /cair|selesai/i.test(c.status))
-      .reduce((s, c) => s + Number(c.nominal || 0), 0),
+      .filter((c) => /cair|finish/i.test(c.status))
+      .reduce((s, c) => s + Number(c.amount || 0), 0),
 );
 const tercapaiDisplay = computed(() => kpi.tercapaiClosing || columnFor('closing').length);
 
@@ -80,11 +80,11 @@ async function loadDashboardKpi() {
   try {
     const d = await apiGet<Record<string, number>>('/marketing/dashboard');
     kpi.targetClosing = Number(d.target_closing ?? 0);
-    kpi.tercapaiClosing = Number(d.closing_bulan ?? d.tercapai_closing ?? 0);
-    kpi.komisiBulan = Number(d.komisi_bulan ?? 0);
-    kpi.komisiCair = Number(d.komisi_cair ?? 0);
+    kpi.tercapaiClosing = Number(d.closing_month ?? d.tercapai_closing ?? 0);
+    kpi.komisiBulan = Number(d.commission_month ?? 0);
+    kpi.komisiCair = Number(d.commission_cair ?? 0);
   } catch {
-    /* fallback dihitung dari leads & commissions di computed */
+    /* fallback dihitung from leads & commissions di computed */
   }
 }
 
@@ -137,7 +137,7 @@ function nextStage(stage: string): string | null {
   return idx >= 0 && idx < STAGE_KEYS.length - 1 ? STAGE_KEYS[idx + 1] : null;
 }
 
-/** Label tahap berikutnya untuk tombol "Pindah →". */
+/** Label stage berikutnya untuk tombol "Pindah →". */
 function nextStageLabel(stage: string): string {
   const next = nextStage(stage);
   return next ? t(`marketing.stage.${next}`) : '';
@@ -168,7 +168,7 @@ async function addLead() {
     newLead.name = '';
     newLead.kontak = '';
     newLead.minat_kursus = '';
-    newLead.nilai_estimasi = 0;
+    newLead.value_estimasi = 0;
     await loadLeads();
   } catch (e) {
     error.value = errorMessage(e, t('marketing.addLeadFailed'));
@@ -178,9 +178,9 @@ async function addLead() {
 }
 
 /**
- * Alamat link referral. Domain diambil dari origin situs yang sedang dibuka,
+ * Alamat link referral. Domain diambil from origin situs yang sedang dibuka,
  * bukan ditulis tetap: setiap pemasang punya domain sendiri, dan link yang
- * menunjuk domain lain tidak akan pernah mengkonversi.
+ * menunjuk domain lain no akan pernah mengkonversi.
  */
 function referralUrl(link: ReferralLink) {
   return link.url || `${window.location.origin}/r/${link.kode}`;
@@ -193,7 +193,7 @@ async function copyReferral(link: ReferralLink) {
     copied.value = true;
     setTimeout(() => (copied.value = false), 1500);
   } catch {
-    /* clipboard tidak tersedia, abaikan */
+    /* clipboard no tersedia, abaikan */
   }
 }
 
@@ -227,7 +227,7 @@ onMounted(loadAll);
         <div v-for="link in referralLinks" :key="link.id" class="mt-2 flex flex-wrap items-center gap-3 text-sm">
           <code class="rounded bg-slate-100 px-2 py-1">{{ referralUrl(link).replace(/^https?:\/\//, '') }}</code>
           <span class="text-slate-500">
-            {{ t('marketing.referralStats', { visits: fmtAngka(link.kunjungan ?? 0), conversions: fmtAngka(link.konversi ?? 0) }) }}
+            {{ t('marketing.referralStats', { visits: fmtAngka(link.visit ?? 0), conversions: fmtAngka(link.conversion ?? 0) }) }}
           </span>
           <button class="btn-outline btn-sm" @click="copyReferral(link)">
             {{ copied ? t('marketing.copied') : t('marketing.copyLink') }}
@@ -259,7 +259,7 @@ onMounted(loadAll);
           </div>
           <div>
             <label class="label">{{ t('marketing.leadValue') }}</label>
-            <input v-model.number="newLead.nilai_estimasi" type="number" min="0" class="input" />
+            <input v-model.number="newLead.value_estimasi" type="number" min="0" class="input" />
           </div>
           <div class="sm:col-span-2">
             <button class="btn-primary" :disabled="addingLead">
@@ -285,7 +285,7 @@ onMounted(loadAll);
                 <div v-if="lead.minat_kursus" class="text-xs text-slate-500">
                   {{ t('marketing.interest', { value: lead.minat_kursus }) }}
                 </div>
-                <div v-if="lead.nilai_estimasi" class="text-xs text-accent-500">{{ fmtRp(lead.nilai_estimasi) }}</div>
+                <div v-if="lead.value_estimasi" class="text-xs text-accent-500">{{ fmtRp(lead.value_estimasi) }}</div>
                 <div class="mt-2 flex gap-2">
                   <button
                     v-if="nextStage(lead.stage)"
@@ -328,7 +328,7 @@ onMounted(loadAll);
           <tbody class="divide-y divide-slate-100">
             <tr v-for="c in commissions" :key="c.id">
               <td class="py-2">{{ c.order_kode ?? '—' }}</td>
-              <td class="py-2">{{ fmtRp(c.nominal) }}</td>
+              <td class="py-2">{{ fmtRp(c.amount) }}</td>
               <td class="py-2">{{ c.rate ? `${c.rate}%` : '—' }}</td>
               <td class="py-2"><StatusChip :status="c.status" /></td>
             </tr>
@@ -344,7 +344,7 @@ onMounted(loadAll);
           <li v-for="(row, i) in leaderboard" :key="row.id" class="flex justify-between">
             <span>{{ fmtAngka(i + 1) }}. {{ row.name }} {{ auth.user?.id === row.id ? t('marketing.you') : '' }}</span>
             <span class="text-slate-500">
-              {{ t('marketing.leaderboardRow', { closings: fmtAngka(row.total_closing ?? 0), commission: fmtRp(row.total_komisi) }) }}
+              {{ t('marketing.leaderboardRow', { closings: fmtAngka(row.total_closing ?? 0), commission: fmtRp(row.total_commission) }) }}
             </span>
           </li>
         </ol>

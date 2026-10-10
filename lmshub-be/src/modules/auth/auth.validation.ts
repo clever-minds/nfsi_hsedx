@@ -2,22 +2,22 @@ import { z } from 'zod';
 
 export const registerSchema = z
   .object({
-    nama_lengkap: z.string().min(2).max(150),
+    name_lengkap: z.string().min(2).max(150),
     email: z.string().email().optional(),
-    nomor_wa: z.string().min(6).max(20).optional(),
+    number_wa: z.string().min(6).max(20).optional(),
     password: z.string().min(8).max(100),
     // pendaftaran affiliate: kode referral pengundang (opsional)
     referral: z.string().optional(),
-    // jalur pendaftaran: student (default) atau affiliate (butuh verifikasi admin)
+    // channel pendaftaran: student (default) atau affiliate (need verifikasi admin)
     sebagai: z.enum(['student', 'affiliate']).default('student'),
   })
-  .refine((d) => d.email || d.nomor_wa, {
+  .refine((d) => d.email || d.number_wa, {
     message: 'Enter an email address or a WhatsApp number',
     path: ['email'],
   });
 
 export const loginSchema = z.object({
-  identifier: z.string().min(3), // email atau nomor WA
+  identifier: z.string().min(3), // email atau number WA
   password: z.string().min(1),
 });
 

@@ -6,14 +6,14 @@ import { currentLocaleDef } from '@/i18n';
 import { fmtJam } from '@/lib/format';
 import PageHeader from '@/components/ui/PageHeader.vue';
 
-// Mengikuti kolom tabel calendar_events + kolom join. `sumber` memakai
-// kosakata BE ('live_session' | 'assignment' | 'quiz' | 'lainnya'); view ini
-// sebelumnya membaca `tipe` dengan kosakata karangan sendiri, jadi legenda
-// tidak pernah cocok dan semua acara jatuh ke penanda default.
+// Mengikuti kolom tabel calendar_events + kolom join. `source` memakai
+// kosakata BE ('live_session' | 'assignment' | 'quiz' | 'other'); view ini
+// previous membaca `type` dengan kosakata karangan sendiri, jadi legenda
+// no pernah cocok dan semua acara due to penanda default.
 interface CalendarEvent {
   id: string;
   title: string;
-  sumber: 'live_session' | 'assignment' | 'quiz' | 'lainnya' | string;
+  source: 'live_session' | 'assignment' | 'quiz' | 'other' | string;
   course_title?: string | null;
   start_time: string;
 }
@@ -27,7 +27,7 @@ const error = ref('');
 const legend = computed<Record<string, { label: string; mark: string; class: string }>>(() => ({
   live_session: { label: t('live.calendarPage.legend.live'), mark: '■', class: 'text-brand-600' },
   assignment: { label: t('live.calendarPage.legend.tenggat'), mark: '▲', class: 'text-accent-500' },
-  quiz: { label: t('live.calendarPage.legend.ujian'), mark: '★', class: 'text-rose-500' },
+  quiz: { label: t('live.calendarPage.legend.exam'), mark: '★', class: 'text-rose-500' },
 }));
 
 function startOfMonth(): string {
@@ -56,7 +56,7 @@ async function load() {
   }
 }
 
-// Tampilan agenda (list per tanggal) — mobile-first, bukan grid bulan penuh.
+// Tampilan agenda (list per date) — mobile-first, bukan grid month penuh.
 const agenda = computed(() => {
   const byDate = new Map<string, CalendarEvent[]>();
   for (const e of [...events.value].sort((a, b) => a.start_time.localeCompare(b.start_time))) {
@@ -92,12 +92,12 @@ onMounted(load);
         <h3 class="mb-2 text-sm font-semibold text-brand-900">{{ date }}</h3>
         <div class="space-y-2">
           <div v-for="e in items" :key="e.id" class="card flex items-center gap-3 p-3">
-            <span :class="legend[e.sumber]?.class || 'text-slate-400'" class="text-lg">{{ legend[e.sumber]?.mark || '•' }}</span>
+            <span :class="legend[e.source]?.class || 'text-slate-400'" class="text-lg">{{ legend[e.source]?.mark || '•' }}</span>
             <div class="min-w-0 flex-1">
               <div class="truncate card-title">{{ e.title }}</div>
               <div class="text-xs text-slate-400">{{ e.course_title || '—' }} · <span class="num">{{ fmtJam(e.start_time) }}</span></div>
             </div>
-            <span class="text-xs text-slate-400">{{ legend[e.sumber]?.label || e.sumber }}</span>
+            <span class="text-xs text-slate-400">{{ legend[e.source]?.label || e.source }}</span>
           </div>
         </div>
       </div>

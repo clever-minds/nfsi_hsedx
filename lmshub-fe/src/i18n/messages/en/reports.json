@@ -49,7 +49,7 @@
       "menunggu_approval": "Awaiting Approval",
       "disetujui": "Approved",
       "pencairan": "Disbursing",
-      "selesai": "Completed",
+      "finish": "Completed",
       "ditolak": "Rejected"
     }
   }

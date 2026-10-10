@@ -11,8 +11,8 @@ import {
   UpdateCourseInput,
 } from './courses.validation';
 
-/** Peran yang boleh melakukan approval/publikasi course (Admin Ops/Direktur ke atas). */
-const ADMIN_ROLES = ['super_admin', 'direktur', 'ketua', 'pembina', 'admin_ops'];
+/** Peran yang boleh melakukan approval/publikasi course (Admin Ops/Direktur to on). */
+const ADMIN_ROLES = ['super_admin', 'director', 'chairperson', 'supervisor', 'operations_admin'];
 const isSuper = (actor: AuthContext) => actor.roles.includes('super_admin');
 const isAdmin = (actor: AuthContext) => actor.roles.some((r) => ADMIN_ROLES.includes(r));
 
@@ -51,9 +51,9 @@ export async function create(actor: AuthContext, input: CreateCourseInput) {
   const categoryOk = await repo.categoryExists(input.category_id);
   if (!categoryOk) throw AppError.badRequest('Category not found', 'category.not_found');
 
-  // `instructor_id` di payload = USER id instructor. Hanya admin/super boleh menugaskan ke user lain.
+  // `instructor_id` di payload = USER id instructor. Hanya admin/super boleh menugaskan to user lain.
   const targetUserId = input.instructor_id && (isSuper(actor) || isAdmin(actor)) ? input.instructor_id : actor.userId;
-  // courses.instructor_id mereferensikan instructor_profiles.id → resolve/buat profil otomatis.
+  // courses.instructor_id mereferensikan instructor_profiles.id → resolve/buat profile otomatis.
   const instructorId = await repo.ensureInstructorProfile(targetUserId);
 
   const slug = slugify(input.slug ?? input.title);
@@ -122,9 +122,9 @@ export async function update(actor: AuthContext, id: string, input: UpdateCourse
   if (input.language !== undefined) fields.language = input.language;
   if (input.meta !== undefined) fields.meta = input.meta;
 
-  // Revisi pada course yang sudah Terbit otomatis pindah ke status "Diperbarui" (lihat aturan bisnis 02-catalog-course.md).
-  if (before.publication_status === 'terbit' && Object.keys(fields).length > 0) {
-    fields.publication_status = 'diperbarui';
+  // Revisi pada course yang sudah Terbit otomatis pindah to status "Diperbarui" (view rule bisnis 02-catalog-course.md).
+  if (before.publication_status === 'publish' && Object.keys(fields).length > 0) {
+    fields.publication_status = 'updated';
   }
 
   await repo.update(id, fields);
@@ -141,10 +141,10 @@ export async function update(actor: AuthContext, id: string, input: UpdateCourse
 }
 
 /**
- * Atur ujian akhir & izin mengulang course.
+ * Atur exam akhir & izin mengulang course.
  *
- * Endpoint tersendiri, bukan bagian dari `update`, karena aturan kelulusan
- * bukan isi catalog: mengubahnya tidak boleh memindahkan course Terbit ke
+ * Endpointst tersendiri, bukan bagian from `update`, karena rule kelulusan
+ * bukan content catalog: mengubahnya no boleh memindahkan course Terbit to
  * "Diperbarui" dan menunggu review ulang.
  */
 export async function updateCompletionRules(actor: AuthContext, id: string, input: CompletionRulesInput) {
@@ -172,20 +172,20 @@ export async function updateCompletionRules(actor: AuthContext, id: string, inpu
 
 export async function remove(actor: AuthContext, id: string) {
   const c = await detail(actor, id);
-  if (c.publication_status !== 'draf') {
+  if (c.publication_status !== 'draft') {
     throw AppError.conflict('A course that has been submitted or published cannot be deleted. Archive it instead', 'course.cannot_delete_published');
   }
   await repo.softDelete(id);
   await recordAudit({ userId: actor.userId, module: 'course', action: 'delete', entity: 'courses', entityId: id });
 }
 
-/** Draf → Dalam Review. Diajukan oleh instructor pemilik (atau admin/super). */
+/** Draf → Dalam Review. Diajukan by instructor pemilik (atau admin/super). */
 export async function submit(actor: AuthContext, id: string) {
   const c = await detail(actor, id); // enforces scope
-  if (c.publication_status !== 'draf') {
+  if (c.publication_status !== 'draft') {
     throw AppError.conflict('Only a draft course can be submitted for review', 'course.only_draft_can_be_submitted');
   }
-  await repo.setStatus(id, 'dalam_review');
+  await repo.setStatus(id, 'in_review');
   await recordAudit({
     userId: actor.userId,
     module: 'course',
@@ -193,21 +193,21 @@ export async function submit(actor: AuthContext, id: string) {
     entity: 'courses',
     entityId: id,
     before: { publication_status: c.publication_status },
-    after: { publication_status: 'dalam_review' },
+    after: { publication_status: 'in_review' },
   });
   return repo.detail(id);
 }
 
-/** Dalam Review/Diperbarui → Terbit. Hanya Admin Ops/Direktur ke atas ( pemisahan assignment pengajuan vs approval). */
+/** Dalam Review/Diperbarui → Terbit. Hanya Admin Ops/Direktur to on ( pemisahan assignment pengajuan vs approval). */
 export async function publish(actor: AuthContext, id: string, input: PublishCourseInput) {
   if (!isAdmin(actor)) throw AppError.forbidden('Only an Operations Admin or Director can publish a course', 'course.publish_requires_admin');
   const c = await repo.detail(id);
   if (!c) throw AppError.notFound('Course not found', 'course.not_found');
-  if (!['dalam_review', 'diperbarui'].includes(c.publication_status)) {
+  if (!['in_review', 'updated'].includes(c.publication_status)) {
     throw AppError.conflict('A course must be in review or updated before it can be published', 'course.publish_wrong_status');
   }
   const firstPublish = c.published_at === null;
-  await repo.setStatus(id, 'terbit', firstPublish ? new Date() : undefined);
+  await repo.setStatus(id, 'publish', firstPublish ? new Date() : undefined);
   await recordAudit({
     userId: actor.userId,
     module: 'course',
@@ -215,17 +215,17 @@ export async function publish(actor: AuthContext, id: string, input: PublishCour
     entity: 'courses',
     entityId: id,
     before: { publication_status: c.publication_status },
-    after: { publication_status: 'terbit' },
-    reason: input.catatan ?? null,
+    after: { publication_status: 'publish' },
+    reason: input.notes ?? null,
   });
   return repo.detail(id);
 }
 
-/** → Diarsip. Course tidak muncul di catalog publik, student yang sudah enroll tetap punya akses. */
+/** → Diarsip. Course no muncul di catalog publik, student yang sudah enroll tetap punya akses. */
 export async function archive(actor: AuthContext, id: string, input: ArchiveCourseInput) {
   const c = await detail(actor, id); // enforces scope
-  if (c.publication_status === 'diarsip') throw AppError.conflict('This course is already archived', 'course.already_archived');
-  await repo.setStatus(id, 'diarsip');
+  if (c.publication_status === 'archived') throw AppError.conflict('This course is already archived', 'course.already_archived');
+  await repo.setStatus(id, 'archived');
   await recordAudit({
     userId: actor.userId,
     module: 'course',
@@ -233,8 +233,8 @@ export async function archive(actor: AuthContext, id: string, input: ArchiveCour
     entity: 'courses',
     entityId: id,
     before: { publication_status: c.publication_status },
-    after: { publication_status: 'diarsip' },
-    reason: input.alasan ?? null,
+    after: { publication_status: 'archived' },
+    reason: input.reason ?? null,
   });
   return repo.detail(id);
 }
@@ -249,4 +249,16 @@ export async function publicDetail(slug: string) {
   if (!c) throw AppError.notFound('Course not found', 'course.not_found');
   const kurikulum = await repo.publicCurriculum(c.id);
   return { ...c, kurikulum };
+}
+
+export async function publicLessonPreview(slug: string, lessonId: string) {
+  const c = await repo.publicBySlug(slug);
+  if (!c) throw AppError.notFound('Course not found', 'course.not_found');
+  
+  const contents = await repo.publicLessonPreview(c.id, lessonId);
+  if (!contents || contents.length === 0) {
+    throw AppError.forbidden('Preview not available or empty', 'lesson.no_preview');
+  }
+  
+  return contents;
 }

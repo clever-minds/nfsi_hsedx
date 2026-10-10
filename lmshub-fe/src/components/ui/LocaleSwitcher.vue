@@ -6,7 +6,7 @@ import type { SupportedLocale } from '@/i18n';
 
 /**
  * Pemilih language. `variant` menyesuaikan warna agar cocok dipakai di
- * topbar gelap (dark), header putih (light), maupun daftar penuh (block).
+ * topbar gelap (dark), header putih (light), maupun register penuh (block).
  */
 const props = withDefaults(
   defineProps<{ variant?: 'light' | 'dark' | 'block'; showLabel?: boolean }>(),
@@ -31,7 +31,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside));
 </script>
 
 <template>
-  <!-- Varian block: dipakai di halaman Pengaturan, semua language terlihat. -->
+  <!-- Varian block: dipakai di halaman settings, semua language terlihat. -->
   <div v-if="props.variant === 'block'" class="grid gap-2 sm:grid-cols-2">
     <button
       v-for="l in locales"

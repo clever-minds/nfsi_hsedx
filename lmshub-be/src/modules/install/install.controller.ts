@@ -4,7 +4,7 @@ import { AppError } from '../../core/http/AppError';
 import * as service from './install.service';
 
 /**
- * Installer endpoints. Unauthenticated by necessity — there is nobody to
+ * Installer endpointsts. Unauthenticated by necessity — there is nobody to
  * authenticate as yet — so every one of them refuses once a super admin exists.
  */
 

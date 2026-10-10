@@ -70,7 +70,7 @@
     "subheading": "Subheading"
   },
   "section": {
-    "kategori": {
+    "category": {
       "name": "Top Categories",
       "desc": "Category grid linking to the catalog."
     },

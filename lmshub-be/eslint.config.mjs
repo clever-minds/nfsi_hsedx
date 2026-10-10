@@ -10,9 +10,9 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     rules: {
-      // Argumen berawalan _ memang sengaja tidak dipakai (mis. `next` di Express).
+      // Argumen berawalan _ memang sengaja no dipakai (mis. `next` di Express).
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      // `any` dipakai di beberapa batas integrasi; jadikan peringatan, bukan galat.
+      // `any` dipakai di beberapa batas integrasi; jadikan warning, bukan galat.
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-console': ['error', { allow: ['warn', 'error'] }],
     },

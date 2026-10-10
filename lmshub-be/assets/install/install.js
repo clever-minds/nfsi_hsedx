@@ -2,7 +2,7 @@
 //
 // Berkas terpisah, BUKAN <script> inline: `helmet()` memasang
 // `script-src 'self'` untuk seluruh aplikasi, termasuk halaman ini. Skrip
-// inline ditolak diam-diam oleh peramban, dan wizard berhenti di "Loading…"
+// inline ditolak diam-diam by peramban, dan wizard berhenti di "Loading…"
 // tanpa pesan apa pun. Melonggarkan CSP demi satu halaman jauh lebih mahal
 // daripada memindahkan berkas.
 // Deliberately dependency-free and un-built: the installer must run on a machine

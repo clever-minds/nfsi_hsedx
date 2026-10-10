@@ -3,13 +3,13 @@ import { pool, query, queryOne } from '../../core/db/pool';
 
 export interface UserRow {
   id: string;
-  nama_lengkap: string;
+  name_lengkap: string;
   email: string | null;
-  nomor_wa: string | null;
+  number_wa: string | null;
   password_hash: string | null;
   role_id: string;
   status: 'pending' | 'active' | 'inactive';
-  foto_profil: string | null;
+  profile_picture: string | null;
   is_multi_peran: boolean;
   created_by: string | null;
   created_at: string;
@@ -22,7 +22,7 @@ export async function roleIdByKode(kode: string): Promise<string | null> {
 
 export async function findByIdentifier(identifier: string): Promise<UserRow | null> {
   return queryOne<UserRow>(
-    `SELECT * FROM users WHERE deleted_at IS NULL AND (email = $1 OR nomor_wa = $1) LIMIT 1`,
+    `SELECT * FROM users WHERE deleted_at IS NULL AND (email = $1 OR number_wa = $1) LIMIT 1`,
     [identifier],
   );
 }
@@ -43,9 +43,9 @@ export async function roleKodesOf(userId: string): Promise<string[]> {
 
 export async function createUser(
   data: {
-    nama_lengkap: string;
+    name_lengkap: string;
     email?: string | null;
-    nomor_wa?: string | null;
+    number_wa?: string | null;
     password_hash: string;
     role_id: string;
     status: 'pending' | 'active';
@@ -55,12 +55,12 @@ export async function createUser(
 ): Promise<UserRow> {
   const runner = tx ?? pool;
   const res = await runner.query<UserRow>(
-    `INSERT INTO users (nama_lengkap, email, nomor_wa, password_hash, role_id, status, created_by)
+    `INSERT INTO users (name_lengkap, email, number_wa, password_hash, role_id, status, created_by)
      VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
     [
-      data.nama_lengkap,
+      data.name_lengkap,
       data.email ?? null,
-      data.nomor_wa ?? null,
+      data.number_wa ?? null,
       data.password_hash,
       data.role_id,
       data.status,
@@ -92,7 +92,7 @@ export async function createSession(data: {
 export async function findActiveSession(id: string, tokenHash: string) {
   return queryOne<{ id: string; user_id: string; status: string; expires_at: string }>(
     `SELECT id, user_id, status, expires_at FROM sessions
-      WHERE id = $1 AND refresh_token_hash = $2 AND status = 'aktif' AND expires_at > now()`,
+      WHERE id = $1 AND refresh_token_hash = $2 AND status = 'active' AND expires_at > now()`,
     [id, tokenHash],
   );
 }
@@ -105,25 +105,25 @@ export async function revokeSession(id: string): Promise<void> {
 
 export async function createAuthToken(data: {
   user_id: string | null;
-  jenis: string;
+  type: string;
   token_hash: string;
   channel?: string | null;
   target?: string | null;
   expires_at: Date;
 }): Promise<void> {
   await query(
-    `INSERT INTO auth_tokens (user_id, jenis, token_hash, channel, target, expires_at)
+    `INSERT INTO auth_tokens (user_id, type, token_hash, channel, target, expires_at)
      VALUES ($1,$2,$3,$4,$5,$6)`,
-    [data.user_id, data.jenis, data.token_hash, data.channel ?? null, data.target ?? null, data.expires_at],
+    [data.user_id, data.type, data.token_hash, data.channel ?? null, data.target ?? null, data.expires_at],
   );
 }
 
-export async function findValidAuthToken(jenis: string, tokenHash: string) {
+export async function findValidAuthToken(type: string, tokenHash: string) {
   return queryOne<{ id: string; user_id: string | null; target: string | null }>(
     `SELECT id, user_id, target FROM auth_tokens
-      WHERE jenis = $1 AND token_hash = $2 AND consumed_at IS NULL AND expires_at > now()
+      WHERE type = $1 AND token_hash = $2 AND consumed_at IS NULL AND expires_at > now()
       LIMIT 1`,
-    [jenis, tokenHash],
+    [type, tokenHash],
   );
 }
 

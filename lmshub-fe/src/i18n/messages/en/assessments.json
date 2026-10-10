@@ -172,7 +172,15 @@
     "add": "Add question",
     "formNew": "New question",
     "formEdit": "Edit question",
-    "type": "Question type",
+    "type": {
+      "single_choice": "Single choice",
+      "multiple_choice": "Multiple choice (several correct)",
+      "true_false": "True / false",
+      "short_answer": "Short answer",
+      "essay": "Essay (manual)",
+      "file_upload": "File upload (manual)",
+      "pencocokan": "Matching"
+    },
     "points": "Points (weight)",
     "pointsHint": "Score = points earned ÷ total points × 100%.",
     "pointsN": "{n} pt",
@@ -196,15 +204,6 @@
     "loadFailed": "Could not load the question bank.",
     "saveFailed": "Could not save the question.",
     "deleteFailed": "Could not delete the question.",
-    "confirmDelete": "Delete this question?",
-    "tipe": {
-      "pilihan_tunggal": "Single choice",
-      "pilihan_ganda": "Multiple choice (several correct)",
-      "benar_salah": "True / false",
-      "isian_singkat": "Short answer",
-      "esai": "Essay (manual)",
-      "upload_file": "File upload (manual)",
-      "pencocokan": "Matching"
-    }
+    "confirmDelete": "Delete this question?"
   }
 }

@@ -21,19 +21,19 @@ const auth = (req: Request) => {
 export async function listPages(req: Request, res: Response) {
   const page = parsePage(req);
   const filters = {
-    tipe: req.query['filter[tipe]'] as string | undefined,
+    type: req.query['filter[type]'] as string | undefined,
     status: req.query['filter[status]'] as string | undefined,
   };
   const { rows, total } = await service.listPages(page, filters);
   return ok(res, rows, pageMeta(page.page, page.limit, total));
 }
 
-// PUBLIC — halaman statis terbit (tentang/FAQ/kebijakan), tanpa requireAuth
+// PUBLIC — halaman statis publish (tentang/FAQ/kebijakan), tanpa requireAuth
 export async function getPublicPage(req: Request, res: Response) {
   return ok(res, await service.getPublicPage(req.params.slug));
 }
 
-// PUBLIC — daftar halaman terbit (untuk footer & sitemap), tanpa isi halaman
+// PUBLIC — register halaman publish (untuk footer & sitemap), tanpa content halaman
 export async function listPublicPages(_req: Request, res: Response) {
   return ok(res, await service.listPublicPages());
 }
@@ -67,9 +67,9 @@ export async function uploadBrandAsset(req: Request, res: Response) {
 }
 
 export async function removeBrandAsset(req: Request, res: Response) {
-  const jenis = req.params.jenis as UploadBrandAssetInput['jenis'];
-  if (jenis !== 'logo' && jenis !== 'icon') throw AppError.badRequest('Unknown asset type', 'upload.unknown_asset_type');
-  return ok(res, await service.removeBrandAsset(auth(req), jenis));
+  const type = req.params.type as UploadBrandAssetInput['type'];
+  if (type !== 'logo' && type !== 'icon') throw AppError.badRequest('Unknown asset type', 'upload.unknown_asset_type');
+  return ok(res, await service.removeBrandAsset(auth(req), type));
 }
 
 export async function updateSetting(req: Request, res: Response) {
@@ -84,14 +84,14 @@ export async function listAuditLog(req: Request, res: Response) {
   const filters = {
     modul: req.query['filter[module]'] as string | undefined,
     userId: req.query['filter[user_id]'] as string | undefined,
-    dari: req.query['filter[dari]'] as string | undefined,
-    sampai: req.query['filter[sampai]'] as string | undefined,
+    from: req.query['filter[from]'] as string | undefined,
+    until: req.query['filter[until]'] as string | undefined,
   };
   const { rows, total } = await service.listAuditLog(page, filters);
   return ok(res, rows, pageMeta(page.page, page.limit, total));
 }
 
-/** Metadata gateway payment (label, status, URL webhook) untuk layar Pengaturan. */
+/** Metadata gateway payment (label, status, URL webhook) untuk layar settings. */
 export async function paymentGateways(_req: Request, res: Response) {
   return ok(res, await service.paymentGateways());
 }

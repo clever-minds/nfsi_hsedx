@@ -23,10 +23,10 @@ import { SITE_CONTENT_SCHEMA, type UploadSiteAssetInput } from './site-content.v
  * Gabungkan bawaan dengan yang tersimpan.
  *
  * Objek digabung per field agar field baru yang ditambahkan di rilis berikutnya
- * tetap punya nilai bawaan walau baris di database ditulis versi lama. Array
- * justru diambil apa adanya: untuk daftar (sosmed, kolom footer, sort_order seksi)
- * "yang tersimpan" adalah keseluruhan jawaban — menggabungkannya per indeks
- * akan menghidupkan kembali elemen yang sengaja dihapus admin.
+ * tetap punya value bawaan walau baris di database ditulis versi lama. Array
+ * justru diambil apa adanya: untuk register (sosmed, kolom footer, sort_order seksi)
+ * "yang tersimpan" adalah keseluruhan answer — menggabungkannya per indeks
+ * akan menghidupkan back elemen yang sengaja dihapus admin.
  */
 function merge<T>(bawaan: T, tersimpan: unknown): T {
   if (tersimpan === null || tersimpan === undefined) return bawaan;
@@ -42,22 +42,22 @@ function merge<T>(bawaan: T, tersimpan: unknown): T {
 }
 
 /**
- * Lengkapi daftar seksi: seksi yang belum pernah disimpan ditempel di akhir.
- * Tanpa ini, seksi baru dari rilis berikutnya tidak akan pernah tampil di
+ * Lengkapi register seksi: seksi yang belum pernah disimpan ditempel di akhir.
+ * Tanpa ini, seksi baru from rilis berikutnya no akan pernah tampil di
  * instalasi yang sudah pernah menyimpan sort_order.
  */
 function lengkapiSections(rows: SiteContent['sections']): SiteContent['sections'] {
   const ada = new Set(rows.map((r) => r.key));
   const tambahan = DEFAULT_SITE_CONTENT.sections.filter((s) => !ada.has(s.key));
-  // Seksi yang sudah tidak dikenal lagi (dihapus dari kode) ikut dibuang.
+  // Seksi yang sudah no dikenal lagi (dihapus from kode) ikut dibuang.
   const dikenal = rows.filter((r) => (SECTION_KEYS as readonly string[]).includes(r.key));
   return [...dikenal, ...tambahan];
 }
 
-/** Seluruh isi halaman publik, siap dipakai frontend tanpa penyesuaian lagi. */
+/** Seluruh content halaman publik, siap dipakai frontend tanpa penyesuaian lagi. */
 export async function getAll(): Promise<SiteContent> {
   const rows = await repo.listAll();
-  const tersimpan = new Map(rows.map((r) => [r.key, r.nilai]));
+  const tersimpan = new Map(rows.map((r) => [r.key, r.value]));
   const out: Record<string, unknown> = {};
   for (const key of SITE_CONTENT_KEYS) {
     out[key] = merge(DEFAULT_SITE_CONTENT[key], tersimpan.get(key));
@@ -80,15 +80,15 @@ export async function updateBlock(actor: AuthContext, key: SiteContentKey, body:
 
   await recordAudit({
     userId: actor.userId,
-    module: 'pengaturan',
+    module: 'settings',
     action: 'update',
     entity: 'site_content',
     entityId: row.id,
-    before: { nilai: before?.nilai ?? null },
-    after: { nilai: parsed.data },
+    before: { value: before?.value ?? null },
+    after: { value: parsed.data },
   });
 
-  return { key, nilai: row.nilai };
+  return { key, value: row.value };
 }
 
 // ── Aset halaman publik ──────────────────────────────────────────────────
@@ -96,13 +96,13 @@ export async function updateBlock(actor: AuthContext, key: SiteContentKey, body:
 const SITE_DIR = path.resolve(process.cwd(), 'uploads', 'site');
 /** Jalur lama (JSON base64) — dibatasi body parser 4MB, jadi gambar efektif ≤2MB. */
 const SITE_MAX_BYTES = 2 * 1024 * 1024;
-/** Jalur unggah langsung (byte mentah) — tidak melewati body parser JSON. */
+/** Jalur upload langsung (byte mentah) — no melewati body parser JSON. */
 export const HERO_MAX_BYTES = 5 * 1024 * 1024;
 const HERO_MAX_MB = HERO_MAX_BYTES / 1024 / 1024;
 
 /**
  * Catat gambar hero yang sudah tersimpan di disk, buang yang lama, audit.
- * Dipakai kedua jalur unggah supaya perilakunya tidak bisa lepas sinkron.
+ * Dipakai kedua channel upload supaya perilakunya no bisa lepas sinkron.
  */
 async function pasangHero(actor: AuthContext, filename: string) {
   const content = await getAll();
@@ -113,17 +113,17 @@ async function pasangHero(actor: AuthContext, filename: string) {
 
   await recordAudit({
     userId: actor.userId,
-    module: 'pengaturan',
+    module: 'settings',
     action: 'update',
     entity: 'site_content',
     entityId: null,
     before: { gambar_url: lama },
     after: { gambar_url: url },
   });
-  return { jenis: 'hero' as const, url };
+  return { type: 'hero' as const, url };
 }
 
-/** Simpan gambar hero (JSON base64 — jalur lama, tetap didukung) lalu catat path-nya di blok `hero`. */
+/** save gambar hero (JSON base64 — channel lama, tetap didukung) lalu catat path-nya di blok `hero`. */
 export async function uploadAsset(actor: AuthContext, input: UploadSiteAssetInput) {
   const raw = input.data_base64.replace(/^data:[^;]+;base64,/, '');
   const buffer = Buffer.from(raw, 'base64');
@@ -132,8 +132,8 @@ export async function uploadAsset(actor: AuthContext, input: UploadSiteAssetInpu
   const mime = sniffImageMime(buffer);
   if (!mime) throw AppError.badRequest('The file is not a JPG, PNG or WebP image', 'upload.image_type_invalid');
 
-  // Cap waktu di name berkas supaya cache browser tidak menahan gambar lama.
-  const filename = `${input.jenis}-${Date.now()}.${IMAGE_EXT[mime]}`;
+  // Cap time di name berkas supaya cache browser no menahan gambar lama.
+  const filename = `${input.type}-${Date.now()}.${IMAGE_EXT[mime]}`;
   try {
     await mkdir(SITE_DIR, { recursive: true });
     await writeFile(path.join(SITE_DIR, filename), buffer);
@@ -144,13 +144,13 @@ export async function uploadAsset(actor: AuthContext, input: UploadSiteAssetInpu
 }
 
 /**
- * Unggah gambar hero sebagai byte mentah (`Content-Type` = tipe gambarnya),
+ * upload gambar hero sebagai byte mentah (`Content-Type` = type gambarnya),
  * mekanisme yang sama dengan Media Library.
  *
  * Jalur base64 lama membengkakkan berkas ±33% dan melewati body parser JSON,
- * sehingga gambar foto biasa (2–4MB) ditolak — sering kali bahkan sebelum
- * sampai ke aplikasi, oleh batas `client_max_body_size` Nginx (bawaan 1MB).
- * Di sini berkas dialirkan ke disk, dibatasi 5MB, lalu jenisnya diperiksa dari
+ * sehingga gambar photo biasa (2–4MB) ditolak — sering kali bahkan sebelum
+ * until to aplikasi, by batas `client_max_body_size` Nginx (bawaan 1MB).
+ * Di sini berkas dialirkan to disk, dibatasi 5MB, lalu jenisnya diperiksa from
  * isinya sendiri.
  */
 export async function uploadHeroStream(actor: AuthContext, req: Request) {
@@ -198,13 +198,13 @@ export async function uploadHeroStream(actor: AuthContext, req: Request) {
       : AppError.badRequest('The file is not a JPG, PNG or WebP image', 'upload.image_type_invalid');
   }
 
-  // Ekstensi mengikuti isi berkas, bukan label dari klien.
+  // Ekstensi mengikuti content berkas, bukan label from klien.
   const filename = `hero-${Date.now()}.${IMAGE_EXT[mime]}`;
   await rename(tmp, path.join(SITE_DIR, filename));
   return pasangHero(actor, filename);
 }
 
-export async function removeAsset(actor: AuthContext, jenis: UploadSiteAssetInput['jenis']) {
+export async function removeAsset(actor: AuthContext, type: UploadSiteAssetInput['type']) {
   const content = await getAll();
   const lama = content.hero.gambar_url;
 
@@ -213,17 +213,17 @@ export async function removeAsset(actor: AuthContext, jenis: UploadSiteAssetInpu
 
   await recordAudit({
     userId: actor.userId,
-    module: 'pengaturan',
+    module: 'settings',
     action: 'update',
     entity: 'site_content',
     entityId: null,
     before: { gambar_url: lama },
     after: { gambar_url: '' },
   });
-  return { jenis, url: '' };
+  return { type, url: '' };
 }
 
-/** Buang berkas lama — best-effort; kegagalannya tidak boleh membatalkan unggahan. */
+/** Buang berkas lama — best-effort; kegagalannya no boleh membatalkan unggahan. */
 async function hapusBerkas(url: string) {
   if (!url.startsWith('/uploads/site/')) return;
   await unlink(path.join(SITE_DIR, path.basename(url))).catch(() => {});

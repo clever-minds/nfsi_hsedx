@@ -21,28 +21,28 @@ export const updateTemplateSchema = z.object({
 });
 
 export const issueSchema = z.object({
-  alasan: z.string().max(1000).optional(),
+  reason: z.string().max(1000).optional(),
 });
 
 export const exceptionIssueSchema = z.object({
   enrollment_id: z.string().uuid(),
   template_id: z.string().uuid().optional(),
-  alasan: z.string().min(5).max(1000),
+  reason: z.string().min(5).max(1000),
 });
 
 export const revokeSchema = z.object({
-  alasan: z.string().min(3).max(1000),
+  reason: z.string().min(3).max(1000),
 });
 
 export const reissueSchema = z.object({
-  alasan: z.string().min(3).max(1000),
+  reason: z.string().min(3).max(1000),
 });
 
 export const createBadgeSchema = z.object({
   kode: z.string().min(2).max(60),
   name: z.string().min(2).max(150),
   description: z.string().max(2000).optional(),
-  kriteria: z.record(z.unknown()),
+  criteria: z.record(z.unknown()),
   icon_url: z.string().max(500).optional(),
   is_active: z.boolean().default(true),
 });
@@ -54,17 +54,17 @@ export const awardBadgeSchema = z.object({
 
 export const awardPointsSchema = z.object({
   user_id: z.string().uuid(),
-  jenis: z.enum(['earn', 'spend']),
-  jumlah: z.number().int().positive(),
-  sumber_type: z.enum(['lesson_progress', 'quiz_attempt', 'streak', 'badge', 'manual_admin']).optional(),
-  sumber_id: z.string().uuid().optional(),
+  type: z.enum(['earn', 'spend']),
+  amount: z.number().int().positive(),
+  source_type: z.enum(['lesson_progress', 'quiz_attempt', 'streak', 'badge', 'manual_admin']).optional(),
+  source_id: z.string().uuid().optional(),
   description: z.string().max(500).optional(),
 });
 
 export const leaderboardSnapshotSchema = z.object({
-  periode_jenis: z.enum(['mingguan', 'bulanan', 'sepanjang_waktu']),
-  periode_mulai: z.string().date(),
-  periode_selesai: z.string().date(),
+  period_type: z.enum(['weekly', 'monthly', 'all_time']),
+  period_start: z.string().date(),
+  period_finish: z.string().date(),
   course_id: z.string().uuid().optional(),
   limit: z.number().int().positive().max(500).default(100),
 });

@@ -11,15 +11,15 @@ const auth = (req: Request) => {
   return req.auth;
 };
 
-// Peta nilai filter ramah-UI → enum submission_status.
+// Peta value filter ramah-UI → enum submission_status.
 const STATUS_MAP: Record<string, string | undefined> = {
-  menunggu_penilaian: 'dikumpulkan',
-  menunggu: 'dikumpulkan',
-  dikumpulkan: 'dikumpulkan',
-  dinilai: 'dinilai',
-  revisi: 'revisi_diminta',
-  revisi_diminta: 'revisi_diminta',
-  belum: 'belum',
+  menunggu_penilaian: 'submitted',
+  menunggu: 'submitted',
+  dikumpulkan: 'submitted',
+  dinilai: 'graded',
+  revisi: 'revision_requested',
+  revisi_diminta: 'revision_requested',
+  belum: 'not_started',
   semua: undefined,
   '': undefined,
 };

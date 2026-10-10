@@ -12,23 +12,23 @@ interface LessonOpt { id: string; title: string; section: string }
 interface Thread {
   id: string;
   title: string;
-  penulis_nama?: string;
+  penulis_name?: string;
   penulis_foto?: string | null;
-  jumlah_post?: number;
+  amount_post?: number;
   is_pinned?: boolean;
   created_at?: string;
 }
-interface Post { id: string; isi: string; penulis_nama?: string; penulis_foto?: string | null; created_at?: string }
+interface Post { id: string; content: string; penulis_name?: string; penulis_foto?: string | null; created_at?: string }
 interface ThreadDetail extends Thread { posts?: Post[] }
-interface Answer { id: string; isi: string; penjawab_nama: string; is_instruktur_jawaban: boolean }
+interface Answer { id: string; content: string; penjawab_name: string; is_instructor_answer: boolean }
 interface Question {
   id: string;
-  isi: string;
-  penanya_nama?: string;
+  content: string;
+  penanya_name?: string;
   penanya_foto?: string | null;
-  status_terjawab: boolean;
-  jumlah_upvote: number;
-  jawaban?: Answer[];
+  is_answered: boolean;
+  amount_upvote: number;
+  answer?: Answer[];
   created_at?: string;
 }
 
@@ -42,12 +42,12 @@ const selectedCourse = ref('');
 
 async function loadCourses() {
   const map = new Map<string, string>();
-  // Course yang diikuti (student) — sumber utama.
+  // Course yang diikuti (student) — source primary.
   const enr = await apiGetFull<Array<{ course_id: string; course_title: string; status: string }>>('/enrollments', { limit: 100 })
     .then((r) => r.data ?? [])
     .catch(() => []);
-  for (const e of enr) if (['terdaftar', 'aktif', 'selesai'].includes(e.status)) map.set(e.course_id, e.course_title);
-  // Course yang dikelola (instructor/admin).
+  for (const e of enr) if (['registered', 'active', 'completed'].includes(e.status)) map.set(e.course_id, e.course_title);
+  // Course yang managed (instructor/admin).
   if (auth.can('course.create')) {
     const mine = await apiGetFull<Array<{ id: string; title: string }>>('/courses', { limit: 100 })
       .then((r) => r.data ?? [])
@@ -99,7 +99,7 @@ async function createThread() {
   try {
     await apiPost(`/discussions/courses/${selectedCourse.value}/threads`, {
       title: newThreadTitle.value.trim(),
-      isi: newThreadBody.value.trim() || undefined,
+      content: newThreadBody.value.trim() || undefined,
     });
     newThreadTitle.value = '';
     newThreadBody.value = '';
@@ -113,7 +113,7 @@ async function createThread() {
 async function sendReply() {
   if (!activeThread.value || !replyBody.value.trim()) return;
   try {
-    await apiPost(`/discussions/threads/${activeThread.value.id}/posts`, { isi: replyBody.value.trim() });
+    await apiPost(`/discussions/threads/${activeThread.value.id}/posts`, { content: replyBody.value.trim() });
     replyBody.value = '';
     await openThread(activeThread.value.id);
   } catch (e) {
@@ -167,7 +167,7 @@ async function loadQa() {
 async function askQuestion() {
   if (!newQuestion.value.trim() || !selectedLesson.value) return;
   try {
-    await apiPost(`/discussions/lessons/${selectedLesson.value}/questions`, { isi: newQuestion.value.trim() });
+    await apiPost(`/discussions/lessons/${selectedLesson.value}/questions`, { content: newQuestion.value.trim() });
     newQuestion.value = '';
     await loadQa();
   } catch (e) {
@@ -176,10 +176,10 @@ async function askQuestion() {
 }
 
 async function sendAnswer(q: Question) {
-  const isi = answerDraft.value[q.id];
-  if (!isi?.trim()) return;
+  const content = answerDraft.value[q.id];
+  if (!content?.trim()) return;
   try {
-    await apiPost(`/discussions/questions/${q.id}/answers`, { isi: isi.trim() });
+    await apiPost(`/discussions/questions/${q.id}/answers`, { content: content.trim() });
     answerDraft.value[q.id] = '';
     await loadQa();
   } catch (e) {
@@ -188,11 +188,11 @@ async function sendAnswer(q: Question) {
 }
 
 async function upvote(q: Question) {
-  q.jumlah_upvote = (q.jumlah_upvote ?? 0) + 1;
+  q.amount_upvote = (q.amount_upvote ?? 0) + 1;
   try {
     await apiPost(`/discussions/questions/${q.id}/upvote`);
   } catch {
-    q.jumlah_upvote = Math.max(0, (q.jumlah_upvote ?? 1) - 1);
+    q.amount_upvote = Math.max(0, (q.amount_upvote ?? 1) - 1);
   }
 }
 
@@ -203,8 +203,8 @@ watch(selectedCourse, () => {
 });
 watch(selectedLesson, loadQa);
 
-// Saat belum ada satu topik pun, tata letak dua kolom tidak masuk akal: panel
-// kanan mengajak "pilih topik di kiri" padahal tidak ada yang bisa dipilih,
+// Saat belum ada satu topik pun, tata letak dua kolom no login akal: panel
+// kanan mengajak "pilih topik di kiri" padahal no ada yang bisa dipilih,
 // dan kolom kiri jadi kartu kerdil di sebelah panel tinggi yang kosong.
 const forumKosong = computed(
   () => !threadsLoading.value && !threadsError.value && !threads.value.length && !showNewThread.value,
@@ -220,12 +220,12 @@ onMounted(async () => {
   <div>
     <PageHeader :title="t('discussions.title')" :subtitle="t('discussions.subtitle')">
       <template #actions>
-        <RouterLink v-can="'diskusi.delete'" to="/d/discussions/moderation" class="btn-outline">
+        <RouterLink v-can="'discussion.delete'" to="/d/discussions/moderation" class="btn-outline">
           {{ t('discussions.moderation') }}
         </RouterLink>
         <button
           v-if="tab === 'forum' && courses.length"
-          v-can="'diskusi.create'"
+          v-can="'discussion.create'"
           class="btn-primary"
           @click="showNewThread = !showNewThread"
         >
@@ -234,8 +234,8 @@ onMounted(async () => {
       </template>
     </PageHeader>
 
-    <!-- Tab memakai pola yang sama dengan halaman bertab lain; sebelumnya
-         halaman ini memakai segmented control sendiri di ujung kanan. -->
+    <!-- Tab memakai pola yang sama dengan halaman bertab lain; previous
+         halaman ini memakai segmentted control sendiri di ujung kanan. -->
     <div class="tab-bar mb-4">
       <button class="tab-item" :class="{ 'tab-item-active': tab === 'forum' }" @click="tab = 'forum'">
         {{ t('discussions.tabForum') }}
@@ -245,7 +245,7 @@ onMounted(async () => {
       </button>
     </div>
 
-    <!-- Toolbar: pemilih course (dan materi saat tab Q&A) dalam satu kartu.
+    <!-- Toolbar: pemilih course (dan material saat tab Q&A) dalam satu kartu.
          Ikon berada di dalam field lewat `.input-icon-wrap`, bukan melayang
          di sebelahnya. -->
     <div v-if="courses.length" class="card mb-4 flex flex-wrap items-end gap-3 p-4">
@@ -310,11 +310,11 @@ onMounted(async () => {
               <span class="line-clamp-1 font-medium text-slate-800">{{ thread.title }}</span>
             </div>
             <div class="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
-              <span>{{ thread.penulis_nama || '—' }}</span>
+              <span>{{ thread.penulis_name || '—' }}</span>
               <span>·</span>
               <span>{{ fmtRelatif(thread.created_at) }}</span>
               <span class="ms-auto flex items-center gap-1">
-                <Icon name="message-circle" :size="12" /> {{ fmtAngka(thread.jumlah_post ?? 0) }}
+                <Icon name="message-circle" :size="12" /> {{ fmtAngka(thread.amount_post ?? 0) }}
               </span>
             </div>
           </button>
@@ -331,27 +331,27 @@ onMounted(async () => {
         <div v-else class="card p-5">
           <h2 class="text-xl font-medium text-slate-900">{{ activeThread.title }}</h2>
           <div class="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
-            <span>{{ activeThread.penulis_nama || '—' }}</span><span>·</span><span>{{ fmtRelatif(activeThread.created_at) }}</span>
+            <span>{{ activeThread.penulis_name || '—' }}</span><span>·</span><span>{{ fmtRelatif(activeThread.created_at) }}</span>
           </div>
 
           <div class="mt-4 space-y-3">
             <div v-for="p in activeThread.posts || []" :key="p.id" class="flex items-start gap-3">
               <span class="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-500 text-xs font-bold text-white">
-                <img v-if="p.penulis_foto" :src="assetUrl(p.penulis_foto)" :alt="p.penulis_nama" class="h-full w-full object-cover" />
-                <template v-else>{{ initialsOf(p.penulis_nama) }}</template>
+                <img v-if="p.penulis_foto" :src="assetUrl(p.penulis_foto)" :alt="p.penulis_name" class="h-full w-full object-cover" />
+                <template v-else>{{ initialsOf(p.penulis_name) }}</template>
               </span>
               <div class="min-w-0 flex-1 rounded-lg bg-slate-50 px-3 py-2">
                 <div class="flex items-center gap-2">
-                  <span class="text-sm font-medium text-slate-700">{{ p.penulis_nama || '—' }}</span>
+                  <span class="text-sm font-medium text-slate-700">{{ p.penulis_name || '—' }}</span>
                   <span class="text-xs text-slate-400">{{ fmtRelatif(p.created_at) }}</span>
                 </div>
-                <p class="mt-0.5 text-sm text-slate-700">{{ p.isi }}</p>
+                <p class="mt-0.5 text-sm text-slate-700">{{ p.content }}</p>
               </div>
             </div>
             <p v-if="!activeThread.posts?.length" class="text-sm text-slate-400">{{ t('discussions.forum.noReplies') }}</p>
           </div>
 
-          <div v-can="'diskusi.create'" class="mt-4 flex gap-2">
+          <div v-can="'discussion.create'" class="mt-4 flex gap-2">
             <input v-model="replyBody" class="input" :placeholder="t('discussions.forum.replyPlaceholder')" @keyup.enter="sendReply" />
             <button class="btn-primary shrink-0" @click="sendReply">{{ t('discussions.forum.reply') }}</button>
           </div>
@@ -362,7 +362,7 @@ onMounted(async () => {
 
     <!-- Q&A -->
     <div v-else>
-      <div v-can="'diskusi.create'" class="card mb-4 flex gap-2 p-4">
+      <div v-can="'discussion.create'" class="card mb-4 flex gap-2 p-4">
         <input
           v-model="newQuestion"
           class="input"
@@ -382,38 +382,38 @@ onMounted(async () => {
         <div v-for="q in questions" :key="q.id" class="card p-4">
           <div class="flex items-start gap-3">
             <span class="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-500 text-xs font-bold text-white">
-              <img v-if="q.penanya_foto" :src="assetUrl(q.penanya_foto)" :alt="q.penanya_nama" class="h-full w-full object-cover" />
-              <template v-else>{{ initialsOf(q.penanya_nama) }}</template>
+              <img v-if="q.penanya_foto" :src="assetUrl(q.penanya_foto)" :alt="q.penanya_name" class="h-full w-full object-cover" />
+              <template v-else>{{ initialsOf(q.penanya_name) }}</template>
             </span>
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-center gap-2">
-                <span class="text-sm font-medium text-slate-800">{{ q.penanya_nama || t('discussions.qa.student') }}</span>
+                <span class="text-sm font-medium text-slate-800">{{ q.penanya_name || t('discussions.qa.student') }}</span>
                 <span class="text-xs text-slate-400">{{ fmtRelatif(q.created_at) }}</span>
                 <span
                   class="rounded-full px-2 py-0.5 text-[11px] font-medium"
-                  :class="q.status_terjawab ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+                  :class="q.is_answered ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
                 >
-                  {{ q.status_terjawab ? t('discussions.qa.answered') : t('discussions.qa.waiting') }}
+                  {{ q.is_answered ? t('discussions.qa.answered') : t('discussions.qa.waiting') }}
                 </span>
               </div>
-              <p class="mt-0.5 text-sm text-slate-700">{{ q.isi }}</p>
+              <p class="mt-0.5 text-sm text-slate-700">{{ q.content }}</p>
               <button class="mt-1.5 inline-flex items-center gap-1 text-xs text-slate-400 transition hover:text-brand-500" @click="upvote(q)">
-                {{ t('discussions.qa.helpful', { n: fmtAngka(q.jumlah_upvote ?? 0) }) }}
+                {{ t('discussions.qa.helpful', { n: fmtAngka(q.amount_upvote ?? 0) }) }}
               </button>
             </div>
           </div>
 
-          <div v-if="q.jawaban?.length" class="ms-12 mt-2 space-y-2 border-s-2 border-slate-100 ps-3">
-            <div v-for="a in q.jawaban" :key="a.id" class="text-sm">
-              <span class="font-medium text-slate-700">{{ a.penjawab_nama }}</span>
-              <span v-if="a.is_instruktur_jawaban" class="ms-1 rounded bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-600">
+          <div v-if="q.answer?.length" class="ms-12 mt-2 space-y-2 border-s-2 border-slate-100 ps-3">
+            <div v-for="a in q.answer" :key="a.id" class="text-sm">
+              <span class="font-medium text-slate-700">{{ a.penjawab_name }}</span>
+              <span v-if="a.is_instructor_answer" class="ms-1 rounded bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-600">
                 {{ t('discussions.qa.instructor') }}
               </span>
-              <p class="text-slate-600">{{ a.isi }}</p>
+              <p class="text-slate-600">{{ a.content }}</p>
             </div>
           </div>
 
-          <div v-can="'diskusi.create'" class="ms-12 mt-2 flex gap-2">
+          <div v-can="'discussion.create'" class="ms-12 mt-2 flex gap-2">
             <input
               v-model="answerDraft[q.id]"
               class="input py-1.5 text-sm"

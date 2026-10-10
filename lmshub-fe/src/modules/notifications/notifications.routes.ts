@@ -18,6 +18,6 @@ export const notificationsRoutes: RouteRecordRaw[] = [
     path: 'notifications/monitor',
     name: 'notification-monitor',
     component: () => import('@/modules/notifications/views/ReminderMonitorView.vue'),
-    meta: { permission: 'notifikasi.view', title: 'Reminder Monitor' },
+    meta: { permission: 'notification.view', title: 'Reminder Monitor' },
   },
 ];

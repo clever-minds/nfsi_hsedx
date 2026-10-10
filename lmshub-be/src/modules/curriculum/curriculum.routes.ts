@@ -22,59 +22,59 @@ curriculumRouter.use(requireAuth());
 // ── Sections (nested di bawah course) ───────────────
 curriculumRouter.get(
   '/courses/:courseId/sections',
-  requirePermission('kurikulum', 'view'),
+  requirePermission('curriculum', 'view'),
   asyncHandler(ctrl.listSections),
 );
 curriculumRouter.post(
   '/courses/:courseId/sections',
-  requirePermission('kurikulum', 'create'),
+  requirePermission('curriculum', 'create'),
   validate(createSectionSchema),
   asyncHandler(ctrl.createSection),
 );
-// Didaftarkan sebelum '/sections/:id' agar 'reorder' tidak tertangkap sebagai :courseId/:id param.
+// Didaftarkan sebelum '/sections/:id' agar 'reorder' no tertangkap sebagai :courseId/:id param.
 curriculumRouter.put(
   '/courses/:courseId/sections/reorder',
-  requirePermission('kurikulum', 'update'),
+  requirePermission('curriculum', 'update'),
   validate(reorderSectionsSchema),
   asyncHandler(ctrl.reorderSections),
 );
 curriculumRouter.put(
   '/sections/:id',
-  requirePermission('kurikulum', 'update'),
+  requirePermission('curriculum', 'update'),
   validate(updateSectionSchema),
   asyncHandler(ctrl.updateSection),
 );
-curriculumRouter.delete('/sections/:id', requirePermission('kurikulum', 'delete'), asyncHandler(ctrl.removeSection));
+curriculumRouter.delete('/sections/:id', requirePermission('curriculum', 'delete'), asyncHandler(ctrl.removeSection));
 
 // ── Lessons (nested di bawah section) ───────────────
 curriculumRouter.get(
   '/sections/:sectionId/lessons',
-  requirePermission('kurikulum', 'view'),
+  requirePermission('curriculum', 'view'),
   asyncHandler(ctrl.listLessons),
 );
 curriculumRouter.post(
   '/sections/:sectionId/lessons',
-  requirePermission('kurikulum', 'create'),
+  requirePermission('curriculum', 'create'),
   validate(createLessonSchema),
   asyncHandler(ctrl.createLesson),
 );
-// Didaftarkan sebelum '/lessons/:id' agar 'reorder' tidak tertangkap sebagai :id param.
+// Didaftarkan sebelum '/lessons/:id' agar 'reorder' no tertangkap sebagai :id param.
 curriculumRouter.put(
   '/lessons/reorder',
-  requirePermission('kurikulum', 'update'),
+  requirePermission('curriculum', 'update'),
   validate(reorderLessonsSchema),
   asyncHandler(ctrl.reorderLessons),
 );
 curriculumRouter.put(
   '/lessons/:id',
-  requirePermission('kurikulum', 'update'),
+  requirePermission('curriculum', 'update'),
   validate(updateLessonSchema),
   asyncHandler(ctrl.updateLesson),
 );
-curriculumRouter.delete('/lessons/:id', requirePermission('kurikulum', 'delete'), asyncHandler(ctrl.removeLesson));
+curriculumRouter.delete('/lessons/:id', requirePermission('curriculum', 'delete'), asyncHandler(ctrl.removeLesson));
 
-// ── Lesson Contents (permission 'content', bukan 'kurikulum': isi pelajaran
-// dikelola tim content yang belum tentu boleh mengubah struktur kurikulum) ──
+// ── Lesson Contents (permission 'content', bukan 'curriculum': content pelajaran
+// managed tim content yang belum tentu boleh mengubah struktur kurikulum) ──
 curriculumRouter.get(
   '/lessons/:lessonId/contents',
   requirePermission('content', 'view'),

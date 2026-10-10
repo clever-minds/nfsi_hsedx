@@ -10,7 +10,7 @@ import type { MigrationBuilder } from 'node-pg-migrate';
  * Anything the site owner already renamed or edited is theirs and is left
  * alone. `down` reverses under the same rule.
  *
- * Codes (`kode`, `jenis_event`, `slug` of a page someone already published) are
+ * Codes (`kode`, `event_type`, `slug` of a page someone already published) are
  * never touched: permissions, filters and stored references key on them.
  */
 type Change = { table: string; keyCol: string; key: string; col: string; id: string; en: string };
@@ -22,94 +22,94 @@ const add = (table: string, keyCol: string, key: string, cols: Record<string, [s
 
 // ── Roles ────────────────────────────────────────────────────────────────
 for (const [kode, id, en] of [
-  ['direktur', 'Direktur / Manajemen', 'Director / Management'],
-  ['ketua', 'Ketua / Pimpinan Lembaga', 'Chairperson / Institution Head'],
-  ['pembina', 'Pembina / Pengawas', 'Supervisor / Advisor'],
-  ['admin_ops', 'Admin Operasional', 'Operations Admin'],
-  ['instructor', 'Instructor / Pengajar', 'Instructor / Teacher'],
-  ['asisten', 'Asisten Pengajar (TA)', 'Teaching Assistant (TA)'],
-  ['student', 'Student / Peserta', 'Student / Participant'],
-  ['sub_user', 'Sub-Pengguna', 'Sub-account'],
+  ['director', 'Director / Management', 'Director / Management'],
+  ['chairperson', 'Chairperson / Institution Head', 'Chairperson / Institution Head'],
+  ['supervisor', 'Supervisor / Advisor', 'Supervisor / Advisor'],
+  ['operations_admin', 'Operations Admin', 'Operations Admin'],
+  ['instructor', 'Instructor', 'Instructor / Teacher'],
+  ['assistant', 'Teaching Assistant', 'Teaching Assistant (TA)'],
+  ['student', 'Student', 'Student / Participant'],
+  ['sub_user', 'Sub-account', 'Sub-account'],
 ]) add('roles', 'kode', kode, { name: [id, en] });
 
 // ── Notification events ─────────────────────────────────────────────────
-// [name, description, template_judul, template_isi]
+// [name, description, template_title, template_content]
 const EVENTS: Array<{ event: string; id: string[]; en: string[] }> = [
   {
-    event: 'kelas.tidak_dilanjutkan',
-    id: ['Kelas Tidak Dilanjutkan', 'Student tidak aktif belajar N hari', 'Yuk lanjutkan belajarmu', 'Kamu belum melanjutkan course {{course}} selama beberapa hari.'],
+    event: 'class.tidak_dilanjutkan',
+    id: ['class no Dilanjutkan', 'Student no active belajar N hari', 'Yuk continue belajarmu', 'Kamu belum melanjutkan course {{course}} selama beberapa hari.'],
     en: ['Course Not Continued', 'Learner has been inactive for N days', 'Pick up where you left off', "You haven't continued {{course}} for a few days."],
   },
   {
-    event: 'komisi.cair',
-    id: ['Komisi Cair', 'Komisi marketing dicairkan', 'Komisi Anda telah cair', 'Komisi sebesar {{nominal}} telah dicairkan.'],
-    en: ['Commission Paid Out', 'Marketing commission paid out', 'Your commission has been paid', 'A commission of {{nominal}} has been paid out.'],
+    event: 'commission.cair',
+    id: ['Komisi Cair', 'Komisi marketing dicairkan', 'Komisi Anda telah cair', 'Komisi sebesar {{amount}} telah dicairkan.'],
+    en: ['Commission Paid Out', 'Marketing commission paid out', 'Your commission has been paid', 'A commission of {{amount}} has been paid out.'],
   },
   {
     event: 'live_session.h1',
-    id: ['Reminder Live Session H-1', 'Reminder jadwal live H-1/H-1 jam', 'Kelas live akan segera dimulai', 'Sesi {{judul_sesi}} dimulai {{start_time}}.'],
-    en: ['Live Session Reminder', 'Reminder 1 day / 1 hour before a live session', 'Your live class starts soon', '{{judul_sesi}} starts {{start_time}}.'],
+    id: ['Reminder Live Session H-1', 'Reminder jadwal live H-1/H-1 jam', 'class live akan segera dimulai', 'Sesi {{title_sesi}} dimulai {{start_time}}.'],
+    en: ['Live Session Reminder', 'Reminder 1 day / 1 hour before a live session', 'Your live class starts soon', '{{title_sesi}} starts {{start_time}}.'],
   },
   {
-    event: 'nilai.dirilis',
-    id: ['Nilai Dirilis', 'Nilai/feedback tersedia', 'Nilai Anda telah dirilis', 'Nilai untuk {{assessment}} telah tersedia.'],
+    event: 'value.dirilis',
+    id: ['grade Dirilis', 'grade/feedback tersedia', 'grade Anda telah dirilis', 'grade untuk {{assessment}} telah tersedia.'],
     en: ['Grade Released', 'Grade or feedback available', 'Your grade has been released', 'Your grade for {{assessment}} is now available.'],
   },
   {
     event: 'order.manual_masuk',
-    id: ['Order Manual Masuk', 'Tanda jadi manual diinput marketing', 'Tanda jadi manual masuk', 'Order {{nomor_order}} senilai {{nominal}} diinput manual oleh {{marketing}}.'],
-    en: ['Manual Order Recorded', 'Manual payment recorded by marketing', 'Manual payment recorded', 'Order {{nomor_order}} for {{nominal}} was recorded manually by {{marketing}}.'],
+    id: ['Order Manual login', 'Tanda jadi manual diinput marketing', 'Tanda jadi manual login', 'Order {{number_order}} senilai {{amount}} diinput manual by {{marketing}}.'],
+    en: ['Manual Order Recorded', 'Manual payment recorded by marketing', 'Manual payment recorded', 'Order {{number_order}} for {{amount}} was recorded manually by {{marketing}}.'],
   },
   {
     event: 'payment.terverifikasi',
-    id: ['Payment Terverifikasi', 'Payment/DP diverifikasi', 'Payment terverifikasi', 'Payment order {{nomor_order}} sebesar {{nominal}} telah diverifikasi.'],
-    en: ['Payment Verified', 'Payment or down payment verified', 'Payment verified', 'Payment of {{nominal}} for order {{nomor_order}} has been verified.'],
+    id: ['Payment Terverifikasi', 'Payment/DP diverifikasi', 'Payment terverifikasi', 'Payment order {{number_order}} sebesar {{amount}} telah diverifikasi.'],
+    en: ['Payment Verified', 'Payment or down payment verified', 'Payment verified', 'Payment of {{amount}} for order {{number_order}} has been verified.'],
   },
   {
     event: 'refund.diajukan',
-    id: ['Refund Diajukan', 'Butuh approval Direktur', 'Pengajuan refund baru', 'Refund order {{nomor_order}} senilai {{nominal}} menunggu approval.'],
-    en: ['Refund Requested', 'Needs director approval', 'New refund request', 'A refund of {{nominal}} for order {{nomor_order}} is awaiting approval.'],
+    id: ['Refund Diajukan', 'Butuh approval Direktur', 'Pengajuan refund baru', 'Refund order {{number_order}} senilai {{amount}} menunggu approval.'],
+    en: ['Refund Requested', 'Needs director approval', 'New refund request', 'A refund of {{amount}} for order {{number_order}} is awaiting approval.'],
   },
   {
-    event: 'certificate.terbit',
-    id: ['Certificate Terbit', 'Certificate kelulusan terbit', 'Certificate Anda telah terbit', 'Certificate course {{course}} telah terbit, nomor {{certificate_number}}.'],
+    event: 'certificate.publish',
+    id: ['Certificate Terbit', 'Certificate kelulusan publish', 'Certificate Anda telah publish', 'Certificate course {{course}} telah publish, number {{certificate_number}}.'],
     en: ['Certificate Issued', 'Completion certificate issued', 'Your certificate has been issued', 'Your certificate for {{course}} has been issued, number {{certificate_number}}.'],
   },
   {
     event: 'student.mendaftar',
-    id: ['Student Baru Mendaftar', 'Student baru mendaftar/checkout', 'Student baru mendaftar', '{{nama_siswa}} mendaftar pada course {{course}}.'],
-    en: ['New Learner Enrolled', 'New learner enrolled or checked out', 'New learner enrolled', '{{nama_siswa}} enrolled in {{course}}.'],
+    id: ['Student Baru Mendaftar', 'Student baru mendaftar/checkout', 'Student baru mendaftar', '{{name_siswa}} mendaftar pada course {{course}}.'],
+    en: ['New Learner Enrolled', 'New learner enrolled or checked out', 'New learner enrolled', '{{name_siswa}} enrolled in {{course}}.'],
   },
   {
-    event: 'tagihan.jatuh_tempo',
-    id: ['Tagihan Jatuh Tempo', 'Reminder cicilan jatuh tempo', 'Tagihan Anda akan jatuh tempo', 'Cicilan order {{nomor_order}} jatuh tempo {{jatuh_tempo}}.'],
-    en: ['Invoice Due', 'Installment due reminder', 'Your invoice is almost due', 'The installment for order {{nomor_order}} is due {{jatuh_tempo}}.'],
+    event: 'invoice.due_date',
+    id: ['invoice Jatuh Tempo', 'Reminder cicilan due date', 'invoice Anda akan due date', 'Cicilan order {{number_order}} due date {{due_date}}.'],
+    en: ['Invoice Due', 'Installment due reminder', 'Your invoice is almost due', 'The installment for order {{number_order}} is due {{due_date}}.'],
   },
   {
     event: 'assignment.dikumpulkan',
-    id: ['Assignment Dikumpulkan', 'Submission assignment masuk', 'Assignment baru dikumpulkan', '{{nama_siswa}} mengumpulkan assignment {{assignment}}.'],
-    en: ['Assignment Submitted', 'Assignment submission received', 'New assignment submitted', '{{nama_siswa}} submitted {{assignment}}.'],
+    id: ['Assignment Dikumpulkan', 'Submission assignment login', 'Assignment baru dikumpulkan', '{{name_siswa}} mengumpulkan assignment {{assignment}}.'],
+    en: ['Assignment Submitted', 'Assignment submission received', 'New assignment submitted', '{{name_siswa}} submitted {{assignment}}.'],
   },
 ];
 for (const e of EVENTS) {
-  add('notification_event_config', 'jenis_event', e.event, {
+  add('notification_event_config', 'event_type', e.event, {
     name: [e.id[0], e.en[0]],
     description: [e.id[1], e.en[1]],
-    template_judul: [e.id[2], e.en[2]],
-    template_isi: [e.id[3], e.en[3]],
+    template_title: [e.id[2], e.en[2]],
+    template_content: [e.id[3], e.en[3]],
   });
 }
 
 // ── Badges ───────────────────────────────────────────────────────────────
-add('badges', 'kode', 'kursus_pertama_selesai', {
-  name: ['Course Pertama Selesai', 'First Course Completed'],
+add('badges', 'kode', 'first_course_finished', {
+  name: ['Course Pertama finish', 'First Course Completed'],
   description: ['Menyelesaikan course pertama', 'Completed a first course'],
 });
-add('badges', 'kode', 'nilai_sempurna', {
-  name: ['Nilai Sempurna', 'Perfect Score'],
-  description: ['Mendapat skor sempurna pada sebuah quiz', 'Scored 100% on a quiz'],
+add('badges', 'kode', 'perfect_score', {
+  name: ['grade Sempurna', 'Perfect Score'],
+  description: ['Mendapat score sempurna pada sebuah quiz', 'Scored 100% on a quiz'],
 });
-add('badges', 'kode', 'streak_7_hari', {
+add('badges', 'kode', '7_day_streak', {
   name: ['Streak 7 Hari', '7-Day Streak'],
   description: ['Belajar 7 hari beruntun', 'Studied 7 days in a row'],
 });
@@ -122,7 +122,7 @@ add('certificate_templates', 'name', 'Template Standar', { name: ['Template Stan
 
 // ── Marketing agent categories ──────────────────────────────────────────
 for (const [kode, name, desc] of [
-  ['mahasiswa', ['Mahasiswa', 'University Student'], ['Target dasar (entry)', 'Entry-level target']],
+  ['mahasiswa', ['Mahasiswa', 'University Student'], ['Target base (entry)', 'Entry-level target']],
   ['umum', ['Umum', 'General'], ['Target menengah', 'Mid-level target']],
   ['profesional', ['Profesional', 'Professional'], ['Target tinggi, agen berpengalaman', 'High target, experienced agents']],
   ['freelance', ['Freelance', 'Freelance'], ['Agen lepas, target menengah-tinggi', 'Freelance agents, mid-to-high target']],
@@ -133,18 +133,18 @@ for (const [kode, name, desc] of [
 // ── Finance categories ───────────────────────────────────────────────────
 for (const [kode, id, en] of [
   ['penjualan_kursus', 'Penjualan Course', 'Course Sales'],
-  ['langganan', 'Langganan/Membership', 'Subscriptions / Membership'],
+  ['subscription', 'Langganan/Membership', 'Subscriptions / Membership'],
   ['payout_instruktur', 'Payout Instructor', 'Instructor Payouts'],
-  ['komisi_marketing', 'Komisi Marketing', 'Marketing Commission'],
-  ['operasional', 'Operasional', 'Operations'],
+  ['commission_marketing', 'Komisi Marketing', 'Marketing Commission'],
+  ['operational', 'Operasional', 'Operations'],
   ['pemasaran', 'Pemasaran', 'Marketing'],
-  ['lainnya', 'Lainnya', 'Other'],
-]) add('kategori_biaya', 'kode', kode, { name: [id, en] });
+  ['other', 'Lainnya', 'Other'],
+]) add('expense_category', 'kode', kode, { name: [id, en] });
 
 // ── Placeholder bank account holder ─────────────────────────────────────
 // A sample account the owner replaces; only its holder name was Indonesian.
-add('bank_accounts', 'nomor_rekening', '1234567890', { atas_nama: ['Yayasan LMS Hub', 'LMS Hub Foundation'] });
-add('settings', 'key', 'bank.atas_nama', { nilai: ['Yayasan LMS Hub', 'LMS Hub Foundation'] });
+add('bank_accounts', 'account_number', '1234567890', { account_name: ['Yayasan LMS Hub', 'LMS Hub Foundation'] });
+add('settings', 'key', 'bank.account_name', { value: ['Yayasan LMS Hub', 'LMS Hub Foundation'] });
 
 const lit = (s: string) => `'${s.replace(/'/g, "''")}'`;
 

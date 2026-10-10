@@ -39,12 +39,12 @@
       "order_manual_masuk": "Manual Order Received",
       "pembayaran_terverifikasi": "Payment Verified",
       "tugas_dikumpulkan": "Assignment Submitted",
-      "nilai_dirilis": "Grades Released",
-      "sertifikat_terbit": "Certificate Issued",
-      "komisi_cair": "Commission Paid Out",
+      "value_dirilis": "Grades Released",
+      "sertifikat_publish": "Certificate Issued",
+      "commission_cair": "Commission Paid Out",
       "refund_diajukan": "Refund Requested",
       "live_session_h1": "Live Session Reminder (1 Day Before)",
-      "tagihan_jatuh_tempo": "Invoice Due",
+      "tagihan_due_date": "Invoice Due",
       "kelas_tidak_dilanjutkan": "Class Discontinued"
     }
   },
@@ -62,9 +62,9 @@
     "colSentAt": "Sent",
     "status": {
       "terkirim": "Sent",
-      "dibaca": "Read",
+      "read": "Read",
       "direspons": "Responded",
-      "eskalasi": "Escalated"
+      "escalation": "Escalated"
     }
   }
 }

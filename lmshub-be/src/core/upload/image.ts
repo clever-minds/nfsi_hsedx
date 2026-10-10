@@ -1,5 +1,5 @@
 /**
- * Kenali jenis gambar dari byte awalnya, bukan dari `Content-Type` kiriman klien.
+ * Kenali type gambar from byte awalnya, bukan from `Content-Type` kiriman klien.
  *
  * Tipe yang diklaim klien hanyalah label. Tanpa pemeriksaan ini, berkas HTML
  * atau skrip bisa diunggah sebagai "image/png" dan disimpan di `uploads/`.

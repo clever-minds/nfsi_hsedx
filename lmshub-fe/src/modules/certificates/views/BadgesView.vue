@@ -18,7 +18,7 @@ interface Badge {
 interface LeaderboardRow extends Record<string, unknown> {
   peringkat: number;
   name: string;
-  poin: number;
+  points: number;
 }
 
 const { t } = useI18n();
@@ -35,31 +35,31 @@ const error = ref('');
 const leaderboardColumns = computed(() => [
   { key: 'peringkat', label: t('certificates.badgesPage.colRank') },
   { key: 'name', label: t('certificates.badgesPage.colName') },
-  { key: 'poin', label: t('certificates.badgesPage.colPoints') },
+  { key: 'points', label: t('certificates.badgesPage.colPoints') },
 ]);
 
 interface UserBadge {
   id: string;
   badge_id: string;
-  tanggal_diraih: string;
+  date_earned: string;
 }
 interface PointsLedgerRow {
-  saldo_setelah: number;
+  balance_after: number;
 }
 interface StreakRow {
-  streak_hari_berjalan: number;
+  current_streak_days: number;
 }
 
 async function loadBadges() {
   loadingBadges.value = true;
   try {
-    // BE tidak punya GET /badges?scope=me. Gabungkan catalog GET /badges (semua badge)
-    // dengan GET /users/me/badges (badge yang sudah diraih pengguna) di sisi klien.
+    // BE no punya GET /badges?scope=me. Gabungkan catalog GET /badges (semua badge)
+    // dengan GET /users/me/badges (badge yang sudah diraih user) di sisi klien.
     const [catalogRes, earnedRes] = await Promise.all([
       apiGetFull<Badge[]>('/badges', { limit: 100 }),
       apiGetFull<UserBadge[]>('/users/me/badges'),
     ]);
-    const earned = new Map((earnedRes.data ?? []).map((u) => [u.badge_id, u.tanggal_diraih]));
+    const earned = new Map((earnedRes.data ?? []).map((u) => [u.badge_id, u.date_earned]));
     badges.value = (catalogRes.data ?? []).map((b) => ({
       ...b,
       diraih: earned.has(b.id),
@@ -74,17 +74,17 @@ async function loadBadges() {
 
 async function loadGamificationSummary() {
   try {
-    // BE: /users/me/points adalah ledger berpaginasi (bukan total poin langsung);
-    // baris terbaru (limit=1, urut DESC created_at) menyimpan saldo_setelah = saldo poin saat ini.
+    // BE: /users/me/points adalah ledger berpaginasi (bukan total points langsung);
+    // baris terbaru (limit=1, sort_order DESC created_at) menyimpan balance_after = saldo points saat ini.
     const res = await apiGetFull<PointsLedgerRow[]>('/users/me/points', { limit: 1 });
     const latest = res.data?.[0];
-    if (latest) totalPoin.value = latest.saldo_setelah;
+    if (latest) totalPoin.value = latest.balance_after;
   } catch {
     /* biarkan totalPoin default '—' */
   }
   try {
     const s = await apiGet<StreakRow | null>('/users/me/streak');
-    if (s) streak.value = s.streak_hari_berjalan;
+    if (s) streak.value = s.current_streak_days;
   } catch {
     /* biarkan streak default '—' */
   }

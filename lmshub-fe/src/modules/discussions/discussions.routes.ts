@@ -6,12 +6,12 @@ export const discussionsRoutes: RouteRecordRaw[] = [
     path: 'discussions',
     name: 'discussions',
     component: () => import('@/modules/discussions/views/DiscussionView.vue'),
-    meta: { permission: 'diskusi.view', title: 'Discussions' },
+    meta: { permission: 'discussion.view', title: 'Discussions' },
   },
   {
     path: 'discussions/moderation',
     name: 'discussion-moderation',
     component: () => import('@/modules/discussions/views/ModerationView.vue'),
-    meta: { permission: 'diskusi.delete', title: 'Discussion Moderation' },
+    meta: { permission: 'discussion.delete', title: 'Discussion Moderation' },
   },
 ];

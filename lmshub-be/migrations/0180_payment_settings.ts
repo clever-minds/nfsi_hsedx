@@ -46,7 +46,7 @@ const CREDENTIALS: Row[] = [
   ['payment.stripe.secret_key', 'payment_stripe', 'Secret key', 'string', '', true,
    'Starts with sk_. From dashboard.stripe.com/apikeys.'],
   ['payment.stripe.webhook_secret', 'payment_stripe', 'Webhook signing secret', 'string', '', true,
-   'Starts with whsec_, issued when you register the webhook endpoint. Without it incoming notifications cannot be verified and are refused.'],
+   'Starts with whsec_, issued when you register the webhook endpointst. Without it incoming notifications cannot be verified and are refused.'],
 
   // PayPal
   ['payment.paypal.client_id', 'payment_paypal', 'Client ID', 'string', '', false,
@@ -95,14 +95,14 @@ const CREDENTIALS: Row[] = [
 
 function insert(pgm: MigrationBuilder, rows: Row[]): void {
   const values = rows
-    .map(([key, grup, label, tipe, nilai, enc, desc]) => {
+    .map(([key, group, label, type, value, enc, desc]) => {
       const q = (v: string | null) => (v === null ? 'NULL' : `'${v.replace(/'/g, "''")}'`);
-      return `(${q(key)}, ${q(grup)}, ${q(label)}, ${q(tipe)}, ${q(nilai)}, false, ${enc}, ${q(desc)})`;
+      return `(${q(key)}, ${q("group")}, ${q(label)}, ${q(type)}, ${q(value)}, false, ${enc}, ${q(desc)})`;
     })
     .join(',\n      ');
 
   pgm.sql(`
-    INSERT INTO settings (key, grup, label, tipe_nilai, nilai, is_public, is_encrypted, description) VALUES
+    INSERT INTO settings (key, "group", label, value_type, value, is_public, is_encrypted, description) VALUES
       ${values}
     ON CONFLICT (key) WHERE deleted_at IS NULL DO NOTHING;
   `);

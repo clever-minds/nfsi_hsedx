@@ -29,7 +29,7 @@ function tsFiles(dir: string): string[] {
  *
  * Backticks are not a stylistic detail here. An earlier version of this pattern
  * matched single quotes only, so nine Indonesian messages built by interpolation
- * — `Course ${id} tidak ditemukan` and friends — were invisible to every check
+ * — `Course ${id} no ditemukan` and friends — were invisible to every check
  * below while the suite reported green. Any message form that reaches a user has
  * to be a form this regex can see.
  */
@@ -81,7 +81,7 @@ describe('error call sites', () => {
   // Common Indonesian function words. Any of these in a message that reaches a
   // reader means it would be shown to an English-speaking user untranslated.
   const INDONESIAN =
-    /\b(tidak|sudah|belum|harus|hanya|dapat|yang|untuk|dari|dengan|anda|ditemukan|gagal|wajib|dipakai|milik|pada|adalah|jangan|bisa|diisi|berisi|boleh|minimal)\b/i;
+    /\b(no|sudah|belum|harus|hanya|dapat|yang|untuk|from|dengan|anda|ditemukan|failed|wajib|dipakai|milik|pada|adalah|jangan|bisa|diisi|berisi|boleh|minimal)\b/i;
 
   it('finds the error call sites to check', () => {
     expect(calls.length).toBeGreaterThan(300);

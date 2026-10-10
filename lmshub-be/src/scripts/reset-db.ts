@@ -3,9 +3,9 @@ import { env } from '../core/config/env';
 import { logger } from '../core/logger/logger';
 
 /**
- * Drop & create ulang database target (dari DATABASE_URL) via koneksi ke database `postgres`.
+ * Drop & create ulang database target (from DATABASE_URL) via koneksi to database `postgres`.
  * MENGHAPUS SELURUH DATA. Hanya untuk dev. Jalankan lalu `migrate:up` + `seed` + `seed:demo`
- * (lihat skrip `db:reset`).
+ * (view skrip `db:reset`).
  */
 async function main() {
   const url = new URL(env.DATABASE_URL);

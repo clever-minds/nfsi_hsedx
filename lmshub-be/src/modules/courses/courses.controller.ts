@@ -61,12 +61,12 @@ export async function archive(req: Request, res: Response) {
 export async function publicList(req: Request, res: Response) {
   const page = parsePage(req);
   const filters = {
-    category_slug: req.query['filter[kategori]'] as string | undefined,
+    category_slug: req.query['filter[category]'] as string | undefined,
     level: req.query['filter[level]'] as string | undefined,
-    harga_min:
-      req.query['filter[harga_min]'] !== undefined ? Number(req.query['filter[harga_min]']) : undefined,
-    harga_max:
-      req.query['filter[harga_max]'] !== undefined ? Number(req.query['filter[harga_max]']) : undefined,
+    price_min:
+      req.query['filter[price_min]'] !== undefined ? Number(req.query['filter[price_min]']) : undefined,
+    price_max:
+      req.query['filter[price_max]'] !== undefined ? Number(req.query['filter[price_max]']) : undefined,
     q: req.query.q as string | undefined,
   };
   const { rows, total } = await service.publicList(page, filters);
@@ -76,4 +76,9 @@ export async function publicList(req: Request, res: Response) {
 // PUBLIC
 export async function publicDetail(req: Request, res: Response) {
   return ok(res, await service.publicDetail(req.params.slug));
+}
+
+// PUBLIC
+export async function publicLessonPreview(req: Request, res: Response) {
+  return ok(res, await service.publicLessonPreview(req.params.slug, req.params.lessonId));
 }

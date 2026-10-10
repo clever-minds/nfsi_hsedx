@@ -25,7 +25,7 @@ const run = promisify(execFile);
  *  - The installer never touches the running application's connection pool. It
  *    opens its own short-lived pool from the credentials being tested, so a
  *    wrong password fails a form field instead of taking the process down.
- *  - Every endpoint refuses once the system is installed. An installer that
+ *  - Every endpointst refuses once the system is installed. An installer that
  *    stays reachable is a way to hand the site to whoever finds it.
  */
 
@@ -52,7 +52,7 @@ export async function requirements(): Promise<Requirement[]> {
     },
   ];
 
-  // The installer has to write .env; without this the whole flow is pointless.
+  // The installer has to write .env; without this the whole flow is pointstless.
   let writable = true;
   let writeDetail = ROOT;
   try {
@@ -180,10 +180,10 @@ export async function createAdmin(databaseUrl: string, input: AdminInput): Promi
 
     const hash = await hashPassword(input.password);
     await probe.query(
-      `INSERT INTO users (nama_lengkap, email, password_hash, role_id, status, email_verified_at)
+      `INSERT INTO users (name_lengkap, email, password_hash, role_id, status, email_verified_at)
        VALUES ($1,$2,$3,$4,'active', now())
        ON CONFLICT (email) WHERE deleted_at IS NULL AND email IS NOT NULL
-         DO UPDATE SET nama_lengkap = EXCLUDED.nama_lengkap, password_hash = EXCLUDED.password_hash`,
+         DO UPDATE SET name_lengkap = EXCLUDED.name_lengkap, password_hash = EXCLUDED.password_hash`,
       [input.name, input.email, hash, role.rows[0].id],
     );
   } finally {

@@ -1,6 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router';
 
-// Rute modul dashboard (anak dari /d). Diagregasi dari tiap modul.
+// Rute modul dashboard (anak from /d). Diagregasi from tiap modul.
 import { usersRoutes } from '@/modules/users/users.routes';
 import { categoriesRoutes } from '@/modules/categories/categories.routes';
 import { coursesRoutes } from '@/modules/courses/courses.routes';

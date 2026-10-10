@@ -11,7 +11,7 @@ const kode = z
 const body = z.object({
   kode,
   name: z.string().trim().min(1).max(80),
-  simbol: z.string().trim().max(8).default(''),
+  symbol: z.string().trim().max(8).default(''),
   /**
    * How many of this currency equal one unit of the base currency.
    * Rejecting zero and negatives here rather than at the database keeps the

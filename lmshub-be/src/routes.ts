@@ -73,12 +73,12 @@ apiRouter.use('/currencies', currenciesRouter);
 apiRouter.use('/site-content', siteContentRouter);
 
 // Modules yang mendefinisikan path absolut (mount di root /api/v1).
-// certificatesRouter didahulukan karena punya rute PUBLIK (`/public/certificates/verify/:nomor`);
+// certificatesRouter didahulukan karena punya rute PUBLIK (`/public/certificates/verify/:number`);
 // router root lain (mis. progress) memasang requireAuth() global sehingga akan mencegat
 // request publik bila dipasang lebih dulu.
 apiRouter.use('/', publicDocumentsRouter); // halaman statis & setting publik — harus sebelum router ber-requireAuth global
 apiRouter.use('/', certificatesRouter);
-apiRouter.use('/', reviewsRouter); // sebelum router root ber-requireAuth global agar GET ulasan tetap publik
+apiRouter.use('/', reviewsRouter); // sebelum router root ber-requireAuth global agar GET review tetap publik
 apiRouter.use('/', curriculumRouter);
 apiRouter.use('/', enrollmentsRouter);
 apiRouter.use('/', progressRouter);

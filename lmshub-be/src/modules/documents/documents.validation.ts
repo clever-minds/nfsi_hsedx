@@ -15,7 +15,7 @@ const metaSeoSchema = z.object({
 });
 
 /**
- * Isi halaman dikirim sebagai HTML (`konten_html`) dari editor Admin Panel dan
+ * Isi halaman dikirim sebagai HTML (`konten_html`) from editor Admin Panel dan
  * disanitasi di server sebelum disimpan. `content` (JSON bebas) tetap diterima
  * demi klien lama; bila berisi `html`, bagian itu ikut disanitasi.
  */
@@ -26,10 +26,10 @@ export const createPageSchema = z.object({
   title: z.string().min(2).max(200),
   content: z.unknown().optional(),
   konten_html: kontenHtmlSchema.optional(),
-  tipe: z.enum(['tentang', 'faq', 'kebijakan', 'halaman']).default('halaman'),
-  status: z.enum(['draft', 'terbit', 'arsip']).default('draft'),
-  tampil_di_footer: z.boolean().default(false),
-  urutan_footer: z.number().int().min(0).max(999).default(0),
+  type: z.enum(['about', 'faq', 'policy', 'page']).default('page'),
+  status: z.enum(['draft', 'publish', 'archived']).default('draft'),
+  show_in_footer: z.boolean().default(false),
+  footer_sort_order: z.number().int().min(0).max(999).default(0),
   meta_seo: metaSeoSchema.optional(),
 });
 
@@ -38,29 +38,29 @@ export const updatePageSchema = z.object({
   title: z.string().min(2).max(200).optional(),
   content: z.unknown().optional(),
   konten_html: kontenHtmlSchema.optional(),
-  tipe: z.enum(['tentang', 'faq', 'kebijakan', 'halaman']).optional(),
-  status: z.enum(['draft', 'terbit', 'arsip']).optional(),
-  tampil_di_footer: z.boolean().optional(),
-  urutan_footer: z.number().int().min(0).max(999).optional(),
+  type: z.enum(['about', 'faq', 'policy', 'page']).optional(),
+  status: z.enum(['draft', 'publish', 'archived']).optional(),
+  show_in_footer: z.boolean().optional(),
+  footer_sort_order: z.number().int().min(0).max(999).optional(),
   meta_seo: metaSeoSchema.nullable().optional(),
 });
 
 // ── settings ─────────────────────────────────────────────────────────────
 /**
- * Aset merek (logo/ikon) dikirim base64 di payload JSON, sama seperti foto
- * profil. Limit body 2mb → gambar efektif sekitar 1.5MB setelah overhead base64.
+ * Aset merek (logo/ikon) dikirim base64 di payload JSON, sama seperti photo
+ * profile. Limit body 2mb → gambar efektif sekitar 1.5MB setelah overhead base64.
  */
 export const uploadBrandAssetSchema = z.object({
-  jenis: z.enum(['logo', 'icon']),
+  type: z.enum(['logo', 'icon']),
   data_base64: z.string().min(1, 'Image data is required'),
-  // SVG sengaja tidak diterima: bisa memuat <script>, dan file ini disajikan
-  // dari origin API sehingga akan dieksekusi bila dibuka langsung.
+  // SVG sengaja no diterima: bisa memuat <script>, dan file ini disajikan
+  // from origin API sehingga akan dieksekusi bila dibuka langsung.
   mime_type: z.enum(['image/jpeg', 'image/png', 'image/webp']),
 });
 
 export const updateSettingSchema = z.object({
-  nilai: z.string().nullable().optional(),
-  nilai_json: z.unknown().optional(),
+  value: z.string().nullable().optional(),
+  value_json: z.unknown().optional(),
 });
 
 export type CreatePageInput = z.infer<typeof createPageSchema>;

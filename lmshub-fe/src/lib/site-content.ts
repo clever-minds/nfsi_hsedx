@@ -20,16 +20,16 @@ export const LOCALE_KEYS: LocaleKey[] = ['en', 'hi'];
 export interface SosialItem {
   platform: string;
   url: string;
-  aktif: boolean;
+  active: boolean;
 }
 export interface MenuItem {
   label: Localized;
   url: string;
-  aktif: boolean;
+  active: boolean;
 }
 export interface SectionItem {
   key: string;
-  aktif: boolean;
+  active: boolean;
   badge: Localized;
   title: Localized;
   subjudul: Localized;
@@ -48,16 +48,16 @@ export interface SiteContent {
   sosial: SosialItem[];
   menu: MenuItem[];
   hero: {
-    aktif: boolean;
+    active: boolean;
     badge: Localized;
-    judul_pre: Localized;
-    judul_highlight: Localized;
-    judul_post: Localized;
+    title_pre: Localized;
+    title_highlight: Localized;
+    title_post: Localized;
     subjudul: Localized;
     gambar_url: string;
     tampilkan_pencarian: boolean;
     tampilkan_rating: boolean;
-    rating_skor: string;
+    rating_score: string;
     rating_teks: Localized;
     tampilkan_kartu_siswa: boolean;
     tampilkan_kartu_kursus: boolean;
@@ -66,14 +66,14 @@ export interface SiteContent {
   footer: {
     description: Localized;
     kolom: FooterKolom[];
-    newsletter: { aktif: boolean; title: Localized; text: Localized };
+    newsletter: { active: boolean; title: Localized; text: Localized };
     copyright: Localized;
     tampilkan_sosial: boolean;
   };
 }
 
-/** Seksi yang boleh diurutkan & dimatikan; harus sama dengan catalog backend. */
-export const SECTION_KEYS = ['kategori', 'benefit', 'featured', 'stats', 'instructor', 'cta'] as const;
+/** Seksi yang boleh disort_orderkan & dimatikan; harus sama dengan catalog backend. */
+export const SECTION_KEYS = ['category', 'benefit', 'featured', 'stats', 'instructor', 'cta'] as const;
 
 /** Platform sosmed yang punya ikon di aplikasi. */
 export const SOSIAL_PLATFORMS = [
@@ -94,56 +94,56 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
   sosial: [],
   menu: [],
   hero: {
-    aktif: true,
+    active: true,
     badge: kosong(),
-    judul_pre: kosong(),
-    judul_highlight: kosong(),
-    judul_post: kosong(),
+    title_pre: kosong(),
+    title_highlight: kosong(),
+    title_post: kosong(),
     subjudul: kosong(),
     gambar_url: '',
     tampilkan_pencarian: true,
     tampilkan_rating: true,
-    rating_skor: '',
+    rating_score: '',
     rating_teks: kosong(),
     tampilkan_kartu_siswa: true,
     tampilkan_kartu_kursus: true,
   },
-  sections: SECTION_KEYS.map((key) => ({ key, aktif: true, badge: kosong(), title: kosong(), subjudul: kosong() })),
+  sections: SECTION_KEYS.map((key) => ({ key, active: true, badge: kosong(), title: kosong(), subjudul: kosong() })),
   footer: {
     description: kosong(),
     kolom: [],
-    newsletter: { aktif: true, title: kosong(), text: kosong() },
+    newsletter: { active: true, title: kosong(), text: kosong() },
     copyright: kosong(),
     tampilkan_sosial: true,
   },
 };
 
 /**
- * Teks untuk language yang sedang aktif.
+ * Teks untuk language yang sedang active.
  *
- * Urutan: language aktif → Inggris (language dasar sistem) → text bawaan aplikasi.
+ * Urutan: language active → Inggris (language base sistem) → text bawaan aplikasi.
  * Langkah tengahnya penting: admin yang hanya mengisi satu language tetap ingin
- * isian itu terlihat oleh pengunjung berbahasa lain, bukan tergantikan diam-diam
- * oleh text contoh.
+ * isian itu terlihat by pengunjung berlanguage lain, bukan tergantikan diam-diam
+ * by text contoh.
  */
-export function pickText(nilai: Localized | undefined, bawaan = ''): string {
-  if (!nilai) return bawaan;
-  const aktif = (nilai[currentLocale() as LocaleKey] ?? '').trim();
-  if (aktif) return aktif;
-  const en = (nilai.en ?? '').trim();
+export function pickText(value: Localized | undefined, bawaan = ''): string {
+  if (!value) return bawaan;
+  const active = (value[currentLocale() as LocaleKey] ?? '').trim();
+  if (active) return active;
+  const en = (value.en ?? '').trim();
   return en || bawaan;
 }
 
 /** True bila ada minimal satu language terisi — dipakai untuk memutuskan override. */
-export function adaTeks(nilai: Localized | undefined): boolean {
-  return !!nilai && LOCALE_KEYS.some((l) => (nilai[l] ?? '').trim());
+export function adaTeks(value: Localized | undefined): boolean {
+  return !!value && LOCALE_KEYS.some((l) => (value[l] ?? '').trim());
 }
 
 /**
- * Saring tautan sebelum masuk atribut `href`.
+ * Saring tautan sebelum login atribut `href`.
  *
  * Backend sudah menolak skema berbahaya saat menyimpan, tapi baris lama atau
- * respons yang dimanipulasi di tengah jalan tidak melewati validasi itu — dan
+ * response yang dimanipulasi di tengah jalan no melewati validasi itu — dan
  * ongkos memeriksa ulang di sini nyaris nol.
  */
 export function safeHref(url: string | undefined): string {

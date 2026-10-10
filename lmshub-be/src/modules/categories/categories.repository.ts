@@ -19,14 +19,14 @@ export interface CategoryFilters {
 }
 
 /**
- * Baris untuk layar kelola kategori. `jumlah_kursus` menghitung SEMUA course
- * yang belum dihapus, bukan hanya yang terbit: yang menahan penghapusan
- * kategori adalah foreign key `courses.category_id` (ON DELETE RESTRICT), dan
- * course draf pun menahannya. Angka yang hanya menghitung course terbit akan
- * menampilkan "0" pada kategori yang tetap menolak dihapus.
+ * Baris untuk layar kelola category. `amount_kursus` menghitung SEMUA course
+ * yang belum dihapus, bukan hanya yang publish: yang menahan penghapusan
+ * category adalah foreign key `courses.category_id` (ON DELETE RESTRICT), dan
+ * course draf pun menahannya. Angka yang hanya menghitung course publish akan
+ * menampilkan "0" pada category yang tetap menolak dihapus.
  */
 export interface CategoryListRow extends CategoryRow {
-  jumlah_kursus: number;
+  amount_kursus: number;
 }
 
 /** Baris `tags`. */
@@ -58,7 +58,7 @@ export async function list(p: PageParams, f: CategoryFilters): Promise<{ rows: C
   const rows = await query<CategoryListRow>(
     `SELECT id, name, slug, description, ikon, sort_order, is_active, created_at,
             (SELECT COUNT(*)::int FROM courses c
-              WHERE c.category_id = categories.id AND c.deleted_at IS NULL) AS jumlah_kursus
+              WHERE c.category_id = categories.id AND c.deleted_at IS NULL) AS amount_kursus
        FROM categories
       WHERE ${whereSql}
       ORDER BY ${sortCol} ${p.order}
@@ -72,13 +72,13 @@ export async function list(p: PageParams, f: CategoryFilters): Promise<{ rows: C
   return { rows, total: Number(totalRow?.count ?? 0) };
 }
 
-/** PUBLIK — hanya kategori aktif + jumlah course terbit, untuk catalog pra-login. */
-export async function publicList(): Promise<Array<CategoryRow & { jumlah_kursus: number }>> {
-  return query<CategoryRow & { jumlah_kursus: number }>(
+/** PUBLIK — hanya category active + amount course publish, untuk catalog pra-login. */
+export async function publicList(): Promise<Array<CategoryRow & { amount_kursus: number }>> {
+  return query<CategoryRow & { amount_kursus: number }>(
     `SELECT cat.id, cat.name, cat.slug, cat.description, cat.ikon, cat.sort_order, cat.is_active, cat.created_at,
             (SELECT COUNT(*)::int FROM courses c
               WHERE c.category_id = cat.id AND c.deleted_at IS NULL
-                AND c.publication_status IN ('terbit','diperbarui')) AS jumlah_kursus
+                AND c.publication_status IN ('publish','updated')) AS amount_kursus
        FROM categories cat
       WHERE cat.deleted_at IS NULL AND cat.is_active = true
       ORDER BY cat.sort_order ASC`,
@@ -159,7 +159,7 @@ export async function listTags(p: PageParams, f: TagFilters): Promise<{ rows: Ta
   return { rows, total: Number(totalRow?.count ?? 0) };
 }
 
-/** PUBLIK — seluruh tag aktif, untuk filter catalog pra-login. */
+/** PUBLIK — seluruh tag active, untuk filter catalog pra-login. */
 export async function publicListTags(): Promise<TagRow[]> {
   return query<TagRow>(`SELECT id, name, slug, created_at FROM tags WHERE deleted_at IS NULL ORDER BY name ASC`);
 }
@@ -191,7 +191,7 @@ export async function softDeleteTag(id: string): Promise<void> {
   await query(`UPDATE tags SET deleted_at = now() WHERE id = $1`, [id]);
 }
 
-/** Dipakai guard hapus tag: hitung pemakaian via pivot `course_tags`. */
+/** Dipakai guard delete tag: hitung pemakaian via pivot `course_tags`. */
 export async function countCoursesUsingTag(id: string): Promise<number> {
   const row = await queryOne<{ count: string }>(`SELECT COUNT(*)::int AS count FROM course_tags WHERE tag_id = $1`, [id]);
   return Number(row?.count ?? 0);

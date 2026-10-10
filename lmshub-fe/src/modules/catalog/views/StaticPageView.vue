@@ -8,7 +8,7 @@ import { useAppConfigStore } from '@/stores/appConfig';
 
 /**
  * Halaman statis publik (About, Help Center, Privacy, Terms, Contact, …),
- * dikelola admin di Website → Pages. Hanya halaman berstatus terbit yang
+ * managed admin di Website → Pages. Hanya halaman berstatus publish yang
  * dikembalikan backend; selain itu 404.
  */
 interface Page {
@@ -50,19 +50,33 @@ watch(
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl px-4 py-12">
-    <div v-if="loading" class="py-20 text-center text-sm text-slate-400">{{ t('common.state.loading') }}</div>
+  <div v-if="loading" class="py-20 text-center text-sm text-slate-400">{{ t('common.state.loading') }}</div>
 
-    <div v-else-if="notFound" class="py-20 text-center">
-      <h1 class="text-2xl font-bold text-slate-900">{{ t('pages.public.notFoundTitle') }}</h1>
-      <p class="mt-2 text-slate-500">{{ t('pages.public.notFoundText') }}</p>
-      <RouterLink to="/" class="btn-primary mt-6 inline-flex">{{ t('pages.public.backHome') }}</RouterLink>
+  <div v-else-if="notFound" class="py-20 text-center">
+    <h1 class="text-2xl font-bold text-slate-900">{{ t('pages.public.notFoundTitle') }}</h1>
+    <p class="mt-2 text-slate-500">{{ t('pages.public.notFoundText') }}</p>
+    <RouterLink to="/" class="btn-primary mt-6 inline-flex">{{ t('pages.public.backHome') }}</RouterLink>
+  </div>
+
+  <div v-else-if="page" class="w-full">
+    <!-- Hero Section with gradient background -->
+    <div class="bg-gradient-to-r from-rose-50 via-slate-50 to-sky-50 py-12 md:py-20 w-full border-b border-slate-100">
+      <div class="container mx-auto px-4 text-center">
+        <h1 class="text-3xl font-bold text-slate-900 md:text-5xl tracking-tight">{{ page.title }}</h1>
+        <div class="mt-4 text-sm text-slate-500 font-medium flex items-center justify-center space-x-2">
+          <RouterLink to="/" class="hover:text-primary transition-colors">{{ t('pages.public.backHome', 'Home') }}</RouterLink>
+          <span class="text-red-500 font-bold">—</span>
+          <span class="text-slate-700">{{ page.title }}</span>
+        </div>
+      </div>
     </div>
-
-    <article v-else-if="page">
-      <h1 class="text-3xl font-bold text-slate-900">{{ page.title }}</h1>
-      <!-- eslint-disable-next-line vue/no-v-html -- isi dilewatkan sanitizeHtml() lebih dulu; lihat src/lib/sanitize.ts -->
-      <div class="prose-page mt-6" v-html="html"></div>
-    </article>
+    
+    <!-- Page Content -->
+    <div class="mx-auto max-w-3xl px-4 py-12">
+      <article>
+        <!-- eslint-disable-next-line vue/no-v-html -- content dilewatkan sanitizeHtml() lebih dulu; view src/lib/sanitize.ts -->
+        <div class="prose-page mt-6" v-html="html"></div>
+      </article>
+    </div>
   </div>
 </template>

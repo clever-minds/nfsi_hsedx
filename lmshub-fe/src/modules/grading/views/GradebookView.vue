@@ -14,9 +14,9 @@ interface AssessmentColumn {
 }
 interface StudentRow {
   siswa_id: string;
-  siswa_nama: string;
+  siswa_name: string;
   scores?: Record<string, number | string | null>;
-  nilai_akhir?: number | null;
+  final_grade?: number | null;
   status?: string;
   disesuaikan?: boolean;
 }
@@ -33,8 +33,8 @@ interface CourseOption {
   title: string;
 }
 interface GradebookRow extends Record<string, unknown> {
-  siswa_nama: string;
-  nilai_akhir: number | string;
+  siswa_name: string;
+  final_grade: number | string;
   status: string;
 }
 
@@ -54,9 +54,9 @@ async function loadCourses() {
   coursesLoading.value = true;
   try {
     // limit dinaikkan: ini pengisi dropdown, bukan tabel. Tanpa ini BE memakai
-    // default 20, jadi pengajar dengan lebih dari 20 course terbit tidak bisa
-    // memilih course ke-21 dan seterusnya di gradebook.
-    const res = await apiGetFull<CourseOption[]>('/courses', { status: 'terbit,diperbarui', limit: 100 });
+    // default 20, jadi pengajar dengan lebih from 20 course publish no bisa
+    // memilih course to-21 dan seterusnya di gradebook.
+    const res = await apiGetFull<CourseOption[]>('/courses', { status: 'publish,diperbarui', limit: 100 });
     courses.value = res.data ?? [];
   } catch {
     courses.value = [];
@@ -84,18 +84,18 @@ function selectCourse(id: string) {
 }
 
 const columns = computed(() => [
-  { key: 'siswa_nama', label: t('grading.gradebook.colStudent') },
+  { key: 'siswa_name', label: t('grading.gradebook.colStudent') },
   ...(data.value?.assessment ?? []).map((a) => ({ key: a.id, label: a.title })),
-  { key: 'nilai_akhir', label: t('grading.gradebook.colFinal') },
+  { key: 'final_grade', label: t('grading.gradebook.colFinal') },
   { key: 'status', label: t('grading.gradebook.colStatus') },
 ]);
 
 const rows = computed<GradebookRow[]>(() =>
   (data.value?.student ?? []).map((s) => {
     const rec: GradebookRow = {
-      siswa_nama: s.siswa_nama,
-      nilai_akhir: s.nilai_akhir ?? '—',
-      status: s.status || 'berjalan',
+      siswa_name: s.siswa_name,
+      final_grade: s.final_grade ?? '—',
+      status: s.status || 'ongoing',
     };
     (data.value?.assessment ?? []).forEach((a) => {
       rec[a.id] = s.scores?.[a.id] ?? t('grading.gradebook.notGraded');

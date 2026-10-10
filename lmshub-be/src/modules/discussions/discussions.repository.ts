@@ -5,12 +5,12 @@ export interface ThreadRow {
   id: string;
   course_id: string;
   title: string;
-  dibuat_oleh: string;
-  penulis_nama?: string; // di-join saat list/detail
+  created_by: string;
+  penulis_name?: string; // di-join saat list/detail
   penulis_foto?: string | null;
   is_pinned: boolean;
   is_locked: boolean;
-  jumlah_post: number;
+  amount_post: number;
   created_at: string;
   updated_at: string;
 }
@@ -20,9 +20,9 @@ export interface PostRow {
   thread_id: string;
   parent_post_id: string | null;
   user_id: string;
-  penulis_nama?: string; // di-join saat listPosts
+  penulis_name?: string; // di-join saat listPosts
   penulis_foto?: string | null;
-  isi: string;
+  content: string;
   is_hidden: boolean;
   hidden_reason: string | null;
   created_at: string;
@@ -31,10 +31,10 @@ export interface PostRow {
 
 export interface QaAnswerLite {
   id: string;
-  isi: string;
-  penjawab_nama: string;
-  is_instruktur_jawaban: boolean;
-  jumlah_upvote: number;
+  content: string;
+  penjawab_name: string;
+  is_instructor_answer: boolean;
+  amount_upvote: number;
   created_at: string;
 }
 
@@ -42,13 +42,13 @@ export interface QuestionRow {
   id: string;
   lesson_id: string;
   user_id: string;
-  penanya_nama?: string; // di-join saat listQuestions
+  penanya_name?: string; // di-join saat listQuestions
   penanya_foto?: string | null;
-  isi: string;
-  status_terjawab: boolean;
-  jumlah_upvote: number;
+  content: string;
+  is_answered: boolean;
+  amount_upvote: number;
   is_hidden: boolean;
-  jawaban?: QaAnswerLite[]; // di-agregasi saat listQuestions
+  answer?: QaAnswerLite[]; // di-agregasi saat listQuestions
   created_at: string;
   updated_at: string;
 }
@@ -57,9 +57,9 @@ export interface AnswerRow {
   id: string;
   question_id: string;
   user_id: string;
-  isi: string;
-  is_instruktur_jawaban: boolean;
-  jumlah_upvote: number;
+  content: string;
+  is_instructor_answer: boolean;
+  amount_upvote: number;
   is_hidden: boolean;
   created_at: string;
   updated_at: string;
@@ -70,7 +70,7 @@ export interface CommentRow {
   target_type: string;
   target_id: string;
   user_id: string;
-  isi: string;
+  content: string;
   is_hidden: boolean;
   created_at: string;
   updated_at: string;
@@ -81,7 +81,7 @@ export interface ReactionRow {
   target_type: string;
   target_id: string;
   user_id: string;
-  jenis: string;
+  type: string;
   created_at: string;
 }
 
@@ -89,13 +89,13 @@ export interface ReportRow {
   id: string;
   target_type: string;
   target_id: string;
-  pelapor_user_id: string;
-  alasan: string;
-  status: 'menunggu' | 'ditinjau' | 'ditindak' | 'ditolak';
-  tindakan: 'sembunyikan' | 'hapus' | 'blokir_pengguna' | null;
-  ditangani_oleh: string | null;
-  catatan_penanganan: string | null;
-  ditangani_at: string | null;
+  reporter_user_id: string;
+  reason: string;
+  status: 'pending' | 'reviewed' | 'actioned' | 'rejected';
+  action: 'hide' | 'delete' | 'block_user' | null;
+  handled_by: string | null;
+  handling_notes: string | null;
+  handled_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -113,7 +113,7 @@ export async function courseIdOfLesson(lessonId: string): Promise<string | null>
 export async function isCourseMember(courseId: string, userId: string): Promise<boolean> {
   const row = await queryOne<{ ok: boolean }>(
     `SELECT (
-       EXISTS (SELECT 1 FROM enrollments e WHERE e.course_id = $1 AND e.user_id = $2 AND e.deleted_at IS NULL AND e.status IN ('terdaftar','aktif','selesai'))
+       EXISTS (SELECT 1 FROM enrollments e WHERE e.course_id = $1 AND e.user_id = $2 AND e.deleted_at IS NULL AND e.status IN ('registered','active','completed'))
        OR EXISTS (SELECT 1 FROM courses c JOIN instructor_profiles ip ON ip.id = c.instructor_id WHERE c.id = $1 AND ip.user_id = $2)
      ) AS ok`,
     [courseId, userId],
@@ -132,7 +132,7 @@ export async function isCourseInstructor(courseId: string, userId: string): Prom
   return row?.ok ?? false;
 }
 
-/** Resolusi best-effort course_id dari target polymorphic (untuk validasi keanggotaan pada moderasi/reaksi/komentar). */
+/** Resolusi best-effort course_id from target polymorphic (untuk validasi keanggotaan pada moderasi/reaksi/komentar). */
 export async function courseIdOfTarget(targetType: string, targetId: string): Promise<string | null> {
   if (targetType === 'discussion_post') {
     const row = await queryOne<{ course_id: string }>(
@@ -152,16 +152,16 @@ export async function courseIdOfTarget(targetType: string, targetId: string): Pr
     );
     return row ? courseIdOfLesson(row.lesson_id) : null;
   }
-  return null; // comment/lesson_content: dicek longgar (sudah gated permission diskusi.*)
+  return null; // comment/lesson_content: dicek longgar (sudah gated permission discussion.*)
 }
 
 // ── Threads & posts ────────────────────────────────────────
 
 export async function listThreads(courseId: string, p: PageParams): Promise<{ rows: ThreadRow[]; total: number }> {
   const rows = await query<ThreadRow>(
-    `SELECT t.*, u.nama_lengkap AS penulis_nama, u.foto_profil AS penulis_foto
+    `SELECT t.*, u.name_lengkap AS penulis_name, u.profile_picture AS penulis_foto
        FROM discussion_threads t
-       JOIN users u ON u.id = t.dibuat_oleh
+       JOIN users u ON u.id = t.created_by
       WHERE t.course_id = $1 AND t.deleted_at IS NULL
       ORDER BY t.is_pinned DESC, t.created_at DESC
       LIMIT ${p.limit} OFFSET ${p.offset}`,
@@ -178,10 +178,10 @@ export async function getThread(id: string): Promise<ThreadRow | null> {
   return queryOne<ThreadRow>(`SELECT * FROM discussion_threads WHERE id = $1 AND deleted_at IS NULL`, [id]);
 }
 
-export async function insertThread(data: { course_id: string; title: string; dibuat_oleh: string }): Promise<ThreadRow> {
+export async function insertThread(data: { course_id: string; title: string; created_by: string }): Promise<ThreadRow> {
   const row = await queryOne<ThreadRow>(
-    `INSERT INTO discussion_threads (course_id, title, dibuat_oleh) VALUES ($1,$2,$3) RETURNING *`,
-    [data.course_id, data.title, data.dibuat_oleh],
+    `INSERT INTO discussion_threads (course_id, title, created_by) VALUES ($1,$2,$3) RETURNING *`,
+    [data.course_id, data.title, data.created_by],
   );
   return row!;
 }
@@ -195,12 +195,12 @@ export async function setThreadLock(id: string, locked: boolean): Promise<void> 
 }
 
 export async function incrementThreadPostCount(id: string): Promise<void> {
-  await query(`UPDATE discussion_threads SET jumlah_post = jumlah_post + 1 WHERE id = $1`, [id]);
+  await query(`UPDATE discussion_threads SET amount_post = amount_post + 1 WHERE id = $1`, [id]);
 }
 
 export async function listPosts(threadId: string): Promise<PostRow[]> {
   return query<PostRow>(
-    `SELECT p.*, u.nama_lengkap AS penulis_nama, u.foto_profil AS penulis_foto
+    `SELECT p.*, u.name_lengkap AS penulis_name, u.profile_picture AS penulis_foto
        FROM discussion_posts p
        JOIN users u ON u.id = p.user_id
       WHERE p.thread_id = $1 AND p.deleted_at IS NULL
@@ -213,11 +213,11 @@ export async function insertPost(data: {
   thread_id: string;
   parent_post_id: string | null;
   user_id: string;
-  isi: string;
+  content: string;
 }): Promise<PostRow> {
   const row = await queryOne<PostRow>(
-    `INSERT INTO discussion_posts (thread_id, parent_post_id, user_id, isi) VALUES ($1,$2,$3,$4) RETURNING *`,
-    [data.thread_id, data.parent_post_id, data.user_id, data.isi],
+    `INSERT INTO discussion_posts (thread_id, parent_post_id, user_id, content) VALUES ($1,$2,$3,$4) RETURNING *`,
+    [data.thread_id, data.parent_post_id, data.user_id, data.content],
   );
   return row!;
 }
@@ -230,16 +230,16 @@ export async function getPost(id: string): Promise<PostRow | null> {
 
 export async function listQuestions(lessonId: string, p: PageParams): Promise<{ rows: QuestionRow[]; total: number }> {
   const rows = await query<QuestionRow>(
-    `SELECT q.*, u.nama_lengkap AS penanya_nama, u.foto_profil AS penanya_foto,
+    `SELECT q.*, u.name_lengkap AS penanya_name, u.profile_picture AS penanya_foto,
             COALESCE(
               (SELECT json_agg(json_build_object(
-                        'id', a.id, 'isi', a.isi, 'penjawab_nama', au.nama_lengkap,
-                        'is_instruktur_jawaban', a.is_instruktur_jawaban,
-                        'jumlah_upvote', a.jumlah_upvote, 'created_at', a.created_at)
-                        ORDER BY a.is_instruktur_jawaban DESC, a.created_at ASC)
+                        'id', a.id, 'content', a.content, 'penjawab_name', au.name_lengkap,
+                        'is_instructor_answer', a.is_instructor_answer,
+                        'amount_upvote', a.amount_upvote, 'created_at', a.created_at)
+                        ORDER BY a.is_instructor_answer DESC, a.created_at ASC)
                  FROM qa_answers a JOIN users au ON au.id = a.user_id
                 WHERE a.question_id = q.id AND a.deleted_at IS NULL AND a.is_hidden = false),
-              '[]'::json) AS jawaban
+              '[]'::json) AS answer
        FROM qa_questions q
        JOIN users u ON u.id = q.user_id
       WHERE q.lesson_id = $1 AND q.deleted_at IS NULL
@@ -258,27 +258,27 @@ export async function getQuestion(id: string): Promise<QuestionRow | null> {
   return queryOne<QuestionRow>(`SELECT * FROM qa_questions WHERE id = $1 AND deleted_at IS NULL`, [id]);
 }
 
-export async function insertQuestion(data: { lesson_id: string; user_id: string; isi: string }): Promise<QuestionRow> {
+export async function insertQuestion(data: { lesson_id: string; user_id: string; content: string }): Promise<QuestionRow> {
   const row = await queryOne<QuestionRow>(
-    `INSERT INTO qa_questions (lesson_id, user_id, isi) VALUES ($1,$2,$3) RETURNING *`,
-    [data.lesson_id, data.user_id, data.isi],
+    `INSERT INTO qa_questions (lesson_id, user_id, content) VALUES ($1,$2,$3) RETURNING *`,
+    [data.lesson_id, data.user_id, data.content],
   );
   return row!;
 }
 
 export async function setQuestionAnswered(id: string, answered: boolean): Promise<void> {
-  await query(`UPDATE qa_questions SET status_terjawab = $2 WHERE id = $1`, [id, answered]);
+  await query(`UPDATE qa_questions SET is_answered = $2 WHERE id = $1`, [id, answered]);
 }
 
 export async function insertAnswer(data: {
   question_id: string;
   user_id: string;
-  isi: string;
-  is_instruktur_jawaban: boolean;
+  content: string;
+  is_instructor_answer: boolean;
 }): Promise<AnswerRow> {
   const row = await queryOne<AnswerRow>(
-    `INSERT INTO qa_answers (question_id, user_id, isi, is_instruktur_jawaban) VALUES ($1,$2,$3,$4) RETURNING *`,
-    [data.question_id, data.user_id, data.isi, data.is_instruktur_jawaban],
+    `INSERT INTO qa_answers (question_id, user_id, content, is_instructor_answer) VALUES ($1,$2,$3,$4) RETURNING *`,
+    [data.question_id, data.user_id, data.content, data.is_instructor_answer],
   );
   return row!;
 }
@@ -300,11 +300,11 @@ export async function insertComment(data: {
   target_type: string;
   target_id: string;
   user_id: string;
-  isi: string;
+  content: string;
 }): Promise<CommentRow> {
   const row = await queryOne<CommentRow>(
-    `INSERT INTO comments (target_type, target_id, user_id, isi) VALUES ($1,$2,$3,$4) RETURNING *`,
-    [data.target_type, data.target_id, data.user_id, data.isi],
+    `INSERT INTO comments (target_type, target_id, user_id, content) VALUES ($1,$2,$3,$4) RETURNING *`,
+    [data.target_type, data.target_id, data.user_id, data.content],
   );
   return row!;
 }
@@ -322,11 +322,11 @@ export async function insertReaction(data: {
   target_type: string;
   target_id: string;
   user_id: string;
-  jenis: string;
+  type: string;
 }): Promise<ReactionRow> {
   const row = await queryOne<ReactionRow>(
-    `INSERT INTO reactions (target_type, target_id, user_id, jenis) VALUES ($1,$2,$3,$4) RETURNING *`,
-    [data.target_type, data.target_id, data.user_id, data.jenis],
+    `INSERT INTO reactions (target_type, target_id, user_id, type) VALUES ($1,$2,$3,$4) RETURNING *`,
+    [data.target_type, data.target_id, data.user_id, data.type],
   );
   return row!;
 }
@@ -336,7 +336,7 @@ export async function deleteReaction(id: string): Promise<void> {
 }
 
 export async function incrementUpvote(table: 'qa_questions' | 'qa_answers', id: string, delta: number): Promise<void> {
-  await query(`UPDATE ${table} SET jumlah_upvote = GREATEST(0, jumlah_upvote + $2) WHERE id = $1`, [id, delta]);
+  await query(`UPDATE ${table} SET amount_upvote = GREATEST(0, amount_upvote + $2) WHERE id = $1`, [id, delta]);
 }
 
 // ── Moderation ──────────────────────────────────────────────
@@ -344,20 +344,20 @@ export async function incrementUpvote(table: 'qa_questions' | 'qa_answers', id: 
 export async function insertReport(data: {
   target_type: string;
   target_id: string;
-  pelapor_user_id: string;
-  alasan: string;
+  reporter_user_id: string;
+  reason: string;
 }): Promise<ReportRow> {
   const row = await queryOne<ReportRow>(
-    `INSERT INTO moderation_reports (target_type, target_id, pelapor_user_id, alasan) VALUES ($1,$2,$3,$4) RETURNING *`,
-    [data.target_type, data.target_id, data.pelapor_user_id, data.alasan],
+    `INSERT INTO moderation_reports (target_type, target_id, reporter_user_id, reason) VALUES ($1,$2,$3,$4) RETURNING *`,
+    [data.target_type, data.target_id, data.reporter_user_id, data.reason],
   );
   return row!;
 }
 
 export async function findDuplicateReport(targetType: string, targetId: string, pelaporUserId: string): Promise<ReportRow | null> {
   return queryOne<ReportRow>(
-    `SELECT * FROM moderation_reports WHERE target_type = $1 AND target_id = $2 AND pelapor_user_id = $3
-       AND status IN ('menunggu','ditinjau') AND deleted_at IS NULL`,
+    `SELECT * FROM moderation_reports WHERE target_type = $1 AND target_id = $2 AND reporter_user_id = $3
+       AND status IN ('pending','reviewed') AND deleted_at IS NULL`,
     [targetType, targetId, pelaporUserId],
   );
 }
@@ -365,7 +365,7 @@ export async function findDuplicateReport(targetType: string, targetId: string, 
 export async function countPendingReportsForTarget(targetType: string, targetId: string): Promise<number> {
   const row = await queryOne<{ count: string }>(
     `SELECT COUNT(*)::int AS count FROM moderation_reports
-      WHERE target_type = $1 AND target_id = $2 AND status IN ('menunggu','ditinjau') AND deleted_at IS NULL`,
+      WHERE target_type = $1 AND target_id = $2 AND status IN ('pending','reviewed') AND deleted_at IS NULL`,
     [targetType, targetId],
   );
   return Number(row?.count ?? 0);
@@ -396,13 +396,13 @@ export async function getReport(id: string): Promise<ReportRow | null> {
 
 export async function actOnReport(
   id: string,
-  data: { status: string; tindakan: string | null; ditangani_oleh: string; catatan_penanganan: string | null },
+  data: { status: string; action: string | null; handled_by: string; handling_notes: string | null },
 ): Promise<ReportRow> {
   const row = await queryOne<ReportRow>(
     `UPDATE moderation_reports
-        SET status = $2, tindakan = $3, ditangani_oleh = $4, catatan_penanganan = $5, ditangani_at = now()
+        SET status = $2, action = $3, handled_by = $4, handling_notes = $5, handled_at = now()
       WHERE id = $1 RETURNING *`,
-    [id, data.status, data.tindakan, data.ditangani_oleh, data.catatan_penanganan],
+    [id, data.status, data.action, data.handled_by, data.handling_notes],
   );
   return row!;
 }

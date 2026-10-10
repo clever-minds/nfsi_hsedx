@@ -12,10 +12,10 @@ import KpiCard from '@/components/ui/KpiCard.vue';
 
 type PayoutRow = Record<string, unknown> & {
   id: string;
-  instruktur_nama?: string;
-  periode?: string;
-  nominal: number;
-  status: string; // menunggu_approval | disetujui | pencairan | selesai | ditolak
+  instruktur_name?: string;
+  period?: string;
+  amount: number;
+  status: string; // menunggu_approval | disetujui | pencairan | finish | ditolak
   created_at?: string;
 };
 
@@ -23,14 +23,14 @@ const auth = useAuthStore();
 const { t } = useI18n();
 
 const columns = computed(() => [
-  { key: 'instruktur_nama', label: t('reports.payout.colInstructor') },
-  { key: 'periode', label: t('reports.payout.colPeriod') },
-  { key: 'nominal', label: t('reports.payout.colAmount') },
+  { key: 'instruktur_name', label: t('reports.payout.colInstructor') },
+  { key: 'period', label: t('reports.payout.colPeriod') },
+  { key: 'amount', label: t('reports.payout.colAmount') },
   { key: 'status', label: t('reports.payout.colStatus') },
   { key: 'created_at', label: t('reports.payout.colSubmitted') },
 ]);
 
-const STATUS_OPTIONS = ['menunggu_approval', 'disetujui', 'pencairan', 'selesai', 'ditolak'];
+const STATUS_OPTIONS = ['awaiting_approval', 'approved', 'disbursement', 'completed', 'rejected'];
 
 const rows = ref<PayoutRow[]>([]);
 const loading = ref(true);
@@ -42,10 +42,10 @@ const total = ref(0);
 const busyId = ref<string | null>(null);
 
 const canApprove = computed(
-  () => auth.can('laporan.update') && ['direktur', 'super_admin'].includes(auth.activeRole ?? ''),
+  () => auth.can('report.update') && ['director', 'super_admin'].includes(auth.activeRole ?? ''),
 );
 // Dihitung backend lewat SUM di database dan dikirim di `meta.total_pending`,
-// bukan dijumlahkan dari baris yang tampil — halaman hanya memuat 20 baris.
+// bukan dijumlahkan from baris yang tampil — halaman hanya memuat 20 baris.
 const totalPending = ref(0);
 
 async function load() {
@@ -70,11 +70,11 @@ async function load() {
 }
 
 async function approve(row: PayoutRow) {
-  if (!window.confirm(t('reports.payout.confirmApprove', { name: row.instruktur_nama ?? '', amount: fmtRp(row.nominal) }))) return;
+  if (!window.confirm(t('reports.payout.confirmApprove', { name: row.instruktur_name ?? '', amount: fmtRp(row.amount) }))) return;
   busyId.value = row.id;
   try {
-    // BE: POST /payouts/:id/approve dengan body { aksi: 'approve' }
-    await apiPost(`/payouts/${row.id}/approve`, { aksi: 'approve' });
+    // BE: POST /payouts/:id/approve dengan body { action: 'approve' }
+    await apiPost(`/payouts/${row.id}/approve`, { action: 'approve' });
     await load();
   } catch (e) {
     error.value = errorMessage(e, t('reports.payout.approveFailed'));
@@ -84,12 +84,12 @@ async function approve(row: PayoutRow) {
 }
 
 async function reject(row: PayoutRow) {
-  const alasan = window.prompt(t('reports.payout.promptReject', { name: row.instruktur_nama ?? '' }));
-  if (!alasan) return;
+  const reason = window.prompt(t('reports.payout.promptReject', { name: row.instruktur_name ?? '' }));
+  if (!reason) return;
   busyId.value = row.id;
   try {
-    // BE: reject juga lewat POST /payouts/:id/approve dengan aksi: 'reject' (tidak ada endpoint /reject terpisah)
-    await apiPost(`/payouts/${row.id}/approve`, { aksi: 'reject', catatan_approval: alasan });
+    // BE: reject juga lewat POST /payouts/:id/approve dengan action: 'reject' (no ada endpointst /reject terpisah)
+    await apiPost(`/payouts/${row.id}/approve`, { action: 'reject', notes_approval: reason });
     await load();
   } catch (e) {
     error.value = errorMessage(e, t('reports.payout.rejectFailed'));
@@ -99,11 +99,11 @@ async function reject(row: PayoutRow) {
 }
 
 async function pay(row: PayoutRow) {
-  if (!window.confirm(t('reports.payout.confirmPay', { amount: fmtRp(row.nominal), name: row.instruktur_nama ?? '' })))
+  if (!window.confirm(t('reports.payout.confirmPay', { amount: fmtRp(row.amount), name: row.instruktur_name ?? '' })))
     return;
   busyId.value = row.id;
   try {
-    // (hanya GET /payouts dan POST /payouts/:id/approve). Dibiarkan agar tidak crash; akan 404 di server.
+    // (hanya GET /payouts dan POST /payouts/:id/approve). Dibiarkan agar no crash; akan 404 di server.
     await apiPost(`/payouts/${row.id}/pay`);
     await load();
   } catch (e) {
@@ -144,14 +144,14 @@ onMounted(load);
           </select>
         </div>
       </template>
-      <template #cell:nominal="{ value }">{{ fmtRp(value as number | string) }}</template>
+      <template #cell:amount="{ value }">{{ fmtRp(value as number | string) }}</template>
       <template #cell:status="{ value }"><StatusChip :status="String(value)" /></template>
       <template #cell:created_at="{ value }">{{ value ? fmtTanggalSaja(String(value)) : '—' }}</template>
       <template #actions="{ row }">
         <div v-if="canApprove" class="flex justify-end gap-2">
-          <template v-if="(row as PayoutRow).status === 'menunggu_approval'">
+          <template v-if="(row as PayoutRow).status === 'awaiting_approval'">
             <button
-              v-can="'laporan.update'"
+              v-can="'report.update'"
               class="btn-outline btn-sm"
               :disabled="busyId === (row as PayoutRow).id"
               @click="approve(row as PayoutRow)"
@@ -159,7 +159,7 @@ onMounted(load);
               {{ t('reports.payout.approve') }}
             </button>
             <button
-              v-can="'laporan.update'"
+              v-can="'report.update'"
               class="btn-outline btn-sm text-rose-600"
               :disabled="busyId === (row as PayoutRow).id"
               @click="reject(row as PayoutRow)"
@@ -168,8 +168,8 @@ onMounted(load);
             </button>
           </template>
           <button
-            v-if="(row as PayoutRow).status === 'disetujui'"
-            v-can="'laporan.update'"
+            v-if="(row as PayoutRow).status === 'approved'"
+            v-can="'report.update'"
             class="btn-primary btn-sm"
             :disabled="busyId === (row as PayoutRow).id"
             @click="pay(row as PayoutRow)"

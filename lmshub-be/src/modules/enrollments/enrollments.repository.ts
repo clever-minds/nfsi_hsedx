@@ -2,34 +2,34 @@ import { PoolClient } from 'pg';
 import { query, queryOne, pool } from '../../core/db/pool';
 import { PageParams } from '../../core/http/pagination';
 
-export type EnrollmentSumber = 'beli' | 'assign' | 'bundle' | 'path';
-export type EnrollmentStatus = 'terdaftar' | 'aktif' | 'selesai' | 'kedaluwarsa' | 'batal';
-export type CohortStatus = 'direncanakan' | 'berjalan' | 'selesai' | 'dibatalkan';
-export type CohortMemberStatus = 'terdaftar' | 'waitlist' | 'aktif' | 'keluar';
+export type EnrollmentSumber = 'buy' | 'assign' | 'bundle' | 'path';
+export type EnrollmentStatus = 'registered' | 'active' | 'completed' | 'expired' | 'cancelled';
+export type CohortStatus = 'planned' | 'ongoing' | 'completed' | 'cancelled';
+export type CohortMemberStatus = 'registered' | 'waitlist' | 'active' | 'left';
 
 export interface EnrollmentRow {
   id: string;
   user_id: string;
   course_id: string;
   cohort_id: string | null;
-  sumber: EnrollmentSumber;
+  source: EnrollmentSumber;
   status: EnrollmentStatus;
   order_item_id: string | null;
   assigned_by: string | null;
-  tanggal_mulai: string | null;
-  tanggal_selesai: string | null;
+  start_date: string | null;
+  end_date: string | null;
   akses_kedaluwarsa_at: string | null;
-  catatan: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface EnrollmentListRow extends EnrollmentRow {
-  siswa_nama: string | null;
+  siswa_name: string | null;
   course_title: string | null;
-  cohort_nama: string | null;
-  /** Alias dari akses_kedaluwarsa_at agar cocok dengan kolom "Akses s/d" di FE. */
-  tanggal_kedaluwarsa: string | null;
+  cohort_name: string | null;
+  /** Alias from akses_kedaluwarsa_at agar cocok dengan kolom "Akses s/d" di FE. */
+  date_kedaluwarsa: string | null;
   meta?: { thumbnail_url?: string } | null;
 }
 
@@ -38,10 +38,10 @@ export interface EnrollmentFilters {
   course_id?: string;
   cohort_id?: string;
   status?: string;
-  sumber?: string;
-  /** Row-level: dipaksa oleh student (hanya miliknya sendiri). */
+  source?: string;
+  /** Row-level: dipaksa by student (hanya miliknya sendiri). */
   ownerUserId?: string | null;
-  /** Row-level: dipaksa oleh instructor (hanya course miliknya). */
+  /** Row-level: dipaksa by instructor (hanya course miliknya). */
   instructorUserId?: string | null;
 }
 
@@ -49,9 +49,9 @@ export interface CohortRow {
   id: string;
   course_id: string;
   name: string;
-  tanggal_mulai: string;
-  tanggal_selesai: string | null;
-  kuota_maksimal: number | null;
+  start_date: string;
+  end_date: string | null;
+  max_quota: number | null;
   status: CohortStatus;
   created_at: string;
   updated_at: string;
@@ -62,7 +62,7 @@ export interface CohortMemberRow {
   cohort_id: string;
   user_id: string;
   status: CohortMemberStatus;
-  waitlist_urutan: number | null;
+  waitlist_sort_orderan: number | null;
   joined_at: string;
   created_at: string;
 }
@@ -80,7 +80,7 @@ export async function list(p: PageParams, f: EnrollmentFilters): Promise<{ rows:
   if (f.course_id) whereAdd(where, params, 'e.course_id = $?', f.course_id);
   if (f.cohort_id) whereAdd(where, params, 'e.cohort_id = $?', f.cohort_id);
   if (f.status) whereAdd(where, params, 'e.status = $?', f.status);
-  if (f.sumber) whereAdd(where, params, 'e.sumber = $?', f.sumber);
+  if (f.source) whereAdd(where, params, 'e.source = $?', f.source);
   if (f.instructorUserId) {
     whereAdd(
       where,
@@ -90,11 +90,11 @@ export async function list(p: PageParams, f: EnrollmentFilters): Promise<{ rows:
     );
   }
   const whereSql = where.join(' AND ');
-  const sortCol = ['created_at', 'status', 'tanggal_mulai'].includes(p.sort ?? '') ? p.sort : 'created_at';
+  const sortCol = ['created_at', 'status', 'start_date'].includes(p.sort ?? '') ? p.sort : 'created_at';
 
   const rows = await query<EnrollmentListRow>(
-    `SELECT e.*, u.nama_lengkap AS siswa_nama, c.title AS course_title, c.meta,
-            co.name AS cohort_nama, e.akses_kedaluwarsa_at AS tanggal_kedaluwarsa
+    `SELECT e.*, u.name_lengkap AS siswa_name, c.title AS course_title, c.meta,
+            co.name AS cohort_name, e.akses_kedaluwarsa_at AS date_kedaluwarsa
        FROM enrollments e
        JOIN users u ON u.id = e.user_id
        LEFT JOIN courses c ON c.id = e.course_id
@@ -113,8 +113,8 @@ export async function list(p: PageParams, f: EnrollmentFilters): Promise<{ rows:
 
 export async function detail(id: string): Promise<EnrollmentListRow | null> {
   return queryOne<EnrollmentListRow>(
-    `SELECT e.*, u.nama_lengkap AS siswa_nama, c.title AS course_title, c.meta,
-            co.name AS cohort_nama, e.akses_kedaluwarsa_at AS tanggal_kedaluwarsa
+    `SELECT e.*, u.name_lengkap AS siswa_name, c.title AS course_title, c.meta,
+            co.name AS cohort_name, e.akses_kedaluwarsa_at AS date_kedaluwarsa
        FROM enrollments e
        JOIN users u ON u.id = e.user_id
        LEFT JOIN courses c ON c.id = e.course_id
@@ -127,7 +127,7 @@ export async function detail(id: string): Promise<EnrollmentListRow | null> {
 export async function findActiveByUserCourse(userId: string, courseId: string): Promise<EnrollmentRow | null> {
   return queryOne<EnrollmentRow>(
     `SELECT * FROM enrollments
-      WHERE user_id = $1 AND course_id = $2 AND deleted_at IS NULL AND status <> 'batal'
+      WHERE user_id = $1 AND course_id = $2 AND deleted_at IS NULL AND status <> 'cancelled'
       ORDER BY created_at DESC LIMIT 1`,
     [userId, courseId],
   );
@@ -138,19 +138,19 @@ export async function insert(
     user_id: string;
     course_id: string;
     cohort_id: string | null;
-    sumber: EnrollmentSumber;
+    source: EnrollmentSumber;
     order_item_id: string | null;
     assigned_by: string | null;
     akses_kedaluwarsa_at: string | null;
-    catatan: string | null;
+    notes: string | null;
   },
   tx?: PoolClient,
 ): Promise<{ id: string }> {
   const runner = tx ?? pool;
   const row = await runner.query<{ id: string }>(
-    `INSERT INTO enrollments (user_id, course_id, cohort_id, sumber, status, order_item_id, assigned_by, akses_kedaluwarsa_at, catatan)
-     VALUES ($1,$2,$3,$4,'terdaftar',$5,$6,$7,$8) RETURNING id`,
-    [data.user_id, data.course_id, data.cohort_id, data.sumber, data.order_item_id, data.assigned_by, data.akses_kedaluwarsa_at, data.catatan],
+    `INSERT INTO enrollments (user_id, course_id, cohort_id, source, status, order_item_id, assigned_by, akses_kedaluwarsa_at, notes)
+     VALUES ($1,$2,$3,$4,'registered',$5,$6,$7,$8) RETURNING id`,
+    [data.user_id, data.course_id, data.cohort_id, data.source, data.order_item_id, data.assigned_by, data.akses_kedaluwarsa_at, data.notes],
   );
   return row.rows[0];
 }
@@ -166,24 +166,24 @@ export async function setCohort(id: string, cohortId: string | null): Promise<vo
   await query(`UPDATE enrollments SET cohort_id = $2 WHERE id = $1`, [id, cohortId]);
 }
 
-/** Dipanggil modul lain (progress) saat student membuka pelajaran pertama: Terdaftar → Aktif. */
+/** Dipanggil modul lain (progress) saat student membuka pelajaran pertama: Terdaftar → active. */
 export async function activateIfTerdaftar(id: string): Promise<void> {
   await query(
-    `UPDATE enrollments SET status = 'aktif', tanggal_mulai = COALESCE(tanggal_mulai, now())
-      WHERE id = $1 AND status = 'terdaftar' AND deleted_at IS NULL`,
+    `UPDATE enrollments SET status = 'active', start_date = COALESCE(start_date, now())
+      WHERE id = $1 AND status = 'registered' AND deleted_at IS NULL`,
     [id],
   );
 }
 
 export async function markSelesai(id: string): Promise<void> {
   await query(
-    `UPDATE enrollments SET status = 'selesai', tanggal_selesai = now()
-      WHERE id = $1 AND status = 'aktif' AND deleted_at IS NULL`,
+    `UPDATE enrollments SET status = 'completed', end_date = now()
+      WHERE id = $1 AND status = 'active' AND deleted_at IS NULL`,
     [id],
   );
 }
 
-/** `courses.allow_restart` — dibaca saat student minta mengulang course. */
+/** `courses.allow_restart` — read saat student minta mengulang course. */
 export async function courseAllowsRestart(courseId: string): Promise<boolean> {
   const row = await queryOne<{ allow_restart: boolean }>(
     `SELECT allow_restart FROM courses WHERE id = $1 AND deleted_at IS NULL`,
@@ -193,9 +193,9 @@ export async function courseAllowsRestart(courseId: string): Promise<boolean> {
 }
 
 /**
- * Kembalikan progres belajar ke nol: progres per pelajaran dihapus, summary
- * progres dinolkan, enrollment kembali `aktif`. Catatan & bookmark student,
- * riwayat percobaan quiz, dan certificate yang sudah terbit TIDAK disentuh.
+ * Kembalikan progres belajar to nol: progres per pelajaran dihapus, summary
+ * progres dinolkan, enrollment back `active`. Catatan & bookmark student,
+ * riwayat percobaan quiz, dan certificate yang sudah publish no disentuh.
  */
 export async function resetProgress(enrollmentId: string, tx: PoolClient): Promise<void> {
   await tx.query(`DELETE FROM lesson_progress WHERE enrollment_id = $1`, [enrollmentId]);
@@ -205,8 +205,8 @@ export async function resetProgress(enrollmentId: string, tx: PoolClient): Promi
     [enrollmentId],
   );
   await tx.query(
-    `UPDATE enrollments SET status = 'aktif', tanggal_selesai = NULL
-      WHERE id = $1 AND status IN ('terdaftar','aktif','selesai') AND deleted_at IS NULL`,
+    `UPDATE enrollments SET status = 'active', end_date = NULL
+      WHERE id = $1 AND status IN ('registered','active','completed') AND deleted_at IS NULL`,
     [enrollmentId],
   );
 }
@@ -215,22 +215,22 @@ export async function resetProgress(enrollmentId: string, tx: PoolClient): Promi
 
 export async function listCohorts(courseId: string): Promise<CohortRow[]> {
   return query<CohortRow>(
-    `SELECT * FROM cohorts WHERE course_id = $1 AND deleted_at IS NULL ORDER BY tanggal_mulai DESC`,
+    `SELECT * FROM cohorts WHERE course_id = $1 AND deleted_at IS NULL ORDER BY start_date DESC`,
     [courseId],
   );
 }
 
 export interface CohortListRow extends CohortRow {
-  course_judul: string | null;
-  jumlah_anggota: number;
+  course_title: string | null;
+  amount_anggota: number;
 }
 
-/** Semua cohort lintas course + title course & jumlah anggota aktif (untuk halaman admin/manajemen cohort). */
+/** Semua cohort lintas course + title course & amount anggota active (untuk halaman admin/manajemen cohort). */
 export async function listAllCohorts(p: PageParams): Promise<{ rows: CohortListRow[]; total: number }> {
   const rows = await query<CohortListRow>(
-    `SELECT co.*, c.title AS course_judul,
+    `SELECT co.*, c.title AS course_title,
             (SELECT COUNT(*)::int FROM cohort_members cm
-              WHERE cm.cohort_id = co.id AND cm.status IN ('terdaftar','aktif')) AS jumlah_anggota
+              WHERE cm.cohort_id = co.id AND cm.status IN ('registered','active')) AS amount_anggota
        FROM cohorts co
        LEFT JOIN courses c ON c.id = co.course_id
       WHERE co.deleted_at IS NULL
@@ -243,13 +243,13 @@ export async function listAllCohorts(p: PageParams): Promise<{ rows: CohortListR
   return { rows, total: Number(totalRow?.count ?? 0) };
 }
 
-/** Anggota cohort berstatus waitlist (FIFO), dengan name pengguna. */
-export async function listCohortWaitlist(cohortId: string): Promise<Array<CohortMemberRow & { nama_lengkap: string }>> {
-  return query<CohortMemberRow & { nama_lengkap: string }>(
-    `SELECT cm.*, u.nama_lengkap
+/** Anggota cohort berstatus waitlist (FIFO), dengan name user. */
+export async function listCohortWaitlist(cohortId: string): Promise<Array<CohortMemberRow & { name_lengkap: string }>> {
+  return query<CohortMemberRow & { name_lengkap: string }>(
+    `SELECT cm.*, u.name_lengkap
        FROM cohort_members cm JOIN users u ON u.id = cm.user_id
       WHERE cm.cohort_id = $1 AND cm.status = 'waitlist'
-      ORDER BY cm.waitlist_urutan NULLS LAST, cm.joined_at`,
+      ORDER BY cm.waitlist_sort_orderan NULLS LAST, cm.joined_at`,
     [cohortId],
   );
 }
@@ -275,14 +275,14 @@ export async function lockCohort(id: string, tx: PoolClient): Promise<CohortRow 
 export async function insertCohort(data: {
   course_id: string;
   name: string;
-  tanggal_mulai: string;
-  tanggal_selesai: string | null;
-  kuota_maksimal: number | null;
+  start_date: string;
+  end_date: string | null;
+  max_quota: number | null;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO cohorts (course_id, name, tanggal_mulai, tanggal_selesai, kuota_maksimal, status)
-     VALUES ($1,$2,$3,$4,$5,'direncanakan') RETURNING id`,
-    [data.course_id, data.name, data.tanggal_mulai, data.tanggal_selesai, data.kuota_maksimal],
+    `INSERT INTO cohorts (course_id, name, start_date, end_date, max_quota, status)
+     VALUES ($1,$2,$3,$4,$5,'planned') RETURNING id`,
+    [data.course_id, data.name, data.start_date, data.end_date, data.max_quota],
   );
   return row!;
 }
@@ -297,18 +297,18 @@ export async function updateCohort(id: string, fields: Record<string, unknown>):
 export async function countActiveCohortMembers(cohortId: string, tx?: PoolClient): Promise<number> {
   const runner = tx ?? pool;
   const res = await runner.query<{ count: string }>(
-    `SELECT COUNT(*)::int AS count FROM cohort_members WHERE cohort_id = $1 AND status IN ('terdaftar','aktif')`,
+    `SELECT COUNT(*)::int AS count FROM cohort_members WHERE cohort_id = $1 AND status IN ('registered','active')`,
     [cohortId],
   );
   return Number(res.rows[0]?.count ?? 0);
 }
 
-export async function listCohortMembers(cohortId: string): Promise<Array<CohortMemberRow & { nama_lengkap: string }>> {
-  return query<CohortMemberRow & { nama_lengkap: string }>(
-    `SELECT cm.*, u.nama_lengkap
+export async function listCohortMembers(cohortId: string): Promise<Array<CohortMemberRow & { name_lengkap: string }>> {
+  return query<CohortMemberRow & { name_lengkap: string }>(
+    `SELECT cm.*, u.name_lengkap
        FROM cohort_members cm JOIN users u ON u.id = cm.user_id
       WHERE cm.cohort_id = $1
-      ORDER BY (cm.status = 'waitlist') , cm.waitlist_urutan NULLS LAST, cm.joined_at`,
+      ORDER BY (cm.status = 'waitlist') , cm.waitlist_sort_orderan NULLS LAST, cm.joined_at`,
     [cohortId],
   );
 }
@@ -323,21 +323,21 @@ export async function findCohortMember(cohortId: string, userId: string, tx?: Po
 }
 
 export async function insertCohortMember(
-  data: { cohort_id: string; user_id: string; status: CohortMemberStatus; waitlist_urutan: number | null },
+  data: { cohort_id: string; user_id: string; status: CohortMemberStatus; waitlist_sort_orderan: number | null },
   tx?: PoolClient,
 ): Promise<{ id: string }> {
   const runner = tx ?? pool;
   const res = await runner.query<{ id: string }>(
-    `INSERT INTO cohort_members (cohort_id, user_id, status, waitlist_urutan)
+    `INSERT INTO cohort_members (cohort_id, user_id, status, waitlist_sort_orderan)
      VALUES ($1,$2,$3,$4) RETURNING id`,
-    [data.cohort_id, data.user_id, data.status, data.waitlist_urutan],
+    [data.cohort_id, data.user_id, data.status, data.waitlist_sort_orderan],
   );
   return res.rows[0];
 }
 
 export async function nextWaitlistPosition(cohortId: string, tx: PoolClient): Promise<number> {
   const res = await tx.query<{ next: number }>(
-    `SELECT COALESCE(MAX(waitlist_urutan), 0) + 1 AS next FROM cohort_members WHERE cohort_id = $1 AND status = 'waitlist'`,
+    `SELECT COALESCE(MAX(waitlist_sort_orderan), 0) + 1 AS next FROM cohort_members WHERE cohort_id = $1 AND status = 'waitlist'`,
     [cohortId],
   );
   return res.rows[0]?.next ?? 1;
@@ -346,12 +346,12 @@ export async function nextWaitlistPosition(cohortId: string, tx: PoolClient): Pr
 export async function topWaitlisted(cohortId: string, limit: number, tx: PoolClient): Promise<CohortMemberRow[]> {
   const res = await tx.query<CohortMemberRow>(
     `SELECT * FROM cohort_members WHERE cohort_id = $1 AND status = 'waitlist'
-      ORDER BY waitlist_urutan NULLS LAST, joined_at LIMIT $2`,
+      ORDER BY waitlist_sort_orderan NULLS LAST, joined_at LIMIT $2`,
     [cohortId, limit],
   );
   return res.rows;
 }
 
 export async function promoteCohortMember(id: string, tx: PoolClient): Promise<void> {
-  await tx.query(`UPDATE cohort_members SET status = 'aktif', waitlist_urutan = NULL WHERE id = $1`, [id]);
+  await tx.query(`UPDATE cohort_members SET status = 'active', waitlist_sort_orderan = NULL WHERE id = $1`, [id]);
 }

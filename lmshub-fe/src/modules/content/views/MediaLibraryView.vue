@@ -9,8 +9,8 @@ import TablePagination from '@/components/ui/TablePagination.vue';
 import StatusChip from '@/components/ui/StatusChip.vue';
 import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
 
-type TipeFile = 'video' | 'gambar' | 'document' | 'audio';
-type StatusTranscode = 'menunggu' | 'memproses' | 'selesai' | 'gagal';
+type TipeFile = 'video' | 'image' | 'document' | 'audio';
+type StatusTranscode = 'pending' | 'memproses' | 'completed' | 'failed';
 
 interface MediaAsset extends Record<string, unknown> {
   id: string;
@@ -26,10 +26,10 @@ interface MediaAsset extends Record<string, unknown> {
 
 const { t } = useI18n();
 
-const TIPE_OPTIONS: TipeFile[] = ['video', 'gambar', 'document', 'audio'];
-const STATUS_OPTIONS: StatusTranscode[] = ['menunggu', 'memproses', 'selesai', 'gagal'];
+const TIPE_OPTIONS: TipeFile[] = ['video', 'image', 'document', 'audio'];
+const STATUS_OPTIONS: StatusTranscode[] = ['pending', 'memproses', 'completed', 'failed'];
 
-const tipeLabel = (tipe: TipeFile) => t(`content.mediaType.${tipe}`);
+const tipeLabel = (type: TipeFile) => t(`content.mediaType.${type}`);
 const transcodeLabel = (s: StatusTranscode) => t(`content.transcode.${s}`);
 
 const rows = ref<MediaAsset[]>([]);

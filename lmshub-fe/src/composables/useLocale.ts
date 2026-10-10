@@ -3,9 +3,9 @@ import { useI18n } from 'vue-i18n';
 import { LOCALE_LIST, LOCALES, setLocale, type SupportedLocale } from '@/i18n';
 
 /**
- * Akses locale aktif + daftar language untuk komponen pemilih language.
- * `isRtl` berguna untuk membalik ikon arah (panah, chevron) yang tidak
- * tercakup oleh CSS logical properties.
+ * Akses locale active + register language untuk komponen pemilih language.
+ * `isRtl` berguna untuk membalik ikon arah (panah, chevron) yang no
+ * tercakup by CSS logical properties.
  */
 export function useLocale() {
   const { locale } = useI18n();

@@ -3,11 +3,11 @@ import { apiPost, apiGet, setTokens } from '@/lib/api';
 
 export interface AuthUser {
   id: string;
-  nama_lengkap: string;
+  name_lengkap: string;
   email: string | null;
-  nomor_wa: string | null;
+  number_wa: string | null;
   status: string;
-  foto_profil: string | null;
+  profile_picture: string | null;
   roles: string[];
   permissions: string[];
 }

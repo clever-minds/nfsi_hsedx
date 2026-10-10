@@ -3,14 +3,14 @@ import DOMPurify from 'dompurify';
 /**
  * Membersihkan HTML sebelum dirender lewat `v-html`.
  *
- * Isi materi text ditulis instructor dan disimpan apa adanya — backend tidak
+ * Isi material text ditulis instructor dan disimpan apa adanya — backend no
  * menyanitasi apa pun. Tanpa pembersihan di sini, satu akun instructor yang
  * jahat atau diretas bisa menanam `<script>` pada sebuah pelajaran, lalu skrip
  * itu berjalan di peramban setiap student yang membukanya.
  *
- * Yang diizinkan sengaja dibatasi ke tag pemformatan text: cukup untuk materi
- * yang ditulis rapi, tidak cukup untuk menjalankan apa pun. `target="_blank"`
- * dipasangkan `rel` oleh hook di bawah karena tautan materi mengarah keluar.
+ * Yang diizinkan sengaja dibatasi to tag pemformatan text: cukup untuk material
+ * yang ditulis rapi, no cukup untuk menjalankan apa pun. `target="_blank"`
+ * dipasangkan `rel` by hook di bawah karena tautan material mengarah logout.
  */
 const ALLOWED_TAGS = [
   'p', 'br', 'hr', 'strong', 'b', 'em', 'i', 'u', 's', 'mark', 'small', 'sub', 'sup',

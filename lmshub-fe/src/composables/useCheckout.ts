@@ -4,7 +4,7 @@ import { t } from '@/i18n';
 import { paySnap } from '@/lib/payments';
 
 export interface CheckoutItem {
-  item_tipe: 'course' | 'bundle' | 'path' | 'langganan';
+  item_type: 'course' | 'bundle' | 'path' | 'subscription';
   course_id?: string;
   learning_path_id?: string;
 }
@@ -20,7 +20,7 @@ interface PayGatewayResp {
   provider: string | null;
   redirect_url: string | null;
   meta: Record<string, unknown> | null;
-  /** Bentuk lama khusus Midtrans; tetap dibaca agar klien lama tidak pecah. */
+  /** Bentuk lama khusus Midtrans; tetap read agar klien lama no pecah. */
   snap: { token: string; redirect_url: string } | null;
   dev_auto_settled?: boolean;
   order: OrderResp;
@@ -34,16 +34,16 @@ interface PayResp {
 export interface BuyOptions {
   /**
    * 'transfer' = transfer bank manual (menunggu konfirmasi admin).
-   * Selain itu, id gateway dari `/orders/payment-config` — mis. 'stripe',
-   * 'paypal', 'midtrans'. Kosong = gateway aktif pertama menurut backend.
+   * Selain itu, id gateway from `/orders/payment-config` — mis. 'stripe',
+   * 'paypal', 'midtrans'. Kosong = gateway active pertama mensort_order backend.
    */
-  metode?: string;
-  /** Catatan/referensi pengirim untuk transfer manual. */
+  method?: string;
+  /** Catatan/referensi sender untuk transfer manual. */
   referensi?: string;
   couponKode?: string;
 }
 
-export type CheckoutStatus = 'idle' | 'sukses' | 'pending' | 'batal' | 'menunggu_konfirmasi' | 'dialihkan';
+export type CheckoutStatus = 'idle' | 'sukses' | 'pending' | 'cancelled' | 'menunggu_konfirmasi' | 'dialihkan';
 
 /**
  * Alur beli: buat order → bayar.
@@ -51,9 +51,9 @@ export type CheckoutStatus = 'idle' | 'sukses' | 'pending' | 'batal' | 'menunggu
  * - 'transfer': catat payment manual, admin yang mengonfirmasi.
  * - Midtrans: popup Snap, pembeli tetap di halaman.
  * - Gateway lain: backend mengembalikan URL checkout dan kita mengalihkan
- *   browser ke sana. Order tetap dilunasi oleh webhook, bukan oleh kepulangan
- *   pembeli ke halaman return.
- * - Mode DEV (tidak ada gateway dikonfigurasi): backend auto-settle.
+ *   browser to sana. Order tetap dilunasi by webhook, bukan by kepulangan
+ *   pembeli to halaman return.
+ * - Mode DEV (no ada gateway dikonfigurasi): backend auto-settle.
  */
 export function useCheckout() {
   const loading = ref(false);
@@ -61,7 +61,7 @@ export function useCheckout() {
   const status = ref<CheckoutStatus>('idle');
 
   async function buy(items: CheckoutItem[], opts: BuyOptions = {}): Promise<boolean> {
-    const metode = opts.metode ?? '';
+    const method = opts.method ?? '';
     loading.value = true;
     error.value = '';
     status.value = 'idle';
@@ -70,27 +70,27 @@ export function useCheckout() {
       const order = await apiPost<OrderResp>('/orders', { items, coupon_kode: opts.couponKode });
 
       // Order bernilai nol — course gratis, atau kupon yang memotong habis —
-      // sudah diaktifkan backend di dalam transaction pembuatannya. Tidak ada yang
-      // perlu dibayar, dan meneruskannya ke jalur gateway justru berakhir
+      // sudah diaktifkan backend di dalam transaction pembuatannya. no ada yang
+      // perlu dibayar, dan meneruskannya to channel gateway justru berakhir
       // `order.free_no_payment`.
-      if (order.status === 'akses_aktif') {
+      if (order.status === 'access_active') {
         status.value = 'sukses';
         return true;
       }
 
-      if (metode === 'transfer') {
+      if (method === 'transfer') {
         await apiPost<PayResp>(`/orders/${order.id}/pay`, {
-          jenis: 'penuh',
-          nominal: Number(order.total),
-          metode: 'transfer_bank',
-          referensi_gateway: opts.referensi,
+          type: 'full',
+          amount: Number(order.total),
+          method: 'transfer_bank',
+          gateway_reference: opts.referensi,
         });
         status.value = 'menunggu_konfirmasi';
         return true;
       }
 
       const pg = await apiPost<PayGatewayResp>(`/orders/${order.id}/pay-gateway`, {
-        provider: metode || undefined,
+        provider: method || undefined,
       });
 
       if (pg.dev_auto_settled) {
@@ -103,11 +103,11 @@ export function useCheckout() {
         const result = await paySnap(pg.snap.token);
         if (result === 'success') status.value = 'sukses';
         else if (result === 'pending') status.value = 'pending';
-        else status.value = 'batal';
+        else status.value = 'cancelled';
         return result === 'success';
       }
 
-      // Gateway hosted: tinggalkan halaman. Tidak ada nilai balik yang berarti
+      // Gateway hosted: tinggalkan halaman. no ada value balik yang berarti
       // setelah ini — navigasi sudah dimulai.
       if (pg.redirect_url) {
         status.value = 'dialihkan';

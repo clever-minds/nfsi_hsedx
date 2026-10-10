@@ -10,10 +10,10 @@ import StatusChip from '@/components/ui/StatusChip.vue';
 
 interface ReminderRecord extends Record<string, unknown> {
   id: string;
-  jenis: string;
-  penerima_nama: string;
-  status: string; // terkirim | dibaca | direspons | eskalasi
-  eskalasi_ke?: string;
+  type: string;
+  recipient_name: string;
+  status: string; // terkirim | read | direspons | escalation
+  escalation_to?: string;
   dikirim_at?: string;
 }
 
@@ -28,20 +28,20 @@ const total = ref(0);
 const { t } = useI18n();
 
 const columns = computed(() => [
-  { key: 'jenis', label: t('notifications.reminders.colType') },
-  { key: 'penerima_nama', label: t('notifications.reminders.colRecipient') },
+  { key: 'type', label: t('notifications.reminders.colType') },
+  { key: 'recipient_name', label: t('notifications.reminders.colRecipient') },
   { key: 'status', label: t('notifications.reminders.colStatus') },
-  { key: 'eskalasi_ke', label: t('notifications.reminders.colEscalatedTo') },
+  { key: 'escalation_to', label: t('notifications.reminders.colEscalatedTo') },
   { key: 'dikirim_at', label: t('notifications.reminders.colSentAt') },
 ]);
 
-const STATUS_OPTIONS = ['terkirim', 'dibaca', 'direspons', 'eskalasi'];
+const STATUS_OPTIONS = ['sent', 'read', 'direspons', 'escalation'];
 
 async function load() {
   loading.value = true;
   error.value = '';
   try {
-    // BE: GET /notifications/reminders/monitor untuk lintas pengguna (bukan /notifications/reminders yang hanya milik pengguna login)
+    // BE: GET /notifications/reminders/monitor untuk lintas user (bukan /notifications/reminders yang hanya milik user login)
     const res = await apiGetFull<ReminderRecord[]>('/notifications/reminders/monitor', {
       page: page.value,
       limit,
@@ -79,7 +79,7 @@ onMounted(load);
       <template #cell:status="{ value }">
         <StatusChip :status="value as string" />
       </template>
-      <template #cell:eskalasi_ke="{ value }">
+      <template #cell:escalation_to="{ value }">
         <span v-if="value" class="text-rose-600">→ {{ value }}</span>
         <span v-else class="text-slate-400">—</span>
       </template>

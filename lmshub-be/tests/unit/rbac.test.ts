@@ -12,9 +12,9 @@ describe('rbac.can', () => {
     expect(can(perms, 'course.view')).toBe(true);
     expect(can(perms, 'transaction.create')).toBe(true);
   });
-  it('menolak key yang tidak dimiliki', () => {
+  it('menolak key yang no dimiliki', () => {
     const perms = new Set<string>(['course.view']);
     expect(can(perms, 'course.delete')).toBe(false);
-    expect(can(perms, 'pengguna.view')).toBe(false);
+    expect(can(perms, 'user.view')).toBe(false);
   });
 });

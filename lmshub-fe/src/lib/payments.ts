@@ -15,10 +15,10 @@ import { apiGet } from './api';
 export interface BankAccountOption {
   id: string;
   bank: string;
-  nomor_rekening: string;
-  atas_nama: string;
-  cabang?: string | null;
-  is_utama?: boolean;
+  account_number: string;
+  account_name: string;
+  branch?: string | null;
+  is_primary?: boolean;
 }
 
 export interface GatewayOption {
@@ -47,7 +47,7 @@ export async function getPaymentConfig(force = false): Promise<PaymentConfig> {
   return cached;
 }
 
-/** Buang cache — dipanggil setelah admin mengubah pengaturan payment. */
+/** Buang cache — dipanggil setelah admin mengubah settings payment. */
 export function invalidatePaymentConfig(): void {
   cached = null;
 }

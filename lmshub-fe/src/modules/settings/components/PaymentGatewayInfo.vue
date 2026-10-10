@@ -4,11 +4,11 @@ import { useI18n } from 'vue-i18n';
 import Icon from '@/components/ui/Icon.vue';
 
 /**
- * Baris informasi di kepala setiap grup kredensial gateway.
+ * Baris information di kepala setiap group kredensial gateway.
  *
  * Menampilkan status dan — yang paling penting — URL webhook siap salin.
- * URL itu dihitung server dari APP_URL, bukan diketik ulang oleh pembeli:
- * salah ketik satu karakter membuat payment berhasil sementara ordernya diam
+ * URL itu dihitung server from APP_URL, bukan diketik ulang by pembeli:
+ * salah ketik satu karakter membuat payment success sementara ordernya diam
  * menggantung tanpa pesan error apa pun, dan itu keluhan support paling mahal
  * pada integrasi seperti ini.
  */

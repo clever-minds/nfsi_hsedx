@@ -11,22 +11,22 @@ import enCommon from '@/i18n/messages/en/common.json';
 
 type AuditRow = Record<string, unknown> & {
   id: string;
-  waktu?: string;
-  user_nama?: string;
+  time?: string;
+  user_name?: string;
   module?: string;
-  aksi?: string;
-  nilai_lama?: Record<string, unknown> | null;
-  nilai_baru?: Record<string, unknown> | null;
-  alasan?: string;
+  action?: string;
+  old_value?: Record<string, unknown> | null;
+  new_value?: Record<string, unknown> | null;
+  reason?: string;
 };
 
 const { t } = useI18n();
 
 const columns = computed(() => [
-  { key: 'waktu', label: t('audit.colTime') },
-  { key: 'user_nama', label: t('audit.colUser') },
+  { key: 'time', label: t('audit.colTime') },
+  { key: 'user_name', label: t('audit.colUser') },
   { key: 'module', label: t('audit.colModule') },
-  { key: 'aksi', label: t('audit.colAction') },
+  { key: 'action', label: t('audit.colAction') },
 ]);
 
 const rows = ref<AuditRow[]>([]);
@@ -34,7 +34,7 @@ const loading = ref(true);
 const error = ref('');
 const expandedId = ref<string | null>(null);
 
-const filters = reactive({ module: '', dari: '', sampai: '' });
+const filters = reactive({ module: '', from: '', until: '' });
 
 /** Every RBAC module code, sorted by its label in the current language. */
 const moduleOptions = computed(() =>
@@ -53,11 +53,11 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    // BE membaca query dengan key filter[module]/filter[dari]/filter[sampai]
+    // BE membaca query dengan key filter[module]/filter[from]/filter[until]
     const res = await fetchAuditLog({
       'filter[module]': filters.module || undefined,
-      'filter[dari]': filters.dari || undefined,
-      'filter[sampai]': filters.sampai || undefined,
+      'filter[from]': filters.from || undefined,
+      'filter[until]': filters.until || undefined,
       page: page.value,
       limit,
     });
@@ -106,15 +106,15 @@ onMounted(load);
         </div>
         <div>
           <label class="label">{{ t('audit.fromDate') }}</label>
-          <input v-model="filters.dari" type="date" class="input w-auto" @change="search" />
+          <input v-model="filters.from" type="date" class="input w-auto" @change="search" />
         </div>
         <div>
           <label class="label">{{ t('audit.toDate') }}</label>
-          <input v-model="filters.sampai" type="date" class="input w-auto" @change="search" />
+          <input v-model="filters.until" type="date" class="input w-auto" @change="search" />
         </div>
         <button class="btn-outline" @click="search">{{ t('audit.applyFilter') }}</button>
       </template>
-      <template #cell:waktu="{ value }">{{ value ? fmtTanggal(String(value)) : '—' }}</template>
+      <template #cell:time="{ value }">{{ value ? fmtTanggal(String(value)) : '—' }}</template>
       <template #cell:module="{ value }">{{ value ? moduleLabel(String(value)) : '—' }}</template>
       <template #actions="{ row }">
         <button class="btn-outline btn-sm" @click="toggle(row as AuditRow)">
@@ -131,19 +131,19 @@ onMounted(load);
       :key="`detail-${row.id}`"
       class="card mt-3 p-4 text-sm"
     >
-      <p v-if="row.alasan" class="mb-2 text-slate-600">{{ t('audit.reason', { value: row.alasan }) }}</p>
+      <p v-if="row.reason" class="mb-2 text-slate-600">{{ t('audit.reason', { value: row.reason }) }}</p>
       <div class="grid gap-4 sm:grid-cols-2">
         <div>
           <h4 class="mb-1 text-xs font-semibold uppercase text-slate-400">{{ t('audit.oldValue') }}</h4>
-          <div v-if="!entries(row.nilai_lama).length" class="text-slate-400">—</div>
-          <div v-for="[k, v] in entries(row.nilai_lama)" :key="k" class="flex justify-between border-b border-slate-100 py-1">
+          <div v-if="!entries(row.old_value).length" class="text-slate-400">—</div>
+          <div v-for="[k, v] in entries(row.old_value)" :key="k" class="flex justify-between border-b border-slate-100 py-1">
             <span class="text-slate-500">{{ k }}</span><span>{{ v }}</span>
           </div>
         </div>
         <div>
           <h4 class="mb-1 text-xs font-semibold uppercase text-slate-400">{{ t('audit.newValue') }}</h4>
-          <div v-if="!entries(row.nilai_baru).length" class="text-slate-400">—</div>
-          <div v-for="[k, v] in entries(row.nilai_baru)" :key="k" class="flex justify-between border-b border-slate-100 py-1">
+          <div v-if="!entries(row.new_value).length" class="text-slate-400">—</div>
+          <div v-for="[k, v] in entries(row.new_value)" :key="k" class="flex justify-between border-b border-slate-100 py-1">
             <span class="text-slate-500">{{ k }}</span><span>{{ v }}</span>
           </div>
         </div>

@@ -1,338 +1,338 @@
 {
   "assignment": {
     "already_submitted": "Assignment sudah dikumpulkan — menunggu penilaian atau permintaan revisi",
-    "inactive": "Assignment tidak aktif",
-    "not_found": "Assignment tidak ditemukan"
+    "inactive": "Assignment no active",
+    "not_found": "Assignment no ditemukan"
   },
   "auth": {
-    "account_disabled": "Akun tidak aktif",
-    "account_inactive": "Akun belum aktif / dinonaktifkan",
-    "account_without_email": "Akun tidak memiliki email",
+    "account_disabled": "Akun no active",
+    "account_inactive": "Akun belum active / dinonaktifkan",
+    "account_without_email": "Akun no memiliki email",
     "current_password_wrong": "Password lama salah",
     "invalid_credentials": "Kredensial salah",
-    "invalid_refresh_token": "Refresh token tidak valid",
-    "permission_required": "Anda tidak punya izin untuk melakukan ini",
-    "session_inactive": "Sesi tidak aktif",
-    "token_invalid": "Token tidak valid atau kedaluwarsa",
-    "token_missing": "Token tidak ada",
-    "verification_token_invalid": "Token verifikasi tidak valid atau kedaluwarsa"
+    "invalid_refresh_token": "Refresh token no valid",
+    "permission_required": "Anda no punya izin untuk melakukan ini",
+    "session_inactive": "Sesi no active",
+    "token_invalid": "Token no valid atau kedaluwarsa",
+    "token_missing": "Token no ada",
+    "verification_token_invalid": "Token verifikasi no valid atau kedaluwarsa"
   },
   "badge": {
-    "already_awarded": "Pengguna sudah memiliki badge ini",
-    "not_found": "Badge tidak ditemukan"
+    "already_awarded": "user sudah memiliki badge ini",
+    "not_found": "Badge no ditemukan"
   },
   "bank_account": {
-    "duplicate": "Rekening dengan bank & nomor tersebut sudah terdaftar",
-    "keep_one_active": "Minimal satu rekening aktif harus tersisa",
-    "not_found": "Rekening tidak ditemukan",
-    "primary_cannot_deactivate": "Rekening utama tidak bisa dinonaktifkan — tetapkan rekening utama lain dulu"
+    "duplicate": "Rekening dengan bank & number tersebut sudah terdaftar",
+    "keep_one_active": "Minimal satu account active harus tersisa",
+    "not_found": "Rekening no ditemukan",
+    "primary_cannot_deactivate": "Rekening primary no bisa dinonaktifkan — tetapkan account primary lain dulu"
   },
   "bookmark": {
-    "not_found": "Bookmark tidak ditemukan",
+    "not_found": "Bookmark no ditemukan",
     "not_owner": "Bukan bookmark Anda"
   },
   "category": {
-    "in_use": "Kategori masih dipakai course aktif — nonaktifkan saja, jangan dihapus",
-    "not_found": "Kategori tidak ditemukan",
-    "slug_taken": "Slug kategori sudah dipakai"
+    "in_use": "Kategori masih dipakai course active — nonaktifkan saja, jangan dihapus",
+    "not_found": "Kategori no ditemukan",
+    "slug_taken": "Slug category sudah dipakai"
   },
   "certificate": {
-    "already_issued": "Certificate sudah terbit",
-    "eligibility_check_failed": "Evaluasi kelulusan gagal",
+    "already_issued": "Certificate sudah publish",
+    "eligibility_check_failed": "Evaluasi kelulusan failed",
     "not_eligible": "Certificate hanya dapat diterbitkan setelah status memenuhi_syarat",
-    "not_found": "Certificate tidak ditemukan",
-    "number_generation_failed": "Gagal membuat nomor certificate unik, coba lagi",
-    "only_issued_can_be_reissued": "Hanya certificate terbit yang dapat diterbitkan ulang",
-    "override_requires_director": "Penerbitan jalur pengecualian wajib disetujui Direktur",
+    "not_found": "Certificate no ditemukan",
+    "number_generation_failed": "failed membuat number certificate unik, coba lagi",
+    "only_issued_can_be_reissued": "Hanya certificate publish yang dapat diterbitkan ulang",
+    "override_requires_director": "Penerbitan channel pengecualian wajib disetujui Direktur",
     "requirements_not_met": "Syarat kelulusan belum terpenuhi",
-    "final_exam_not_passed": "Lulus ujian akhir course ini untuk membuka certificate"
+    "final_exam_not_passed": "Lulus exam akhir course ini untuk membuka certificate"
   },
   "cohort": {
     "already_member": "Sudah terdaftar pada cohort ini",
-    "closed": "Cohort tidak menerima pendaftaran baru",
-    "full_cannot_promote": "Cohort sudah penuh, tidak dapat mempromosikan anggota waitlist",
-    "member_not_waitlisted": "Anggota tidak berada pada status waitlist",
-    "not_found": "Cohort tidak ditemukan",
+    "closed": "Cohort no menerima pendaftaran baru",
+    "full_cannot_promote": "Cohort sudah penuh, no dapat mempromosikan anggota waitlist",
+    "member_not_waitlisted": "Anggota no berada pada status waitlist",
+    "not_found": "Cohort no ditemukan",
     "target_full": "Cohort tujuan penuh",
-    "target_not_found": "Cohort tujuan tidak ditemukan",
-    "waitlist_member_not_found": "Anggota waitlist tidak ditemukan"
+    "target_not_found": "Cohort tujuan no ditemukan",
+    "waitlist_member_not_found": "Anggota waitlist no ditemukan"
   },
   "commission": {
-    "approve_requires_director": "Hanya Direktur yang dapat menyetujui komisi",
+    "approve_requires_director": "Hanya Direktur yang dapat menyetujui commission",
     "must_be_approved": "Komisi harus berstatus disetujui sebelum dicairkan",
-    "not_calculated": "Komisi tidak dalam status dihitung",
-    "not_decidable": "Komisi tidak dalam status yang dapat disetujui/ditolak",
-    "not_found": "Komisi tidak ditemukan",
-    "release_forbidden": "Tidak berwenang mencairkan komisi",
-    "submit_forbidden": "Tidak berwenang mengajukan komisi"
+    "not_calculated": "Komisi no dalam status dihitung",
+    "not_decidable": "Komisi no dalam status yang dapat disetujui/ditolak",
+    "not_found": "Komisi no ditemukan",
+    "release_forbidden": "no berwenang mencairkan commission",
+    "submit_forbidden": "no berwenang mengajukan commission"
   },
   "common": {
     "slug_taken": "Slug sudah dipakai"
   },
   "content": {
-    "not_found": "Konten tidak ditemukan"
+    "not_found": "Konten no ditemukan"
   },
   "coupon": {
-    "below_minimum": "Subtotal belum memenuhi minimum pembelian kupon",
+    "below_minimum": "Subtotal belum memenuhi minimum purchase kupon",
     "expired": "Kupon sudah kedaluwarsa",
-    "invalid": "Kupon tidak valid",
-    "not_yet_valid": "Kupon belum berlaku",
+    "invalid": "Kupon no valid",
+    "not_yet_valid": "Kupon belum valid",
     "quota_exhausted": "Kuota kupon telah habis"
   },
   "course": {
     "access_expired": "Akses course telah kedaluwarsa",
-    "action_requires_instructor_or_admin": "Hanya instructor pengampu/admin yang dapat melakukan aksi ini",
+    "action_requires_instructor_or_admin": "Hanya instructor pengampu/admin yang dapat melakukan action ini",
     "already_archived": "Course sudah diarsipkan",
-    "cannot_delete_published": "Course yang pernah diajukan/terbit tidak dapat dihapus — arsipkan saja",
-    "no_active_access": "Anda tidak memiliki akses aktif ke course ini",
-    "not_found": "Course tidak ditemukan",
+    "cannot_delete_published": "Course yang pernah diajukan/publish no dapat dihapus — arsipkan saja",
+    "no_active_access": "Anda no memiliki akses active to course ini",
+    "not_found": "Course no ditemukan",
     "not_owner": "Anda hanya dapat mengelola course milik Anda sendiri",
     "only_draft_can_be_submitted": "Hanya course berstatus draf yang dapat diajukan review",
-    "promo_video_not_found": "Media promo video tidak ditemukan",
+    "promo_video_not_found": "Media promo video no ditemukan",
     "publish_requires_admin": "Hanya Admin Ops/Direktur yang dapat menerbitkan course",
     "publish_wrong_status": "Course harus berstatus \"dalam_review\" atau \"diperbarui\" untuk diterbitkan",
     "slug_taken": "Slug course sudah dipakai",
-    "thumbnail_not_found": "Media thumbnail tidak ditemukan",
-    "final_exam_invalid": "Ujian akhir harus quiz dari course ini"
+    "thumbnail_not_found": "Media thumbnail no ditemukan",
+    "final_exam_invalid": "exam akhir harus quiz from course ini"
   },
   "curriculum": {
     "not_owner": "Anda hanya dapat mengelola kurikulum course milik Anda sendiri"
   },
   "db": {
-    "foreign_key_violation": "Data terkait tidak ada atau masih dipakai",
+    "foreign_key_violation": "Data terkait no ada atau masih dipakai",
     "unique_violation": "Data itu sudah ada"
   },
   "discussion": {
-    "invalid_parent_post": "parent_post_id tidak valid",
-    "members_only": "Hanya anggota course (enrollment aktif/instructor pengampu) yang boleh mengakses diskusi ini",
-    "thread_locked": "Thread terkunci, tidak menerima balasan baru",
-    "thread_not_found": "Thread tidak ditemukan"
+    "invalid_parent_post": "parent_post_id no valid",
+    "members_only": "Hanya anggota course (enrollment active/instructor pengampu) yang boleh mengakses discussion ini",
+    "thread_locked": "Thread terkunci, no menerima balasan baru",
+    "thread_not_found": "Thread no ditemukan"
   },
   "enrollment": {
-    "already_active": "Pengguna sudah terdaftar aktif pada course ini",
+    "already_active": "user sudah terdaftar active pada course ini",
     "cancelled": "Enrollment sudah dibatalkan",
-    "course_mismatch": "Enrollment tidak sesuai course ini",
+    "course_mismatch": "Enrollment no sesuai course ini",
     "not_enrolled": "Anda belum terdaftar di course ini",
     "not_enrolled_course": "Anda belum terdaftar pada course ini",
-    "not_found": "Enrollment tidak ditemukan",
-    "not_found_for_course": "Enrollment tidak ditemukan untuk course ini",
-    "restart_not_allowed": "Course ini tidak boleh diulang",
-    "restart_invalid_status": "Hanya enrollment aktif atau selesai yang bisa diulang"
+    "not_found": "Enrollment no ditemukan",
+    "not_found_for_course": "Enrollment no ditemukan untuk course ini",
+    "restart_not_allowed": "Course ini no boleh diulang",
+    "restart_invalid_status": "Hanya enrollment active atau finish yang bisa diulang"
   },
   "finance": {
-    "category_not_found": "Kategori biaya tidak ditemukan",
-    "entry_type_mismatch": "Jenis entri tidak sesuai kategori biaya"
+    "category_not_found": "Kategori biaya no ditemukan",
+    "entry_type_mismatch": "Jenis entri no sesuai category biaya"
   },
   "gamification": {
-    "event_config_not_found": "Konfigurasi event tidak ditemukan",
-    "insufficient_points": "Saldo poin tidak cukup untuk transaction spend ini"
+    "event_config_not_found": "Konfigurasi event no ditemukan",
+    "insufficient_points": "Saldo points no cukup untuk transaction spend ini"
   },
   "grading": {
-    "already_released": "Nilai sudah dirilis sebelumnya",
-    "not_found": "Nilai tidak ditemukan",
-    "not_released_use_grading": "Nilai belum dirilis — gunakan endpoint grading biasa",
-    "released_use_adjust": "Nilai sudah dirilis — gunakan endpoint penyesuaian (adjust)"
+    "already_released": "grade sudah dirilis previous",
+    "not_found": "grade no ditemukan",
+    "not_released_use_grading": "grade belum dirilis — gunakan endpointst grading biasa",
+    "released_use_adjust": "grade sudah dirilis — gunakan endpointst penyesuaian (adjust)"
   },
   "http": {
-    "internal": "Terjadi kesalahan di sisi kami",
-    "route_not_found": "Halaman atau endpoint itu tidak ada"
+    "internal": "Terjadi error di sisi kami",
+    "route_not_found": "Halaman atau endpointst itu no ada"
   },
   "instructor": {
-    "not_found": "Instructor tidak ditemukan"
+    "not_found": "Instructor no ditemukan"
   },
   "learning_path": {
-    "not_found": "Learning path tidak ditemukan",
-    "not_sold_as_bundle": "Learning path ini tidak dijual sebagai bundle"
+    "not_found": "Learning path no ditemukan",
+    "not_sold_as_bundle": "Learning path ini no dijual sebagai bundle"
   },
   "lesson": {
-    "not_found": "Pelajaran tidak ditemukan"
+    "not_found": "Pelajaran no ditemukan"
   },
   "live": {
-    "cannot_cancel_started": "Sesi yang sudah berlangsung/selesai tidak dapat dibatalkan",
-    "join_link_not_yet_active": "Tautan gabung hanya aktif menjelang dan selama jadwal sesi",
+    "cannot_cancel_started": "Sesi yang sudah berlangsung/finish no dapat dibatalkan",
+    "join_link_not_yet_active": "Tautan gabung hanya active menjelang dan selama jadwal sesi",
     "manage_requires_instructor_or_host": "Hanya instructor pengampu/host yang dapat mengelola sesi ini",
-    "not_in_progress": "Sesi tidak dalam status berlangsung",
-    "not_in_session_cohort": "Anda tidak terdaftar pada course/cohort sesi ini",
-    "not_scheduled": "Sesi tidak dalam status dijadwalkan",
+    "not_in_progress": "Sesi no dalam status berlangsung",
+    "not_in_session_cohort": "Anda no terdaftar pada course/cohort sesi ini",
+    "not_scheduled": "Sesi no dalam status dijadwalkan",
     "only_scheduled_editable": "Hanya sesi berstatus dijadwalkan yang dapat diubah",
-    "recording_not_found": "Rekaman tidak ditemukan",
-    "session_not_found": "Sesi live tidak ditemukan"
+    "recording_not_found": "Rekaman no ditemukan",
+    "session_not_found": "Sesi live no ditemukan"
   },
   "marketing": {
-    "agent_not_found": "Profil agen tidak ditemukan",
-    "agent_not_verified": "Profil agen belum terverifikasi",
+    "agent_not_found": "profile agen no ditemukan",
+    "agent_not_verified": "profile agen belum terverifikasi",
     "already_an_agent": "Anda sudah terdaftar sebagai agen marketing",
-    "category_unknown": "Kategori marketing tidak dikenal/aktif",
-    "lead_already_at_stage": "Lead sudah berada di tahap tersebut",
-    "lead_not_found": "Lead tidak ditemukan",
-    "list_all_forbidden": "Tidak berwenang melihat seluruh agen",
+    "category_unknown": "Kategori marketing no dikenal/active",
+    "lead_already_at_stage": "Lead sudah berada di stage tersebut",
+    "lead_not_found": "Lead no ditemukan",
+    "list_all_forbidden": "no berwenang melihat seluruh agen",
     "not_an_agent": "Anda belum terdaftar sebagai agen marketing",
-    "pipeline_no_rollback": "Tidak dapat mengembalikan tahap pipeline",
-    "pipeline_no_skip": "Tidak dapat melompati tahap pipeline",
-    "referral_code_generation_failed": "Gagal membuat kode referral unik, coba lagi",
-    "register_first": "Daftar sebagai agen marketing terlebih dahulu",
+    "pipeline_no_rollback": "no dapat mengembalikan stage pipeline",
+    "pipeline_no_skip": "no dapat melompati stage pipeline",
+    "referral_code_generation_failed": "failed membuat kode referral unik, coba lagi",
+    "register_first": "register sebagai agen marketing terlebih dahulu",
     "target_requires_director": "Hanya Direktur yang dapat mengubah target agen",
     "verify_requires_admin": "Hanya Admin/Direktur yang dapat memverifikasi agen"
   },
   "media": {
-    "in_use": "Aset media masih dipakai course/pelajaran — tidak dapat dihapus permanen",
-    "not_found": "Aset media tidak ditemukan",
+    "in_use": "Aset media masih dipakai course/pelajaran — no dapat dihapus permanen",
+    "not_found": "Aset media no ditemukan",
     "not_owner": "Anda hanya dapat mengelola aset media milik Anda sendiri",
-    "transcode_pending": "Video belum selesai diproses (transcode)",
-    "unknown_asset": "Aset tidak dikenal",
-    "unsupported_type": "Jenis berkas tidak didukung. Unggah video MP4/WebM, audio MP3/M4A/WAV, gambar JPG/PNG/WebP, atau PDF.",
-    "too_large": "Ukuran berkas melebihi batas unggah server ini.",
+    "transcode_pending": "Video belum finish diproses (transcode)",
+    "unknown_asset": "Aset no dikenal",
+    "unsupported_type": "Jenis berkas no didukung. upload video MP4/WebM, audio MP3/M4A/WAV, gambar JPG/PNG/WebP, atau PDF.",
+    "too_large": "Ukuran berkas melebihi batas upload server ini.",
     "upload_interrupted": "Unggahan terputus. Silakan coba lagi.",
     "empty": "Berkas kosong."
   },
   "message": {
-    "cannot_message_self": "Tidak dapat mengirim pesan ke diri sendiri",
-    "not_found": "Pesan tidak ditemukan"
+    "cannot_message_self": "no dapat mengirim pesan to diri sendiri",
+    "not_found": "Pesan no ditemukan"
   },
   "moderation": {
     "already_reported": "Anda sudah melaporkan content ini dan masih dalam proses"
   },
   "note": {
-    "not_found": "Catatan tidak ditemukan",
-    "not_owner": "Bukan catatan Anda"
+    "not_found": "Catatan no ditemukan",
+    "not_owner": "Bukan notes Anda"
   },
   "notification": {
-    "not_found": "Notifikasi tidak ditemukan"
+    "not_found": "Notifikasi no ditemukan"
   },
   "order": {
     "already_paid": "Order sudah lunas",
     "cancelled": "Order sudah dibatalkan",
-    "free_no_payment": "Order gratis — tidak memerlukan payment",
+    "free_no_payment": "Order gratis — no memerlukan payment",
     "manual_requires_marketing": "Hanya Marketing/Admin yang dapat membuat order manual",
-    "not_found": "Order tidak ditemukan",
-    "referenced_not_found": "Order rujukan tidak ditemukan"
+    "not_found": "Order no ditemukan",
+    "referenced_not_found": "Order rujukan no ditemukan"
   },
   "page": {
-    "not_found": "Halaman tidak ditemukan"
+    "not_found": "Halaman no ditemukan"
   },
   "payment": {
     "already_decided": "Payment sudah diverifikasi/ditolak",
-    "gateway_currency_unsupported": "Gateway payment itu tidak mendukung mata uang ini",
+    "gateway_currency_unsupported": "Gateway payment itu no mendukung mata uang ini",
     "gateway_not_configured": "Gateway payment itu belum dikonfigurasi",
-    "gateway_unknown": "Gateway payment tidak dikenal",
-    "invalid_webhook_signature": "Signature webhook tidak valid",
-    "not_found": "Payment tidak ditemukan"
+    "gateway_unknown": "Gateway payment no dikenal",
+    "invalid_webhook_signature": "Signature webhook no valid",
+    "not_found": "Payment no ditemukan"
   },
   "payout": {
     "approve_requires_director": "Hanya Direktur yang dapat menyetujui payout",
     "not_approved": "Payout ini harus disetujui sebelum dapat dicairkan",
-    "not_found": "Payout tidak ditemukan",
-    "not_reprocessable": "Payout ini tidak dapat diproses ulang",
-    "nothing_to_withdraw": "Tidak ada saldo yang dapat dicairkan saat ini",
+    "not_found": "Payout no ditemukan",
+    "not_reprocessable": "Payout ini no dapat diproses ulang",
+    "nothing_to_withdraw": "no ada saldo yang dapat dicairkan saat ini",
     "release_requires_director": "Hanya Direktur/Admin Ops yang dapat mencairkan payout",
     "request_requires_instructor": "Hanya instructor yang dapat mengajukan pencairan"
   },
   "permission": {
     "certificate_update_required": "Butuh izin certificate.update",
-    "discussion_view_required": "Butuh izin diskusi.view",
+    "discussion_view_required": "Butuh izin discussion.view",
     "gamification_create_required": "Butuh izin gamifikasi.create"
   },
   "qa": {
-    "answer_not_found": "Jawaban tidak ditemukan",
-    "question_not_found": "Pertanyaan tidak ditemukan",
+    "answer_not_found": "Jawaban no ditemukan",
+    "question_not_found": "Pertanyaan no ditemukan",
     "status_requires_asker_or_instructor": "Hanya penanya atau instructor yang dapat menandai status ini"
   },
   "question": {
-    "needs_correct_option": "Wajib menandai minimal 1 opsi sebagai jawaban benar",
-    "not_found": "Soal tidak ditemukan",
-    "single_answer_only": "Tipe soal ini hanya boleh 1 jawaban benar",
+    "needs_correct_option": "Wajib menandai minimal 1 opsi sebagai answer benar",
+    "not_found": "Soal no ditemukan",
+    "single_answer_only": "Tipe soal ini hanya boleh 1 answer benar",
     "true_false_needs_two_options": "Soal benar/salah wajib memiliki tepat 2 opsi"
   },
   "question_bank": {
-    "create_cross_category_requires_admin": "Hanya admin yang dapat membuat bank soal lintas kategori",
-    "manage_cross_category_requires_admin": "Hanya admin yang dapat mengelola bank soal lintas kategori",
-    "not_found": "Bank soal tidak ditemukan"
+    "create_cross_category_requires_admin": "Hanya admin yang dapat membuat bank soal lintas category",
+    "manage_cross_category_requires_admin": "Hanya admin yang dapat mengelola bank soal lintas category",
+    "not_found": "Bank soal no ditemukan"
   },
   "quiz": {
     "answer_requires_owner": "Hanya pemilik attempt yang dapat menjawab",
-    "attempt_already_submitted": "Attempt sudah dikumpulkan sebelumnya",
-    "attempt_limit_reached": "Batas percobaan maksimal untuk quiz ini telah tercapai",
-    "attempt_not_editable": "Attempt tidak dapat diubah pada status ini",
-    "attempt_not_found": "Attempt tidak ditemukan",
-    "inactive": "Quiz tidak aktif",
-    "not_found": "Quiz tidak ditemukan",
+    "attempt_already_submitted": "Attempt sudah dikumpulkan previous",
+    "attempt_limit_reached": "Batas percobaan maximum untuk quiz ini telah tercapai",
+    "attempt_not_editable": "Attempt no dapat diubah pada status ini",
+    "attempt_not_found": "Attempt no ditemukan",
+    "inactive": "Quiz no active",
+    "not_found": "Quiz no ditemukan",
     "submit_requires_owner": "Hanya pemilik attempt yang dapat submit",
-    "retake_cooldown": "Tunggu jeda sebelum mengulang quiz ini"
+    "retake_cooldown": "wait jeda sebelum mengulang quiz ini"
   },
   "rbac": {
-    "base_roles_missing": "Peran dasar belum ter-seed",
+    "base_roles_missing": "Peran base belum ter-seed",
     "student_role_missing": "Peran student belum ter-seed",
-    "unknown_role": "Peran tidak dikenal"
+    "unknown_role": "Peran no dikenal"
   },
   "refund": {
-    "approve_requires_director": "Refund hanya dapat disetujui oleh Direktur",
+    "approve_requires_director": "Refund hanya dapat disetujui by Direktur",
     "exceeds_order_total": "Nominal refund melebihi total order",
-    "order_not_eligible": "Refund hanya berlaku untuk order yang sudah lunas/akses aktif"
+    "order_not_eligible": "Refund hanya valid untuk order yang sudah lunas/akses active"
   },
   "reminder": {
-    "not_found": "Reminder tidak ditemukan"
+    "not_found": "Reminder no ditemukan"
   },
   "report": {
-    "not_found": "Laporan tidak ditemukan"
+    "not_found": "Laporan no ditemukan"
   },
   "review": {
-    "already_exists": "Enrollment ini sudah memiliki ulasan",
-    "enrollment_not_active": "Enrollment harus aktif/selesai untuk memberi ulasan",
-    "requires_enrollment_owner": "Ulasan hanya dapat dibuat oleh pemilik enrollment"
+    "already_exists": "Enrollment ini sudah memiliki review",
+    "enrollment_not_active": "Enrollment harus active/finish untuk memberi review",
+    "requires_enrollment_owner": "Ulasan hanya dapat created by pemilik enrollment"
   },
   "rubric": {
-    "weights_must_total_100": "Total bobot kriteria rubrik wajib 100%"
+    "weights_must_total_100": "Total bobot criteria rubrik wajib 100%"
   },
   "scope": {
     "course_out_of_scope": "Di luar cakupan course Anda",
     "out_of_scope": "Di luar cakupan Anda"
   },
   "section": {
-    "invalid_target": "Seksi tujuan tidak valid untuk course ini",
-    "not_found": "Seksi tidak ditemukan"
+    "invalid_target": "Seksi tujuan no valid untuk course ini",
+    "not_found": "Seksi no ditemukan"
   },
   "setting": {
-    "locked": "Setting ini dikunci dan tidak dapat diubah",
-    "not_found": "Setting tidak ditemukan"
+    "locked": "Setting ini dikunci dan no dapat diubah",
+    "not_found": "Setting no ditemukan"
   },
   "site_content": {
-    "block_invalid": "Blok content itu tidak valid",
-    "unknown_block": "Blok content tidak dikenal"
+    "block_invalid": "Blok content itu no valid",
+    "unknown_block": "Blok content no dikenal"
   },
   "submission": {
-    "not_found": "Pengumpulan tidak ditemukan"
+    "not_found": "Pengumpulan no ditemukan"
   },
   "tag": {
-    "in_use": "Tag masih dipakai course — lepaskan dari course terkait terlebih dahulu",
-    "not_found": "Tag tidak ditemukan",
+    "in_use": "Tag masih dipakai course — lepaskan from course terkait terlebih dahulu",
+    "not_found": "Tag no ditemukan",
     "slug_taken": "Slug tag sudah dipakai"
   },
   "template": {
-    "not_found": "Template tidak ditemukan"
+    "not_found": "Template no ditemukan"
   },
   "upload": {
-    "branding_dir_not_writable": "Berkas tidak dapat disimpan — direktori uploads/branding tidak bisa ditulis",
+    "branding_dir_not_writable": "Berkas no dapat disimpan — direktori uploads/branding no bisa ditulis",
     "image_empty": "Data gambar kosong",
-    "image_invalid": "Data gambar tidak valid",
-    "max_2mb": "Ukuran berkas maksimal 2MB",
-    "max_512kb": "Ukuran berkas maksimal 512KB",
-    "photo_max_2mb": "Ukuran foto maksimal 2MB",
-    "site_dir_not_writable": "Berkas tidak dapat disimpan — direktori uploads/site tidak bisa ditulis",
-    "unknown_asset_type": "Jenis aset tidak dikenal",
-    "max_5mb": "Ukuran gambar maksimal 5MB",
+    "image_invalid": "Data gambar no valid",
+    "max_2mb": "Ukuran berkas maximum 2MB",
+    "max_512kb": "Ukuran berkas maximum 512KB",
+    "photo_max_2mb": "Ukuran photo maximum 2MB",
+    "site_dir_not_writable": "Berkas no dapat disimpan — direktori uploads/site no bisa ditulis",
+    "unknown_asset_type": "Jenis aset no dikenal",
+    "max_5mb": "Ukuran gambar maximum 5MB",
     "image_type_invalid": "Berkas bukan gambar JPG, PNG, atau WebP"
   },
   "user": {
-    "cannot_be_own_manager": "Tidak dapat menjadi atasan diri sendiri",
-    "cannot_delete_self": "Tidak dapat menghapus akun sendiri",
+    "cannot_be_own_manager": "no dapat menjadi atasan diri sendiri",
+    "cannot_delete_self": "no dapat menghapus akun sendiri",
     "email_taken": "Email sudah terdaftar",
-    "not_found": "Pengguna tidak ditemukan",
-    "permission_escalation": "Tidak boleh memberi izin melebihi hak Anda",
+    "not_found": "user no ditemukan",
+    "permission_escalation": "no boleh memberi izin melebihi hak Anda",
     "phone_taken": "Nomor WA sudah terdaftar",
     "email_change_requires_super_admin": "Hanya super admin yang bisa mengganti email sendiri — hubungi admin",
     "email_unchanged": "Itu sudah alamat email Anda"
   },
   "validation": {
-    "failed": "Validasi gagal"
+    "failed": "Validasi failed"
   }
 }

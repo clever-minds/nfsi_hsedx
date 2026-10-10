@@ -104,7 +104,7 @@ async function refreshEnrollments(): Promise<void> {
 
   await pool.query(
     `UPDATE certificates c
-        SET tanggal_terbit = e.created_at + interval '13 days'
+        SET publish_date = e.created_at + interval '13 days'
        FROM enrollments e
       WHERE c.enrollment_id = e.id AND c.deleted_at IS NULL`,
   );
@@ -137,9 +137,9 @@ async function refreshEngagement(): Promise<void> {
  * Move every demo financial entry into the current month.
  *
  * The dashboard's revenue, expense and profit tiles all filter on
- * `date_trunc('month', tanggal) = date_trunc('month', CURRENT_DATE)`. An entry
+ * `date_trunc('month', date) = date_trunc('month', CURRENT_DATE)`. An entry
  * dated last month contributes nothing, which is why all three tiles read zero.
- * `periode_bulan`/`periode_tahun` are rewritten from the same date so the
+ * `period_month`/`period_year` are rewritten from the same date so the
  * monthly report and the ledger can never disagree.
  */
 async function refreshFinance(): Promise<void> {
@@ -147,7 +147,7 @@ async function refreshFinance(): Promise<void> {
     `WITH ordered AS (
        SELECT fe.id, row_number() OVER (ORDER BY fe.created_at, fe.id) - 1 AS n
          FROM financial_entries fe
-         JOIN kategori_biaya kb ON kb.id = fe.kategori_id
+         JOIN expense_category kb ON kb.id = fe.category_id
         WHERE kb.kode = ANY($1) AND fe.deleted_at IS NULL
      ), dated AS (
        SELECT id,
@@ -162,9 +162,9 @@ async function refreshFinance(): Promise<void> {
          FROM ordered
      )
      UPDATE financial_entries fe
-        SET tanggal = dated.d,
-            periode_bulan = EXTRACT(MONTH FROM dated.d)::smallint,
-            periode_tahun = EXTRACT(YEAR FROM dated.d)::smallint
+        SET date = dated.d,
+            period_month = EXTRACT(MONTH FROM dated.d)::smallint,
+            period_year = EXTRACT(YEAR FROM dated.d)::smallint
        FROM dated
       WHERE fe.id = dated.id`,
     [DEMO_FINANCE_CODES],
@@ -193,16 +193,16 @@ async function refreshLiveSessions(): Promise<void> {
                      THEN now() - ((3 - n) * 4 || ' days')::interval
                      ELSE now() + (((n - 2) * 2) || ' days')::interval
                 END
-              ) + interval '19 hours' AS mulai,
+              ) + interval '19 hours' AS start,
               n
          FROM ordered
      )
      UPDATE live_sessions ls
-        SET start_time   = p.mulai,
-            waktu_selesai = p.mulai + interval '90 minutes',
-            status = (CASE WHEN p.n = 1 THEN 'rekaman_tersedia'
-                           WHEN p.n = 2 THEN 'selesai'
-                           ELSE 'dijadwalkan' END)::live_session_status
+        SET start_time   = p.start,
+            end_time = p.start + interval '90 minutes',
+            status = (CASE WHEN p.n = 1 THEN 'recording_available'
+                           WHEN p.n = 2 THEN 'completed'
+                           ELSE 'scheduled' END)::live_session_status
        FROM placed p
       WHERE ls.id = p.id`,
   );

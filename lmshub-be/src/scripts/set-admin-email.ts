@@ -2,14 +2,14 @@ import { pool, queryOne } from '../core/db/pool';
 import { recordAudit } from '../core/audit/audit';
 
 /**
- * Ganti email akun super admin dari server, tanpa login.
+ * Ganti email akun super admin from server, tanpa login.
  *
  *   npm run admin:set-email -- <email-sekarang> <email-baru>
  *
- * Untuk saat super admin tidak bisa masuk lagi (alamat lama sudah tidak
- * dipakai, password dilupakan bersama kotak suratnya). Profil di Admin Panel
- * adalah jalur normalnya; ini jalan darurat bagi pemilik server. Hanya akun
- * berperan super_admin yang bisa diubah lewat sini — akun lain diurus dari
+ * Untuk saat super admin no bisa login lagi (alamat lama sudah no
+ * dipakai, password dilupakan bersama kotak suratnya). profile di Admin Panel
+ * adalah channel normalnya; ini jalan darurat bagi pemilik server. Hanya akun
+ * berperan super_admin yang bisa diubah lewat sini — akun lain diurus from
  * menu Users.
  */
 async function main() {
@@ -44,7 +44,7 @@ async function main() {
   await pool.query(`UPDATE users SET email = $2, email_verified_at = NULL WHERE id = $1`, [user.id, next]);
   await recordAudit({
     userId: user.id,
-    module: 'pengguna',
+    module: 'users',
     action: 'change_email_cli',
     entity: 'users',
     entityId: user.id,

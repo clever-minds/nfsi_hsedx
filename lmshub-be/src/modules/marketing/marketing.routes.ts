@@ -72,24 +72,24 @@ marketingRouter.patch(
 );
 
 // ── Commissions (finansial) ────────────────────────────────
-marketingRouter.get('/commissions', requirePermission('komisi', 'view'), asyncHandler(ctrl.listCommissions));
-marketingRouter.get('/commissions/:id', requirePermission('komisi', 'view'), asyncHandler(ctrl.commissionDetail));
+marketingRouter.get('/commissions', requirePermission('commission', 'view'), asyncHandler(ctrl.listCommissions));
+marketingRouter.get('/commissions/:id', requirePermission('commission', 'view'), asyncHandler(ctrl.commissionDetail));
 marketingRouter.post(
   '/commissions/:id/submit',
-  requirePermission('komisi', 'update'),
+  requirePermission('commission', 'update'),
   asyncHandler(ctrl.submitCommission),
 );
 // approval Direktur (dijaga tambahan di service, bukan hanya permission)
 marketingRouter.post(
   '/commissions/:id/approve',
-  requirePermission('komisi', 'update'),
+  requirePermission('commission', 'update'),
   validate(approveCommissionSchema),
   asyncHandler(ctrl.approveCommission),
 );
 // pencairan — dalam DB transaction
 marketingRouter.post(
   '/commissions/:id/disburse',
-  requirePermission('komisi', 'update'),
+  requirePermission('commission', 'update'),
   validate(disburseCommissionSchema),
   asyncHandler(ctrl.disburseCommission),
 );

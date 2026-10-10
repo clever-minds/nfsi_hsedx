@@ -16,11 +16,11 @@ const auth = (req: Request) => {
 export async function listFinancialEntries(req: Request, res: Response) {
   const page = parsePage(req);
   const filters = {
-    jenis: req.query['filter[jenis]'] as 'pemasukan' | 'pengeluaran' | undefined,
-    kategori_id: req.query['filter[kategori]'] as string | undefined,
+    type: req.query['filter[type]'] as 'income' | 'expense' | undefined,
+    category_id: req.query['filter[category]'] as string | undefined,
     course_id: req.query['filter[course_id]'] as string | undefined,
-    dari: req.query['filter[dari]'] as string | undefined,
-    sampai: req.query['filter[sampai]'] as string | undefined,
+    from: req.query['filter[from]'] as string | undefined,
+    until: req.query['filter[until]'] as string | undefined,
   };
   const { rows, total } = await service.listFinancialEntries(page, filters);
   return ok(res, rows, pageMeta(page.page, page.limit, total));
@@ -30,20 +30,20 @@ export async function createFinancialEntry(req: Request, res: Response) {
   return created(res, await service.createFinancialEntry(auth(req), validated<CreateFinancialEntryInput>(req)));
 }
 
-// ── laporan ──────────────────────────────────────────────────────────────
+// ── report ──────────────────────────────────────────────────────────────
 
 export async function cashflow(req: Request, res: Response) {
   const filters = {
-    dari: req.query['filter[dari]'] as string | undefined,
-    sampai: req.query['filter[sampai]'] as string | undefined,
+    from: req.query['filter[from]'] as string | undefined,
+    until: req.query['filter[until]'] as string | undefined,
   };
   return ok(res, await service.cashflow(filters));
 }
 
 export async function exportReport(req: Request, res: Response) {
   const filters = {
-    dari: req.query['filter[dari]'] as string | undefined,
-    sampai: req.query['filter[sampai]'] as string | undefined,
+    from: req.query['filter[from]'] as string | undefined,
+    until: req.query['filter[until]'] as string | undefined,
   };
   return ok(res, await service.exportReport(filters));
 }

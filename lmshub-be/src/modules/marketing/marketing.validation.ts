@@ -2,15 +2,15 @@ import { z } from 'zod';
 
 export const registerAffiliateSchema = z.object({
   category_kode: z.string().min(2).max(50),
-  nama_bank: z.string().max(60).optional(),
-  no_rekening: z.string().max(40).optional(),
-  nama_pemilik_rekening: z.string().max(150).optional(),
-  parent_agen_user_id: z.string().uuid().optional(),
+  bank_name: z.string().max(60).optional(),
+  no_account: z.string().max(40).optional(),
+  account_owner_name: z.string().max(150).optional(),
+  parent_agent_user_id: z.string().uuid().optional(),
 });
 
 export const verifyAffiliateSchema = z.object({
-  aksi: z.enum(['approve', 'reject']),
-  alasan: z.string().max(500).optional(),
+  action: z.enum(['approve', 'reject']),
+  reason: z.string().max(500).optional(),
 });
 
 export const targetOverrideSchema = z.object({
@@ -18,42 +18,42 @@ export const targetOverrideSchema = z.object({
 });
 
 export const createReferralLinkSchema = z.object({
-  url_target: z.string().min(3).max(2000),
+  target_url: z.string().min(3).max(2000),
   title: z.string().max(150).optional(),
   expires_at: z.string().datetime().optional(),
 });
 
 export const createLeadSchema = z.object({
-  nama_calon: z.string().min(2).max(150),
+  lead_name: z.string().min(2).max(150),
   kontak: z.string().min(3).max(120),
-  minat_course_id: z.string().uuid().optional(),
-  sumber_referral_link_id: z.string().uuid().optional(),
-  catatan: z.string().max(1000).optional(),
+  interested_course_id: z.string().uuid().optional(),
+  source_referral_link_id: z.string().uuid().optional(),
+  notes: z.string().max(1000).optional(),
 });
 
 export const moveStageSchema = z
   .object({
-    tahap: z.enum(['lead', 'prospek', 'closing']),
-    catatan: z.string().max(500).optional(),
-    // wajib bila tahap='closing' — hasil POST /orders/manual (09-transaction-payment)
+    stage: z.enum(['lead', 'prospect', 'closing']),
+    notes: z.string().max(500).optional(),
+    // wajib bila stage='closing' — hasil POST /orders/manual (09-transaction-payment)
     order_id: z.string().uuid().optional(),
   })
-  .refine((d) => d.tahap !== 'closing' || !!d.order_id, {
+  .refine((d) => d.stage !== 'closing' || !!d.order_id, {
     message: 'order_id is required for the closing stage',
     path: ['order_id'],
   });
 
 /** FINANSIAL — approval Direktur wajib. */
 export const approveCommissionSchema = z.object({
-  aksi: z.enum(['approve', 'reject']),
-  catatan: z.string().max(500).optional(),
+  action: z.enum(['approve', 'reject']),
+  notes: z.string().max(500).optional(),
 });
 
-/** FINANSIAL — pencairan komisi. */
+/** FINANSIAL — pencairan commission. */
 export const disburseCommissionSchema = z.object({
-  bukti_cair: z.string().min(3).max(500),
-  metode_pencairan: z.string().max(30).optional(),
-  catatan: z.string().max(500).optional(),
+  disbursement_proof: z.string().min(3).max(500),
+  method_pencairan: z.string().max(30).optional(),
+  notes: z.string().max(500).optional(),
 });
 
 export type RegisterAffiliateInput = z.infer<typeof registerAffiliateSchema>;

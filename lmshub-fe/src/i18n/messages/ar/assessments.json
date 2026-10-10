@@ -172,7 +172,15 @@
     "add": "إضافة سؤال",
     "formNew": "سؤال جديد",
     "formEdit": "تعديل السؤال",
-    "type": "نوع السؤال",
+    "type": {
+      "single_choice": "اختيار واحد",
+      "multiple_choice": "اختيار متعدد (عدة إجابات صحيحة)",
+      "true_false": "صح / خطأ",
+      "short_answer": "إجابة قصيرة",
+      "essay": "مقال (يدوي)",
+      "file_upload": "رفع ملف (يدوي)",
+      "pencocokan": "مطابقة"
+    },
     "points": "النقاط (الوزن)",
     "pointsHint": "الدرجة = النقاط المكتسبة ÷ إجمالي النقاط × 100%.",
     "pointsN": "{n} نقطة",
@@ -196,15 +204,6 @@
     "loadFailed": "تعذّر تحميل بنك الأسئلة.",
     "saveFailed": "تعذّر حفظ السؤال.",
     "deleteFailed": "تعذّر حذف السؤال.",
-    "confirmDelete": "حذف هذا السؤال؟",
-    "tipe": {
-      "pilihan_tunggal": "اختيار واحد",
-      "pilihan_ganda": "اختيار متعدد (عدة إجابات صحيحة)",
-      "benar_salah": "صح / خطأ",
-      "isian_singkat": "إجابة قصيرة",
-      "esai": "مقال (يدوي)",
-      "upload_file": "رفع ملف (يدوي)",
-      "pencocokan": "مطابقة"
-    }
+    "confirmDelete": "حذف هذا السؤال؟"
   }
 }

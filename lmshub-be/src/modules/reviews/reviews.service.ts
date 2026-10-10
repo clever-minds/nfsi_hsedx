@@ -3,30 +3,30 @@ import { AuthContext } from '../../core/rbac/types';
 import * as repo from './reviews.repository';
 import { UpsertReviewInput } from './reviews.validation';
 
-/** Ringkasan rating + daftar ulasan publik (tanpa auth). */
+/** Ringkasan rating + register review publik (tanpa auth). */
 export async function publicReviews(courseId: string) {
   const [summary, reviews] = await Promise.all([repo.summary(courseId), repo.listPublicReviews(courseId)]);
   return { summary: summary, reviews };
 }
 
-/** Ulasan milik sendiri + status kelayakan memberi ulasan. */
+/** Ulasan milik sendiri + status kelayakan memberi review. */
 export async function myReviewState(actor: AuthContext, courseId: string) {
   const enrollment = await repo.eligibleEnrollment(actor.userId, courseId);
   const review = await repo.myReview(actor.userId, courseId);
-  const eligible = !!enrollment && ['aktif', 'selesai'].includes(enrollment.status);
+  const eligible = !!enrollment && ['active', 'completed'].includes(enrollment.status);
   return {
     eligible,
-    alasan: eligible ? null : enrollment ? 'Your enrolment is not active yet' : 'You are not enrolled in this course',
+    reason: eligible ? null : enrollment ? 'Your enrolment is not active yet' : 'You are not enrolled in this course',
     enrollment_status: enrollment?.status ?? null,
     review,
   };
 }
 
-/** Buat/ubah ulasan (satu per enrollment). Hanya student aktif/selesai. */
+/** Buat/edit review (satu per enrollment). Hanya student active/finish. */
 export async function upsert(actor: AuthContext, courseId: string, input: UpsertReviewInput) {
   const enrollment = await repo.eligibleEnrollment(actor.userId, courseId);
   if (!enrollment) throw AppError.forbidden('You are not enrolled in this course', 'enrollment.not_enrolled');
-  if (!['aktif', 'selesai'].includes(enrollment.status)) {
+  if (!['active', 'completed'].includes(enrollment.status)) {
     throw AppError.badRequest('You can only review a course you are actively taking or have completed', 'review.enrollment_not_active');
   }
   await repo.upsertReview({
@@ -34,7 +34,7 @@ export async function upsert(actor: AuthContext, courseId: string, input: Upsert
     user_id: actor.userId,
     course_id: courseId,
     rating: input.rating,
-    ulasan: input.ulasan ?? null,
+    review: input.review ?? null,
   });
   await repo.recomputeCourseRating(courseId);
   return repo.myReview(actor.userId, courseId);

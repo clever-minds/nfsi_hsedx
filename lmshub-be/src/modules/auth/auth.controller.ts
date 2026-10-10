@@ -54,7 +54,7 @@ export async function googleLogin(req: Request, res: Response) {
   return ok(res, await service.loginWithGoogle(input.id_token, ctxOf(req)));
 }
 
-// Konfigurasi OAuth/verifikasi untuk FE (client id Google, apakah email aktif).
+// Konfigurasi OAuth/verifikasi untuk FE (client id Google, apakah email active).
 export async function oauthConfig(_req: Request, res: Response) {
   return ok(res, {
     google_client_id: await googleClientId(),

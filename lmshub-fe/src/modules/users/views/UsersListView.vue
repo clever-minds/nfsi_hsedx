@@ -10,14 +10,14 @@ import { roleOptionLabel } from '@/lib/labels';
 
 interface UserRow extends Record<string, unknown> {
   id: string;
-  nama_lengkap: string;
+  name_lengkap: string;
   email: string | null;
-  nomor_wa: string | null;
+  number_wa: string | null;
   role_kode: string;
-  role_nama: string;
+  role_name: string;
   status: string;
   created_by: string | null;
-  created_by_nama: string | null;
+  created_by_name: string | null;
   created_at: string;
 }
 
@@ -45,9 +45,9 @@ const error = ref('');
 const verifyingId = ref<string | null>(null);
 
 const columns = computed(() => [
-  { key: 'nama_lengkap', label: t('users.list.colUser') },
-  { key: 'role_nama', label: t('users.list.colRole') },
-  { key: 'created_by_nama', label: t('users.list.colCreatedBy') },
+  { key: 'name_lengkap', label: t('users.list.colUser') },
+  { key: 'role_name', label: t('users.list.colRole') },
+  { key: 'created_by_name', label: t('users.list.colCreatedBy') },
   { key: 'status', label: t('users.list.colStatus') },
 ]);
 
@@ -86,10 +86,10 @@ function search() {
 }
 
 
-async function verify(id: string, aksi: 'approve' | 'reject') {
+async function verify(id: string, action: 'approve' | 'reject') {
   verifyingId.value = id;
   try {
-    await apiPost(`/users/${id}/verify`, { aksi });
+    await apiPost(`/users/${id}/verify`, { action });
     await load();
   } catch (e) {
     error.value = errorMessage(e, t('users.list.verifyFailed'));
@@ -109,7 +109,7 @@ onMounted(() => {
   <div>
     <PageHeader :title="t('users.list.title')" :subtitle="t('users.list.subtitle')">
       <template #actions>
-        <RouterLink v-can="'pengguna.create'" to="/d/users/new" class="btn-primary">{{ t('users.list.add') }}</RouterLink>
+        <RouterLink v-can="'user.create'" to="/d/users/new" class="btn-primary">{{ t('users.list.add') }}</RouterLink>
       </template>
     </PageHeader>
 
@@ -130,12 +130,12 @@ onMounted(() => {
         </select>
         <button class="btn-outline" @click="search">{{ t('common.action.search') }}</button>
       </template>
-      <template #cell:nama_lengkap="{ row }">
-        <div class="font-medium text-slate-800">{{ (row as unknown as UserRow).nama_lengkap }}</div>
-        <div class="text-xs text-slate-400">{{ (row as unknown as UserRow).email || (row as unknown as UserRow).nomor_wa || '—' }}</div>
+      <template #cell:name_lengkap="{ row }">
+        <div class="font-medium text-slate-800">{{ (row as unknown as UserRow).name_lengkap }}</div>
+        <div class="text-xs text-slate-400">{{ (row as unknown as UserRow).email || (row as unknown as UserRow).number_wa || '—' }}</div>
       </template>
-      <template #cell:role_nama="{ row }">{{ roleOptionLabel((row as UserRow).role_kode) }}</template>
-      <template #cell:created_by_nama="{ value }">
+      <template #cell:role_name="{ row }">{{ roleOptionLabel((row as UserRow).role_kode) }}</template>
+      <template #cell:created_by_name="{ value }">
         {{ value || t('users.list.selfRegistered') }}
       </template>
       <template #cell:status="{ value }">
@@ -145,7 +145,7 @@ onMounted(() => {
         <div class="flex justify-end gap-2">
           <template v-if="(row as unknown as UserRow).status === 'pending'">
             <button
-              v-can="'pengguna.update'"
+              v-can="'user.update'"
               class="row-link row-link-positive"
               :disabled="verifyingId === (row as unknown as UserRow).id"
               @click="verify((row as unknown as UserRow).id, 'approve')"
@@ -153,7 +153,7 @@ onMounted(() => {
               {{ t('users.list.approve') }}
             </button>
             <button
-              v-can="'pengguna.update'"
+              v-can="'user.update'"
               class="row-link row-link-danger"
               :disabled="verifyingId === (row as unknown as UserRow).id"
               @click="verify((row as unknown as UserRow).id, 'reject')"
@@ -162,7 +162,7 @@ onMounted(() => {
             </button>
           </template>
           <RouterLink
-            v-can="'pengguna.update'"
+            v-can="'user.update'"
             :to="`/d/users/${(row as unknown as UserRow).id}/edit`"
             class="row-link row-link-primary"
           >

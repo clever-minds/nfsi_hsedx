@@ -10,22 +10,22 @@ export const reportsRouter = Router();
 
 reportsRouter.use(requireAuth());
 
-// Entri keuangan
-reportsRouter.get('/financial-entries', requirePermission('keuangan', 'view'), asyncHandler(ctrl.listFinancialEntries));
+// Entri finance
+reportsRouter.get('/financial-entries', requirePermission('finance', 'view'), asyncHandler(ctrl.listFinancialEntries));
 reportsRouter.post(
   '/financial-entries',
-  requirePermission('keuangan', 'create'),
+  requirePermission('finance', 'create'),
   validate(createFinancialEntrySchema),
   asyncHandler(ctrl.createFinancialEntry),
 );
 
-// Laporan arus kas & laba per periode + ekspor (stub JSON)
-reportsRouter.get('/reports/cashflow', requirePermission('laporan', 'view'), asyncHandler(ctrl.cashflow));
-reportsRouter.get('/reports/export', requirePermission('laporan', 'view'), asyncHandler(ctrl.exportReport));
+// Laporan arus kas & laba per period + ekspor (stub JSON)
+reportsRouter.get('/reports/cashflow', requirePermission('report', 'view'), asyncHandler(ctrl.cashflow));
+reportsRouter.get('/reports/export', requirePermission('report', 'view'), asyncHandler(ctrl.exportReport));
 
 // Payout instructor — approve HANYA Direktur
 reportsRouter.get('/payouts', requirePermission('payout', 'view'), asyncHandler(ctrl.listPayouts));
-// Saldo tersedia & pengajuan pencairan oleh instructor sendiri (scope via instructor_profile).
+// Saldo tersedia & pengajuan pencairan by instructor sendiri (scope via instructor_profile).
 reportsRouter.get('/payouts/available', requirePermission('payout', 'view'), asyncHandler(ctrl.availablePayout));
 reportsRouter.post('/payouts/request', requirePermission('payout', 'view'), asyncHandler(ctrl.requestPayout));
 reportsRouter.post(
@@ -37,4 +37,4 @@ reportsRouter.post(
 // FINANSIAL — pencairan payout yang sudah disetujui (izin sama dgn approve)
 reportsRouter.post('/payouts/:id/pay', requirePermission('payout', 'update'), asyncHandler(ctrl.payPayout));
 
-// Rating & ulasan course dipindah ke modul `reviews` (publik + upsert oleh student ter-enroll).
+// Rating & review course dipindah to modul `reviews` (publik + upsert by student ter-enroll).

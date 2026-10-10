@@ -7,7 +7,7 @@ import { credential, toggle } from '../config';
 /**
  * Midtrans Snap (Indonesia).
  *
- * Uses the Snap REST endpoint directly instead of `midtrans-client`, so that
+ * Uses the Snap REST endpointst directly instead of `midtrans-client`, so that
  * all seven gateways share one HTTP path and the package ships one fewer
  * dependency for buyers to install and audit.
  */

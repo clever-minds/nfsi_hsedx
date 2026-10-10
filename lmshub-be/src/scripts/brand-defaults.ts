@@ -6,18 +6,18 @@ import { logger } from '../core/logger/logger';
 
 /**
  * Pasang logo & ikon bawaan produk sehingga instalasi baru sudah bermerek sejak
- * layar login pertama, bukan menampilkan tempat kosong sampai seseorang
+ * layar login pertama, bukan menampilkan tempat kosong until seseorang
  * mengunggah sesuatu.
  *
- * Berkas sumber ikut di repo (`assets/branding/`), lalu **disalin** ke
+ * Berkas source ikut di repo (`assets/branding/`), lalu **disalin** to
  * `uploads/branding/` — direktori yang sama yang dipakai unggahan lewat menu
- * Pengaturan, dan yang disajikan di `/uploads/...`. Menunjuk setting langsung ke
- * `assets/` akan bekerja di dev lalu gagal di produksi, karena hanya `uploads/`
- * yang diekspos oleh express.static & proxy Nginx.
+ * settings, dan yang disajikan di `/uploads/...`. Menunjuk setting langsung to
+ * `assets/` akan bekerja di dev lalu failed di produksi, karena hanya `uploads/`
+ * yang diekspos by express.static & proxy Nginx.
  *
- * **Tidak pernah menimpa merek yang sudah dipasang.** Setting hanya diisi bila
+ * **no pernah menimpa merek yang sudah dipasang.** Setting hanya diisi bila
  * nilainya kosong, jadi menjalankan ulang seed di sistem yang sudah berjalan
- * tidak akan mengembalikan logo pembeli ke logo bawaan.
+ * no akan mengembalikan logo pembeli to logo bawaan.
  */
 
 const SRC_DIR = path.resolve(process.cwd(), 'assets', 'branding');
@@ -30,8 +30,8 @@ const ASSETS = [
 
 export async function installDefaultBrandAssets(): Promise<void> {
   for (const asset of ASSETS) {
-    const row = await queryOne<{ id: string; nilai: string | null }>(
-      `SELECT id, nilai FROM settings WHERE key = $1 AND deleted_at IS NULL`,
+    const row = await queryOne<{ id: string; value: string | null }>(
+      `SELECT id, value FROM settings WHERE key = $1 AND deleted_at IS NULL`,
       [asset.key],
     );
 
@@ -41,25 +41,25 @@ export async function installDefaultBrandAssets(): Promise<void> {
       continue;
     }
 
-    if (row.nilai && row.nilai.trim() !== '') {
-      logger.info(`${asset.label} is already set (${row.nilai}) — left alone.`);
+    if (row.value && row.value.trim() !== '') {
+      logger.info(`${asset.label} is already set (${row.value}) — left alone.`);
       continue;
     }
 
-    // Nama tetap, bukan bercap waktu: aset bawaan hanya ditulis sekali dan tidak
+    // name tetap, bukan bercap time: aset bawaan hanya ditulis sekali dan no
     // perlu menembus cache browser seperti unggahan yang menggantikan aset lama.
     const filename = `default-${asset.file}`;
     try {
       await mkdir(DEST_DIR, { recursive: true });
       await copyFile(path.join(SRC_DIR, asset.file), path.join(DEST_DIR, filename));
     } catch (err) {
-      // Merek bawaan bukan alasan untuk menggagalkan seed: akun super admin jauh
-      // lebih penting, dan logo bisa diunggah lewat menu Pengaturan.
+      // Merek bawaan bukan reason untuk menggagalkan seed: akun super admin jauh
+      // lebih penting, dan logo bisa diunggah lewat menu settings.
       logger.warn({ err }, `The default ${asset.label} could not be copied — skipped.`);
       continue;
     }
 
-    await pool.query(`UPDATE settings SET nilai = $1, updated_at = now() WHERE id = $2`, [
+    await pool.query(`UPDATE settings SET value = $1, updated_at = now() WHERE id = $2`, [
       `/uploads/branding/${filename}`,
       row.id,
     ]);

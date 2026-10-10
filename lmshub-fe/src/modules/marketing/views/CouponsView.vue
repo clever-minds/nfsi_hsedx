@@ -12,19 +12,19 @@ import Icon from '@/components/ui/Icon.vue';
  * Kelola kode kupon.
  *
  * Penukarannya sudah lama jalan — checkout menerima `coupon_kode` dan modul
- * Order memvalidasi masa berlaku, kuota dan minimum belanja. Yang tidak pernah
- * ada adalah sisi admin: tanpa layar ini kupon hanya bisa dibuat lewat SQL.
+ * Order memvalidasi masa valid, kuota dan minimum belanja. Yang no pernah
+ * ada adalah sisi admin: tanpa layar ini kupon hanya bisa created lewat SQL.
  */
 interface Coupon extends Record<string, unknown> {
   id: string;
   kode: string;
-  tipe_potongan: 'persen' | 'nominal';
-  nilai_potongan: string;
-  kuota_maksimal: number | null;
-  kuota_terpakai: number;
-  minimum_pembelian: string | null;
-  berlaku_mulai: string | null;
-  berlaku_sampai: string | null;
+  discount_type: 'persen' | 'amount';
+  discount_value: string;
+  max_quota: number | null;
+  used_quota: number;
+  min_purchase: string | null;
+  valid_from: string | null;
+  valid_until: string | null;
   is_active: boolean;
 }
 
@@ -50,20 +50,20 @@ const formError = ref('');
 
 const form = reactive({
   kode: '',
-  tipe_potongan: 'persen' as 'persen' | 'nominal',
-  nilai_potongan: 10,
-  kuota_maksimal: '' as number | '',
-  minimum_pembelian: '' as number | '',
-  berlaku_mulai: '',
-  berlaku_sampai: '',
+  discount_type: 'persen' as 'persen' | 'amount',
+  discount_value: 10,
+  max_quota: '' as number | '',
+  min_purchase: '' as number | '',
+  valid_from: '',
+  valid_until: '',
   is_active: true,
 });
 
 const columns = computed(() => [
   { key: 'kode', label: t('coupons.colCode') },
-  { key: 'nilai_potongan', label: t('coupons.colDiscount') },
-  { key: 'kuota_terpakai', label: t('coupons.colUsage') },
-  { key: 'berlaku_sampai', label: t('coupons.colWindow') },
+  { key: 'discount_value', label: t('coupons.colDiscount') },
+  { key: 'used_quota', label: t('coupons.colUsage') },
+  { key: 'valid_until', label: t('coupons.colWindow') },
   { key: 'is_active', label: t('coupons.colStatus') },
 ]);
 
@@ -73,24 +73,24 @@ const fromDateInput = (d: string, endOfDay = false) =>
   d ? new Date(`${d}T${endOfDay ? '23:59:59' : '00:00:00'}Z`).toISOString() : null;
 
 function potonganLabel(c: Coupon): string {
-  const n = Number(c.nilai_potongan);
-  return c.tipe_potongan === 'persen' ? `${n}%` : `${currency.base} ${n}`;
+  const n = Number(c.discount_value);
+  return c.discount_type === 'persen' ? `${n}%` : `${currency.base} ${n}`;
 }
 
 function windowLabel(c: Coupon): string {
-  const a = toDateInput(c.berlaku_mulai);
-  const b = toDateInput(c.berlaku_sampai);
+  const a = toDateInput(c.valid_from);
+  const b = toDateInput(c.valid_until);
   if (!a && !b) return t('coupons.noLimit');
   if (a && b) return `${a} → ${b}`;
   return a ? `${t('coupons.from')} ${a}` : `${t('coupons.until')} ${b}`;
 }
 
-/** Kupon aktif yang jendelanya sudah lewat tetap ditolak checkout — tandai. */
+/** Kupon active yang jendelanya sudah lewat tetap ditolak checkout — tandai. */
 function isExpired(c: Coupon): boolean {
-  return !!c.berlaku_sampai && new Date(c.berlaku_sampai) < new Date();
+  return !!c.valid_until && new Date(c.valid_until) < new Date();
 }
 function isExhausted(c: Coupon): boolean {
-  return c.kuota_maksimal != null && c.kuota_terpakai >= c.kuota_maksimal;
+  return c.max_quota != null && c.used_quota >= c.max_quota;
 }
 
 async function load() {
@@ -115,12 +115,12 @@ function resetForm() {
   formError.value = '';
   Object.assign(form, {
     kode: '',
-    tipe_potongan: 'persen',
-    nilai_potongan: 10,
-    kuota_maksimal: '',
-    minimum_pembelian: '',
-    berlaku_mulai: '',
-    berlaku_sampai: '',
+    discount_type: 'persen',
+    discount_value: 10,
+    max_quota: '',
+    min_purchase: '',
+    valid_from: '',
+    valid_until: '',
     is_active: true,
   });
 }
@@ -135,12 +135,12 @@ function openEdit(c: Coupon) {
   formError.value = '';
   Object.assign(form, {
     kode: c.kode,
-    tipe_potongan: c.tipe_potongan,
-    nilai_potongan: Number(c.nilai_potongan),
-    kuota_maksimal: c.kuota_maksimal ?? '',
-    minimum_pembelian: c.minimum_pembelian != null ? Number(c.minimum_pembelian) : '',
-    berlaku_mulai: toDateInput(c.berlaku_mulai),
-    berlaku_sampai: toDateInput(c.berlaku_sampai),
+    discount_type: c.discount_type,
+    discount_value: Number(c.discount_value),
+    max_quota: c.max_quota ?? '',
+    min_purchase: c.min_purchase != null ? Number(c.min_purchase) : '',
+    valid_from: toDateInput(c.valid_from),
+    valid_until: toDateInput(c.valid_until),
     is_active: c.is_active,
   });
   showForm.value = true;
@@ -151,7 +151,7 @@ async function submit() {
     formError.value = t('coupons.codeInvalid');
     return;
   }
-  if (form.tipe_potongan === 'persen' && (form.nilai_potongan <= 0 || form.nilai_potongan > 100)) {
+  if (form.discount_type === 'persen' && (form.discount_value <= 0 || form.discount_value > 100)) {
     formError.value = t('coupons.percentRange');
     return;
   }
@@ -159,12 +159,12 @@ async function submit() {
   formError.value = '';
   const payload = {
     kode: form.kode.trim(),
-    tipe_potongan: form.tipe_potongan,
-    nilai_potongan: Number(form.nilai_potongan),
-    kuota_maksimal: form.kuota_maksimal === '' ? null : Number(form.kuota_maksimal),
-    minimum_pembelian: form.minimum_pembelian === '' ? null : Number(form.minimum_pembelian),
-    berlaku_mulai: fromDateInput(form.berlaku_mulai),
-    berlaku_sampai: fromDateInput(form.berlaku_sampai, true),
+    discount_type: form.discount_type,
+    discount_value: Number(form.discount_value),
+    max_quota: form.max_quota === '' ? null : Number(form.max_quota),
+    min_purchase: form.min_purchase === '' ? null : Number(form.min_purchase),
+    valid_from: fromDateInput(form.valid_from),
+    valid_until: fromDateInput(form.valid_until, true),
     is_active: form.is_active,
   };
   try {
@@ -232,25 +232,25 @@ onMounted(load);
         </div>
         <div>
           <label class="label">{{ t('coupons.type') }}</label>
-          <select v-model="form.tipe_potongan" class="input">
+          <select v-model="form.discount_type" class="input">
             <option value="persen">{{ t('coupons.typePercent') }}</option>
-            <option value="nominal">{{ t('coupons.typeFixed', { currency: currency.base }) }}</option>
+            <option value="amount">{{ t('coupons.typeFixed', { currency: currency.base }) }}</option>
           </select>
         </div>
         <div>
           <label class="label">{{ t('coupons.value') }}</label>
-          <input v-model.number="form.nilai_potongan" type="number" min="0" step="0.01" class="input" />
+          <input v-model.number="form.discount_value" type="number" min="0" step="0.01" class="input" />
           <p class="mt-1 text-xs text-slate-400">
-            {{ form.tipe_potongan === 'persen' ? t('coupons.valueHintPercent') : t('coupons.valueHintFixed') }}
+            {{ form.discount_type === 'persen' ? t('coupons.valueHintPercent') : t('coupons.valueHintFixed') }}
           </p>
         </div>
         <div>
           <label class="label">{{ t('coupons.minPurchase') }}</label>
-          <input v-model="form.minimum_pembelian" type="number" min="0" step="0.01" class="input" :placeholder="t('coupons.optional')" />
+          <input v-model="form.min_purchase" type="number" min="0" step="0.01" class="input" :placeholder="t('coupons.optional')" />
         </div>
         <div>
           <label class="label">{{ t('coupons.quota') }}</label>
-          <input v-model="form.kuota_maksimal" type="number" min="1" class="input" :placeholder="t('coupons.quotaUnlimited')" />
+          <input v-model="form.max_quota" type="number" min="1" class="input" :placeholder="t('coupons.quotaUnlimited')" />
         </div>
         <div class="flex items-end pb-1">
           <label class="label-inline">
@@ -259,11 +259,11 @@ onMounted(load);
         </div>
         <div>
           <label class="label">{{ t('coupons.startDate') }}</label>
-          <input v-model="form.berlaku_mulai" type="date" class="input" />
+          <input v-model="form.valid_from" type="date" class="input" />
         </div>
         <div>
           <label class="label">{{ t('coupons.endDate') }}</label>
-          <input v-model="form.berlaku_sampai" type="date" class="input" />
+          <input v-model="form.valid_until" type="date" class="input" />
         </div>
       </div>
 
@@ -294,23 +294,23 @@ onMounted(load);
 
       <template #cell:kode="{ row }">
         <span class="font-mono font-medium text-slate-800">{{ (row as unknown as Coupon).kode }}</span>
-        <div v-if="(row as unknown as Coupon).minimum_pembelian" class="text-xs text-slate-400">
-          {{ t('coupons.minPurchaseShort', { amount: `${currency.base} ${Number((row as unknown as Coupon).minimum_pembelian)}` }) }}
+        <div v-if="(row as unknown as Coupon).min_purchase" class="text-xs text-slate-400">
+          {{ t('coupons.minPurchaseShort', { amount: `${currency.base} ${Number((row as unknown as Coupon).min_purchase)}` }) }}
         </div>
       </template>
 
-      <template #cell:nilai_potongan="{ row }">
+      <template #cell:discount_value="{ row }">
         <span class="num">{{ potonganLabel(row as unknown as Coupon) }}</span>
       </template>
 
-      <template #cell:kuota_terpakai="{ row }">
+      <template #cell:used_quota="{ row }">
         <span class="num">
-          {{ (row as unknown as Coupon).kuota_terpakai }}<template v-if="(row as unknown as Coupon).kuota_maksimal"> / {{ (row as unknown as Coupon).kuota_maksimal }}</template>
+          {{ (row as unknown as Coupon).used_quota }}<template v-if="(row as unknown as Coupon).max_quota"> / {{ (row as unknown as Coupon).max_quota }}</template>
         </span>
         <div v-if="isExhausted(row as unknown as Coupon)" class="text-xs text-amber-600">{{ t('coupons.exhausted') }}</div>
       </template>
 
-      <template #cell:berlaku_sampai="{ row }">
+      <template #cell:valid_until="{ row }">
         <span class="text-xs text-slate-500">{{ windowLabel(row as unknown as Coupon) }}</span>
         <div v-if="isExpired(row as unknown as Coupon)" class="text-xs text-amber-600">{{ t('coupons.expired') }}</div>
       </template>
@@ -338,12 +338,12 @@ onMounted(load);
             {{ t('common.action.edit') }}
           </button>
           <!-- Kupon yang sudah dipakai order ditolak backend: menghapusnya akan
-               mengosongkan jejak diskon pada order lama. -->
+               mengosongkan jejak discount pada order lama. -->
           <button
             v-if="canDelete"
             class="row-link row-link-danger"
-            :disabled="busyId === (row as unknown as Coupon).id || (row as unknown as Coupon).kuota_terpakai > 0"
-            :title="(row as unknown as Coupon).kuota_terpakai > 0 ? t('coupons.usedHint') : ''"
+            :disabled="busyId === (row as unknown as Coupon).id || (row as unknown as Coupon).used_quota > 0"
+            :title="(row as unknown as Coupon).used_quota > 0 ? t('coupons.usedHint') : ''"
             @click="remove(row as unknown as Coupon)"
           >
             {{ t('common.action.delete') }}

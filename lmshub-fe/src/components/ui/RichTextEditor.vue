@@ -8,7 +8,7 @@ import { sanitizeHtml } from '@/lib/sanitize';
  *
  * `contenteditable` + perintah pemformatan bawaan peramban, ditambah mode
  * "HTML" untuk yang ingin menempel markup sendiri. Isi selalu disaring
- * `sanitizeHtml` sebelum dimasukkan ke editor: memasang HTML mentah ke
+ * `sanitizeHtml` sebelum dimasukkan to editor: memasang HTML mentah to
  * elemen yang hidup akan menjalankan `onerror`/`onload` di dalamnya, di
  * peramban admin sendiri. Server menyaring lagi sebelum menyimpan.
  */
@@ -26,8 +26,8 @@ function render(html: string) {
 
 onMounted(() => render(props.modelValue));
 
-// Nilai dari luar (mis. membuka halaman lain di form yang sama) — jangan
-// menimpa saat perubahan itu berasal dari ketikan di editor ini sendiri.
+// grade from luar (mis. membuka halaman lain di form yang sama) — jangan
+// menimpa saat perubahan itu berasal from ketikan di editor ini sendiri.
 watch(
   () => props.modelValue,
   (v) => {
@@ -54,7 +54,7 @@ function block(tag: string) {
 function link() {
   const url = window.prompt(t('pages.editor.linkPrompt'), 'https://');
   if (!url) return;
-  // Skema berbahaya ditolak di sini juga, bukan hanya oleh sanitizer.
+  // Skema berbahaya ditolak di sini juga, bukan hanya by sanitizer.
   if (!/^(https?:\/\/|mailto:|tel:|\/|#)/i.test(url.trim())) return;
   exec('createLink', url.trim());
 }

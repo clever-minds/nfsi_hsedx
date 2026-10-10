@@ -10,24 +10,24 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 /**
  * Soal di dalam satu bank soal.
  *
- * Sebelumnya tidak ada layar untuk menambah soal sama sekali — bank soal bisa
- * dibuat, tapi selalu kosong, sehingga quiz/ujian tidak pernah bisa disusun dari
+ * previous no ada layar untuk menambah soal sama sekali — bank soal bisa
+ * created, tapi selalu kosong, sehingga quiz/exam no pernah bisa disusun from
  * Admin Panel. Tipe yang disediakan di sini adalah yang dinilai otomatis
  * (pilihan tunggal/ganda, benar-salah, isian singkat) plus esai.
  */
-type Tipe = 'pilihan_tunggal' | 'pilihan_ganda' | 'benar_salah' | 'isian_singkat' | 'esai';
+type Tipe = 'single_choice' | 'multiple_choice' | 'true_false' | 'short_answer' | 'essay';
 interface Option {
   id?: string;
-  teks_opsi: string;
-  is_benar: boolean;
+  option_text: string;
+  is_correct: boolean;
   sort_order: number;
 }
 interface Question {
   id: string;
-  tipe: Tipe | string;
-  teks_soal: string;
-  poin: string | number;
-  penjelasan_jawaban: string | null;
+  type: Tipe | string;
+  question_text: string;
+  points: string | number;
+  answer_explanation: string | null;
   options: Option[];
 }
 interface Bank {
@@ -36,7 +36,7 @@ interface Bank {
   course_title?: string | null;
 }
 
-const TIPE: Tipe[] = ['pilihan_tunggal', 'pilihan_ganda', 'benar_salah', 'isian_singkat', 'esai'];
+const TIPE: Tipe[] = ['single_choice', 'multiple_choice', 'true_false', 'short_answer', 'essay'];
 
 const route = useRoute();
 const { t } = useI18n();
@@ -57,20 +57,20 @@ const editingId = ref<string | null>(null);
 const saving = ref(false);
 const formError = ref('');
 const form = reactive({
-  tipe: 'pilihan_tunggal' as Tipe,
-  teks_soal: '',
-  poin: 1,
+  type: 'single_choice' as Tipe,
+  question_text: '',
+  points: 1,
   penjelasan: '',
   options: [] as Option[],
 });
 
 const blankOptions = (): Option[] => [
-  { teks_opsi: '', is_benar: true, sort_order: 0 },
-  { teks_opsi: '', is_benar: false, sort_order: 1 },
+  { option_text: '', is_correct: true, sort_order: 0 },
+  { option_text: '', is_correct: false, sort_order: 1 },
 ];
 const trueFalse = (): Option[] => [
-  { teks_opsi: t('assessments.bank.true'), is_benar: true, sort_order: 0 },
-  { teks_opsi: t('assessments.bank.false'), is_benar: false, sort_order: 1 },
+  { option_text: t('assessments.bank.true'), is_correct: true, sort_order: 0 },
+  { option_text: t('assessments.bank.false'), is_correct: false, sort_order: 1 },
 ];
 
 async function load() {
@@ -91,21 +91,21 @@ async function load() {
 }
 
 function onTipe() {
-  if (form.tipe === 'benar_salah') form.options = trueFalse();
-  else if (form.tipe === 'esai') form.options = [];
-  else if (form.tipe === 'isian_singkat') form.options = [{ teks_opsi: '', is_benar: true, sort_order: 0 }];
+  if (form.type === 'true_false') form.options = trueFalse();
+  else if (form.type === 'essay') form.options = [];
+  else if (form.type === 'short_answer') form.options = [{ option_text: '', is_correct: true, sort_order: 0 }];
   else if (!form.options.length || form.options.length < 2) form.options = blankOptions();
-  if (form.tipe === 'pilihan_tunggal') {
-    // Pilihan tunggal: tepat satu jawaban benar.
-    const first = form.options.findIndex((o) => o.is_benar);
-    form.options.forEach((o, i) => (o.is_benar = i === (first < 0 ? 0 : first)));
+  if (form.type === 'single_choice') {
+    // Pilihan tunggal: tepat satu answer benar.
+    const first = form.options.findIndex((o) => o.is_correct);
+    form.options.forEach((o, i) => (o.is_correct = i === (first < 0 ? 0 : first)));
   }
 }
 
 function openCreate() {
   editingId.value = null;
   formError.value = '';
-  Object.assign(form, { tipe: 'pilihan_tunggal', teks_soal: '', poin: 1, penjelasan: '', options: blankOptions() });
+  Object.assign(form, { type: 'single_choice', question_text: '', points: 1, penjelasan: '', options: blankOptions() });
   showForm.value = true;
 }
 
@@ -113,54 +113,54 @@ function openEdit(q: Question) {
   editingId.value = q.id;
   formError.value = '';
   Object.assign(form, {
-    tipe: q.tipe as Tipe,
-    teks_soal: q.teks_soal,
-    poin: Number(q.poin),
-    penjelasan: q.penjelasan_jawaban ?? '',
-    options: q.options.map((o) => ({ teks_opsi: o.teks_opsi, is_benar: o.is_benar, sort_order: o.sort_order })),
+    type: q.type as Tipe,
+    question_text: q.question_text,
+    points: Number(q.points),
+    penjelasan: q.answer_explanation ?? '',
+    options: q.options.map((o) => ({ option_text: o.option_text, is_correct: o.is_correct, sort_order: o.sort_order })),
   });
   showForm.value = true;
 }
 
 function addOption() {
-  form.options.push({ teks_opsi: '', is_benar: form.tipe === 'isian_singkat', sort_order: form.options.length });
+  form.options.push({ option_text: '', is_correct: form.type === 'short_answer', sort_order: form.options.length });
 }
 function removeOption(i: number) {
   form.options.splice(i, 1);
   form.options.forEach((o, j) => (o.sort_order = j));
 }
 function markCorrect(i: number) {
-  if (form.tipe === 'pilihan_ganda') form.options[i].is_benar = !form.options[i].is_benar;
-  else form.options.forEach((o, j) => (o.is_benar = j === i));
+  if (form.type === 'multiple_choice') form.options[i].is_correct = !form.options[i].is_correct;
+  else form.options.forEach((o, j) => (o.is_correct = j === i));
 }
 
 async function submit() {
   formError.value = '';
-  if (!form.teks_soal.trim()) {
+  if (!form.question_text.trim()) {
     formError.value = t('assessments.bank.textRequired');
     return;
   }
-  const options = form.options.filter((o) => o.teks_opsi.trim()).map((o, i) => ({ ...o, teks_opsi: o.teks_opsi.trim(), sort_order: i }));
-  if (form.tipe !== 'esai') {
-    if (form.tipe !== 'isian_singkat' && options.length < 2) {
+  const options = form.options.filter((o) => o.option_text.trim()).map((o, i) => ({ ...o, option_text: o.option_text.trim(), sort_order: i }));
+  if (form.type !== 'essay') {
+    if (form.type !== 'short_answer' && options.length < 2) {
       formError.value = t('assessments.bank.needTwoOptions');
       return;
     }
-    if (!options.some((o) => o.is_benar)) {
+    if (!options.some((o) => o.is_correct)) {
       formError.value = t('assessments.bank.needCorrect');
       return;
     }
   }
   saving.value = true;
   const payload = {
-    teks_soal: form.teks_soal.trim(),
-    poin: Number(form.poin) || 0,
-    penjelasan_jawaban: form.penjelasan.trim() || null,
+    question_text: form.question_text.trim(),
+    points: Number(form.points) || 0,
+    answer_explanation: form.penjelasan.trim() || null,
     options,
   };
   try {
     if (editingId.value) await apiPut(`/questions/${editingId.value}`, payload);
-    else await apiPost(`/question-banks/${bankId.value}/questions`, { ...payload, tipe: form.tipe });
+    else await apiPost(`/question-banks/${bankId.value}/questions`, { ...payload, type: form.type });
     showForm.value = false;
     await load();
   } catch (e) {
@@ -183,7 +183,7 @@ async function remove(q: Question) {
   }
 }
 
-const totalPoin = computed(() => questions.value.reduce((s, q) => s + Number(q.poin || 0), 0));
+const totalPoin = computed(() => questions.value.reduce((s, q) => s + Number(q.points || 0), 0));
 
 onMounted(load);
 </script>
@@ -204,43 +204,43 @@ onMounted(load);
       <div v-if="formError" class="mt-2 alert-error">{{ formError }}</div>
       <div class="mt-3 grid gap-3 sm:grid-cols-3">
         <div>
-          <label class="label" for="q-type">{{ t('assessments.bank.type') }}</label>
-          <!-- Tipe soal tidak bisa diubah setelah dibuat (backend tidak menerimanya). -->
-          <select id="q-type" v-model="form.tipe" class="input" :disabled="!!editingId" @change="onTipe">
-            <option v-for="x in TIPE" :key="x" :value="x">{{ t(`assessments.bank.tipe.${x}`) }}</option>
+          <label class="label" for="q-type">Question Type</label>
+          <!-- Tipe soal no bisa diubah setelah created (backend no menerimanya). -->
+          <select id="q-type" v-model="form.type" class="input" :disabled="!!editingId" @change="onTipe">
+            <option v-for="x in TIPE" :key="x" :value="x">{{ t(`assessments.bank.type.${x}`) }}</option>
           </select>
         </div>
         <div>
           <label class="label" for="q-points">{{ t('assessments.bank.points') }}</label>
-          <input id="q-points" v-model.number="form.poin" type="number" min="0" step="0.5" class="input" />
+          <input id="q-points" v-model.number="form.points" type="number" min="0" step="0.5" class="input" />
           <p class="mt-1 text-xs text-slate-400">{{ t('assessments.bank.pointsHint') }}</p>
         </div>
         <div class="sm:col-span-3">
           <label class="label" for="q-text">{{ t('assessments.bank.text') }}</label>
-          <textarea id="q-text" v-model="form.teks_soal" rows="3" class="input"></textarea>
+          <textarea id="q-text" v-model="form.question_text" rows="3" class="input"></textarea>
         </div>
 
-        <div v-if="form.tipe !== 'esai'" class="sm:col-span-3">
+        <div v-if="form.type !== 'essay'" class="sm:col-span-3">
           <label class="label">
-            {{ form.tipe === 'isian_singkat' ? t('assessments.bank.acceptedAnswers') : t('assessments.bank.options') }}
+            {{ form.type === 'short_answer' ? t('assessments.bank.acceptedAnswers') : t('assessments.bank.options') }}
           </label>
           <p class="mb-2 text-xs text-slate-400">
-            {{ form.tipe === 'isian_singkat' ? t('assessments.bank.acceptedHint') : form.tipe === 'pilihan_ganda' ? t('assessments.bank.multiHint') : t('assessments.bank.singleHint') }}
+            {{ form.type === 'short_answer' ? t('assessments.bank.acceptedHint') : form.type === 'multiple_choice' ? t('assessments.bank.multiHint') : t('assessments.bank.singleHint') }}
           </p>
           <div v-for="(o, i) in form.options" :key="i" class="mb-2 flex items-center gap-2">
             <button
-              v-if="form.tipe !== 'isian_singkat'"
+              v-if="form.type !== 'short_answer'"
               type="button"
               class="grid h-8 w-8 shrink-0 place-items-center rounded-full border text-sm"
-              :class="o.is_benar ? 'border-emerald-500 bg-emerald-50 text-emerald-600' : 'border-slate-200 text-slate-300'"
+              :class="o.is_correct ? 'border-emerald-500 bg-emerald-50 text-emerald-600' : 'border-slate-200 text-slate-300'"
               :title="t('assessments.bank.markCorrect')"
               @click="markCorrect(i)"
             >
               ✓
             </button>
-            <input v-model="o.teks_opsi" class="input" :disabled="form.tipe === 'benar_salah'" />
+            <input v-model="o.option_text" class="input" :disabled="form.type === 'true_false'" />
             <button
-              v-if="form.tipe !== 'benar_salah' && form.options.length > 1"
+              v-if="form.type !== 'true_false' && form.options.length > 1"
               type="button"
               class="btn-outline btn-sm text-rose-600"
               @click="removeOption(i)"
@@ -248,7 +248,7 @@ onMounted(load);
               ×
             </button>
           </div>
-          <button v-if="form.tipe !== 'benar_salah'" type="button" class="btn-outline btn-sm" @click="addOption">
+          <button v-if="form.type !== 'true_false'" type="button" class="btn-outline btn-sm" @click="addOption">
             {{ t('assessments.bank.addOption') }}
           </button>
         </div>
@@ -277,13 +277,13 @@ onMounted(load);
       <div v-for="(q, i) in questions" :key="q.id" class="flex gap-4 px-5 py-4">
         <span class="num w-6 shrink-0 text-sm text-slate-400">{{ i + 1 }}.</span>
         <div class="min-w-0 flex-1">
-          <p class="whitespace-pre-line text-sm text-slate-800">{{ q.teks_soal }}</p>
+          <p class="whitespace-pre-line text-sm text-slate-800">{{ q.question_text }}</p>
           <p class="mt-1 text-xs text-slate-400">
-            {{ t(`assessments.bank.tipe.${q.tipe}`) }} · {{ t('assessments.bank.pointsN', { n: fmtAngka(Number(q.poin)) }) }}
+            {{ t(`assessments.bank.type.${q.type}`) }} · {{ t('assessments.bank.pointsN', { n: fmtAngka(Number(q.points)) }) }}
           </p>
           <ul v-if="q.options.length" class="mt-2 space-y-0.5 text-xs">
-            <li v-for="o in q.options" :key="o.id" :class="o.is_benar ? 'font-medium text-emerald-600' : 'text-slate-500'">
-              {{ o.is_benar ? '✓' : '•' }} {{ o.teks_opsi }}
+            <li v-for="o in q.options" :key="o.id" :class="o.is_correct ? 'font-medium text-emerald-600' : 'text-slate-500'">
+              {{ o.is_correct ? '✓' : '•' }} {{ o.option_text }}
             </li>
           </ul>
         </div>

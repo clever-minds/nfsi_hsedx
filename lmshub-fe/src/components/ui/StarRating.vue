@@ -15,7 +15,7 @@ const hover = ref(0);
 const shown = computed(() => (props.editable && hover.value ? hover.value : props.modelValue));
 
 function pct(i: number): number {
-  // Persentase isian bintang ke-i (1..5) untuk dukungan pecahan.
+  // Persentase isian bintang to-i (1..5) untuk dukungan pecahan.
   const v = shown.value - (i - 1);
   return Math.max(0, Math.min(1, v)) * 100;
 }
@@ -25,7 +25,7 @@ function pick(i: number) {
 </script>
 
 <template>
-  <div class="inline-flex items-center gap-0.5" :class="editable ? 'cursor-pointer' : ''">
+  <div class="inline-flex items-center gap-0.5" :class="editable ? 'cursor-pointster' : ''">
     <span
       v-for="i in 5"
       :key="i"

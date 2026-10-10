@@ -14,12 +14,12 @@ export interface AuditInput {
 }
 
 /**
- * Catat aksi ke audit_log (append-only). Menerima `tx` opsional agar ikut transaction pemanggil.
- * Kegagalan audit tidak boleh menggagalkan operasi utama di luar transaction (log warning).
+ * Catat action to audit_log (append-only). Menerima `tx` opsional agar ikut transaction pemanggil.
+ * Kegagalan audit no boleh menggagalkan operasi primary di luar transaction (log warning).
  */
 export async function recordAudit(input: AuditInput, tx?: PoolClient): Promise<void> {
   const runner = tx ?? pool;
-  const sql = `INSERT INTO audit_log (user_id, module, action, entity, entity_id, nilai_lama, nilai_baru, alasan)
+  const sql = `INSERT INTO audit_log (user_id, module, action, entity, entity_id, old_value, new_value, reason)
                VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`;
   const params = [
     input.userId,
@@ -34,7 +34,7 @@ export async function recordAudit(input: AuditInput, tx?: PoolClient): Promise<v
   try {
     await runner.query(sql, params);
   } catch (err) {
-    if (tx) throw err; // dalam transaction, biarkan gagal
+    if (tx) throw err; // dalam transaction, biarkan failed
     logger.warn({ err, module: input.module, action: input.action }, 'Failed to write audit log entry');
   }
 }

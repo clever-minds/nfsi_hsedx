@@ -8,29 +8,29 @@ import * as ctrl from './bank-accounts.controller';
 
 export const bankAccountsRouter = Router();
 
-// PUBLIC — rekening aktif untuk instructions transfer di checkout.
+// PUBLIC — account active untuk instructions transfer di checkout.
 bankAccountsRouter.get('/public', asyncHandler(ctrl.publicList));
 
-// Master data dikelola di bawah izin `pengaturan` (sama dengan layar Settings).
-bankAccountsRouter.get('/', requireAuth(), requirePermission('pengaturan', 'view'), asyncHandler(ctrl.list));
+// Master data managed di bawah izin `settings` (sama dengan layar Settings).
+bankAccountsRouter.get('/', requireAuth(), requirePermission('settings', 'view'), asyncHandler(ctrl.list));
 bankAccountsRouter.post(
   '/',
   requireAuth(),
-  requirePermission('pengaturan', 'update'),
+  requirePermission('settings', 'update'),
   validate(createBankAccountSchema),
   asyncHandler(ctrl.create),
 );
-bankAccountsRouter.get('/:id', requireAuth(), requirePermission('pengaturan', 'view'), asyncHandler(ctrl.detail));
+bankAccountsRouter.get('/:id', requireAuth(), requirePermission('settings', 'view'), asyncHandler(ctrl.detail));
 bankAccountsRouter.put(
   '/:id',
   requireAuth(),
-  requirePermission('pengaturan', 'update'),
+  requirePermission('settings', 'update'),
   validate(updateBankAccountSchema),
   asyncHandler(ctrl.update),
 );
 bankAccountsRouter.delete(
   '/:id',
   requireAuth(),
-  requirePermission('pengaturan', 'update'),
+  requirePermission('settings', 'update'),
   asyncHandler(ctrl.remove),
 );

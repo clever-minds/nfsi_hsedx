@@ -6,7 +6,7 @@ import { apiGet, errorMessage } from '@/lib/api';
 import CertificateDocument, { type CertData } from '@/components/CertificateDocument.vue';
 
 interface VerifyResult extends CertData {
-  status: 'valid' | 'dibatalkan' | 'tidak_ditemukan';
+  status: 'valid' | 'cancelled' | 'tidak_ditemukan';
 }
 
 const route = useRoute();
@@ -17,7 +17,7 @@ const error = ref('');
 
 onMounted(async () => {
   try {
-    result.value = await apiGet<VerifyResult>(`/public/certificates/verify/${route.params.nomor}`);
+    result.value = await apiGet<VerifyResult>(`/public/certificates/verify/${route.params.number}`);
   } catch (e) {
     error.value = errorMessage(e, t('catalog.verify.failed'));
   } finally {
@@ -44,12 +44,12 @@ const cetak = () => window.print();
             {{
               valid
                 ? t('catalog.verify.valid')
-                : result.status === 'dibatalkan'
+                : result.status === 'cancelled'
                   ? t('catalog.verify.cancelled')
                   : t('catalog.verify.notFound')
             }}
           </div>
-          <div class="text-sm opacity-80">{{ t('catalog.verify.number', { value: route.params.nomor }) }}</div>
+          <div class="text-sm opacity-80">{{ t('catalog.verify.number', { value: route.params.number }) }}</div>
         </div>
         <button v-if="valid" class="btn-primary text-sm" @click="cetak">🖶 {{ t('catalog.verify.print') }}</button>
       </div>

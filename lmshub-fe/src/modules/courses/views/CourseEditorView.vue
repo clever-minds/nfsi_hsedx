@@ -22,7 +22,7 @@ interface CourseDetail {
   strike_price: string | null;
   language: string;
   publication_status: string;
-  instructor_nama?: string | null;
+  instructor_name?: string | null;
   final_exam_quiz_id?: string | null;
   allow_restart?: boolean;
   thumbnail_media_id?: string | null;
@@ -40,7 +40,7 @@ interface Category {
   name: string;
 }
 
-const STATUS_CHAIN = ['draf', 'dalam_review', 'terbit', 'diperbarui', 'diarsip'];
+const STATUS_CHAIN = ['draft', 'in_review', 'publish', 'updated', 'archived'];
 
 const route = useRoute();
 const router = useRouter();
@@ -48,26 +48,26 @@ const { t } = useI18n();
 
 const courseId = computed(() => route.params.id as string | undefined);
 const isEdit = computed(() => !!courseId.value);
-const tab = ref<'info' | 'kurikulum' | 'kelulusan'>(route.query.tab === 'completion' ? 'kelulusan' : 'info');
+const tab = ref<'info' | 'curriculum' | 'kelulusan'>(route.query.tab === 'completion' ? 'kelulusan' : 'info');
 
 const form = reactive({
   title: '',
   slug: '',
   category_id: '',
-  level: 'pemula' as 'pemula' | 'menengah' | 'mahir',
+  level: 'beginner' as 'beginner' | 'intermediate' | 'advanced',
   price: 0,
   strike_price: undefined as number | undefined,
   summary: '',
   description: '',
-  language: 'id',
+  language: 'en',
   thumbnail_media_id: undefined as string | undefined,
 });
 
-const currentStatus = ref('draf');
+const currentStatus = ref('draft');
 const instructorNama = ref('');
 const categories = ref<Category[]>([]);
-const canManageCategories = useAuthStore().can('kategori.create');
-// Harga disimpan dalam mata uang basis, bukan Rupiah. Labelnya dulu menuliskan
+const canManageCategories = useAuthStore().can('category.create');
+// price disimpan dalam mata uang basis, bukan Rupiah. Labelnya dulu menuliskan
 // "(IDR)" secara harfiah di keempat berkas terjemahan, jadi pemasangan yang
 // memakai mata uang lain melihat kolom price yang salah namanya.
 const currency = useCurrencyStore();
@@ -80,9 +80,9 @@ const previewUrl = ref('');
 const courseMeta = ref<any>({});
 
 /**
- * Kegagalan di sini sengaja tidak membatalkan pemuatan halaman — editor tetap
- * berguna untuk menyunting course yang sudah ada. Tapi daftar yang kosong
- * berarti `category_id` (wajib) tidak bisa diisi, jadi templatenya menjelaskan
+ * Kegagalan di sini sengaja no membatalkan pemuatan halaman — editor tetap
+ * berguna untuk menyunting course yang sudah ada. Tapi register yang kosong
+ * berarti `category_id` (wajib) no bisa diisi, jadi templatenya menjelaskan
  * hal itu di bawah dropdown alih-alih membiarkannya kosong tanpa sebab.
  */
 async function loadCategories() {
@@ -105,7 +105,7 @@ async function loadCourse(id: string) {
   form.description = c.description ?? '';
   form.language = c.language;
   currentStatus.value = c.publication_status;
-  instructorNama.value = c.instructor_nama ?? '';
+  instructorNama.value = c.instructor_name ?? '';
   form.thumbnail_media_id = c.thumbnail_media_id ?? undefined;
   courseMeta.value = c.meta || {};
   previewUrl.value = courseMeta.value.thumbnail_url ? assetUrl(courseMeta.value.thumbnail_url) : '';
@@ -114,8 +114,8 @@ async function loadCourse(id: string) {
 }
 
 // ── Kelulusan & certificate ───────────────────────────────────────────────
-// Disimpan lewat endpoint tersendiri: mengubah aturan kelulusan tidak boleh
-// memindahkan course Terbit ke "Diperbarui" dan menunggu review ulang.
+// Disimpan lewat endpointst tersendiri: mengubah rule kelulusan no boleh
+// memindahkan course Terbit to "Diperbarui" dan menunggu review ulang.
 const rules = reactive({ final_exam_quiz_id: '', allow_restart: false });
 const quizzes = ref<QuizOption[]>([]);
 const savingRules = ref(false);
@@ -246,8 +246,8 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
         </button>
         <button
           class="tab-item"
-          :class="{ 'tab-item-active': tab === 'kurikulum' }"
-          @click="tab = 'kurikulum'"
+          :class="{ 'tab-item-active': tab === 'curriculum' }"
+          @click="tab = 'curriculum'"
         >
           {{ t('courses.editor.tabCurriculum') }}
         </button>
@@ -278,8 +278,8 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
             <select v-model="form.category_id" class="input" required>
               <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
             </select>
-            <!-- Tautan hanya untuk yang boleh membuat kategori; sisanya diarahkan
-                 ke admin, bukan ke halaman yang akan menolak mereka. -->
+            <!-- Tautan hanya untuk yang boleh membuat category; sisanya diarahkan
+                 to admin, bukan to halaman yang akan menolak mereka. -->
             <p v-if="!loading && !categories.length" class="mt-1 text-xs text-amber-600">
               <template v-if="canManageCategories">
                 {{ t('courses.editor.noCategory') }}
@@ -290,25 +290,23 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
               <template v-else>{{ t('courses.editor.noCategoryAskAdmin') }}</template>
             </p>
           </div>
-          <div>
-            <label class="label">{{ t('courses.editor.fieldLevel') }}</label>
-            <select v-model="form.level" class="input">
-              <option value="pemula">{{ t('common.level.pemula') }}</option>
-              <option value="menengah">{{ t('common.level.menengah') }}</option>
-              <option value="mahir">{{ t('common.level.mahir') }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="label">{{ t('courses.editor.fieldLanguage') }}</label>
-            <input v-model="form.language" class="input" maxlength="10" />
-          </div>
-          <div>
-            <label class="label">{{ t('courses.editor.fieldPrice', { currency: currency.base }) }}</label>
-            <input v-model.number="form.price" class="input" type="number" min="0" />
-          </div>
-          <div>
-            <label class="label">{{ t('courses.editor.fieldStrikePrice') }}</label>
-            <input v-model.number="form.strike_price" class="input" type="number" min="0" />
+          <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="label">{{ t('courses.editor.fieldLevel') }}</label>
+              <select v-model="form.level" class="input">
+                <option value="beginner">{{ t('common.level.pemula') }}</option>
+                <option value="intermediate">{{ t('common.level.menengah') }}</option>
+                <option value="advanced">{{ t('common.level.mahir') }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">{{ t('courses.editor.fieldPrice', { currency: currency.base }) }}</label>
+              <input v-model.number="form.price" class="input" type="number" min="0" />
+            </div>
+            <div>
+              <label class="label">{{ t('courses.editor.fieldStrikePrice') }}</label>
+              <input v-model.number="form.strike_price" class="input" type="number" min="0" />
+            </div>
           </div>
           <div class="sm:col-span-2">
             <label class="label">{{ t('courses.editor.fieldSummary') }}</label>
@@ -348,7 +346,7 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
 
         <div v-if="isEdit" class="card flex flex-wrap gap-2 p-5">
           <button
-            v-if="currentStatus === 'draf'"
+            v-if="currentStatus === 'draft'"
             v-can="'course.update'"
             class="btn-outline"
             :disabled="busy"
@@ -357,7 +355,7 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
             {{ t('courses.list.submitReview') }}
           </button>
           <button
-            v-if="['dalam_review', 'diperbarui'].includes(currentStatus)"
+            v-if="['in_review', 'updated'].includes(currentStatus)"
             v-can="'course.update'"
             class="btn-outline"
             :disabled="busy"
@@ -366,7 +364,7 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
             {{ t('courses.editor.approvePublish') }}
           </button>
           <button
-            v-if="currentStatus !== 'diarsip'"
+            v-if="currentStatus !== 'archived'"
             v-can="'course.update'"
             class="btn-outline"
             :disabled="busy"

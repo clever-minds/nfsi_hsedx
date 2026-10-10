@@ -13,7 +13,7 @@ import { logger } from '../core/logger/logger';
  * can never 404.
  *
  * Lesson videos are copied out of `assets/demo/` (CC0 clips — see the LICENSE
- * file there). Earlier demo data pointed at third-party YouTube videos, and one
+ * file there). Earlier demo data pointsted at third-party YouTube videos, and one
  * of them was deleted by its owner, so the course player showed
  * "Video unavailable". Nothing here depends on anyone else's server.
  *
@@ -227,7 +227,7 @@ function heroSvg(): string {
     <rect x="0" y="0" width="500" height="290" rx="18" fill="#0f172a" opacity="0.92"/>
     <rect x="22" y="24" width="456" height="228" rx="10" fill="#ffffff"/>
     <rect x="44" y="48" width="180" height="128" rx="8" fill="#e2e8f0"/>
-    <polygon points="118,90 158,112 118,134" fill="#e11d48"/>
+    <polygon pointsts="118,90 158,112 118,134" fill="#e11d48"/>
     <rect x="244" y="48" width="212" height="15" rx="7" fill="#cbd5e1"/>
     <rect x="244" y="76" width="168" height="15" rx="7" fill="#e2e8f0"/>
     <rect x="244" y="104" width="196" height="15" rx="7" fill="#e2e8f0"/>

@@ -25,7 +25,7 @@ export async function baseCode(): Promise<string> {
 export interface PublicCurrency {
   kode: string;
   name: string;
-  simbol: string;
+  symbol: string;
   rate: number;
   desimal: number;
   is_basis: boolean;
@@ -40,7 +40,7 @@ export async function publicList(): Promise<{ base: string; switcher: boolean; c
   const currencies = rows.map((r) => ({
     kode: r.kode.toUpperCase(),
     name: r.name,
-    simbol: r.simbol,
+    symbol: r.symbol,
     // The base is pinned to 1 on the way out too, so a bad stored rate cannot
     // reach a price label even if it somehow got past the write path.
     rate: r.kode.toUpperCase() === base ? 1 : Number(r.rate),
@@ -50,7 +50,7 @@ export async function publicList(): Promise<{ base: string; switcher: boolean; c
 
   // A store whose base is not in the table still has to be able to show prices.
   if (!currencies.some((c) => c.is_basis)) {
-    currencies.unshift({ kode: base, name: base, simbol: '', rate: 1, desimal: 2, is_basis: true });
+    currencies.unshift({ kode: base, name: base, symbol: '', rate: 1, desimal: 2, is_basis: true });
   }
 
   return { base, switcher, currencies };
@@ -78,7 +78,7 @@ export async function create(actor: AuthContext, input: CreateCurrencyInput) {
 
   await recordAudit({
     userId: actor.userId,
-    module: 'pengaturan',
+    module: 'settings',
     action: 'create',
     entity: 'currencies',
     entityId: row.id,
@@ -111,7 +111,7 @@ export async function update(actor: AuthContext, id: string, input: UpdateCurren
 
   await recordAudit({
     userId: actor.userId,
-    module: 'pengaturan',
+    module: 'settings',
     action: 'update',
     entity: 'currencies',
     entityId: id,
@@ -136,7 +136,7 @@ export async function remove(actor: AuthContext, id: string) {
   await repo.softDelete(id);
   await recordAudit({
     userId: actor.userId,
-    module: 'pengaturan',
+    module: 'settings',
     action: 'delete',
     entity: 'currencies',
     entityId: id,

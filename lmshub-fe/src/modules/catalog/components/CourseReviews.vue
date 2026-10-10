@@ -13,8 +13,8 @@ const { t } = useI18n();
 interface Review {
   id: string;
   rating: number;
-  ulasan: string | null;
-  user_nama: string;
+  review: string | null;
+  user_name: string;
   user_foto: string | null;
   created_at: string;
 }
@@ -25,9 +25,9 @@ interface Summary {
 }
 interface MyReviewState {
   eligible: boolean;
-  alasan: string | null;
+  reason: string | null;
   enrollment_status: string | null;
-  review: { id: string; rating: number; ulasan: string | null } | null;
+  review: { id: string; rating: number; review: string | null } | null;
 }
 
 const summary = ref<Summary>({ rating_avg: 0, rating_count: 0, distribusi: { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 } });
@@ -56,7 +56,7 @@ async function loadMine() {
   my.value = await apiGet<MyReviewState>(`/courses/${props.courseId}/reviews/me`).catch(() => null);
   if (my.value?.review) {
     formRating.value = my.value.review.rating;
-    formUlasan.value = my.value.review.ulasan ?? '';
+    formUlasan.value = my.value.review.review ?? '';
   }
 }
 
@@ -64,7 +64,7 @@ async function submit() {
   saving.value = true;
   formError.value = '';
   try {
-    await apiPost(`/courses/${props.courseId}/reviews`, { rating: formRating.value, ulasan: formUlasan.value.trim() || null });
+    await apiPost(`/courses/${props.courseId}/reviews`, { rating: formRating.value, review: formUlasan.value.trim() || null });
     showForm.value = false;
     await Promise.all([loadPublic(), loadMine()]);
   } catch (e) {
@@ -101,7 +101,7 @@ onMounted(async () => {
     <div v-if="loading" class="card h-32 animate-pulse bg-slate-100"></div>
 
     <template v-else>
-      <!-- Form beri/ubah ulasan -->
+      <!-- Form beri/edit review -->
       <div v-if="showForm" class="card mb-5 p-5">
         <label class="label">{{ t('catalog.reviews.yourRating') }}</label>
         <StarRating v-model="formRating" :size="30" editable />
@@ -140,21 +140,21 @@ onMounted(async () => {
         {{ t('catalog.reviews.eligibleHint') }}
       </p>
 
-      <!-- Daftar ulasan -->
+      <!-- register review -->
       <div v-if="reviews.length" class="space-y-3">
         <div v-for="r in reviews" :key="r.id" class="card p-4">
           <div class="flex items-start gap-3">
             <span class="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-500 text-sm font-bold text-white">
-              <img v-if="r.user_foto" :src="assetUrl(r.user_foto)" :alt="r.user_nama" class="h-full w-full object-cover" />
-              <template v-else>{{ initialsOf(r.user_nama) }}</template>
+              <img v-if="r.user_foto" :src="assetUrl(r.user_foto)" :alt="r.user_name" class="h-full w-full object-cover" />
+              <template v-else>{{ initialsOf(r.user_name) }}</template>
             </span>
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-center justify-between gap-1">
-                <span class="font-medium text-slate-900">{{ r.user_nama }}</span>
+                <span class="font-medium text-slate-900">{{ r.user_name }}</span>
                 <span class="text-xs text-slate-400">{{ fmtRelatif(r.created_at) }}</span>
               </div>
               <StarRating :model-value="r.rating" :size="14" class="mt-0.5" />
-              <p v-if="r.ulasan" class="mt-2 text-sm leading-relaxed text-slate-700">{{ r.ulasan }}</p>
+              <p v-if="r.review" class="mt-2 text-sm leading-relaxed text-slate-700">{{ r.review }}</p>
             </div>
           </div>
         </div>

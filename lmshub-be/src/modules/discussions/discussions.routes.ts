@@ -25,31 +25,31 @@ discussionsRouter.use(requireAuth());
 // Forum per course
 discussionsRouter.get(
   '/courses/:courseId/threads',
-  requirePermission('diskusi', 'view'),
+  requirePermission('discussion', 'view'),
   asyncHandler(ctrl.listThreads),
 );
 discussionsRouter.post(
   '/courses/:courseId/threads',
-  requirePermission('diskusi', 'create'),
+  requirePermission('discussion', 'create'),
   validate(createThreadSchema),
   asyncHandler(ctrl.createThread),
 );
-discussionsRouter.get('/threads/:id', requirePermission('diskusi', 'view'), asyncHandler(ctrl.threadDetail));
+discussionsRouter.get('/threads/:id', requirePermission('discussion', 'view'), asyncHandler(ctrl.threadDetail));
 discussionsRouter.post(
   '/threads/:id/posts',
-  requirePermission('diskusi', 'create'),
+  requirePermission('discussion', 'create'),
   validate(createPostSchema),
   asyncHandler(ctrl.reply),
 );
 discussionsRouter.put(
   '/threads/:id/pin',
-  requirePermission('diskusi', 'update'),
+  requirePermission('discussion', 'update'),
   validate(pinThreadSchema),
   asyncHandler(ctrl.pinThread),
 );
 discussionsRouter.put(
   '/threads/:id/lock',
-  requirePermission('diskusi', 'update'),
+  requirePermission('discussion', 'update'),
   validate(lockThreadSchema),
   asyncHandler(ctrl.lockThread),
 );
@@ -57,48 +57,48 @@ discussionsRouter.put(
 // Q&A per pelajaran
 discussionsRouter.get(
   '/lessons/:lessonId/questions',
-  requirePermission('diskusi', 'view'),
+  requirePermission('discussion', 'view'),
   asyncHandler(ctrl.listQuestions),
 );
 discussionsRouter.post(
   '/lessons/:lessonId/questions',
-  requirePermission('diskusi', 'create'),
+  requirePermission('discussion', 'create'),
   validate(createQuestionSchema),
   asyncHandler(ctrl.askQuestion),
 );
 discussionsRouter.post(
   '/questions/:id/answers',
-  requirePermission('diskusi', 'create'),
+  requirePermission('discussion', 'create'),
   validate(createAnswerSchema),
   asyncHandler(ctrl.answerQuestion),
 );
 discussionsRouter.put(
   '/questions/:id/terjawab',
-  requirePermission('diskusi', 'update'),
+  requirePermission('discussion', 'update'),
   validate(markTerjawabSchema),
   asyncHandler(ctrl.markQuestionTerjawab),
 );
 discussionsRouter.post(
   '/questions/:id/upvote',
-  requirePermission('diskusi', 'create'),
+  requirePermission('discussion', 'create'),
   asyncHandler(ctrl.upvoteQuestion),
 );
 discussionsRouter.post(
   '/answers/:id/upvote',
-  requirePermission('diskusi', 'create'),
+  requirePermission('discussion', 'create'),
   asyncHandler(ctrl.upvoteAnswer),
 );
 
 // Komentar & reaksi umum
 discussionsRouter.post(
   '/comments',
-  requirePermission('diskusi', 'create'),
+  requirePermission('discussion', 'create'),
   validate(createCommentSchema),
   asyncHandler(ctrl.createComment),
 );
 discussionsRouter.post(
   '/reactions',
-  requirePermission('diskusi', 'create'),
+  requirePermission('discussion', 'create'),
   validate(toggleReactionSchema),
   asyncHandler(ctrl.toggleReaction),
 );
@@ -106,14 +106,14 @@ discussionsRouter.post(
 // Moderasi
 discussionsRouter.post(
   '/reports',
-  requirePermission('diskusi', 'create'),
+  requirePermission('discussion', 'create'),
   validate(createReportSchema),
   asyncHandler(ctrl.createReport),
 );
-discussionsRouter.get('/reports', requirePermission('diskusi', 'view'), asyncHandler(ctrl.listReports));
+discussionsRouter.get('/reports', requirePermission('discussion', 'view'), asyncHandler(ctrl.listReports));
 discussionsRouter.patch(
   '/reports/:id',
-  requirePermission('diskusi', 'delete'),
+  requirePermission('discussion', 'delete'),
   validate(actOnReportSchema),
   asyncHandler(ctrl.actOnReport),
 );

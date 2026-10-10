@@ -7,7 +7,7 @@ import * as repo from './instructors.repository';
 
 export const instructorsRouter = Router();
 
-// PUBLIC — daftar & profil instructor untuk catalog pra-login (lmshub-fe).
+// PUBLIC — register & profile instructor untuk catalog pra-login (lmshub-fe).
 instructorsRouter.get(
   '/public',
   asyncHandler(async (req: Request, res: Response) => {
@@ -19,9 +19,9 @@ instructorsRouter.get(
 instructorsRouter.get(
   '/public/:id',
   asyncHandler(async (req: Request, res: Response) => {
-    const profil = await repo.publicDetail(req.params.id);
-    if (!profil) throw AppError.notFound('Instructor not found', 'instructor.not_found');
-    const course = await repo.publicCourses(profil.id);
-    return ok(res, { ...profil, course });
+    const profile = await repo.publicDetail(req.params.id);
+    if (!profile) throw AppError.notFound('Instructor not found', 'instructor.not_found');
+    const course = await repo.publicCourses(profile.id);
+    return ok(res, { ...profile, course });
   }),
 );

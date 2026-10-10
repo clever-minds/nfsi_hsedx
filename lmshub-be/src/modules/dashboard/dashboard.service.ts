@@ -64,7 +64,7 @@ export async function direktur(_actor: AuthContext) {
   return {
     ...kpi,
     total_pengguna_aktif: summary.total_pengguna_aktif,
-    total_kursus_terbit: summary.total_kursus_terbit,
+    total_kursus_publish: summary.total_kursus_publish,
     antrean_payout,
     tren_enrollment_7hari,
     kursus_terpopuler,

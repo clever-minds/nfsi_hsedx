@@ -9,7 +9,7 @@ import { kpiLabel, levelLabel, roleLabel } from '@/lib/labels';
 import KpiCard from '@/components/ui/KpiCard.vue';
 import Icon from '@/components/ui/Icon.vue';
 
-interface Reminder { id: string; title: string; jatuh_tempo: string; sumber?: string }
+interface Reminder { id: string; title: string; due_date: string; source?: string }
 interface JadwalLive { id: string; title: string; start_time: string; status?: string }
 
 const props = defineProps<{ data: Record<string, unknown> }>();
@@ -20,9 +20,9 @@ const { t } = useI18n();
 
 const kpiIcons: Record<string, string> = {
   kursus_aktif: 'play-circle',
-  kursus_selesai: 'check-square',
+  kursus_finish: 'check-square',
   sertifikat_diraih: 'award',
-  notifikasi_belum_dibaca: 'bell',
+  notification_belum_read: 'bell',
 };
 
 const kpis = computed(() =>
@@ -34,16 +34,16 @@ const kpis = computed(() =>
 const reminders = computed(() => (props.data.reminder_mendatang as Reminder[] | undefined) ?? []);
 const jadwalLive = computed(() => (props.data.jadwal_live_terdekat as JadwalLive[] | undefined) ?? []);
 
-// ── Data tambahan (course saya, kategori, populer) ──────
-// `course_title`, bukan `course_judul`: name kolom itu yang dikembalikan
-// GET /enrollments. Endpoint agregasi dashboard memakai `course_judul`, jadi
+// ── Data tambahan (course saya, category, populer) ──────
+// `course_title`, bukan `course_title`: name kolom itu yang dikembalikan
+// GET /enrollments. Endpointst agregasi dashboard memakai `course_title`, jadi
 // dua komponen dashboard lain memang benar membaca name yang berbeda.
 interface Enrollment { id: string; course_id: string; course_title: string; status: string }
 interface MyCourse extends Enrollment { progress_percent: number }
 interface Category { id: string; name: string; slug: string; ikon?: string | null }
 interface PublicCourse {
   id: string; title: string; slug: string; price: number; level?: string;
-  category_nama?: string; instructor_nama?: string; rating_avg?: string | number | null; student_count?: number;
+  category_name?: string; instructor_name?: string; rating_avg?: string | number | null; student_count?: number;
 }
 
 const myCourses = ref<MyCourse[]>([]);
@@ -61,7 +61,7 @@ const thumbGradients = [
 ];
 const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
 
-const initials = computed(() => initialsOf(auth.user?.nama_lengkap));
+const initials = computed(() => initialsOf(auth.user?.name_lengkap));
 
 function searchCatalog() {
   router.push({ path: '/d/catalog', query: searchQ.value ? { q: searchQ.value } : {} });
@@ -71,7 +71,7 @@ onMounted(async () => {
   const enrolls = await apiGetFull<Enrollment[]>('/enrollments', { limit: 4 }).then((r) => r.data ?? []).catch(() => []);
   myCourses.value = await Promise.all(
     enrolls
-      .filter((e) => ['terdaftar', 'aktif', 'selesai'].includes(e.status))
+      .filter((e) => ['registered', 'active', 'completed'].includes(e.status))
       .slice(0, 4)
       .map(async (e) => {
         const persen = await apiGet<{ progress_percent: string }>(`/courses/${e.course_id}/progress`)
@@ -89,13 +89,13 @@ onMounted(async () => {
 
 <template>
   <div class="grid gap-6 xl:grid-cols-[1fr,20rem]">
-    <!-- Kolom utama -->
+    <!-- Kolom primary -->
     <div class="min-w-0 space-y-8">
       <!-- Hero -->
       <section class="relative overflow-hidden rounded-lg bg-gradient-to-r from-sky-100 to-sky-50 p-6 sm:p-10">
         <div class="relative z-10 max-w-lg">
           <h1 class="text-2xl font-black leading-tight text-slate-900 sm:text-3xl">
-            {{ t('dashboard.greeting', { name: auth.user?.nama_lengkap?.split(' ')[0] }) }}<br />
+            {{ t('dashboard.greeting', { name: auth.user?.name_lengkap?.split(' ')[0] }) }}<br />
             <i18n-t keypath="dashboard.student.heroTitle" tag="span" scope="global">
               <template #highlight><span class="text-brand-500">{{ t('dashboard.student.heroHighlight') }}</span></template>
             </i18n-t>
@@ -124,7 +124,7 @@ onMounted(async () => {
         </div>
       </section>
 
-      <!-- Lanjutkan belajar -->
+      <!-- continue belajar -->
       <section>
         <div class="mb-4 flex items-center justify-between">
           <h2 class="section-title">{{ t('dashboard.student.continueLearning') }}</h2>
@@ -216,8 +216,8 @@ onMounted(async () => {
             <div class="p-4">
               <h3 class="line-clamp-2 text-sm font-medium leading-snug text-slate-900 group-hover:text-brand-500">{{ c.title }}</h3>
               <div class="mt-1 truncate text-xs text-slate-400">
-                {{ c.category_nama || t('dashboard.student.generalCategory') }}
-                <template v-if="c.instructor_nama">· {{ c.instructor_nama }}</template>
+                {{ c.category_name || t('dashboard.student.generalCategory') }}
+                <template v-if="c.instructor_name">· {{ c.instructor_name }}</template>
               </div>
               <div class="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5">
                 <span class="flex items-center gap-1 text-xs text-accent-500">
@@ -236,10 +236,10 @@ onMounted(async () => {
     <div class="space-y-6">
       <div class="card p-6 text-center">
         <div class="mx-auto grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-brand-500 text-2xl font-bold text-white ring-4 ring-brand-100">
-          <img v-if="auth.user?.foto_profil" :src="assetUrl(auth.user.foto_profil)" :alt="auth.user?.nama_lengkap" class="h-full w-full object-cover" />
+          <img v-if="auth.user?.profile_picture" :src="assetUrl(auth.user.profile_picture)" :alt="auth.user?.name_lengkap" class="h-full w-full object-cover" />
           <template v-else>{{ initials }}</template>
         </div>
-        <h3 class="mt-3 font-medium text-slate-900">{{ auth.user?.nama_lengkap }}</h3>
+        <h3 class="mt-3 font-medium text-slate-900">{{ auth.user?.name_lengkap }}</h3>
         <p class="text-xs text-slate-400">{{ roleLabel(auth.activeRole) }}</p>
         <RouterLink to="/d/profile" class="btn-outline btn-sm mt-4 w-full">{{ t('dashboard.student.viewProfile') }}</RouterLink>
       </div>
@@ -251,7 +251,7 @@ onMounted(async () => {
         <ul v-if="reminders.length" class="space-y-3">
           <li v-for="r in reminders" :key="r.id" class="border-s-2 border-brand-200 ps-3">
             <div class="line-clamp-1 text-sm text-slate-700">{{ r.title }}</div>
-            <div class="text-xs text-slate-400">{{ t('dashboard.student.dueOn', { date: fmtTanggal(r.jatuh_tempo) }) }}</div>
+            <div class="text-xs text-slate-400">{{ t('dashboard.student.dueOn', { date: fmtTanggal(r.due_date) }) }}</div>
           </li>
         </ul>
         <p v-else class="text-sm text-slate-400">{{ t('dashboard.student.noReminders') }}</p>

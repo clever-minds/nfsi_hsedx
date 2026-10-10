@@ -22,14 +22,14 @@ export async function createManual(req: Request, res: Response) {
 export async function list(req: Request, res: Response) {
   const page = parsePage(req);
   // Both spellings are accepted. The transaction screen sends plain `status=` and
-  // `jalur=`, while the rest of the API uses `filter[...]`; reading only the
+  // `channel=`, while the rest of the API uses `filter[...]`; reading only the
   // bracketed form left every control on that screen doing nothing at all.
   const pick = (name: string): string | undefined =>
     (req.query[`filter[${name}]`] as string | undefined) ?? (req.query[name] as string | undefined);
 
-  // Nilai di luar enum dulu diteruskan apa adanya dan Postgres menolaknya sebagai
+  // grade di luar enum dulu diteruskan apa adanya dan Postgres menolaknya sebagai
   // kegagalan internal, sehingga penyaring yang salah ketik menjawab 500.
-  const ORDER_STATUS = ['menunggu_pembayaran', 'dp_cicilan_berjalan', 'lunas', 'akses_aktif', 'batal'];
+  const ORDER_STATUS = ['awaiting_payment', 'installment_running', 'paid_in_full', 'access_active', 'cancelled'];
   const ORDER_JALUR = ['online', 'manual'];
   const oneOf = (value: string | undefined, allowed: string[], field: string): string | undefined => {
     if (value === undefined || value === '') return undefined;
@@ -41,7 +41,7 @@ export async function list(req: Request, res: Response) {
 
   const filters = {
     status: oneOf(pick('status'), ORDER_STATUS, 'status'),
-    jalur: oneOf(pick('jalur'), ORDER_JALUR, 'jalur'),
+    channel: oneOf(pick('channel'), ORDER_JALUR, 'channel'),
     q: pick('q'),
     buyer_user_id: pick('buyer_user_id'),
     marketing_user_id: pick('marketing_user_id'),
@@ -58,20 +58,20 @@ export async function pay(req: Request, res: Response) {
   return ok(res, await service.pay(auth(req), req.params.id, validated<PayInput>(req)));
 }
 
-// Mulai payment gateway — kembalikan URL checkout provider.
-// `provider` opsional: klien lama tanpa field ini memakai gateway pertama yang aktif.
+// start payment gateway — kembalikan URL checkout provider.
+// `provider` opsional: klien lama tanpa field ini memakai gateway pertama yang active.
 export async function payGateway(req: Request, res: Response) {
   const provider = typeof req.body?.provider === 'string' ? req.body.provider : undefined;
   return ok(res, await service.payGateway(auth(req), req.params.id, provider));
 }
 
-// Daftar gateway aktif + rekening transfer manual, untuk layar checkout FE.
+// register gateway active + account transfer manual, untuk layar checkout FE.
 export async function paymentConfig(_req: Request, res: Response) {
   return ok(res, await service.paymentConfig());
 }
 
-// Webhook gateway — TANPA auth, diverifikasi oleh adapter masing-masing.
-// Selalu balas 200 bila tertangani agar provider tidak mengulang kiriman.
+// Webhook gateway — TANPA auth, diverifikasi by adapter masing-masing.
+// Selalu balas 200 bila tertangani agar provider no mengulang kiriman.
 export async function gatewayWebhook(req: Request, res: Response) {
   const result = await service.handleGatewayWebhook(req.params.provider, {
     headers: req.headers,

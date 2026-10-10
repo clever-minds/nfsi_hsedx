@@ -40,7 +40,7 @@ const visibleSections = computed(() =>
 );
 
 const initials = computed(() =>
-  (auth.user?.nama_lengkap ?? '?')
+  (auth.user?.name_lengkap ?? '?')
     .split(' ')
     .slice(0, 2)
     .map((w) => w[0])
@@ -48,15 +48,15 @@ const initials = computed(() =>
     .toUpperCase(),
 );
 
-/** Item cocok bila path-nya sama persis atau merupakan induk dari path saat ini. */
+/** Item cocok bila path-nya sama persis atau merupakan induk from path saat ini. */
 function matches(to: string): boolean {
-  if (to === '/d') return route.path === '/d'; // '/d' hanya aktif persis
+  if (to === '/d') return route.path === '/d'; // '/d' hanya active persis
   return route.path === to || route.path.startsWith(`${to}/`);
 }
 
 /**
  * Hanya item paling spesifik yang disorot. Tanpa ini `/d/settings` ikut menyala
- * saat membuka `/d/settings/bank-accounts`, sehingga dua menu tampak aktif bersamaan.
+ * saat membuka `/d/settings/bank-accounts`, sehingga dua menu tampak active bersamaan.
  */
 function isActive(to: string) {
   if (!matches(to)) return false;
@@ -81,15 +81,15 @@ async function logout() {
 onMounted(() => document.addEventListener('click', onClickOutside));
 onBeforeUnmount(() => document.removeEventListener('click', onClickOutside));
 
-const tahun = new Date().getFullYear();
+const year = new Date().getFullYear();
 </script>
 
 <template>
   <div class="min-h-screen bg-surface">
     <!-- ── Header (fixed, ala Cursus) ─────────────────────────────── -->
     <header class="fixed inset-x-0 top-0 z-40 flex h-16 items-center bg-white shadow-header">
-      <!-- Hamburger sengaja netral: merah disisakan untuk aksi utama, nav
-           aktif, dan badge — bukan untuk mewarnai perabot. -->
+      <!-- Hamburger sengaja netral: merah disisakan untuk action primary, nav
+           active, dan badge — bukan untuk mewarnai perabot. -->
       <button
         class="grid h-16 w-16 shrink-0 place-items-center text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
         :aria-label="t('nav.header.toggleMenu')"
@@ -124,9 +124,9 @@ const tahun = new Date().getFullYear();
         <!-- <CurrencySwitcher /> -->
         <!-- <LocaleSwitcher /> -->
 
-        <!-- Ikon aksi -->
+        <!-- Ikon action -->
         <RouterLink
-          v-if="auth.can('diskusi.view')"
+          v-if="auth.can('discussion.view')"
           to="/d/discussions"
           class="header-icon-btn"
           :title="t('nav.item.discussions')"
@@ -134,7 +134,7 @@ const tahun = new Date().getFullYear();
           <Icon name="mail" :size="19" />
         </RouterLink>
         <RouterLink
-          v-if="auth.can('notifikasi.view')"
+          v-if="auth.can('notification.view')"
           to="/d/notifications"
           class="header-icon-btn"
           :title="t('nav.item.notifications')"
@@ -176,9 +176,9 @@ const tahun = new Date().getFullYear();
         </div>
       </nav>
 
-      <!-- ── Footer sidebar: profil pengguna + menu ────────────────── -->
+      <!-- ── Footer sidebar: profile user + menu ────────────────── -->
       <div class="relative border-t border-slate-200" data-user-menu>
-        <!-- Menu naik ke atas saat dibuka -->
+        <!-- Menu naik to on saat dibuka -->
         <Transition
           enter-active-class="transition duration-100"
           enter-from-class="translate-y-2 opacity-0"
@@ -193,19 +193,19 @@ const tahun = new Date().getFullYear();
             <div class="flex flex-col items-center gap-1 bg-brand-500 px-4 py-4 text-center text-white">
               <span class="grid h-11 w-11 place-items-center overflow-hidden rounded-full bg-white/20 text-sm font-bold">
                 <img
-                  v-if="auth.user?.foto_profil"
-                  :src="assetUrl(auth.user.foto_profil)"
-                  :alt="auth.user?.nama_lengkap"
+                  v-if="auth.user?.profile_picture"
+                  :src="assetUrl(auth.user.profile_picture)"
+                  :alt="auth.user?.name_lengkap"
                   class="h-full w-full object-cover"
                 />
                 <template v-else>{{ initials }}</template>
               </span>
-              <div class="font-semibold leading-tight">{{ auth.user?.nama_lengkap }}</div>
+              <div class="font-semibold leading-tight">{{ auth.user?.name_lengkap }}</div>
               <div v-if="auth.user?.email" class="text-xs text-white/80">{{ auth.user.email }}</div>
-              <div v-if="auth.user?.nomor_wa" class="num text-xs text-white/80">{{ auth.user.nomor_wa }}</div>
+              <div v-if="auth.user?.number_wa" class="num text-xs text-white/80">{{ auth.user.number_wa }}</div>
             </div>
 
-            <!-- Ganti peran (bila punya lebih dari satu) -->
+            <!-- Ganti peran (bila punya lebih from satu) -->
             <div v-if="auth.roles.length > 1" class="border-b border-slate-100 px-4 py-3">
               <label class="label text-xs">{{ t('nav.header.switchRole') }}</label>
               <select
@@ -225,7 +225,7 @@ const tahun = new Date().getFullYear();
               <Icon name="user" :size="16" /> {{ t('common.nav.profile') }}
             </RouterLink>
             <RouterLink
-              v-if="auth.can('pengaturan.view')"
+              v-if="auth.can('settings.view')"
               to="/d/settings"
               class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-slate-600 transition hover:bg-brand-50 hover:text-brand-500"
               @click="userMenuOpen = false"
@@ -248,15 +248,15 @@ const tahun = new Date().getFullYear();
         >
           <span class="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-500 text-sm font-bold text-white">
             <img
-              v-if="auth.user?.foto_profil"
-              :src="assetUrl(auth.user.foto_profil)"
-              :alt="auth.user?.nama_lengkap"
+              v-if="auth.user?.profile_picture"
+              :src="assetUrl(auth.user.profile_picture)"
+              :alt="auth.user?.name_lengkap"
               class="h-full w-full object-cover"
             />
             <template v-else>{{ initials }}</template>
           </span>
           <span class="min-w-0 flex-1">
-            <span class="block truncate text-sm font-semibold text-slate-900">{{ auth.user?.nama_lengkap }}</span>
+            <span class="block truncate text-sm font-semibold text-slate-900">{{ auth.user?.name_lengkap }}</span>
             <span class="block truncate text-xs text-slate-400">
               {{ auth.activeRole ? roleLabel(auth.activeRole) : t('common.role.user') }}
             </span>
@@ -286,7 +286,7 @@ const tahun = new Date().getFullYear();
       <footer class="border-t border-slate-200 bg-white px-4 py-4 sm:px-6">
         <div class="flex flex-col items-center justify-center gap-2 text-xs text-slate-400 sm:flex-row">
           <div v-if="appConfig.footerText">{{ appConfig.footerText }}</div>
-          <div v-else>© {{ tahun }} <span class="font-medium text-slate-500">{{ appConfig.appName }}</span></div>
+          <div v-else>© {{ year }} <span class="font-medium text-slate-500">{{ appConfig.appName }}</span></div>
         </div>
       </footer>
     </div>

@@ -16,13 +16,13 @@ const props = defineProps<{
     price: number | string;
     strike_price?: number | string | null;
     level?: string;
-    category_nama?: string | null;
-    instructor_nama?: string | null;
+    category_name?: string | null;
+    instructor_name?: string | null;
     instructor_foto?: string | null;
     rating_avg?: string | number | null;
     rating_count?: number | null;
     student_count?: number | null;
-    durasi_total_menit?: number | null;
+    total_duration_minutes?: number | null;
     meta?: { thumbnail_url?: string } | null;
   };
   /** Basis tautan detail ('/courses' publik, '/d/catalog' dashboard). */
@@ -31,9 +31,9 @@ const props = defineProps<{
 
 const to = computed(() => `${props.base ?? '/courses'}/${props.course.slug}`);
 const inisial = computed(() =>
-  (props.course.instructor_nama ?? '?').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase(),
+  (props.course.instructor_name ?? '?').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase(),
 );
-const diskon = computed(() => {
+const discount = computed(() => {
   const h = Number(props.course.price);
   const c = Number(props.course.strike_price ?? 0);
   return c > h && h > 0 ? Math.round(((c - h) / c) * 100) : 0;
@@ -57,8 +57,8 @@ console.log(`Course [${props.course.title}] thumbnail URL:`, props.course.meta?.
       <div v-else class="grid h-full place-items-center bg-gradient-to-br from-brand-400 to-brand-600 text-white/80">
         <Icon name="play-circle" :size="40" />
       </div>
-      <span v-if="diskon" class="absolute start-3 top-3 rounded-md bg-brand-500 px-2 py-0.5 text-[11px] font-bold text-white">
-        {{ t('catalog.card.discount', { n: diskon }) }}
+      <span v-if="discount" class="absolute start-3 top-3 rounded-md bg-brand-500 px-2 py-0.5 text-[11px] font-bold text-white">
+        {{ t('catalog.card.discount', { n: discount }) }}
       </span>
       <span v-if="course.level" class="absolute end-3 top-3 rounded-md bg-black/60 px-2 py-0.5 text-[11px] font-medium text-white">
         {{ levelLabel(course.level) }}
@@ -68,8 +68,8 @@ console.log(`Course [${props.course.title}] thumbnail URL:`, props.course.meta?.
     <!-- Isi -->
     <div class="flex flex-1 flex-col p-4">
       <div class="flex items-center gap-2">
-        <span v-if="course.category_nama" class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
-          {{ course.category_nama }}
+        <span v-if="course.category_name" class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+          {{ course.category_name }}
         </span>
       </div>
 
@@ -91,7 +91,7 @@ console.log(`Course [${props.course.title}] thumbnail URL:`, props.course.meta?.
       <div class="mt-auto flex items-center justify-between border-t border-slate-100 pt-3">
         <div>
           <span class="text-lg font-bold text-brand-500">{{ fmtHarga(course.price) }}</span>
-          <span v-if="diskon" class="ms-1.5 text-xs text-slate-400 line-through">{{ fmtHarga(course.strike_price!) }}</span>
+          <span v-if="discount" class="ms-1.5 text-xs text-slate-400 line-through">{{ fmtHarga(course.strike_price!) }}</span>
         </div>
         <span class="flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-medium text-white transition group-hover:bg-brand-500">
           {{ t('catalog.card.viewCourse') }} <Icon name="arrow-right" :size="11" class="rtl-flip" />

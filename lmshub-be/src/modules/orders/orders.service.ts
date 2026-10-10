@@ -18,34 +18,34 @@ import * as marketingService from '../marketing/marketing.service';
 import { CheckoutInput, ManualOrderInput, OrderItemInput, PayInput, RefundInput, VerifyPaymentInput } from './orders.validation';
 
 // Finansial: fallback revenue share instructor (README §"revenue share 60:40") bila
-// `instructor_profiles.revenue_share_percent` (override) tidak diisi. Final via `settings` (domain 12).
+// `instructor_profiles.revenue_share_percent` (override) no diisi. Final via `settings` (domain 12).
 const DEFAULT_INSTRUCTOR_SHARE_PERCENT = 60;
-// Timeout checkout default (menit) — placeholder sampai `settings.checkout_timeout_minutes` tersedia (domain 12).
+// Timeout checkout default (menit) — placeholder until `settings.checkout_timeout_minutes` tersedia (domain 12).
 const DEFAULT_CHECKOUT_TIMEOUT_MINUTES = 24 * 60;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 const isAdminLike = (actor: AuthContext) =>
-  actor.roles.includes('super_admin') || actor.roles.includes('direktur') || actor.roles.includes('admin_ops');
+  actor.roles.includes('super_admin') || actor.roles.includes('director') || actor.roles.includes('operations_admin');
 const isMarketing = (actor: AuthContext) => actor.roles.includes('marketing');
-const isDirektur = (actor: AuthContext) => actor.roles.includes('super_admin') || actor.roles.includes('direktur');
+const isDirektur = (actor: AuthContext) => actor.roles.includes('super_admin') || actor.roles.includes('director');
 
 /**
  * Metode luar-jaringan yang boleh dicatat lewat `POST /orders/:id/pay`.
  *
- * Endpoint itu hanya MENCATAT klaim payment; tidak ada uang yang berpindah
- * di dalamnya. Karena itu setiap catatan masuk sebagai `menunggu_verifikasi`
+ * Endpointst itu hanya MENCATAT klaim payment; no ada uang yang berpindah
+ * di dalamnya. Karena itu setiap notes login sebagai `menunggu_verifikasi`
  * dan baru melunasi order setelah seseorang ber-izin `payment.update`
  * menyetujuinya di layar Transaction.
  *
- * Metode gateway (kartu, VA, e-wallet, QRIS) sengaja TIDAK ada di daftar ini.
- * Untuk metode tersebut satu-satunya bukti uang sudah masuk adalah webhook
- * provider yang tertandatangani, dan jalurnya `POST /orders/:id/pay-gateway`.
- * Sebelumnya keempatnya diterima di sini dan langsung ditandai terverifikasi
+ * Metode gateway (kartu, VA, e-wallet, QRIS) sengaja no ada di register ini.
+ * Untuk method tersebut satu-satunya proof uang sudah login adalah webhook
+ * provider yang tertandatangani, dan channelnya `POST /orders/:id/pay-gateway`.
+ * previous keempatnya diterima di sini dan langsung ditandai terverifikasi
  * sebagai "simulasi gateway" — artinya siapa pun yang boleh membuat order bisa
  * melunasinya sendiri tanpa membayar.
  */
-const METODE_OFFLINE = new Set(['transfer_bank', 'tunai', 'lainnya']);
+const METODE_OFFLINE = new Set(['transfer_bank', 'tunai', 'other']);
 
 function periodeNow(): string {
   const d = new Date();
@@ -55,30 +55,30 @@ function periodeNow(): string {
 // ── Penyusunan item & kupon ──────────────────────────────────
 
 /**
- * Tipe item yang harganya DIPASOK KLIEN, bukan diturunkan dari catalog.
+ * Tipe item yang pricenya DIPASOK KLIEN, bukan diturunkan from catalog.
  *
- * Untuk `course`, `bundle` dan `path`, `resolveItems()` membaca price dari basis
+ * Untuk `course`, `bundle` dan `path`, `resolveItems()` membaca price from basis
  * data dan mengabaikan apa pun yang dikirim pembeli. `langganan` belum punya
- * catalog paket tersendiri, jadi harganya datang dari request.
+ * catalog package tersendiri, jadi pricenya datang from request.
  *
- * Himpunan ini ada supaya keputusan "total nol boleh dipercaya" (lihat
- * `checkout()`) tidak pernah lepas sinkron dari kenyataan di `resolveItems()`.
- * Tanpa itu, satu baris langganan berharga 0 cukup untuk mencetak order lunas
+ * Himpunan ini ada supaya keputusan "total nol boleh dipercaya" (view
+ * `checkout()`) no pernah lepas sinkron from kenyataan di `resolveItems()`.
+ * Tanpa itu, satu baris langganan berprice 0 cukup untuk mencetak order lunas
  * sendiri. Dijaga `tests/unit/security-guards.test.ts`.
  */
-export const TIPE_HARGA_DARI_KLIEN = new Set<OrderItemInput['item_tipe']>(['langganan']);
+export const TIPE_HARGA_DARI_KLIEN = new Set<OrderItemInput['item_type']>(['subscription']);
 
-/** Seluruh price order ini diturunkan server dari catalog? */
-export const hargaSepenuhnyaDariKatalog = (items: OrderItemInput[]): boolean =>
-  items.every((i) => !TIPE_HARGA_DARI_KLIEN.has(i.item_tipe));
+/** Seluruh price order ini diturunkan server from catalog? */
+export const priceSepenuhnyaDariKatalog = (items: OrderItemInput[]): boolean =>
+  items.every((i) => !TIPE_HARGA_DARI_KLIEN.has(i.item_type));
 
 interface ResolvedItem {
-  item_tipe: OrderItemInput['item_tipe'];
+  item_type: OrderItemInput['item_type'];
   course_id: string | null;
   learning_path_id: string | null;
   bundle_group_id: string | null;
-  harga_satuan: number;
-  kuantitas: number;
+  price_unit: number;
+  quantity: number;
   subtotal: number;
   meta: unknown;
 }
@@ -86,87 +86,87 @@ interface ResolvedItem {
 async function resolveItems(items: OrderItemInput[]): Promise<ResolvedItem[]> {
   const resolved: ResolvedItem[] = [];
   for (const item of items) {
-    let hargaSatuan = 0;
-    if (item.item_tipe === 'course' || item.item_tipe === 'bundle') {
+    let priceSatuan = 0;
+    if (item.item_type === 'course' || item.item_type === 'bundle') {
       const course = await repo.courseById(item.course_id!);
       if (!course) throw AppError.badRequest(`Course ${item.course_id} was not found`, 'course.not_found');
-      hargaSatuan = Number(course.price);
-    } else if (item.item_tipe === 'path') {
+      priceSatuan = Number(course.price);
+    } else if (item.item_type === 'path') {
       const path = await repo.learningPathById(item.learning_path_id!);
       if (!path) throw AppError.badRequest(`Learning path ${item.learning_path_id} was not found`, 'learning_path.not_found');
-      if (path.harga_bundle == null) throw AppError.badRequest('This learning path is not sold as a bundle', 'learning_path.not_sold_as_bundle');
-      hargaSatuan = Number(path.harga_bundle);
+      if (path.price_bundle == null) throw AppError.badRequest('This learning path is not sold as a bundle', 'learning_path.not_sold_as_bundle');
+      priceSatuan = Number(path.price_bundle);
     } else {
-      // langganan: belum ada catalog paket terpisah — price dipasok klien,
-      // divalidasi non-negatif oleh Zod. Tercatat di TIPE_HARGA_DARI_KLIEN;
-      // menambah cabang serupa di sini WAJIB menambah tipenya ke sana.
-      hargaSatuan = item.harga_satuan ?? 0;
+      // langganan: belum ada catalog package terpisah — price dipasok klien,
+      // divalidasi non-negatif by Zod. Tercatat di TIPE_HARGA_DARI_KLIEN;
+      // menambah branch serupa di sini WAJIB menambah tipenya to sana.
+      priceSatuan = item.price_unit ?? 0;
     }
-    const kuantitas = item.kuantitas ?? 1;
+    const quantity = item.quantity ?? 1;
     resolved.push({
-      item_tipe: item.item_tipe,
+      item_type: item.item_type,
       course_id: item.course_id ?? null,
       learning_path_id: item.learning_path_id ?? null,
       bundle_group_id: item.bundle_group_id ?? null,
-      harga_satuan: hargaSatuan,
-      kuantitas,
-      subtotal: round2(hargaSatuan * kuantitas),
+      price_unit: priceSatuan,
+      quantity,
+      subtotal: round2(priceSatuan * quantity),
       meta: item.meta ?? null,
     });
   }
   return resolved;
 }
 
-async function applyCoupon(kode: string | undefined, subtotal: number): Promise<{ coupon_id: string | null; diskon: number }> {
-  if (!kode) return { coupon_id: null, diskon: 0 };
+async function applyCoupon(kode: string | undefined, subtotal: number): Promise<{ coupon_id: string | null; discount: number }> {
+  if (!kode) return { coupon_id: null, discount: 0 };
   const coupon = await repo.couponByKode(kode);
   if (!coupon || !coupon.is_active) throw AppError.badRequest('This coupon is not valid', 'coupon.invalid');
   const now = new Date();
-  if (coupon.berlaku_mulai && new Date(coupon.berlaku_mulai) > now) throw AppError.badRequest('This coupon is not valid yet', 'coupon.not_yet_valid');
-  if (coupon.berlaku_sampai && new Date(coupon.berlaku_sampai) < now) throw AppError.badRequest('This coupon has expired', 'coupon.expired');
-  if (coupon.kuota_maksimal != null && coupon.kuota_terpakai >= coupon.kuota_maksimal) {
+  if (coupon.valid_from && new Date(coupon.valid_from) > now) throw AppError.badRequest('This coupon is not valid yet', 'coupon.not_yet_valid');
+  if (coupon.valid_until && new Date(coupon.valid_until) < now) throw AppError.badRequest('This coupon has expired', 'coupon.expired');
+  if (coupon.max_quota != null && coupon.used_quota >= coupon.max_quota) {
     throw AppError.badRequest('This coupon has been fully redeemed', 'coupon.quota_exhausted');
   }
-  if (coupon.minimum_pembelian != null && subtotal < Number(coupon.minimum_pembelian)) {
+  if (coupon.min_purchase != null && subtotal < Number(coupon.min_purchase)) {
     throw AppError.badRequest('Your subtotal is below the minimum for this coupon', 'coupon.below_minimum');
   }
-  const diskon =
-    coupon.tipe_potongan === 'persen'
-      ? round2((subtotal * Number(coupon.nilai_potongan)) / 100)
-      : Math.min(round2(Number(coupon.nilai_potongan)), subtotal);
-  return { coupon_id: coupon.id, diskon };
+  const discount =
+    coupon.discount_type === 'persen'
+      ? round2((subtotal * Number(coupon.discount_value)) / 100)
+      : Math.min(round2(Number(coupon.discount_value)), subtotal);
+  return { coupon_id: coupon.id, discount };
 }
 
 async function buildOrder(
   tx: PoolClient,
   params: {
     buyer_user_id: string;
-    jalur: 'online' | 'manual';
+    channel: 'online' | 'manual';
     marketing_user_id: string | null;
     items: OrderItemInput[];
     coupon_kode?: string;
-    catatan?: string;
+    notes?: string;
   },
 ): Promise<OrderRow> {
   const resolvedItems = await resolveItems(params.items);
   const subtotal = round2(resolvedItems.reduce((s, i) => s + i.subtotal, 0));
-  const { coupon_id, diskon } = await applyCoupon(params.coupon_kode, subtotal);
-  const total = Math.max(0, round2(subtotal - diskon));
+  const { coupon_id, discount } = await applyCoupon(params.coupon_kode, subtotal);
+  const total = Math.max(0, round2(subtotal - discount));
 
-  const checkout_kedaluwarsa_at =
-    params.jalur === 'online' ? new Date(Date.now() + DEFAULT_CHECKOUT_TIMEOUT_MINUTES * 60 * 1000) : null;
+  const checkout_expired_at =
+    params.channel === 'online' ? new Date(Date.now() + DEFAULT_CHECKOUT_TIMEOUT_MINUTES * 60 * 1000) : null;
 
   const order = await repo.insertOrder(
     {
       buyer_user_id: params.buyer_user_id,
-      jalur: params.jalur,
+      channel: params.channel,
       marketing_user_id: params.marketing_user_id,
       coupon_id,
       subtotal,
-      diskon,
+      discount,
       total,
-      checkout_kedaluwarsa_at,
-      catatan: params.catatan ?? null,
+      checkout_expired_at,
+      notes: params.notes ?? null,
     },
     tx,
   );
@@ -183,41 +183,41 @@ async function buildOrder(
  * Boleh langsung diberi akses tanpa payment?
  *
  * Dua keadaan sah membuat sebuah order bernilai nol: course yang memang
- * dipasang gratis, dan kupon yang memotong habis seluruh tagihan. Keduanya
- * dijanjikan Buku 3 dan keduanya sebelumnya buntu — `pay-gateway` menolak
- * dengan `order.free_no_payment`, `pay` menuntut nominal positif, dan
+ * dipasang gratis, dan kupon yang memotong habis seluruh invoice. Keduanya
+ * dijanjikan Buku 3 dan keduanya previous buntu — `pay-gateway` menolak
+ * dengan `order.free_no_payment`, `pay` menuntut amount positif, dan
  * `recomputeOrderStatus` hanya melunasi bila `total > 0`. Akibatnya course
- * gratis tidak bisa didaftari sama sekali.
+ * gratis no bisa didaftari sama sekali.
  *
  * Syaratnya sengaja DUA, bukan sekadar `total === 0`:
  *
  *  1. totalnya benar-benar nol, dan
- *  2. seluruh price di order itu diturunkan server dari catalog.
+ *  2. seluruh price di order itu diturunkan server from catalog.
  *
- * Syarat kedua yang menahan penyalahgunaan. Harga `course`/`bundle`/`path`
- * dibaca dari basis data dan input klien diabaikan, jadi pembeli tidak bisa
- * memaksa nol. Tetapi `langganan` harganya dipasok request — tanpa syarat kedua,
- * satu baris langganan berharga 0 cukup untuk mencetak order berstatus lunas
- * atas kemauan pembeli sendiri.
+ * Syarat kedua yang menahan penyalahgunaan. price `course`/`bundle`/`path`
+ * read from basis data dan input klien diabaikan, jadi pembeli no bisa
+ * memaksa nol. Tetapi `langganan` pricenya dipasok request — tanpa syarat kedua,
+ * satu baris langganan berprice 0 cukup untuk mencetak order berstatus lunas
+ * on kemauan pembeli sendiri.
  */
 function bolehLangsungAktif(order: OrderRow, items: OrderItemInput[]): boolean {
-  return Number(order.total) === 0 && hargaSepenuhnyaDariKatalog(items);
+  return Number(order.total) === 0 && priceSepenuhnyaDariKatalog(items);
 }
 
 // ── Checkout online (student) ──────────────────────────────────
 
 export async function checkout(actor: AuthContext, input: CheckoutInput) {
   // Order bernilai nol diaktifkan di transaction yang sama dengan pembuatannya,
-  // supaya tidak pernah ada keadaan antara "order gratis dibuat" dan "aksesnya
-  // diberikan" yang bisa gagal di tengah jalan.
+  // supaya no pernah ada keadaan antara "order gratis created" dan "aksesnya
+  // diberikan" yang bisa failed di tengah jalan.
   const order = await withTransaction(async (tx) => {
     const o = await buildOrder(tx, {
       buyer_user_id: actor.userId,
-      jalur: 'online',
+      channel: 'online',
       marketing_user_id: null,
       items: input.items,
       coupon_kode: input.coupon_kode,
-      catatan: input.catatan,
+      notes: input.notes,
     });
 
     if (bolehLangsungAktif(o, input.items)) {
@@ -231,8 +231,8 @@ export async function checkout(actor: AuthContext, input: CheckoutInput) {
           entityId: o.id,
           after: {
             total: 0,
-            // Dua sebab sah sebuah order bernilai nol; dicatat supaya laporan
-            // bisa memisahkan course gratis dari kupon potong-habis.
+            // Dua sebab sah sebuah order bernilai nol; dicatat supaya report
+            // bisa memisahkan course gratis from kupon potong-habis.
             sebab: Number(o.subtotal) > 0 ? 'kupon_100_persen' : 'kursus_gratis',
           },
         },
@@ -248,7 +248,7 @@ export async function checkout(actor: AuthContext, input: CheckoutInput) {
     action: 'checkout',
     entity: 'orders',
     entityId: order.id,
-    after: { total: order.total, jalur: order.jalur },
+    after: { total: order.total, channel: order.channel },
   });
   return detail(actor, order.id);
 }
@@ -259,17 +259,17 @@ export async function createManual(actor: AuthContext, input: ManualOrderInput) 
   if (!isMarketing(actor) && !isAdminLike(actor)) {
     throw AppError.forbidden('Only Marketing or an Admin can create a manual order', 'order.manual_requires_marketing');
   }
-  // attribution komisi — pelaku marketing yang menginput, kecuali admin menunjuk agen lain eksplisit
+  // attribution commission — pelaku marketing yang menginput, kecuali admin menunjuk agen lain eksplisit
   const marketing_user_id = input.marketing_user_id ?? (isMarketing(actor) ? actor.userId : null);
 
   const order = await withTransaction((tx) =>
     buildOrder(tx, {
       buyer_user_id: input.buyer_user_id,
-      jalur: 'manual',
+      channel: 'manual',
       marketing_user_id,
       items: input.items,
       coupon_kode: input.coupon_kode,
-      catatan: input.catatan ?? 'Tanda jadi/invoice manual',
+      notes: input.notes ?? 'Tanda jadi/invoice manual',
     }),
   );
   await recordAudit({
@@ -311,58 +311,58 @@ export async function detail(actor: AuthContext, id: string) {
   return { ...order, items, payments, invoice };
 }
 
-// ── Pelunasan → enrollment + revenue share + komisi (finansial) ──
+// ── Pelunasan → enrollment + revenue share + commission (finansial) ──
 
 async function activateOrderOnLunas(tx: PoolClient, order: OrderRow, actorId: string | null): Promise<void> {
-  await repo.updateOrderStatus(order.id, 'lunas', tx);
+  await repo.updateOrderStatus(order.id, 'paid_in_full', tx);
 
   const items = await repo.itemsByOrder(order.id, tx);
   const ratio = Number(order.subtotal) > 0 ? Number(order.total) / Number(order.subtotal) : 1;
-  const periode = periodeNow();
+  const period = periodeNow();
 
   for (const item of items) {
-    if (item.item_tipe === 'course' || item.item_tipe === 'bundle') {
+    if (item.item_type === 'course' || item.item_type === 'bundle') {
       if (!item.course_id) continue;
       const course = await repo.courseById(item.course_id, tx);
       if (!course) continue;
 
-      // revenue share instructor:lembaga dari price efektif (setelah kupon)
+      // revenue share instructor:lembaga from price efektif (setelah kupon)
       const efektif = round2(Number(item.subtotal) * ratio);
       const instructorProfile = await repo.instructorProfileById(course.instructor_id, tx);
       const persen = instructorProfile?.revenue_share_percent != null
         ? Number(instructorProfile.revenue_share_percent)
         : DEFAULT_INSTRUCTOR_SHARE_PERCENT;
-      const nominalInstruktur = round2((efektif * persen) / 100);
-      const nominalPlatform = round2(efektif - nominalInstruktur);
+      const amountInstruktur = round2((efektif * persen) / 100);
+      const amountPlatform = round2(efektif - amountInstruktur);
 
       await repo.insertRevenueShare(
         {
           course_id: course.id,
           instructor_id: course.instructor_id,
           order_item_id: item.id,
-          persen_share: persen,
-          nominal_share: nominalInstruktur,
-          nominal_platform: nominalPlatform,
-          periode,
+          share_percentage: persen,
+          amount_share: amountInstruktur,
+          amount_platform: amountPlatform,
+          period,
         },
         tx,
       );
 
-      await repo.insertEnrollment({ user_id: order.buyer_user_id, course_id: item.course_id, sumber: 'beli', order_item_id: item.id }, tx);
-    } else if (item.item_tipe === 'path' && item.learning_path_id) {
+      await repo.insertEnrollment({ user_id: order.buyer_user_id, course_id: item.course_id, source: 'buy', order_item_id: item.id }, tx);
+    } else if (item.item_type === 'path' && item.learning_path_id) {
       const courseIds = await repo.pathCourseIds(item.learning_path_id, tx);
       for (const courseId of courseIds) {
-        await repo.insertEnrollment({ user_id: order.buyer_user_id, course_id: courseId, sumber: 'path', order_item_id: item.id }, tx);
+        await repo.insertEnrollment({ user_id: order.buyer_user_id, course_id: courseId, source: 'path', order_item_id: item.id }, tx);
       }
-      // Catatan: bagi hasil per-course pada jalur ini diagregasi lintas
-      // instructor oleh modul laporan, bukan di sini — lihat domain 05/09.
+      // Catatan: bagi hasil per-course pada channel ini diagregasi lintas
+      // instructor by modul report, bukan di sini — view domain 05/09.
     }
-    // item_tipe='langganan': aktivasi subscriptions/memberships di luar cakupan modul orders/marketing ini.
+    // item_type='subscription': aktivasi subscriptions/memberships di luar cakupan modul orders/marketing ini.
   }
 
-  await repo.updateOrderStatus(order.id, 'akses_aktif', tx);
+  await repo.updateOrderStatus(order.id, 'access_active', tx);
 
-  // engine komisi marketing — attribution via orders.marketing_user_id
+  // engine commission marketing — attribution via orders.marketing_user_id
   await marketingService.computeCommissionOnOrderLunas(tx, order);
 
   await recordAudit(
@@ -373,7 +373,7 @@ async function activateOrderOnLunas(tx: PoolClient, order: OrderRow, actorId: st
       entity: 'orders',
       entityId: order.id,
       before: { status: order.status },
-      after: { status: 'akses_aktif' },
+      after: { status: 'access_active' },
     },
     tx,
   );
@@ -381,14 +381,14 @@ async function activateOrderOnLunas(tx: PoolClient, order: OrderRow, actorId: st
 
 async function recomputeOrderStatus(tx: PoolClient, orderId: string, actorId: string | null): Promise<void> {
   const order = await repo.lockOrderForUpdate(orderId, tx);
-  if (!order || order.status === 'lunas' || order.status === 'akses_aktif' || order.status === 'batal') return;
+  if (!order || order.status === 'paid_in_full' || order.status === 'access_active' || order.status === 'cancelled') return;
 
   const paid = await repo.sumVerifiedPayments(orderId, tx);
   const total = Number(order.total);
   if (paid >= total && total > 0) {
     await activateOrderOnLunas(tx, order, actorId);
   } else if (paid > 0) {
-    await repo.updateOrderStatus(orderId, 'dp_cicilan_berjalan', tx);
+    await repo.updateOrderStatus(orderId, 'installment_running', tx);
   }
 }
 
@@ -396,12 +396,12 @@ async function recomputeOrderStatus(tx: PoolClient, orderId: string, actorId: st
 
 export async function pay(actor: AuthContext, orderId: string, input: PayInput) {
   const order = await loadOrderScoped(actor, orderId);
-  if (order.status === 'lunas' || order.status === 'akses_aktif') throw AppError.conflict('This order is already paid', 'order.already_paid');
-  if (order.status === 'batal') throw AppError.conflict('This order has been cancelled', 'order.cancelled');
+  if (order.status === 'paid_in_full' || order.status === 'access_active') throw AppError.conflict('This order is already paid', 'order.already_paid');
+  if (order.status === 'cancelled') throw AppError.conflict('This order has been cancelled', 'order.cancelled');
 
-  // Metode gateway tidak boleh lewat sini: pencatatnya adalah pembeli, dan tidak
+  // Metode gateway no boleh lewat sini: pencatatnya adalah pembeli, dan no
   // ada apa pun di request ini yang membuktikan uang sudah berpindah.
-  if (!METODE_OFFLINE.has(input.metode)) {
+  if (!METODE_OFFLINE.has(input.method)) {
     throw AppError.badRequest(
       'That payment method must go through the payment gateway',
       'payment.method_requires_gateway',
@@ -412,17 +412,17 @@ export async function pay(actor: AuthContext, orderId: string, input: PayInput) 
     const payment = await repo.insertPayment(
       {
         order_id: orderId,
-        jenis: input.jenis,
-        nominal: input.nominal,
-        metode: input.metode,
+        type: input.type,
+        amount: input.amount,
+        method: input.method,
         // Selalu menunggu manusia. Order menjadi lunas hanya lewat POST
         // /orders/:id/verify (transfer/tunai) atau webhook gateway.
-        status: 'menunggu_verifikasi',
-        bukti_media_id: input.bukti_media_id ?? null,
-        referensi_gateway: input.referensi_gateway ?? null,
+        status: 'awaiting_verification',
+        proof_media_id: input.proof_media_id ?? null,
+        gateway_reference: input.gateway_reference ?? null,
         verified_by: null,
         verified_at: null,
-        catatan_verifikasi: null,
+        notes_verifikasi: null,
       },
       tx,
     );
@@ -433,7 +433,7 @@ export async function pay(actor: AuthContext, orderId: string, input: PayInput) 
         action: 'pay',
         entity: 'payments',
         entityId: payment.id,
-        after: { jenis: payment.jenis, nominal: payment.nominal, status: payment.status },
+        after: { type: payment.type, amount: payment.amount, status: payment.status },
       },
       tx,
     );
@@ -448,7 +448,7 @@ export async function pay(actor: AuthContext, orderId: string, input: PayInput) 
 // Delapan gateway didukung (Stripe, PayPal, Razorpay, Paystack, Flutterwave,
 // Mollie, Midtrans, Easebuzz). Adapter-nya ada di `core/payment/providers`; modul ini
 // hanya memutuskan kapan sebuah order menjadi lunas. Order HANYA lunas lewat
-// webhook — redirect balik dari browser tidak pernah dianggap bukti bayar.
+// webhook — redirect balik from browser no pernah dianggap proof bayar.
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -458,41 +458,41 @@ async function storeCurrency(): Promise<string> {
   return (code || 'IDR').toUpperCase();
 }
 
-/** Konfigurasi payment untuk FE: gateway yang aktif + rekening transfer manual. */
+/** Konfigurasi payment untuk FE: gateway yang active + account transfer manual. */
 export async function paymentConfig() {
-  // Kredensial gateway kini datang dari Pengaturan (env hanya cadangan), jadi
-  // cache-nya harus terisi sebelum daftar gateway dibangun.
+  // Kredensial gateway kini datang from settings (env hanya cadangan), jadi
+  // cache-nya harus terisi sebelum register gateway dibangun.
   await ensurePaymentSettings();
 
   const currency = await storeCurrency();
   const providers = availableProviders(currency);
 
-  // Rekening tujuan adalah master data (`bank_accounts`); di layar Pengaturan
-  // transfer manual hanya punya sakelar aktif/tidak, bukan kolom kredensial.
+  // Rekening tujuan adalah master data (`bank_accounts`); di layar settings
+  // transfer manual hanya punya sakelar active/no, bukan kolom kredensial.
   const manualAktif = manualTransferEnabled();
-  const rekening = manualAktif ? await listActiveBankAccounts() : [];
-  const utama = rekening.find((r) => r.is_utama) ?? rekening[0] ?? null;
+  const account = manualAktif ? await listActiveBankAccounts() : [];
+  const primary = account.find((r) => r.is_primary) ?? account[0] ?? null;
 
   const midtrans = providers.find((p) => p.id === 'midtrans');
 
   return {
     currency,
-    /** Gateway siap pakai, urut sesuai tampilan checkout. */
+    /** Gateway siap pakai, sort_order sesuai tampilan checkout. */
     providers: providers.map((p) => ({
       id: p.id,
       label: p.label,
       config: p.publicConfig(),
     })),
-    /** Transfer bank manual aktif? Rekeningnya diatur di menu Rekening Bank. */
+    /** Transfer bank manual active? Rekeningnya diatur di menu Rekening Bank. */
     manual_transfer_enabled: manualAktif,
-    /** Seluruh rekening aktif — FE menampilkan pilihan bila lebih dari satu. */
-    bank_accounts: rekening.map((r) => ({
+    /** Seluruh account active — FE menampilkan pilihan bila lebih from satu. */
+    bank_accounts: account.map((r) => ({
       id: r.id,
-      bank: r.nama_bank,
-      nomor_rekening: r.nomor_rekening,
-      atas_nama: r.atas_nama,
-      cabang: r.cabang,
-      is_utama: r.is_utama,
+      bank: r.bank_name,
+      account_number: r.account_number,
+      account_name: r.account_name,
+      branch: r.branch,
+      is_primary: r.is_primary,
     })),
 
     // ── Kompatibilitas klien lama (hanya tahu Midtrans) ──
@@ -505,27 +505,27 @@ export async function paymentConfig() {
     configured: providers.length > 0,
     client_key: env.MIDTRANS_CLIENT_KEY ?? null,
     is_production: env.MIDTRANS_IS_PRODUCTION,
-    bank_transfer: utama
-      ? { bank: utama.nama_bank, nomor_rekening: utama.nomor_rekening, atas_nama: utama.atas_nama }
+    bank_transfer: primary
+      ? { bank: primary.bank_name, account_number: primary.account_number, account_name: primary.account_name }
       : null,
   };
 }
 
 /**
- * Mulai payment gateway: buat payment pending, lalu sesi checkout di provider.
+ * start payment gateway: buat payment pending, lalu sesi checkout di provider.
  * `payments.id` dikirim sebagai referensi sehingga webhook bisa menemukannya lagi.
  *
- * Bila belum ada gateway terkonfigurasi, checkout DITOLAK. Dulu jalur itu
+ * Bila belum ada gateway terkonfigurasi, checkout DITOLAK. Dulu channel itu
  * melunasi order begitu saja "supaya alur bisa diuji" — dan karena seluruh
  * kredensial gateway bersifat opsional, itulah keadaan setiap instalasi baru:
- * toko yang baru dipasang membagikan course berbayar secara cuma-cuma sampai
+ * toko yang baru dipasang membagikan course berbayar secara cuma-cuma until
  * pemiliknya memasang gateway. Auto-settle kini harus dinyalakan sendiri lewat
- * `PAYMENT_DEV_AUTOSETTLE=true` dan tidak bisa hidup di `NODE_ENV=production`.
+ * `PAYMENT_DEV_AUTOSETTLE=true` dan no bisa hidup di `NODE_ENV=production`.
  */
 export async function payGateway(actor: AuthContext, orderId: string, providerId?: string) {
   const order = await loadOrderScoped(actor, orderId);
-  if (order.status === 'lunas' || order.status === 'akses_aktif') throw AppError.conflict('This order is already paid', 'order.already_paid');
-  if (order.status === 'batal') throw AppError.conflict('This order has been cancelled', 'order.cancelled');
+  if (order.status === 'paid_in_full' || order.status === 'access_active') throw AppError.conflict('This order is already paid', 'order.already_paid');
+  if (order.status === 'cancelled') throw AppError.conflict('This order has been cancelled', 'order.cancelled');
   const total = Number(order.total);
   if (total <= 0) throw AppError.badRequest('This order is free and needs no payment', 'order.free_no_payment');
 
@@ -546,8 +546,8 @@ export async function payGateway(actor: AuthContext, orderId: string, providerId
     provider = ready[0] ?? null;
   }
 
-  // Tanpa gateway tidak ada cara memastikan uang masuk. Menolak lebih awal juga
-  // menghindari baris payment menggantung untuk checkout yang mustahil selesai.
+  // Tanpa gateway no ada cara memastikan uang login. Menolak lebih awal juga
+  // menghindari baris payment menggantung untuk checkout yang mustahil finish.
   if (!provider) {
     if (!env.PAYMENT_DEV_AUTOSETTLE || isProd) {
       throw AppError.badRequest(
@@ -561,37 +561,37 @@ export async function payGateway(actor: AuthContext, orderId: string, providerId
     );
   }
 
-  const metode = provider?.id ?? 'dev_autosettle';
+  const method = provider?.id ?? 'dev_autosettle';
 
   const payment = await withTransaction(async (tx) => {
     const p = await repo.insertPayment(
       {
         order_id: orderId,
-        jenis: 'penuh',
-        nominal: total,
-        metode,
-        status: 'menunggu_verifikasi',
-        bukti_media_id: null,
-        referensi_gateway: null,
+        type: 'full',
+        amount: total,
+        method,
+        status: 'awaiting_verification',
+        proof_media_id: null,
+        gateway_reference: null,
         verified_by: null,
         verified_at: null,
-        catatan_verifikasi: null,
+        notes_verifikasi: null,
       },
       tx,
     );
     await recordAudit(
-      { userId: actor.userId, module: 'payment', action: 'gateway_init', entity: 'payments', entityId: p.id, after: { metode, nominal: total } },
+      { userId: actor.userId, module: 'payment', action: 'gateway_init', entity: 'payments', entityId: p.id, after: { method, amount: total } },
       tx,
     );
     return p;
   });
 
-  // Auto-settle pengembangan (sudah dijamin non-produksi + opt-in di atas).
+  // Auto-settle pengembangan (sudah dijamin non-produksi + opt-in di on).
   if (!provider) {
     await withTransaction(async (tx) => {
       await repo.updatePaymentVerification(
         payment.id,
-        { status: 'terverifikasi', verified_by: actor.userId, verified_at: new Date(), catatan_verifikasi: 'PAYMENT_DEV_AUTOSETTLE (development, no gateway)' },
+        { status: 'verified', verified_by: actor.userId, verified_at: new Date(), notes_verifikasi: 'PAYMENT_DEV_AUTOSETTLE (development, no gateway)' },
         tx,
       );
       await recomputeOrderStatus(tx, orderId, actor.userId);
@@ -600,8 +600,8 @@ export async function payGateway(actor: AuthContext, orderId: string, providerId
   }
 
   // Kontak pembeli untuk customer_details
-  const buyer = await query<{ nama_lengkap: string; email: string | null; nomor_wa: string | null }>(
-    `SELECT nama_lengkap, email, nomor_wa FROM users WHERE id = $1`,
+  const buyer = await query<{ name_lengkap: string; email: string | null; number_wa: string | null }>(
+    `SELECT name_lengkap, email, number_wa FROM users WHERE id = $1`,
     [order.buyer_user_id],
   );
   const c = buyer[0];
@@ -612,16 +612,16 @@ export async function payGateway(actor: AuthContext, orderId: string, providerId
     currency,
     description: `Order ${orderId}`,
     customer: {
-      name: c?.nama_lengkap ?? undefined,
+      name: c?.name_lengkap ?? undefined,
       email: c?.email ?? undefined,
-      phone: c?.nomor_wa ?? undefined,
+      phone: c?.number_wa ?? undefined,
     },
     returnUrl: `${env.PAYMENT_RETURN_URL}?order=${orderId}`,
     cancelUrl: `${env.PAYMENT_CANCEL_URL}?order=${orderId}`,
     notifyUrl: `${env.APP_URL}/api/v1/orders/webhook/${provider.id}`,
   });
 
-  await query(`UPDATE payments SET referensi_gateway = $2 WHERE id = $1`, [
+  await query(`UPDATE payments SET gateway_reference = $2 WHERE id = $1`, [
     payment.id,
     checkout.gatewayRef ?? payment.id,
   ]);
@@ -640,7 +640,7 @@ export async function payGateway(actor: AuthContext, orderId: string, providerId
 }
 
 /**
- * Handler webhook gateway (dipanggil TANPA auth — diverifikasi oleh adapter).
+ * Handler webhook gateway (dipanggil TANPA auth — diverifikasi by adapter).
  * Idempoten: payment yang sudah terverifikasi diabaikan.
  */
 export async function handleGatewayWebhook(providerId: string, req: WebhookRequest) {
@@ -653,7 +653,7 @@ export async function handleGatewayWebhook(providerId: string, req: WebhookReque
   try {
     event = await provider.handleWebhook(req);
   } catch (err) {
-    // Verifikasi gagal = bukan dari gateway. Jangan bocorkan detailnya.
+    // Verifikasi failed = bukan from gateway. Jangan bocorkan detailnya.
     logger.warn({ provider: providerId, err }, 'Gateway webhook verification failed');
     throw AppError.forbidden('Invalid webhook signature', 'payment.invalid_webhook_signature');
   }
@@ -668,28 +668,28 @@ export async function handleGatewayWebhook(providerId: string, req: WebhookReque
 
   if (!payment) return { ok: true, note: 'payment not found — ignored' };
 
-  // Gateway lain tidak boleh menyelesaikan payment milik gateway ini.
-  if (payment.metode !== provider.id) {
+  // Gateway lain no boleh menyelesaikan payment milik gateway ini.
+  if (payment.method !== provider.id) {
     logger.warn(
-      { provider: provider.id, payment: payment.id, metode: payment.metode },
+      { provider: provider.id, payment: payment.id, method: payment.method },
       'Webhook refers to a payment belonging to another gateway — ignored',
     );
     return { ok: true, note: 'gateway mismatch — ignored' };
   }
 
   // idempotensi
-  if (payment.status === 'terverifikasi') return { ok: true, note: 'already processed' };
-  if (payment.status === 'ditolak' && event.outcome !== 'settlement') return { ok: true, note: 'already rejected' };
+  if (payment.status === 'verified') return { ok: true, note: 'already processed' };
+  if (payment.status === 'rejected' && event.outcome !== 'settlement') return { ok: true, note: 'already rejected' };
 
   if (event.outcome === 'settlement') {
     await withTransaction(async (tx) => {
       await repo.updatePaymentVerification(
         payment.id,
         {
-          status: 'terverifikasi',
+          status: 'verified',
           verified_by: null,
           verified_at: new Date(),
-          catatan_verifikasi: event.note ?? provider.label,
+          notes_verifikasi: event.note ?? provider.label,
         },
         tx,
       );
@@ -703,7 +703,7 @@ export async function handleGatewayWebhook(providerId: string, req: WebhookReque
     await withTransaction(async (tx) => {
       await repo.updatePaymentVerification(
         payment.id,
-        { status: 'ditolak', verified_by: null, verified_at: new Date(), catatan_verifikasi: event.note ?? provider.label },
+        { status: 'rejected', verified_by: null, verified_at: new Date(), notes_verifikasi: event.note ?? provider.label },
         tx,
       );
       await recordAudit(
@@ -724,15 +724,15 @@ export async function verify(actor: AuthContext, orderId: string, input: VerifyP
   if (!order) throw AppError.notFound('Order not found', 'order.not_found');
   // `payment_id` opsional: layar Transaction menyetujui sebuah order, bukan sebuah
   // baris payment, dan hampir semua order hanya punya satu klaim yang
-  // menunggu. Bila ternyata ada lebih dari satu, minta penyebutnya secara
+  // menunggu. Bila ternyata ada lebih from satu, minta penyebutnya secara
   // eksplisit alih-alih menebak yang mana.
   let payment;
   if (input.payment_id) {
     payment = await repo.paymentById(input.payment_id);
     if (!payment || payment.order_id !== orderId) throw AppError.notFound('Payment not found', 'payment.not_found');
-    if (payment.status !== 'menunggu_verifikasi') throw AppError.conflict('This payment has already been verified or rejected', 'payment.already_decided');
+    if (payment.status !== 'awaiting_verification') throw AppError.conflict('This payment has already been verified or rejected', 'payment.already_decided');
   } else {
-    const pending = (await repo.paymentsByOrder(orderId)).filter((p) => p.status === 'menunggu_verifikasi');
+    const pending = (await repo.paymentsByOrder(orderId)).filter((p) => p.status === 'awaiting_verification');
     if (!pending.length) throw AppError.notFound('This order has no payment waiting for verification', 'payment.none_pending');
     if (pending.length > 1) {
       throw AppError.badRequest('This order has several payments waiting — say which one', 'payment.ambiguous_pending', {
@@ -742,28 +742,28 @@ export async function verify(actor: AuthContext, orderId: string, input: VerifyP
     payment = pending[0];
   }
 
-  const newStatus = input.aksi === 'verify' ? 'terverifikasi' : 'ditolak';
+  const newStatus = input.action === 'verify' ? 'verified' : 'rejected';
 
   await withTransaction(async (tx) => {
     await repo.updatePaymentVerification(
       payment.id,
-      { status: newStatus, verified_by: actor.userId, verified_at: new Date(), catatan_verifikasi: input.catatan_verifikasi ?? null },
+      { status: newStatus, verified_by: actor.userId, verified_at: new Date(), notes_verifikasi: input.notes_verifikasi ?? null },
       tx,
     );
     await recordAudit(
       {
         userId: actor.userId,
         module: 'payment',
-        action: `verify_${input.aksi}`,
+        action: `verify_${input.action}`,
         entity: 'payments',
         entityId: payment.id,
         before: { status: payment.status },
         after: { status: newStatus },
-        reason: input.catatan_verifikasi ?? null,
+        reason: input.notes_verifikasi ?? null,
       },
       tx,
     );
-    if (newStatus === 'terverifikasi') await recomputeOrderStatus(tx, orderId, actor.userId);
+    if (newStatus === 'verified') await recomputeOrderStatus(tx, orderId, actor.userId);
   });
 
   return detail(actor, orderId);
@@ -778,8 +778,8 @@ export async function invoice(actor: AuthContext, orderId: string) {
 
   const now = new Date();
   const seq = (await repo.countInvoicesInPeriod(now.getUTCFullYear(), now.getUTCMonth() + 1)) + 1;
-  const nomor_invoice = `INV/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, '0')}/${String(seq).padStart(5, '0')}`;
-  return repo.insertInvoice({ order_id: orderId, nomor_invoice });
+  const number_invoice = `INV/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, '0')}/${String(seq).padStart(5, '0')}`;
+  return repo.insertInvoice({ order_id: orderId, number_invoice });
 }
 
 // ── Refund (finansial — approval Direktur wajib) ──────────
@@ -788,10 +788,10 @@ export async function refund(actor: AuthContext, orderId: string, input: RefundI
   if (!isDirektur(actor)) throw AppError.forbidden('Only a Director can approve a refund', 'refund.approve_requires_director');
   const order = await repo.findById(orderId);
   if (!order) throw AppError.notFound('Order not found', 'order.not_found');
-  if (!['lunas', 'akses_aktif'].includes(order.status)) {
+  if (!['paid_in_full', 'access_active'].includes(order.status)) {
     throw AppError.conflict('Only a paid order with active access can be refunded', 'refund.order_not_eligible');
   }
-  if (input.nominal > Number(order.total)) throw AppError.badRequest('The refund amount is larger than the order total', 'refund.exceeds_order_total');
+  if (input.amount > Number(order.total)) throw AppError.badRequest('The refund amount is larger than the order total', 'refund.exceeds_order_total');
 
   const result = await withTransaction(async (tx) => {
     const now = new Date();
@@ -799,24 +799,24 @@ export async function refund(actor: AuthContext, orderId: string, input: RefundI
     const refundRow = await repo.insertRefund(
       {
         order_id: orderId,
-        nominal: input.nominal,
-        alasan: input.alasan,
-        status: 'selesai',
-        diajukan_oleh: actor.userId,
-        disetujui_oleh: actor.userId,
-        disetujui_at: now,
-        diproses_at: now,
-        metode_pengembalian: input.metode_pengembalian ?? null,
-        catatan: input.catatan ?? null,
+        amount: input.amount,
+        reason: input.reason,
+        status: 'completed',
+        submitted_by: actor.userId,
+        approved_by: actor.userId,
+        approved_at: now,
+        processed_at: now,
+        method_pengembalian: input.method_pengembalian ?? null,
+        notes: input.notes ?? null,
       },
       tx,
     );
 
-    await repo.updateOrderStatus(orderId, 'batal', tx);
-    // pembalikan revenue share (soft-delete — enum revenue_shares.status tidak menyediakan status reversal)
+    await repo.updateOrderStatus(orderId, 'cancelled', tx);
+    // pembalikan revenue share (soft-delete — enum revenue_shares.status no menyediakan status reversal)
     await repo.softDeleteRevenueSharesByOrder(orderId, tx);
     await repo.cancelEnrollmentsByOrder(orderId, tx);
-    await marketingService.reverseCommissionOnRefund(tx, orderId, input.alasan);
+    await marketingService.reverseCommissionOnRefund(tx, orderId, input.reason);
 
     await recordAudit(
       {
@@ -826,8 +826,8 @@ export async function refund(actor: AuthContext, orderId: string, input: RefundI
         entity: 'refunds',
         entityId: refundRow.id,
         before: { status: order.status },
-        after: { status: 'batal', nominal: input.nominal },
-        reason: input.alasan,
+        after: { status: 'cancelled', amount: input.amount },
+        reason: input.reason,
       },
       tx,
     );

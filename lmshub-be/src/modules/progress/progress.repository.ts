@@ -1,6 +1,6 @@
 import { query, queryOne } from '../../core/db/pool';
 
-export type LessonProgressStatus = 'belum' | 'sedang' | 'selesai';
+export type LessonProgressStatus = 'not_started' | 'in_progress' | 'completed';
 
 export interface LessonProgressRow {
   id: string;
@@ -8,7 +8,7 @@ export interface LessonProgressRow {
   lesson_id: string;
   status: LessonProgressStatus;
   position_seconds: number;
-  waktu_selesai: string | null;
+  end_time: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -16,7 +16,7 @@ export interface LessonProgressRow {
 export interface CourseProgressRow {
   id: string;
   enrollment_id: string;
-  progress_percent: string; // numeric(5,2) datang sebagai string dari pg
+  progress_percent: string; // numeric(5,2) datang sebagai string from pg
   completed_lessons_count: number;
   total_lesson: number;
   last_accessed_at: string | null;
@@ -29,7 +29,7 @@ export interface NoteRow {
   id: string;
   enrollment_id: string;
   lesson_id: string | null;
-  isi: string;
+  content: string;
   timestamp_detik: number | null;
   created_at: string;
   updated_at: string;
@@ -40,7 +40,7 @@ export interface BookmarkRow {
   enrollment_id: string;
   lesson_id: string;
   position_seconds: number | null;
-  catatan: string | null;
+  notes: string | null;
   created_at: string;
 }
 
@@ -64,7 +64,7 @@ export interface LearnLessonRow {
   id: string;
   section_id: string;
   title: string;
-  tipe: string;
+  type: string;
   sort_order: number;
   duration_minutes: number | null;
   gratis_preview: boolean;
@@ -77,8 +77,8 @@ export interface LearnLessonRow {
 /**
  * Apakah `userId` adalah instructor pengampu course ini?
  *
- * Dipakai agar staf pengelola bisa membuka isi course tanpa harus mendaftar
- * sebagai student — mereka perlu melihat materi untuk memoderasi Tanya-Jawab.
+ * Dipakai agar staf pengelola bisa membuka content course tanpa harus mendaftar
+ * sebagai student — mereka perlu melihat material untuk memoderasi Tanya-Jawab.
  */
 export async function isCourseInstructor(courseId: string, userId: string): Promise<boolean> {
   const row = await queryOne<{ ada: number }>(
@@ -92,7 +92,7 @@ export async function isCourseInstructor(courseId: string, userId: string): Prom
 }
 
 export async function learnCourse(courseId: string): Promise<LearnCourseRow | null> {
-  // Ujian akhir hanya dilaporkan bila masih bisa dikerjakan (aktif, belum dihapus).
+  // exam akhir hanya dilaporkan bila masih bisa dikerjakan (active, belum dihapus).
   return queryOne<LearnCourseRow>(
     `SELECT c.id, c.title, c.allow_restart, q.id AS final_exam_quiz_id, q.title AS final_exam_title
        FROM courses c
@@ -111,19 +111,19 @@ export async function learnSections(courseId: string): Promise<LearnSectionRow[]
 
 export async function learnLessons(courseId: string): Promise<LearnLessonRow[]> {
   return query<LearnLessonRow>(
-    `SELECT l.id, l.section_id, l.title, l.tipe, l.sort_order, l.duration_minutes,
+    `SELECT l.id, l.section_id, l.title, l.type, l.sort_order, l.duration_minutes,
             l.gratis_preview, l.drip_release_at, l.must_complete,
             c.body AS content_body, c.url AS content_url
        FROM lessons l
        JOIN sections s ON s.id = l.section_id
        LEFT JOIN LATERAL (
-         -- A lesson may point at a Media Library asset instead of a URL; the
+         -- A lesson may pointst at a Media Library asset instead of a URL; the
          -- player only knows URLs, so resolve the asset's stored path here.
          -- Unfinished or deleted assets resolve to nothing rather than a dead link.
          SELECT lc.body, COALESCE(lc.url, ma.path_object_storage) AS url
            FROM lesson_contents lc
            LEFT JOIN media_assets ma
-             ON ma.id = lc.media_asset_id AND ma.deleted_at IS NULL AND ma.status_transcode = 'selesai'
+             ON ma.id = lc.media_asset_id AND ma.deleted_at IS NULL AND ma.status_transcode = 'completed'
           WHERE lc.lesson_id = l.id AND lc.deleted_at IS NULL
           ORDER BY lc.sort_order ASC LIMIT 1
        ) c ON true
@@ -136,7 +136,7 @@ export async function learnLessons(courseId: string): Promise<LearnLessonRow[]> 
 export interface LearnLessonContentRow {
   id: string;
   lesson_id: string;
-  tipe: string;
+  type: string;
   sort_order: number;
   content_body: string | null;
   content_url: string | null;
@@ -144,11 +144,11 @@ export interface LearnLessonContentRow {
 
 export async function learnLessonContents(courseId: string): Promise<LearnLessonContentRow[]> {
   return query<LearnLessonContentRow>(
-    `SELECT lc.id, lc.lesson_id, lc.tipe, lc.sort_order, lc.body AS content_body, COALESCE(lc.url, ma.path_object_storage) AS content_url
+    `SELECT lc.id, lc.lesson_id, lc.type, lc.sort_order, lc.body AS content_body, COALESCE(lc.url, ma.path_object_storage) AS content_url
        FROM lesson_contents lc
        JOIN lessons l ON l.id = lc.lesson_id
        JOIN sections s ON s.id = l.section_id
-       LEFT JOIN media_assets ma ON ma.id = lc.media_asset_id AND ma.deleted_at IS NULL AND ma.status_transcode = 'selesai'
+       LEFT JOIN media_assets ma ON ma.id = lc.media_asset_id AND ma.deleted_at IS NULL AND ma.status_transcode = 'completed'
       WHERE s.course_id = $1 AND lc.deleted_at IS NULL AND l.deleted_at IS NULL AND s.deleted_at IS NULL
       ORDER BY lc.lesson_id, lc.sort_order ASC`,
     [courseId],
@@ -164,7 +164,7 @@ export async function lessonProgressOfEnrollment(
   );
 }
 
-/** Resolusi lesson -> course_id via sections (domain 02, dibaca read-only). */
+/** Resolusi lesson -> course_id via sections (domain 02, read read-only). */
 export async function lessonCourseId(lessonId: string): Promise<{ course_id: string; must_complete: boolean } | null> {
   return queryOne<{ course_id: string; must_complete: boolean }>(
     `SELECT s.course_id, l.must_complete
@@ -188,15 +188,15 @@ export async function upsertLessonProgress(data: {
   position_seconds: number;
 }): Promise<LessonProgressRow> {
   const row = await queryOne<LessonProgressRow>(
-    `INSERT INTO lesson_progress (enrollment_id, lesson_id, status, position_seconds, waktu_selesai)
+    `INSERT INTO lesson_progress (enrollment_id, lesson_id, status, position_seconds, end_time)
      VALUES ($1,$2,$3,$4,$5)
      ON CONFLICT (enrollment_id, lesson_id) DO UPDATE SET
        status = EXCLUDED.status,
        position_seconds = EXCLUDED.position_seconds,
-       waktu_selesai = CASE WHEN EXCLUDED.status = 'selesai' THEN COALESCE(lesson_progress.waktu_selesai, now()) ELSE lesson_progress.waktu_selesai END,
+       end_time = CASE WHEN EXCLUDED.status = 'completed' THEN COALESCE(lesson_progress.end_time, now()) ELSE lesson_progress.end_time END,
        updated_at = now()
      RETURNING *`,
-    [data.enrollment_id, data.lesson_id, data.status, data.position_seconds, data.status === 'selesai' ? new Date() : null],
+    [data.enrollment_id, data.lesson_id, data.status, data.position_seconds, data.status === 'completed' ? new Date() : null],
   );
   return row!;
 }
@@ -217,7 +217,7 @@ export async function countCompletedWajibLessons(enrollmentId: string, courseId:
        FROM lesson_progress lp
        JOIN lessons l ON l.id = lp.lesson_id
        JOIN sections s ON s.id = l.section_id
-      WHERE lp.enrollment_id = $1 AND s.course_id = $2 AND lp.status = 'selesai' AND l.must_complete AND lp.deleted_at IS NULL`,
+      WHERE lp.enrollment_id = $1 AND s.course_id = $2 AND lp.status = 'completed' AND l.must_complete AND lp.deleted_at IS NULL`,
     [enrollmentId, courseId],
   );
   return Number(row?.count ?? 0);
@@ -266,12 +266,12 @@ export async function findNote(id: string): Promise<NoteRow | null> {
 export async function insertNote(data: {
   enrollment_id: string;
   lesson_id: string | null;
-  isi: string;
+  content: string;
   timestamp_detik: number | null;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO notes (enrollment_id, lesson_id, isi, timestamp_detik) VALUES ($1,$2,$3,$4) RETURNING id`,
-    [data.enrollment_id, data.lesson_id, data.isi, data.timestamp_detik],
+    `INSERT INTO notes (enrollment_id, lesson_id, content, timestamp_detik) VALUES ($1,$2,$3,$4) RETURNING id`,
+    [data.enrollment_id, data.lesson_id, data.content, data.timestamp_detik],
   );
   return row!;
 }
@@ -304,16 +304,16 @@ export async function insertBookmark(data: {
   enrollment_id: string;
   lesson_id: string;
   position_seconds: number | null;
-  catatan: string | null;
+  notes: string | null;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO bookmarks (enrollment_id, lesson_id, position_seconds, catatan) VALUES ($1,$2,$3,$4) RETURNING id`,
-    [data.enrollment_id, data.lesson_id, data.position_seconds, data.catatan],
+    `INSERT INTO bookmarks (enrollment_id, lesson_id, position_seconds, notes) VALUES ($1,$2,$3,$4) RETURNING id`,
+    [data.enrollment_id, data.lesson_id, data.position_seconds, data.notes],
   );
   return row!;
 }
 
-/** `bookmarks` tanpa soft delete (hapus permanen) — sesuai skema domain 03. */
+/** `bookmarks` tanpa soft delete (delete permanen) — sesuai skema domain 03. */
 export async function hardDeleteBookmark(id: string): Promise<void> {
   await query(`DELETE FROM bookmarks WHERE id = $1`, [id]);
 }

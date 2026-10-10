@@ -74,8 +74,8 @@
   "transcode": {
     "menunggu": "Waiting",
     "memproses": "Processing",
-    "selesai": "Done",
-    "gagal": "Failed"
+    "finish": "Done",
+    "failed": "Failed"
   },
   "contents": {
     "manage": "Content",

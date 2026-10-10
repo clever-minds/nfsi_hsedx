@@ -17,81 +17,81 @@ export const notificationsRouter = Router();
 
 notificationsRouter.use(requireAuth());
 
-// Konfigurasi event → penerima × kanal (admin/Super Admin/Direktur)
+// Konfigurasi event → recipient × channel (admin/Super Admin/Direktur)
 notificationsRouter.get(
   '/event-config',
-  requirePermission('notifikasi', 'view'),
+  requirePermission('notification', 'view'),
   asyncHandler(ctrl.listEventConfig),
 );
 notificationsRouter.put(
   '/event-config/:jenisEvent',
-  requirePermission('notifikasi', 'update'),
+  requirePermission('notification', 'update'),
   validate(updateEventConfigSchema),
   asyncHandler(ctrl.updateEventConfig),
 );
 
-// Pusat notifikasi in-app milik pengguna login (student hanya lihat miliknya)
-notificationsRouter.get('/', requirePermission('notifikasi', 'view'), asyncHandler(ctrl.listInbox));
+// Pusat notification in-app milik user login (student hanya view miliknya)
+notificationsRouter.get('/', requirePermission('notification', 'view'), asyncHandler(ctrl.listInbox));
 notificationsRouter.post(
   '/:id/read',
-  requirePermission('notifikasi', 'update'),
+  requirePermission('notification', 'update'),
   asyncHandler(ctrl.markRead),
 );
 notificationsRouter.post(
   '/:id/respond',
-  requirePermission('notifikasi', 'update'),
+  requirePermission('notification', 'update'),
   validate(respondNotificationSchema),
   asyncHandler(ctrl.respond),
 );
 
 // Reminder
-notificationsRouter.get('/reminders', requirePermission('notifikasi', 'view'), asyncHandler(ctrl.listMyReminders));
+notificationsRouter.get('/reminders', requirePermission('notification', 'view'), asyncHandler(ctrl.listMyReminders));
 notificationsRouter.get(
   '/reminders/monitor',
-  requirePermission('notifikasi', 'view'),
+  requirePermission('notification', 'view'),
   asyncHandler(ctrl.monitorReminders),
 );
 notificationsRouter.post(
   '/reminders',
-  requirePermission('notifikasi', 'create'),
+  requirePermission('notification', 'create'),
   validate(createReminderSchema),
   asyncHandler(ctrl.createReminder),
 );
 notificationsRouter.post(
   '/reminders/:id/read',
-  requirePermission('notifikasi', 'update'),
+  requirePermission('notification', 'update'),
   asyncHandler(ctrl.markReminderRead),
 );
 notificationsRouter.post(
   '/reminders/:id/respond',
-  requirePermission('notifikasi', 'update'),
+  requirePermission('notification', 'update'),
   validate(respondReminderSchema),
   asyncHandler(ctrl.respondReminder),
 );
 
-// Pengumuman / broadcast tersegmen
+// Pengumuman / broadcast tersegment
 notificationsRouter.get(
   '/announcements',
-  requirePermission('notifikasi', 'view'),
+  requirePermission('notification', 'view'),
   asyncHandler(ctrl.listAnnouncements),
 );
 notificationsRouter.post(
   '/announcements',
-  requirePermission('notifikasi', 'create'),
+  requirePermission('notification', 'create'),
   validate(createAnnouncementSchema),
   asyncHandler(ctrl.createAnnouncement),
 );
 
 // Pesan internal / inbox (permission terpisah: pesan)
-notificationsRouter.get('/messages', requirePermission('pesan', 'view'), asyncHandler(ctrl.listMessages));
+notificationsRouter.get('/messages', requirePermission('messages', 'view'), asyncHandler(ctrl.listMessages));
 notificationsRouter.post(
   '/messages',
-  requirePermission('pesan', 'create'),
+  requirePermission('messages', 'create'),
   validate(createMessageSchema),
   asyncHandler(ctrl.sendMessage),
 );
 notificationsRouter.post(
   '/messages/:id/read',
-  requirePermission('pesan', 'update'),
+  requirePermission('messages', 'update'),
   asyncHandler(ctrl.markMessageRead),
 );

@@ -67,7 +67,7 @@ export async function answerQuestion(req: Request, res: Response) {
 
 export async function markQuestionTerjawab(req: Request, res: Response) {
   const input = validated<MarkTerjawabInput>(req);
-  return ok(res, await service.markQuestionTerjawab(auth(req), req.params.id, input.status_terjawab));
+  return ok(res, await service.markQuestionTerjawab(auth(req), req.params.id, input.is_answered));
 }
 
 export async function upvoteQuestion(req: Request, res: Response) {

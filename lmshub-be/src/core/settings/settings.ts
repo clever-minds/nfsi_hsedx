@@ -2,10 +2,10 @@ import { query } from '../db/pool';
 
 interface SettingRow {
   key: string;
-  nilai: string | null;
+  value: string | null;
 }
 
-// Cache sederhana (TTL 30 dtk) agar tidak query tiap kirim email.
+// Cache sederhana (TTL 30 dtk) agar no query tiap send email.
 let cache: Map<string, string | null> | null = null;
 let cacheAt = 0;
 const TTL_MS = 30_000;
@@ -13,8 +13,8 @@ const TTL_MS = 30_000;
 async function loadAll(): Promise<Map<string, string | null>> {
   const now = Date.now();
   if (cache && now - cacheAt < TTL_MS) return cache;
-  const rows = await query<SettingRow>(`SELECT key, nilai FROM settings WHERE deleted_at IS NULL`);
-  cache = new Map(rows.map((r) => [r.key, r.nilai]));
+  const rows = await query<SettingRow>(`SELECT key, value FROM settings WHERE deleted_at IS NULL`);
+  cache = new Map(rows.map((r) => [r.key, r.value]));
   cacheAt = now;
   return cache;
 }
@@ -40,7 +40,7 @@ export async function getSettingInt(key: string, fallback = 0): Promise<number> 
   return Number.isFinite(n) ? n : fallback;
 }
 
-/** Ambil beberapa setting sekaligus (map key→nilai). */
+/** Ambil beberapa setting sekaligus (map key→value). */
 export async function getSettings(keys: string[]): Promise<Record<string, string>> {
   const all = await loadAll();
   const out: Record<string, string> = {};

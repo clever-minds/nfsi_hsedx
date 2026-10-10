@@ -8,47 +8,47 @@ import * as ctrl from './categories.controller';
 
 export const categoriesRouter = Router();
 
-// PUBLIC — catalog kategori & tag (dikonsumsi rute pra-login lmshub-fe)
+// PUBLIC — catalog category & tag (dikonsumsi rute pra-login lmshub-fe)
 categoriesRouter.get('/public', asyncHandler(ctrl.publicList));
 categoriesRouter.get('/public/:slug', asyncHandler(ctrl.publicDetail));
 categoriesRouter.get('/tags/public', asyncHandler(ctrl.publicTagList));
 
 // ── Categories (dashboard) ──────────────────────────
-categoriesRouter.get('/', requireAuth(), requirePermission('kategori', 'view'), asyncHandler(ctrl.list));
+categoriesRouter.get('/', requireAuth(), requirePermission('category', 'view'), asyncHandler(ctrl.list));
 categoriesRouter.post(
   '/',
   requireAuth(),
-  requirePermission('kategori', 'create'),
+  requirePermission('category', 'create'),
   validate(createCategorySchema),
   asyncHandler(ctrl.create),
 );
 
-// ── Tags (dashboard) — didaftarkan sebelum '/:id' agar 'tags' tidak tertangkap sebagai :id
-categoriesRouter.get('/tags', requireAuth(), requirePermission('kategori', 'view'), asyncHandler(ctrl.tagList));
+// ── Tags (dashboard) — didaftarkan sebelum '/:id' agar 'tags' no tertangkap sebagai :id
+categoriesRouter.get('/tags', requireAuth(), requirePermission('category', 'view'), asyncHandler(ctrl.tagList));
 categoriesRouter.post(
   '/tags',
   requireAuth(),
-  requirePermission('kategori', 'create'),
+  requirePermission('category', 'create'),
   validate(createTagSchema),
   asyncHandler(ctrl.tagCreate),
 );
-categoriesRouter.get('/tags/:id', requireAuth(), requirePermission('kategori', 'view'), asyncHandler(ctrl.tagDetail));
+categoriesRouter.get('/tags/:id', requireAuth(), requirePermission('category', 'view'), asyncHandler(ctrl.tagDetail));
 categoriesRouter.put(
   '/tags/:id',
   requireAuth(),
-  requirePermission('kategori', 'update'),
+  requirePermission('category', 'update'),
   validate(updateTagSchema),
   asyncHandler(ctrl.tagUpdate),
 );
-categoriesRouter.delete('/tags/:id', requireAuth(), requirePermission('kategori', 'delete'), asyncHandler(ctrl.tagRemove));
+categoriesRouter.delete('/tags/:id', requireAuth(), requirePermission('category', 'delete'), asyncHandler(ctrl.tagRemove));
 
 // ── Categories (dashboard, lanjutan) ────────────────
-categoriesRouter.get('/:id', requireAuth(), requirePermission('kategori', 'view'), asyncHandler(ctrl.detail));
+categoriesRouter.get('/:id', requireAuth(), requirePermission('category', 'view'), asyncHandler(ctrl.detail));
 categoriesRouter.put(
   '/:id',
   requireAuth(),
-  requirePermission('kategori', 'update'),
+  requirePermission('category', 'update'),
   validate(updateCategorySchema),
   asyncHandler(ctrl.update),
 );
-categoriesRouter.delete('/:id', requireAuth(), requirePermission('kategori', 'delete'), asyncHandler(ctrl.remove));
+categoriesRouter.delete('/:id', requireAuth(), requirePermission('category', 'delete'), asyncHandler(ctrl.remove));

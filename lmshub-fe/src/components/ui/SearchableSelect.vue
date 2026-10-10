@@ -4,11 +4,11 @@ import { useI18n } from 'vue-i18n';
 import Icon from '@/components/ui/Icon.vue';
 
 /**
- * Dropdown dengan kotak cari.
+ * Dropdown dengan kotak search.
  *
- * `<select>` biasa memaksa menggulir daftar panjang untuk menemukan satu baris,
- * dan tidak menunjukkan apa pun tentang pilihan yang sedang aktif sampai dibuka.
- * Di sini pilihan yang tersedia disaring saat mengetik, dan yang aktif ditandai.
+ * `<select>` biasa memaksa menggulir register panjang untuk menemukan satu baris,
+ * dan no menunjukkan apa pun tentang pilihan yang sedang active until dibuka.
+ * Di sini pilihan yang tersedia disaring saat mengetik, dan yang active ditandai.
  */
 
 export interface Option {
@@ -24,7 +24,7 @@ const props = withDefaults(
     options: Option[];
     disabled?: boolean;
     placeholder?: string;
-    /** Ditampilkan saat daftar kosong; biasanya mengarahkan ke tempat menambahnya. */
+    /** Ditampilkan saat register kosong; biasanya mengarahkan to tempat menambahnya. */
     emptyHint?: string;
   }>(),
   { disabled: false, placeholder: '', emptyHint: '' },
@@ -64,7 +64,7 @@ function onClickOutside(e: MouseEvent) {
   if (root.value && !root.value.contains(e.target as Node)) open.value = false;
 }
 
-// Esc menutup tanpa mengubah pilihan — kebiasaan yang orang harapkan dari
+// Esc menutup tanpa mengubah pilihan — kebiasaan yang orang harapkan from
 // kontrol semacam ini, dan murah untuk dipenuhi.
 function onKey(e: KeyboardEvent) {
   if (e.key === 'Escape') open.value = false;

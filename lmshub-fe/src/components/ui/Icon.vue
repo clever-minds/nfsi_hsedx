@@ -3,7 +3,7 @@ import { computed } from 'vue';
 
 /**
  * Ikon SVG inline gaya Feather (stroke, 24x24) — dipakai sidebar & header.
- * Tambahkan path baru di `paths` bila modul butuh ikon lain.
+ * add path baru di `paths` bila modul need ikon lain.
  */
 const props = withDefaults(defineProps<{ name: string; size?: number | string }>(), { size: 18 });
 
@@ -119,8 +119,8 @@ const inner = computed(() => paths[props.name] ?? paths['grid']);
 </script>
 
 <template>
-  <!-- eslint-disable vue/no-v-html -- `inner` berasal dari peta `paths` di
-       berkas ini, bukan dari input pengguna. Menyanitasinya justru membuang
+  <!-- eslint-disable vue/no-v-html -- `inner` berasal from peta `paths` di
+       berkas ini, bukan from input user. Menyanitasinya justru membuang
        elemen <path>/<line> yang memang harus dirender. -->
   <svg
     :width="size"

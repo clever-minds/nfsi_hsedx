@@ -19,7 +19,7 @@ import * as ctrl from './certificates.controller';
 export const certificatesRouter = Router();
 
 // PUBLIC — verifikasi keaslian certificate, tanpa requireAuth, tanpa membocorkan data pribadi
-certificatesRouter.get('/public/certificates/verify/:nomor', asyncHandler(ctrl.verify));
+certificatesRouter.get('/public/certificates/verify/:number', asyncHandler(ctrl.verify));
 
 // ── Certificate ──────────────────────────────────────────────
 certificatesRouter.get('/certificates', requireAuth(), requirePermission('certificate', 'view'), asyncHandler(ctrl.list));
@@ -96,45 +96,45 @@ certificatesRouter.delete(
 );
 
 // ── Badge & gamifikasi ──────────────────────────────────────
-certificatesRouter.get('/badges', requireAuth(), requirePermission('gamifikasi', 'view'), asyncHandler(ctrl.listBadges));
+certificatesRouter.get('/badges', requireAuth(), requirePermission('gamification', 'view'), asyncHandler(ctrl.listBadges));
 certificatesRouter.post(
   '/badges',
   requireAuth(),
-  requirePermission('gamifikasi', 'create'),
+  requirePermission('gamification', 'create'),
   validate(createBadgeSchema),
   asyncHandler(ctrl.createBadge),
 );
 certificatesRouter.post(
   '/badges/:id/award',
   requireAuth(),
-  requirePermission('gamifikasi', 'create'),
+  requirePermission('gamification', 'create'),
   validate(awardBadgeSchema),
   asyncHandler(ctrl.awardBadge),
 );
-certificatesRouter.get('/users/me/badges', requireAuth(), requirePermission('gamifikasi', 'view'), asyncHandler(ctrl.myBadges));
+certificatesRouter.get('/users/me/badges', requireAuth(), requirePermission('gamification', 'view'), asyncHandler(ctrl.myBadges));
 
-certificatesRouter.get('/users/me/points', requireAuth(), requirePermission('gamifikasi', 'view'), asyncHandler(ctrl.myPoints));
+certificatesRouter.get('/users/me/pointsts', requireAuth(), requirePermission('gamification', 'view'), asyncHandler(ctrl.myPoints));
 certificatesRouter.post(
-  '/points',
+  '/pointsts',
   requireAuth(),
-  requirePermission('gamifikasi', 'create'),
+  requirePermission('gamification', 'create'),
   validate(awardPointsSchema),
   asyncHandler(ctrl.awardPoints),
 );
 
-certificatesRouter.get('/leaderboards', requireAuth(), requirePermission('gamifikasi', 'view'), asyncHandler(ctrl.leaderboards));
+certificatesRouter.get('/leaderboards', requireAuth(), requirePermission('gamification', 'view'), asyncHandler(ctrl.leaderboards));
 certificatesRouter.post(
   '/leaderboards/snapshot',
   requireAuth(),
-  requirePermission('gamifikasi', 'create'),
+  requirePermission('gamification', 'create'),
   validate(leaderboardSnapshotSchema),
   asyncHandler(ctrl.generateLeaderboardSnapshot),
 );
 
-certificatesRouter.get('/users/me/streak', requireAuth(), requirePermission('gamifikasi', 'view'), asyncHandler(ctrl.myStreak));
+certificatesRouter.get('/users/me/streak', requireAuth(), requirePermission('gamification', 'view'), asyncHandler(ctrl.myStreak));
 certificatesRouter.post(
   '/users/me/streak/record-activity',
   requireAuth(),
-  requirePermission('gamifikasi', 'view'),
+  requirePermission('gamification', 'view'),
   asyncHandler(ctrl.recordStreakActivity),
 );

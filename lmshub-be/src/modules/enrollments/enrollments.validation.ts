@@ -1,47 +1,47 @@
 import { z } from 'zod';
 
-export const enrollmentSumberEnum = z.enum(['beli', 'assign', 'bundle', 'path']);
-export const enrollmentStatusEnum = z.enum(['terdaftar', 'aktif', 'selesai', 'kedaluwarsa', 'batal']);
+export const enrollmentSumberEnum = z.enum(['buy', 'assign', 'bundle', 'path']);
+export const enrollmentStatusEnum = z.enum(['registered', 'active', 'completed', 'expired', 'cancelled']);
 
 export const createEnrollmentSchema = z.object({
   user_id: z.string().uuid(),
   course_id: z.string().uuid(),
   cohort_id: z.string().uuid().nullable().optional(),
-  sumber: enrollmentSumberEnum,
+  source: enrollmentSumberEnum,
   order_item_id: z.string().uuid().nullable().optional(),
   akses_kedaluwarsa_at: z.string().datetime().nullable().optional(),
-  catatan: z.string().max(500).nullable().optional(),
+  notes: z.string().max(500).nullable().optional(),
 });
 
 export const transferEnrollmentSchema = z.object({
   cohort_id: z.string().uuid().nullable(),
-  catatan: z.string().max(500).optional(),
+  notes: z.string().max(500).optional(),
 });
 
 export const revokeEnrollmentSchema = z.object({
-  alasan: z.string().min(3).max(500),
+  reason: z.string().min(3).max(500),
 });
 
 export const bulkImportSchema = z.object({
   course_id: z.string().uuid(),
   cohort_id: z.string().uuid().nullable().optional(),
   user_ids: z.array(z.string().uuid()).min(1).max(1000),
-  alasan: z.string().max(500).optional(),
+  reason: z.string().max(500).optional(),
 });
 
 export const createCohortSchema = z.object({
   name: z.string().min(2).max(150),
-  tanggal_mulai: z.string().datetime(),
-  tanggal_selesai: z.string().datetime().nullable().optional(),
-  kuota_maksimal: z.number().int().positive().nullable().optional(),
+  start_date: z.string().datetime(),
+  end_date: z.string().datetime().nullable().optional(),
+  max_quota: z.number().int().positive().nullable().optional(),
 });
 
 export const updateCohortSchema = z.object({
   name: z.string().min(2).max(150).optional(),
-  tanggal_mulai: z.string().datetime().optional(),
-  tanggal_selesai: z.string().datetime().nullable().optional(),
-  kuota_maksimal: z.number().int().positive().nullable().optional(),
-  status: z.enum(['direncanakan', 'berjalan', 'selesai', 'dibatalkan']).optional(),
+  start_date: z.string().datetime().optional(),
+  end_date: z.string().datetime().nullable().optional(),
+  max_quota: z.number().int().positive().nullable().optional(),
+  status: z.enum(['planned', 'ongoing', 'completed', 'cancelled']).optional(),
 });
 
 export const openSlotSchema = z.object({

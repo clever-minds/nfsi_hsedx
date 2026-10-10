@@ -12,7 +12,7 @@ interface Quiz extends Record<string, unknown> {
   title: string;
   course_title?: string;
   course_id?: string;
-  batas_waktu_menit?: number;
+  time_limit_minutes?: number;
   max_attempts?: number;
   passing_score?: string | number;
   total_points?: string | number;
@@ -20,10 +20,10 @@ interface Quiz extends Record<string, unknown> {
   attempt_status?: string;
   best_score?: string | null;
   used_attempts?: number;
-  is_ujian_akhir?: boolean;
+  is_final_exam?: boolean;
   retry_delay_minutes?: number;
   passing_score_val?: number;
-  skor_terbaik_persen?: number | null;
+  score_terbaik_persen?: number | null;
   sisa_percobaan?: number | null;
   can_start?: boolean;
   can_retry_at?: string | null;
@@ -53,7 +53,7 @@ const assignmentsError = ref('');
 
 const quizColumns = computed(() => [
   { key: 'title', label: t('assessments.list.colQuiz') },
-  { key: 'batas_waktu_menit', label: t('assessments.list.colTimeLimit') },
+  { key: 'time_limit_minutes', label: t('assessments.list.colTimeLimit') },
   { key: 'max_attempts', label: t('assessments.list.colMaxAttempts') },
   { key: 'passing_score', label: t('assessments.list.colPassingScore') },
   { key: 'status', label: t('assessments.list.colStatus') },
@@ -68,17 +68,17 @@ const assignmentColumns = computed(() => [
 
 function quizStatusText(q: Quiz): string {
   const s = q.attempt_status;
-  if (!s || s === 'belum' || s === 'belum_dikerjakan') return t('assessments.list.quizStatus.notStarted');
-  if (s === 'sedang') return t('assessments.list.quizStatus.inProgress');
-  if (s === 'dikumpulkan') return t('assessments.list.quizStatus.awaitingGrading');
-  if (s === 'dinilai') {
-    const skor = Number(q.best_score ?? 0);
+  if (!s || s === 'not_started' || s === 'not_started') return t('assessments.list.quizStatus.notStarted');
+  if (s === 'in_progress') return t('assessments.list.quizStatus.inProgress');
+  if (s === 'submitted') return t('assessments.list.quizStatus.awaitingGrading');
+  if (s === 'graded') {
+    const score = Number(q.best_score ?? 0);
     const total = Number(q.total_points ?? 0);
-    const pct = q.skor_terbaik_persen ?? (total ? Math.round((skor / total) * 100) : 0);
+    const pct = q.score_terbaik_persen ?? (total ? Math.round((score / total) * 100) : 0);
     const passing = q.passing_score_val ?? (q.passing_score != null ? Number(q.passing_score) : null);
     const lulus = passing != null ? pct >= passing : null;
     const base = t('assessments.list.quizStatus.scored', {
-      score: fmtAngka(skor),
+      score: fmtAngka(score),
       total: fmtAngka(total),
       percent: fmtAngka(pct),
     });
@@ -90,35 +90,35 @@ function quizStatusText(q: Quiz): string {
 
 function quizStatusClass(q: Quiz): string {
   const s = q.attempt_status;
-  if (s === 'dinilai') {
-    const pct = q.skor_terbaik_persen ?? (Number(q.total_points) ? (Number(q.best_score ?? 0) / Number(q.total_points)) * 100 : 0);
+  if (s === 'graded') {
+    const pct = q.score_terbaik_persen ?? (Number(q.total_points) ? (Number(q.best_score ?? 0) / Number(q.total_points)) * 100 : 0);
     const passing = q.passing_score_val ?? (q.passing_score != null ? Number(q.passing_score) : null);
     const lulus = passing != null ? pct >= passing : true;
     return lulus ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700';
   }
-  if (s === 'sedang' || s === 'dikumpulkan') return 'bg-amber-100 text-amber-700';
+  if (s === 'in_progress' || s === 'submitted') return 'bg-amber-100 text-amber-700';
   return 'bg-slate-100 text-slate-500';
 }
 
 function assignmentStatusText(a: Assignment): string {
-  const s = a.submission_status ?? 'belum';
+  const s = a.submission_status ?? 'not_started';
   const key = `assessments.list.submissionStatus.${s}`;
   return te(key) ? t(key) : s;
 }
 
 function assignmentStatusClass(a: Assignment): string {
   const s = a.submission_status;
-  if (s === 'dinilai') return 'bg-emerald-100 text-emerald-700';
-  if (s === 'dikumpulkan') return 'bg-amber-100 text-amber-700';
-  if (s === 'revisi_diminta') return 'bg-rose-100 text-rose-700';
+  if (s === 'graded') return 'bg-emerald-100 text-emerald-700';
+  if (s === 'submitted') return 'bg-amber-100 text-amber-700';
+  if (s === 'revision_requested') return 'bg-rose-100 text-rose-700';
   return 'bg-slate-100 text-slate-500';
 }
 
-function submissionTypeLabel(tipe?: string): string {
-  if (tipe === 'tautan' || tipe === 'url') return t('assessments.list.typeLink');
-  if (tipe === 'text') return t('assessments.list.typeText');
-  if (tipe === 'file') return t('assessments.list.typeFile');
-  return tipe || '—';
+function submissionTypeLabel(type?: string): string {
+  if (type === 'tautan' || type === 'url') return t('assessments.list.typeLink');
+  if (type === 'text') return t('assessments.list.typeText');
+  if (type === 'file') return t('assessments.list.typeFile');
+  return type || '—';
 }
 
 function bolehMulai(q: Quiz): boolean {
@@ -175,7 +175,7 @@ onMounted(loadData);
       <DataTable :columns="quizColumns" :rows="quizzes" :loading="quizzesLoading" :empty="t('assessments.list.quizEmpty')">
         <template #cell:title="{ row }">
           <span>{{ (row as Quiz).title }}</span>
-          <span v-if="(row as Quiz).is_ujian_akhir" class="ms-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-600">
+          <span v-if="(row as Quiz).is_final_exam" class="ms-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-600">
             {{ t('assessments.list.finalExam') }}
           </span>
         </template>

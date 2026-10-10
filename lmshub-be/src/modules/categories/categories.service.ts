@@ -50,7 +50,7 @@ export async function create(actor: AuthContext, input: CreateCategoryInput) {
   });
   await recordAudit({
     userId: actor.userId,
-    module: 'kategori',
+    module: 'category',
     action: 'create',
     entity: 'categories',
     entityId: id,
@@ -77,7 +77,7 @@ export async function update(actor: AuthContext, id: string, input: UpdateCatego
   await repo.update(id, fields);
   await recordAudit({
     userId: actor.userId,
-    module: 'kategori',
+    module: 'category',
     action: 'update',
     entity: 'categories',
     entityId: id,
@@ -94,7 +94,7 @@ export async function remove(actor: AuthContext, id: string) {
     throw AppError.conflict('This category is still used by active courses. Deactivate it instead of deleting it', 'category.in_use');
   }
   await repo.softDelete(id);
-  await recordAudit({ userId: actor.userId, module: 'kategori', action: 'delete', entity: 'categories', entityId: id });
+  await recordAudit({ userId: actor.userId, module: 'category', action: 'delete', entity: 'categories', entityId: id });
 }
 
 // ── Tags ─────────────────────────────────────────────
@@ -118,7 +118,7 @@ export async function tagCreate(actor: AuthContext, input: CreateTagInput) {
   if (existing) throw AppError.conflict('That tag slug is already in use', 'tag.slug_taken');
 
   const { id } = await repo.insertTag({ name: input.name, slug });
-  await recordAudit({ userId: actor.userId, module: 'kategori', action: 'create_tag', entity: 'tags', entityId: id, after: input });
+  await recordAudit({ userId: actor.userId, module: 'category', action: 'create_tag', entity: 'tags', entityId: id, after: input });
   return repo.detailTag(id);
 }
 
@@ -136,7 +136,7 @@ export async function tagUpdate(actor: AuthContext, id: string, input: UpdateTag
   await repo.updateTag(id, fields);
   await recordAudit({
     userId: actor.userId,
-    module: 'kategori',
+    module: 'category',
     action: 'update_tag',
     entity: 'tags',
     entityId: id,
@@ -153,5 +153,5 @@ export async function tagRemove(actor: AuthContext, id: string) {
     throw AppError.conflict('This tag is still used by courses. Remove it from them first', 'tag.in_use');
   }
   await repo.softDeleteTag(id);
-  await recordAudit({ userId: actor.userId, module: 'kategori', action: 'delete_tag', entity: 'tags', entityId: id });
+  await recordAudit({ userId: actor.userId, module: 'category', action: 'delete_tag', entity: 'tags', entityId: id });
 }

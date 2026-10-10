@@ -16,7 +16,7 @@ export const liveRouter = Router();
 
 liveRouter.use(requireAuth());
 
-// Kalender terpadu (live class + agenda course) untuk pengguna login
+// Kalender terpadu (live class + agenda course) untuk user login
 liveRouter.get('/calendar', requirePermission('live_class', 'view'), asyncHandler(ctrl.calendar));
 
 // Sesi live
@@ -42,12 +42,12 @@ liveRouter.post('/live-sessions/:id/join', requirePermission('live_class', 'view
 // Kehadiran
 liveRouter.get(
   '/live-sessions/:id/attendance',
-  requirePermission('kehadiran', 'view'),
+  requirePermission('attendance', 'view'),
   asyncHandler(ctrl.listAttendance),
 );
 liveRouter.post(
   '/live-sessions/:id/attendance',
-  requirePermission('kehadiran', 'update'),
+  requirePermission('attendance', 'update'),
   validate(markAttendanceSchema),
   asyncHandler(ctrl.markAttendance),
 );

@@ -3,7 +3,7 @@ import { sanitizeRichText } from '../../src/core/html/sanitize';
 import { sniffImageMime } from '../../src/core/upload/image';
 import { normalizeKonten } from '../../src/modules/documents/documents.service';
 
-describe('sanitizeRichText (isi halaman statis)', () => {
+describe('sanitizeRichText (content halaman statis)', () => {
   it('membuang script, event handler, dan javascript: URL', () => {
     const out = sanitizeRichText(
       '<p onclick="steal()">Hi<script>alert(1)</script></p><a href="javascript:alert(1)">x</a><img src="x" onerror="alert(1)">',
@@ -37,13 +37,13 @@ describe('normalizeKonten', () => {
       format: 'html',
     });
   });
-  it('tidak ada field content → undefined (tidak diubah)', () => {
+  it('no ada field content → undefined (no diubah)', () => {
     expect(normalizeKonten({})).toBeUndefined();
   });
 });
 
 describe('sniffImageMime (unggahan hero)', () => {
-  it('mengenali JPG, PNG, WebP dari byte awal', () => {
+  it('mengenali JPG, PNG, WebP from byte awal', () => {
     expect(sniffImageMime(Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0]))).toBe('image/jpeg');
     expect(sniffImageMime(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]))).toBe('image/png');
     expect(sniffImageMime(Buffer.concat([Buffer.from('RIFF'), Buffer.alloc(4), Buffer.from('WEBPVP8 ')]))).toBe('image/webp');

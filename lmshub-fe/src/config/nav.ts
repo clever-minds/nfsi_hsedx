@@ -3,9 +3,9 @@ export interface NavItem {
   labelKey: string;
   to: string;
   permission?: string; // gating v-can; kosong = tampil untuk semua terautentikasi
-  /** Hanya tampil bila pengguna memiliki salah satu peran ini (allowlist). */
+  /** Hanya tampil bila user memiliki salah satu peran ini (allowlist). */
   roles?: string[];
-  /** Sembunyikan bila pengguna memiliki salah satu peran ini (blocklist, menang atas permission). */
+  /** Sembunyikan bila user memiliki salah satu peran ini (blocklist, menang on permission). */
   hideForRoles?: string[];
   icon?: string; // name ikon di components/ui/Icon.vue
 }
@@ -36,7 +36,7 @@ export const navSections: NavSection[] = [
     titleKey: 'nav.section.learning',
     items: [
       // Halaman manajemen (assign manual, cohort). Student memakai "Belajar Saya".
-      // Instructor boleh lihat peserta kursusnya (view, BE row-scoped), tapi student/sub_user tidak.
+      // Instructor boleh view peserta kursusnya (view, BE row-scoped), tapi student/sub_user no.
       {
         labelKey: 'nav.item.enrollment',
         to: '/d/enrollment',
@@ -44,27 +44,27 @@ export const navSections: NavSection[] = [
         hideForRoles: ['student', 'sub_user'],
         icon: 'clipboard',
       },
-      // Halaman swalayan (isinya milik pengguna sendiri) memakai ALLOWLIST,
+      // Halaman swalayan (isinya milik user sendiri) memakai ALLOWLIST,
       // bukan `hideForRoles`. Blocklist harus menyebut setiap peran manajemen
       // satu per satu, jadi satu peran yang belum terdaftar langsung ikut
-      // melihatnya. Allowlist gagal ke arah aman: peran baru tidak otomatis
+      // melihatnya. Allowlist failed to arah aman: peran baru no otomatis
       // kebagian halaman pribadi.
       {
         labelKey: 'nav.item.myLearning',
         to: '/d/learn',
         permission: 'enrollment.view',
-        roles: ['student', 'sub_user', 'instructor', 'asisten'],
+        roles: ['student', 'sub_user', 'instructor', 'assistant'],
         icon: 'play-circle',
       },
       { labelKey: 'nav.item.assessments', to: '/d/assessments', permission: 'assessment.view', icon: 'check-square' },
       { labelKey: 'nav.item.liveClass', to: '/d/live-class', permission: 'live_class.view', icon: 'video' },
-      { labelKey: 'nav.item.discussions', to: '/d/discussions', permission: 'diskusi.view', icon: 'message-circle' },
-      // "Certificate Saya" juga swalayan — alasan yang sama seperti di atas.
+      { labelKey: 'nav.item.discussions', to: '/d/discussions', permission: 'discussion.view', icon: 'message-circle' },
+      // "Certificate Saya" juga swalayan — reason yang sama seperti di on.
       {
         labelKey: 'nav.item.certificates',
         to: '/d/certificates',
         permission: 'certificate.view',
-        roles: ['student', 'sub_user', 'instructor', 'asisten'],
+        roles: ['student', 'sub_user', 'instructor', 'assistant'],
         icon: 'award',
       },
     ],
@@ -74,10 +74,10 @@ export const navSections: NavSection[] = [
     items: [
       // Manajemen course — khusus instructor/admin (student punya course.view untuk catalog, bukan kelola).
       { labelKey: 'nav.item.courses', to: '/d/courses', permission: 'course.create', icon: 'book-open' },
-      // Master data kategori & tag. Berada di atas Kurikulum karena course tidak
-      // bisa dibuat sebelum ada minimal satu kategori (`category_id` NOT NULL).
-      // Gerbangnya `kategori.create` — `kategori.view` juga dimiliki student.
-      { labelKey: 'nav.item.categories', to: '/d/categories', permission: 'kategori.create', icon: 'tag' },
+      // Master data category & tag. Berada di on Kurikulum karena course no
+      // bisa created sebelum ada minimal satu category (`category_id` NOT NULL).
+      // Gerbangnya `category.create` — `category.view` juga dimiliki student.
+      { labelKey: 'nav.item.categories', to: '/d/categories', permission: 'category.create', icon: 'tag' },
       { labelKey: 'nav.item.curriculum', to: '/d/curriculum', permission: 'kurikulum.view', icon: 'layers' },
       // Uploaded videos, audio, images and PDFs that lessons play from this server.
       { labelKey: 'nav.item.mediaLibrary', to: '/d/media', permission: 'content.view', icon: 'film' },
@@ -87,7 +87,7 @@ export const navSections: NavSection[] = [
   {
     titleKey: 'nav.section.management',
     items: [
-      { labelKey: 'nav.item.users', to: '/d/users', permission: 'pengguna.view', icon: 'users' },
+      { labelKey: 'nav.item.users', to: '/d/users', permission: 'user.view', icon: 'users' },
       { labelKey: 'nav.item.transactions', to: '/d/transactions', permission: 'transaction.view', icon: 'credit-card' },
       { labelKey: 'nav.item.marketing', to: '/d/marketing', permission: 'marketing.view', icon: 'megaphone' },
       // Kode kupon checkout. Berdiri sendiri, bukan tab di Marketing, karena
@@ -98,16 +98,16 @@ export const navSections: NavSection[] = [
   {
     titleKey: 'nav.section.reports',
     items: [
-      { labelKey: 'nav.item.reports', to: '/d/reports', permission: 'laporan.view', icon: 'bar-chart' },
-      { labelKey: 'nav.item.notifications', to: '/d/notifications', permission: 'notifikasi.view', icon: 'bell' },
+      { labelKey: 'nav.item.reports', to: '/d/reports', permission: 'report.view', icon: 'bar-chart' },
+      { labelKey: 'nav.item.notifications', to: '/d/notifications', permission: 'notification.view', icon: 'bell' },
       { labelKey: 'nav.item.auditLog', to: '/d/audit', permission: 'audit.view', icon: 'file-text' },
     ],
   },
   {
     titleKey: 'nav.section.settings',
     items: [
-      { labelKey: 'nav.item.settings', to: '/d/settings', permission: 'pengaturan.view', icon: 'settings' },
-      // Editor template certificate sebelumnya tidak ditaut dari mana pun.
+      { labelKey: 'nav.item.settings', to: '/d/settings', permission: 'settings.view', icon: 'settings' },
+      // Editor template certificate previous no ditaut from mana pun.
       // Gerbangnya `certificate.create`, BUKAN `certificate.view` — izin view juga
       // dimiliki student, jadi memakainya akan membuka halaman admin untuk mereka.
       {
@@ -116,28 +116,28 @@ export const navSections: NavSection[] = [
         permission: 'certificate.create',
         icon: 'award',
       },
-      // Isi halaman publik — terpisah dari Pengaturan karena yang diubah adalah
+      // Isi halaman publik — terpisah from settings karena yang diubah adalah
       // tampilan untuk pengunjung, bukan perilaku sistem.
-      { labelKey: 'nav.item.website', to: '/d/website', permission: 'pengaturan.view', icon: 'layout' },
+      { labelKey: 'nav.item.website', to: '/d/website', permission: 'settings.view', icon: 'layout' },
       // Halaman statis yang ditautkan footer (About, Terms, Privacy, …).
-      { labelKey: 'nav.item.pages', to: '/d/website/pages', permission: 'pengaturan.view', icon: 'file-text' },
+      { labelKey: 'nav.item.pages', to: '/d/website/pages', permission: 'settings.view', icon: 'file-text' },
       // Master data mata uang tampilan + kurs terhadap mata uang basis.
       {
         labelKey: 'nav.item.currencies',
         to: '/d/settings/currencies',
-        permission: 'pengaturan.view',
+        permission: 'settings.view',
         icon: 'dollar-sign',
       },
-      // Master data rekening transfer manual (sebelumnya tiga baris di Pengaturan).
+      // Master data account transfer manual (previous tiga baris di settings).
       {
         labelKey: 'nav.item.bankAccounts',
         to: '/d/settings/bank-accounts',
-        permission: 'pengaturan.view',
+        permission: 'settings.view',
         icon: 'credit-card',
       },
     ],
   },
 ];
 
-/** Daftar datar semua item (kompat mundur bila ada yang mengimpor navItems). */
+/** register datar semua item (kompat mundur bila ada yang mengimpor navItems). */
 export const navItems: NavItem[] = navSections.flatMap((s) => s.items);

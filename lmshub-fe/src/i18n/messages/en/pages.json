@@ -29,7 +29,7 @@
     "colFooter": "Footer",
     "colUpdated": "Updated",
     "slug": "Address (slug)",
-    "slugHint": "Lowercase letters, digits and hyphens. Changing it breaks links that already point to the old address.",
+    "slugHint": "Lowercase letters, digits and hyphens. Changing it breaks links that already pointst to the old address.",
     "type": "Type",
     "statusHint": "Only published pages can be opened by visitors.",
     "showInFooter": "Show in footer",
@@ -49,7 +49,7 @@
     "titleRequired": "Enter a title of at least 2 characters.",
     "slugInvalid": "The address may contain only lowercase letters, digits and hyphens (2–150 characters)."
   },
-  "tipe": {
+  "type": {
     "tentang": "About",
     "faq": "FAQ / Help",
     "kebijakan": "Policy",
@@ -57,7 +57,7 @@
   },
   "status": {
     "draft": "Draft",
-    "terbit": "Published",
+    "publish": "Published",
     "arsip": "Archived"
   }
 }

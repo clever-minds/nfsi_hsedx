@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const courseLevelEnum = z.enum(['pemula', 'menengah', 'mahir']);
+export const courseLevelEnum = z.enum(['beginner', 'intermediate', 'advanced']);
 
 export const createCourseSchema = z.object({
   title: z.string().min(3).max(200),
@@ -8,9 +8,9 @@ export const createCourseSchema = z.object({
   summary: z.string().max(500).optional(),
   description: z.string().optional(),
   category_id: z.string().uuid(),
-  // Hanya admin/super yang boleh mengisi ini untuk menugaskan course ke instructor lain.
+  // Hanya admin/super yang boleh mengisi ini untuk menugaskan course to instructor lain.
   instructor_id: z.string().uuid().optional(),
-  level: courseLevelEnum.default('pemula'),
+  level: courseLevelEnum.default('beginner'),
   price: z.number().min(0).default(0),
   strike_price: z.number().min(0).optional(),
   thumbnail_media_id: z.string().uuid().optional(),
@@ -34,18 +34,18 @@ export const updateCourseSchema = z.object({
   meta: z.record(z.unknown()).nullable().optional(),
 });
 
-/** Aturan kelulusan — disimpan terpisah dari data course supaya tidak memicu review ulang. */
+/** Aturan kelulusan — disimpan terpisah from data course supaya no memicu review ulang. */
 export const completionRulesSchema = z.object({
   final_exam_quiz_id: z.string().uuid().nullable().optional(),
   allow_restart: z.boolean().optional(),
 });
 
 export const publishCourseSchema = z.object({
-  catatan: z.string().max(500).optional(),
+  notes: z.string().max(500).optional(),
 });
 
 export const archiveCourseSchema = z.object({
-  alasan: z.string().max(500).optional(),
+  reason: z.string().max(500).optional(),
 });
 
 export type CreateCourseInput = z.infer<typeof createCourseSchema>;

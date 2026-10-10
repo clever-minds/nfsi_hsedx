@@ -10,11 +10,11 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 
 interface UserDetail {
   id: string;
-  nama_lengkap: string;
+  name_lengkap: string;
   email: string | null;
-  nomor_wa: string | null;
+  number_wa: string | null;
   role_kode: string;
-  role_nama: string;
+  role_name: string;
   status: string;
 }
 interface RoleOption {
@@ -48,9 +48,9 @@ const userId = computed(() => route.params.id as string | undefined);
 const isEdit = computed(() => !!userId.value);
 
 const form = reactive({
-  nama_lengkap: '',
+  name_lengkap: '',
   email: '',
-  nomor_wa: '',
+  number_wa: '',
   password: '',
   role_kode: '',
   status: 'active' as 'pending' | 'active' | 'inactive',
@@ -135,9 +135,9 @@ async function loadUser(id: string) {
     apiGet<UserDetail>(`/users/${id}`),
     apiGetFull<PermissionRow[]>(`/users/${id}/permissions`).then((r) => r.data ?? []),
   ]);
-  form.nama_lengkap = detail.nama_lengkap;
+  form.name_lengkap = detail.name_lengkap;
   form.email = detail.email ?? '';
-  form.nomor_wa = detail.nomor_wa ?? '';
+  form.number_wa = detail.number_wa ?? '';
   form.role_kode = detail.role_kode;
   form.status = detail.status as typeof form.status;
   applyPermissionRows(perms);
@@ -178,17 +178,17 @@ async function submit() {
     let id = userId.value;
     if (isEdit.value && id) {
       await apiPut(`/users/${id}`, {
-        nama_lengkap: form.nama_lengkap,
+        name_lengkap: form.name_lengkap,
         email: form.email || null,
-        nomor_wa: form.nomor_wa || null,
+        number_wa: form.number_wa || null,
         status: form.status,
         role_kode: form.role_kode,
       });
     } else {
       const created = await apiPost<{ id: string }>('/users', {
-        nama_lengkap: form.nama_lengkap,
+        name_lengkap: form.name_lengkap,
         email: form.email || undefined,
-        nomor_wa: form.nomor_wa || undefined,
+        number_wa: form.number_wa || undefined,
         password: form.password,
         role_kode: form.role_kode,
         status: form.status === 'inactive' ? 'pending' : form.status,
@@ -221,7 +221,7 @@ async function submit() {
       <div class="card grid gap-4 p-5 sm:grid-cols-2">
         <div>
           <label class="label">{{ t('users.form.fullName') }}</label>
-          <input v-model="form.nama_lengkap" class="input" required :placeholder="t('users.form.fullNamePlaceholder')" />
+          <input v-model="form.name_lengkap" class="input" required :placeholder="t('users.form.fullNamePlaceholder')" />
         </div>
         <div>
           <label class="label">{{ t('users.form.role') }}</label>
@@ -235,7 +235,7 @@ async function submit() {
         </div>
         <div>
           <label class="label">{{ t('users.form.whatsapp') }}</label>
-          <input v-model="form.nomor_wa" class="input" :placeholder="t('users.form.whatsappPlaceholder')" />
+          <input v-model="form.number_wa" class="input" :placeholder="t('users.form.whatsappPlaceholder')" />
         </div>
         <div v-if="!isEdit">
           <label class="label">{{ t('users.form.initialPassword') }}</label>

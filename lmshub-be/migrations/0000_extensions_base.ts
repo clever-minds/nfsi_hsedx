@@ -35,15 +35,15 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   `);
   pgm.sql(`
     DO $$ BEGIN
-      CREATE TYPE kanal_notifikasi AS ENUM ('in_app','email','wa','push');
+      CREATE TYPE channel_notification AS ENUM ('in_app','email','wa','push');
     EXCEPTION WHEN duplicate_object THEN null; END $$;
   `);
 }
 
 export async function down(pgm: MigrationBuilder): Promise<void> {
-  pgm.sql(`DROP TYPE IF EXISTS kanal_notifikasi;`);
+  pgm.sql(`DROP TYPE IF EXISTS channel_notification;`);
   pgm.sql(`DROP TYPE IF EXISTS permission_action;`);
   pgm.sql(`DROP TYPE IF EXISTS user_status;`);
   pgm.sql(`DROP FUNCTION IF EXISTS set_updated_at();`);
-  // Extensions sengaja tidak di-drop (dipakai objek lain / aman ditinggalkan).
+  // Extensions sengaja no di-drop (dipakai objek lain / aman ditinggalkan).
 }

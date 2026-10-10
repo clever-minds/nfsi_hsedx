@@ -9,32 +9,32 @@ import KpiCard from '@/components/ui/KpiCard.vue';
 import DonutChart from '@/components/ui/DonutChart.vue';
 import Icon from '@/components/ui/Icon.vue';
 
-interface TrenHari { tanggal: string; jumlah: number }
-interface KursusPopuler { id: string; title: string; student_count: number | null; rating_avg: string | null; instructor_nama: string }
-interface PendaftaranBaru { id: string; user_nama: string; course_judul: string; status: string; created_at: string }
-interface AntreanPayout { id: string; nominal_total: string; status: string; created_at: string }
-interface AuditItem { id: string; modul: string; aksi: string; entity_type: string | null; waktu: string }
-interface KomposisiRow { status: string; jumlah: number }
-interface TopInstruktur { id: string; name: string; foto_profil: string | null; jumlah_kursus: number; total_siswa: number; rating_avg: string | null }
-interface TransaksiBaru { id: string; pembeli_nama: string; jalur: string; status: string; total: string; created_at: string }
+interface TrenHari { date: string; amount: number }
+interface KursusPopuler { id: string; title: string; student_count: number | null; rating_avg: string | null; instructor_name: string }
+interface PendaftaranBaru { id: string; user_name: string; course_title: string; status: string; created_at: string }
+interface AntreanPayout { id: string; amount_total: string; status: string; created_at: string }
+interface AuditItem { id: string; modul: string; action: string; entity_type: string | null; time: string }
+interface KomposisiRow { status: string; amount: number }
+interface TopInstruktur { id: string; name: string; profile_picture: string | null; amount_kursus: number; total_siswa: number; rating_avg: string | null }
+interface TransaksiBaru { id: string; pembeli_name: string; channel: string; status: string; total: string; created_at: string }
 
 const props = defineProps<{ data: Record<string, unknown> }>();
 const auth = useAuthStore();
 const { t } = useI18n();
 
-const MONEY_RE = /pendapatan|revenue|laba|pengeluaran|komisi/;
+const MONEY_RE = /pendapatan|revenue|laba|pengeluaran|commission/;
 
 const iconFor = (label: string) => {
   const l = label.toLowerCase();
   if (MONEY_RE.test(l) || l.includes('payout') || l.includes('payment') || l.includes('refund')) return 'credit-card';
   if (l.includes('course')) return 'book-open';
-  if (l.includes('pengguna') || l.includes('student') || l.includes('pendaftaran') || l.includes('enrollment')) return 'users';
+  if (l.includes('users') || l.includes('student') || l.includes('pendaftaran') || l.includes('enrollment')) return 'users';
   if (l.includes('live')) return 'video';
   if (l.includes('rating')) return 'award';
   return 'bar-chart';
 };
 
-/** KPI dari field skalar + flatten `antrean_approval` (direktur). */
+/** KPI from field skalar + flatten `antrean_approval` (direktur). */
 const kpis = computed(() => {
   const out: Array<{ label: string; value: string | number; icon: string }> = [];
   for (const [k, v] of Object.entries(props.data)) {
@@ -52,8 +52,8 @@ const kpis = computed(() => {
 });
 
 const tren = computed(() => (props.data.tren_enrollment_7hari as TrenHari[] | undefined) ?? []);
-const trenMax = computed(() => Math.max(1, ...tren.value.map((t) => t.jumlah)));
-const trenTotal = computed(() => tren.value.reduce((a, t) => a + t.jumlah, 0));
+const trenMax = computed(() => Math.max(1, ...tren.value.map((t) => t.amount)));
+const trenTotal = computed(() => tren.value.reduce((a, t) => a + t.amount, 0));
 const kursusPopuler = computed(() => (props.data.kursus_terpopuler as KursusPopuler[] | undefined) ?? []);
 const pendaftaranTerbaru = computed(() => (props.data.pendaftaran_terbaru as PendaftaranBaru[] | undefined) ?? []);
 const antreanPayout = computed(() => (props.data.antrean_payout as AntreanPayout[] | undefined) ?? []);
@@ -63,27 +63,27 @@ const auditTerbaru = computed(() => (props.data.audit_terbaru as AuditItem[] | u
 
 /**
  * Urutan status yang menentukan slot warna. Sengaja dipatok di sini, bukan
- * mengikuti sort_order kiriman backend (yang tersusun menurun berdasarkan jumlah):
+ * mengikuti sort_order kiriman backend (yang tersusun menurun berdasarkan amount):
  * kalau warna ikut peringkat, satu status bisa berganti warna hanya karena
  * angkanya naik, dan pembaca kehilangan jangkarnya.
  */
-const URUTAN_ORDER = ['menunggu_pembayaran', 'dp_cicilan_berjalan', 'lunas', 'akses_aktif', 'batal'];
-const URUTAN_ENROLLMENT = ['terdaftar', 'aktif', 'selesai', 'kedaluwarsa', 'batal'];
+const URUTAN_ORDER = ['awaiting_payment', 'installment_running', 'paid_in_full', 'access_active', 'cancelled'];
+const URUTAN_ENROLLMENT = ['registered', 'active', 'completed', 'expired', 'cancelled'];
 
 /**
- * Peran yang dapat slot warnanya sendiri. Sisanya dilebur jadi satu segmen
- * "lainnya": palet hanya punya lima slot dan tidak boleh didaur ulang, jadi
- * peran ke-enam dan seterusnya lebih jujur diringkas daripada dipaksa berwarna
+ * Peran yang dapat slot warnanya sendiri. Sisanya dilebur jadi satu segment
+ * "lainnya": palet hanya punya lima slot dan no boleh didaur ulang, jadi
+ * peran to-enam dan seterusnya lebih jujur diringkas daripada dipaksa berwarna
  * sama dengan peran lain.
  */
-const URUTAN_PERAN = ['student', 'instructor', 'admin_ops', 'marketing'];
-const PERAN_LAINNYA = 'lainnya';
+const URUTAN_PERAN = ['student', 'instructor', 'operations_admin', 'marketing'];
+const PERAN_LAINNYA = 'other';
 
 /**
  * `label` menentukan catalog terjemahan yang dipakai. Donut peran berisi kode
  * peran (`student`, `instructor`), bukan kode status, sehingga memakai
- * `statusLabel` untuk semuanya membuat legenda peran jatuh ke kode mentah dan
- * menampilkan "Student"/"Instructor" di UI berbahasa apa pun.
+ * `statusLabel` untuk semuanya membuat legenda peran due to kode mentah dan
+ * menampilkan "Student"/"Instructor" di UI berlanguage apa pun.
  */
 function toSegments(
   rows: KomposisiRow[],
@@ -94,28 +94,28 @@ function toSegments(
     .map((r) => ({
       key: r.status,
       label: label(r.status),
-      value: Number(r.jumlah) || 0,
-      // Status di luar daftar tetap ditaruh di slot terakhir agar tetap tampil.
+      value: Number(r.amount) || 0,
+      // Status di luar register tetap ditaruh di slot terakhir agar tetap tampil.
       color: chartColor(sort_order.indexOf(r.status) === -1 ? sort_order.length : sort_order.indexOf(r.status)),
     }))
     .sort((a, b) => sort_order.indexOf(a.key) - sort_order.indexOf(b.key));
 }
 
-const segmenOrder = computed(() =>
+const segmentOrder = computed(() =>
   toSegments((props.data.komposisi_order as KomposisiRow[] | undefined) ?? [], URUTAN_ORDER),
 );
-const segmenEnrollment = computed(() =>
+const segmentEnrollment = computed(() =>
   toSegments((props.data.komposisi_enrollment as KomposisiRow[] | undefined) ?? [], URUTAN_ENROLLMENT),
 );
 
-/** Peran di luar daftar tetap digabung jadi satu segmen sebelum diberi warna. */
-const segmenPeran = computed(() => {
+/** Peran di luar register tetap digabung jadi satu segment sebelum diberi warna. */
+const segmentPeran = computed(() => {
   const rows = (props.data.komposisi_peran as KomposisiRow[] | undefined) ?? [];
-  const utama = rows.filter((r) => URUTAN_PERAN.includes(r.status));
+  const primary = rows.filter((r) => URUTAN_PERAN.includes(r.status));
   const sisa = rows
     .filter((r) => !URUTAN_PERAN.includes(r.status))
-    .reduce((a, r) => a + (Number(r.jumlah) || 0), 0);
-  const seg = toSegments(utama, URUTAN_PERAN, roleLabel);
+    .reduce((a, r) => a + (Number(r.amount) || 0), 0);
+  const seg = toSegments(primary, URUTAN_PERAN, roleLabel);
   if (sisa > 0) {
     seg.push({
       key: PERAN_LAINNYA,
@@ -131,16 +131,16 @@ const segmenPeran = computed(() => {
 const punyaKomposisi = (seg: DonutSegment[]) => seg.filter((s) => s.value > 0).length >= 2;
 
 /**
- * Donut yang layak digambar. Dikumpulkan jadi satu daftar supaya jumlah kolom
+ * Donut yang layak digambar. Dikumpulkan jadi satu register supaya amount kolom
  * bisa mengikuti berapa yang benar-benar ada — satu donut sendirian di baris
  * yang dirancang untuk dua akan menyisakan separuh kartu kosong.
  */
 const donuts = computed(() =>
   [
-    { key: 'order', segments: segmenOrder.value },
-    { key: 'enrollment', segments: segmenEnrollment.value },
-    { key: 'peran', segments: segmenPeran.value },
-  ].filter((d) => punyaKomposisi(d.segments)),
+    { key: 'order', segmentts: segmentOrder.value },
+    { key: 'enrollment', segmentts: segmentEnrollment.value },
+    { key: 'peran', segmentts: segmentPeran.value },
+  ].filter((d) => punyaKomposisi(d.segmentts)),
 );
 
 /** Tiga donut muat sebaris di layar lebar; dua atau empat lebih rapi dua kolom. */
@@ -151,22 +151,22 @@ const kolomDonut = computed(() =>
 const topInstruktur = computed(() => (props.data.top_instruktur as TopInstruktur[] | undefined) ?? []);
 const transaksiTerbaru = computed(() => (props.data.transaksi_terbaru as TransaksiBaru[] | undefined) ?? []);
 
-/** Warna badge status transaction — status, bukan kategori, jadi paletnya terpisah. */
+/** Warna badge status transaction — status, bukan category, jadi paletnya terpisah. */
 function badgeStatus(status: string): string {
-  if (status === 'lunas' || status === 'akses_aktif') return 'bg-emerald-50 text-emerald-700';
-  if (status === 'batal') return 'bg-rose-50 text-rose-700';
-  if (status === 'dp_cicilan_berjalan') return 'bg-sky-50 text-sky-700';
+  if (status === 'paid_in_full' || status === 'access_active') return 'bg-emerald-50 text-emerald-700';
+  if (status === 'cancelled') return 'bg-rose-50 text-rose-700';
+  if (status === 'installment_running') return 'bg-sky-50 text-sky-700';
   return 'bg-amber-50 text-amber-700';
 }
 </script>
 
 <template>
   <div class="grid gap-6 xl:grid-cols-[1fr,20rem]">
-    <!-- Kolom utama -->
+    <!-- Kolom primary -->
     <div class="min-w-0 space-y-8">
       <div>
         <h1 class="text-xl font-medium text-slate-900 sm:text-2xl">
-          {{ t('dashboard.greeting', { name: auth.user?.nama_lengkap }) }}
+          {{ t('dashboard.greeting', { name: auth.user?.name_lengkap }) }}
         </h1>
         <p class="mt-1 text-sm text-slate-400">{{ t('dashboard.ops.platformSummary', { role: roleLabel(auth.activeRole) }) }}</p>
       </div>
@@ -192,39 +192,39 @@ function badgeStatus(status: string): string {
         <div class="mt-5 flex h-32 items-end gap-2" role="img" :aria-label="t('dashboard.ops.trendAria', { n: trenTotal })">
           <div
             v-for="bar in tren"
-            :key="bar.tanggal"
+            :key="bar.date"
             class="group relative flex h-full flex-1 flex-col justify-end"
-            :aria-label="t('dashboard.ops.trendBarAria', { day: fmtHari(bar.tanggal), n: bar.jumlah })"
+            :aria-label="t('dashboard.ops.trendBarAria', { day: fmtHari(bar.date), n: bar.amount })"
           >
             <!-- tooltip -->
             <div
-              class="pointer-events-none absolute -top-9 start-1/2 z-10 -translate-x-1/2 rtl:translate-x-1/2 whitespace-nowrap rounded bg-slate-800 px-2 py-1 text-[11px] text-white opacity-0 transition group-hover:opacity-100"
+              class="pointster-events-none absolute -top-9 start-1/2 z-10 -translate-x-1/2 rtl:translate-x-1/2 whitespace-nowrap rounded bg-slate-800 px-2 py-1 text-[11px] text-white opacity-0 transition group-hover:opacity-100"
             >
-              {{ fmtAngka(bar.jumlah) }} · {{ fmtTanggalSaja(bar.tanggal) }}
+              {{ fmtAngka(bar.amount) }} · {{ fmtTanggalSaja(bar.date) }}
             </div>
-            <!-- label langsung hanya pada nilai puncak -->
-            <div v-if="bar.jumlah === trenMax && bar.jumlah > 0" class="mb-1 text-center text-[11px] font-medium text-slate-500">
-              {{ fmtAngka(bar.jumlah) }}
+            <!-- label langsung hanya pada value puncak -->
+            <div v-if="bar.amount === trenMax && bar.amount > 0" class="mb-1 text-center text-[11px] font-medium text-slate-500">
+              {{ fmtAngka(bar.amount) }}
             </div>
             <div
               class="w-full rounded-t transition group-hover:opacity-80"
-              :class="bar.jumlah > 0 ? 'bg-brand-500' : 'bg-slate-200'"
-              :style="{ height: bar.jumlah > 0 ? `${Math.max(6, (bar.jumlah / trenMax) * 100)}%` : '3px' }"
+              :class="bar.amount > 0 ? 'bg-brand-500' : 'bg-slate-200'"
+              :style="{ height: bar.amount > 0 ? `${Math.max(6, (bar.amount / trenMax) * 100)}%` : '3px' }"
             ></div>
           </div>
         </div>
         <div class="mt-2 flex gap-2 border-t border-slate-100 pt-2">
-          <div v-for="bar in tren" :key="bar.tanggal" class="flex-1 text-center text-[11px] text-slate-400">{{ fmtHari(bar.tanggal) }}</div>
+          <div v-for="bar in tren" :key="bar.date" class="flex-1 text-center text-[11px] text-slate-400">{{ fmtHari(bar.date) }}</div>
         </div>
       </section>
 
-      <!-- Komposisi: order, pendaftaran, dan peran pengguna -->
+      <!-- Komposisi: order, pendaftaran, dan peran user -->
       <section v-if="donuts.length" class="grid gap-6" :class="kolomDonut">
         <div v-for="d in donuts" :key="d.key" class="card p-5">
           <h2 class="section-title">{{ t(`dashboard.ops.mix.${d.key}.title`) }}</h2>
           <p class="mt-0.5 text-xs text-slate-400">{{ t(`dashboard.ops.mix.${d.key}.hint`) }}</p>
           <div class="mt-4">
-            <DonutChart :segments="d.segments" :total-label="t(`dashboard.ops.mix.${d.key}.total`)" />
+            <DonutChart :segmentts="d.segmentts" :total-label="t(`dashboard.ops.mix.${d.key}.total`)" />
           </div>
         </div>
       </section>
@@ -252,9 +252,9 @@ function badgeStatus(status: string): string {
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-2.5">
                     <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-50 text-[11px] font-bold text-brand-500">
-                      {{ initialsOf(trx.pembeli_nama) }}
+                      {{ initialsOf(trx.pembeli_name) }}
                     </span>
-                    <span class="truncate font-medium text-slate-700">{{ trx.pembeli_nama }}</span>
+                    <span class="truncate font-medium text-slate-700">{{ trx.pembeli_name }}</span>
                   </div>
                 </td>
                 <td class="px-4 py-3">
@@ -287,7 +287,7 @@ function badgeStatus(status: string): string {
             </span>
             <div class="min-w-0 flex-1">
               <h3 class="truncate card-title">{{ c.title }}</h3>
-              <div class="text-xs text-slate-400">{{ t('dashboard.ops.byInstructor', { name: c.instructor_nama }) }}</div>
+              <div class="text-xs text-slate-400">{{ t('dashboard.ops.byInstructor', { name: c.instructor_name }) }}</div>
             </div>
             <div class="shrink-0 text-end">
               <div class="flex items-center gap-1 text-sm font-medium text-slate-700">
@@ -303,7 +303,7 @@ function badgeStatus(status: string): string {
       <section v-if="topInstruktur.length">
         <div class="mb-4 flex items-center justify-between">
           <h2 class="section-title">{{ t('dashboard.ops.topInstructors') }}</h2>
-          <RouterLink v-if="auth.can('pengguna.view')" to="/d/users" class="section-link">
+          <RouterLink v-if="auth.can('user.view')" to="/d/users" class="section-link">
             {{ t('dashboard.student.seeAll') }}
           </RouterLink>
         </div>
@@ -315,7 +315,7 @@ function badgeStatus(status: string): string {
             <div class="min-w-0 flex-1">
               <h3 class="truncate card-title">{{ ins.name }}</h3>
               <div class="text-xs text-slate-400">
-                {{ t('dashboard.ops.courseCount', { n: fmtAngka(ins.jumlah_kursus) }) }}
+                {{ t('dashboard.ops.courseCount', { n: fmtAngka(ins.amount_kursus) }) }}
               </div>
             </div>
             <div class="shrink-0 text-end">
@@ -339,11 +339,11 @@ function badgeStatus(status: string): string {
         <ul class="space-y-3">
           <li v-for="e in pendaftaranTerbaru" :key="e.id" class="flex items-start gap-3">
             <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-50 text-xs font-bold text-brand-500">
-              {{ initialsOf(e.user_nama) }}
+              {{ initialsOf(e.user_name) }}
             </span>
             <div class="min-w-0">
-              <div class="text-sm text-slate-700"><b>{{ e.user_nama }}</b></div>
-              <div class="line-clamp-1 text-xs text-slate-400">{{ e.course_judul }} · {{ fmtRelatif(e.created_at) }}</div>
+              <div class="text-sm text-slate-700"><b>{{ e.user_name }}</b></div>
+              <div class="line-clamp-1 text-xs text-slate-400">{{ e.course_title }} · {{ fmtRelatif(e.created_at) }}</div>
             </div>
           </li>
         </ul>
@@ -357,7 +357,7 @@ function badgeStatus(status: string): string {
         </h3>
         <ul class="space-y-2">
           <li v-for="p in antreanPayout" :key="p.id" class="flex items-center justify-between rounded bg-slate-50 px-3 py-2">
-            <span class="text-sm font-medium text-slate-700">{{ fmtRp(p.nominal_total) }}</span>
+            <span class="text-sm font-medium text-slate-700">{{ fmtRp(p.amount_total) }}</span>
             <span class="text-xs text-slate-400">{{ fmtRelatif(p.created_at) }}</span>
           </li>
         </ul>
@@ -371,18 +371,18 @@ function badgeStatus(status: string): string {
         </h3>
         <ul class="space-y-2">
           <li v-for="a in auditTerbaru.slice(0, 6)" :key="a.id" class="border-s-2 border-slate-200 ps-3">
-            <div class="text-sm text-slate-700"><b class="capitalize">{{ a.modul }}</b> · {{ a.aksi }}</div>
-            <div class="text-xs text-slate-400">{{ fmtRelatif(a.waktu) }}</div>
+            <div class="text-sm text-slate-700"><b class="capitalize">{{ a.modul }}</b> · {{ a.action }}</div>
+            <div class="text-xs text-slate-400">{{ fmtRelatif(a.time) }}</div>
           </li>
         </ul>
         <RouterLink to="/d/audit" class="section-link mt-3 block text-end">{{ t('dashboard.student.seeAll') }}</RouterLink>
       </div>
 
-      <!-- Aksi cepat -->
+      <!-- action cepat -->
       <div class="card p-5">
         <h3 class="mb-3 card-title">{{ t('dashboard.ops.quickActions') }}</h3>
         <div class="space-y-2">
-          <RouterLink v-if="auth.can('pengguna.view')" to="/d/users" class="nav-item rounded border-0 px-3 py-2">
+          <RouterLink v-if="auth.can('user.view')" to="/d/users" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="users" :size="16" /> {{ t('dashboard.ops.quickUsers') }}
           </RouterLink>
           <RouterLink v-if="auth.can('course.create')" to="/d/courses" class="nav-item rounded border-0 px-3 py-2">
@@ -391,7 +391,7 @@ function badgeStatus(status: string): string {
           <RouterLink v-if="auth.can('transaction.view')" to="/d/transactions" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="credit-card" :size="16" /> {{ t('dashboard.ops.quickTransactions') }}
           </RouterLink>
-          <RouterLink v-if="auth.can('laporan.view')" to="/d/reports" class="nav-item rounded border-0 px-3 py-2">
+          <RouterLink v-if="auth.can('report.view')" to="/d/reports" class="nav-item rounded border-0 px-3 py-2">
             <Icon name="bar-chart" :size="16" /> {{ t('dashboard.ops.quickReports') }}
           </RouterLink>
         </div>

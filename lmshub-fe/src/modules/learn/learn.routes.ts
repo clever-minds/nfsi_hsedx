@@ -7,7 +7,7 @@ export const learnRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/learn/views/MyCoursesView.vue'),
     meta: {
       permission: 'enrollment.view',
-      hideForRoles: ['direktur', 'ketua', 'pembina', 'admin_ops', 'marketing'],
+      hideForRoles: ['director', 'chairperson', 'supervisor', 'operations_admin', 'marketing'],
       title: 'My Learning',
     },
   },

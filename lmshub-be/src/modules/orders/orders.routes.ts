@@ -8,14 +8,14 @@ import * as ctrl from './orders.controller';
 
 export const ordersRouter = Router();
 
-// ── Webhook gateway — PUBLIC (tanpa auth), diverifikasi oleh adapter provider.
+// ── Webhook gateway — PUBLIC (tanpa auth), diverifikasi by adapter provider.
 // Harus terpasang sebelum requireAuth(), atau seluruh webhook akan dibalas 401. ──
 // Mollie mengirim `id=tr_xxx` sebagai form body, bukan JSON — parser urlencoded
 // global di app.ts sudah menanganinya.
 ordersRouter.post('/webhook/:provider', asyncHandler(ctrl.gatewayWebhook));
 
-// Proxy untuk gateway yang me-redirect pembeli dengan metode HTTP POST
-// (seperti Easebuzz, PayU). Frontend SPA (Vite/Nginx) akan menolak POST ke 
+// Proxy untuk gateway yang me-redirect pembeli dengan method HTTP POST
+// (seperti Easebuzz, PayU). Frontend SPA (Vite/Nginx) akan menolak POST to 
 // berkas statis (404/405). Rute ini mencegat POST tersebut dan mengubahnya 
 // menjadi GET biasa dengan 302 Redirect.
 ordersRouter.post('/redirect', (req, res) => {
@@ -42,11 +42,11 @@ ordersRouter.get('/', requirePermission('transaction', 'view'), asyncHandler(ctr
 ordersRouter.get('/:id', requirePermission('transaction', 'view'), asyncHandler(ctrl.detail));
 ordersRouter.get('/:id/invoice', requirePermission('payment', 'view'), asyncHandler(ctrl.invoice));
 
-// FINANSIAL — transfer manual/mock, WAJIB withTransaction (lihat orders.service)
+// FINANSIAL — transfer manual/mock, WAJIB withTransaction (view orders.service)
 ordersRouter.post('/:id/pay', requirePermission('payment', 'create'), validate(paySchema), asyncHandler(ctrl.pay));
-// FINANSIAL — mulai payment gateway (settle HANYA lewat webhook)
+// FINANSIAL — start payment gateway (settle HANYA lewat webhook)
 ordersRouter.post('/:id/pay-gateway', requirePermission('payment', 'create'), asyncHandler(ctrl.payGateway));
-// FINANSIAL — verifikasi admin_ops atas transfer manual
+// FINANSIAL — verifikasi admin_ops on transfer manual
 ordersRouter.post(
   '/:id/verify',
   requirePermission('payment', 'update'),

@@ -8,10 +8,10 @@ import { AdjustGradeInput, GradeSubmissionInput, ReleaseGradeInput, RequestRevis
 
 const isSuper = (actor: AuthContext) => actor.roles.includes('super_admin');
 const isElevated = (actor: AuthContext) =>
-  isSuper(actor) || actor.roles.some((r) => ['admin_ops', 'direktur', 'ketua', 'pembina'].includes(r));
+  isSuper(actor) || actor.roles.some((r) => ['operations_admin', 'director', 'chairperson', 'supervisor'].includes(r));
 
 /** Bobot komponen (quiz/assignment) belum tersedia (courses.bobot_komponen di luar cakupan domain 03/04) —
- * pakai rata-rata sederhana antar komponen & ambang lulus default sampai domain pengaturan (12) tersedia. */
+ * pakai rata-rata sederhana antar komponen & ambang lulus default until domain settings (12) tersedia. */
 const DEFAULT_PASSING_SCORE = 70;
 
 async function assertCourseOwnership(actor: AuthContext, courseId: string) {
@@ -30,59 +30,59 @@ export async function listSubmissions(
   return repo.listSubmissionsQueue(p, { status: filters.status, instructorUserId });
 }
 
-// ── Auto-grade (dipanggil dari assessments.service saat attempt disubmit) ─
+// ── Auto-grade (dipanggil from assessments.service saat attempt disubmit) ─
 
-type GradedAnswer = { skor: number; isBenar: boolean | null; manual: boolean };
+type GradedAnswer = { score: number; isBenar: boolean | null; manual: boolean };
 
 function gradeSingleAnswer(
-  tipe: assessmentsRepo.QuestionTipe,
-  poin: number,
+  type: assessmentsRepo.QuestionTipe,
+  points: number,
   options: assessmentsRepo.QuestionOptionRow[],
-  jawabanRaw: unknown,
+  answerRaw: unknown,
 ): GradedAnswer {
-  const j = (jawabanRaw ?? {}) as Record<string, unknown>;
-  switch (tipe) {
-    case 'pilihan_tunggal':
-    case 'benar_salah': {
-      const correct = options.find((o) => o.is_benar);
+  const j = (answerRaw ?? {}) as Record<string, unknown>;
+  switch (type) {
+    case 'single_choice':
+    case 'true_false': {
+      const correct = options.find((o) => o.is_correct);
       const selected = typeof j.option_id === 'string' ? j.option_id : undefined;
       const isBenar = !!correct && selected === correct.id;
-      return { skor: isBenar ? poin : 0, isBenar, manual: false };
+      return { score: isBenar ? points : 0, isBenar, manual: false };
     }
-    case 'pilihan_ganda': {
-      const correctIds = new Set(options.filter((o) => o.is_benar).map((o) => o.id));
+    case 'multiple_choice': {
+      const correctIds = new Set(options.filter((o) => o.is_correct).map((o) => o.id));
       const selectedIds = Array.isArray(j.option_ids) ? (j.option_ids as string[]) : [];
       const allMatch = selectedIds.length === correctIds.size && selectedIds.every((id) => correctIds.has(id));
-      return { skor: allMatch ? poin : 0, isBenar: allMatch, manual: false };
+      return { score: allMatch ? points : 0, isBenar: allMatch, manual: false };
     }
-    case 'pencocokan': {
-      const pairs = Array.isArray(j.pairs) ? (j.pairs as Array<{ option_id: string; pasangan_key: string }>) : [];
+    case 'matching': {
+      const pairs = Array.isArray(j.pairs) ? (j.pairs as Array<{ option_id: string; pair_key: string }>) : [];
       const byId = new Map(options.map((o) => [o.id, o]));
       let correct = 0;
       for (const p of pairs) {
         const opt = byId.get(p.option_id);
-        if (opt?.pasangan_key && opt.pasangan_key === p.pasangan_key) correct += 1;
+        if (opt?.pair_key && opt.pair_key === p.pair_key) correct += 1;
       }
-      const total = options.filter((o) => o.pasangan_key).length || 1;
+      const total = options.filter((o) => o.pair_key).length || 1;
       const fraction = Math.min(1, correct / total);
-      return { skor: Math.round(poin * fraction * 100) / 100, isBenar: fraction === 1, manual: false };
+      return { score: Math.round(points * fraction * 100) / 100, isBenar: fraction === 1, manual: false };
     }
-    case 'isian_singkat': {
+    case 'short_answer': {
       const text = typeof j.text === 'string' ? j.text.trim().toLowerCase() : '';
-      const isBenar = options.some((o) => o.is_benar && o.teks_opsi.trim().toLowerCase() === text);
-      return { skor: isBenar ? poin : 0, isBenar, manual: false };
+      const isBenar = options.some((o) => o.is_correct && o.option_text.trim().toLowerCase() === text);
+      return { score: isBenar ? points : 0, isBenar, manual: false };
     }
-    case 'esai':
-    case 'upload_file':
+    case 'essay':
+    case 'file_upload':
     default:
-      return { skor: 0, isBenar: null, manual: true };
+      return { score: 0, isBenar: null, manual: true };
   }
 }
 
 /**
- * Auto-grade objektif saat attempt disubmit (dipanggil dari `assessments.service`).
- * Tipe esai/upload_file selalu masuk antrean manual (`attempt_answers.dinilai_manual=true`),
- * status attempt tetap `dikumpulkan` sampai dinilai manual oleh instructor/TA.
+ * Auto-grade objektif saat attempt disubmit (dipanggil from `assessments.service`).
+ * Tipe esai/upload_file selalu login antrean manual (`attempt_answers.manually_graded=true`),
+ * status attempt tetap `dikumpulkan` until dinilai manual by instructor/TA.
  */
 export async function autoGradeAttempt(attemptId: string): Promise<void> {
   const attempt = await assessmentsRepo.attemptDetail(attemptId);
@@ -96,47 +96,47 @@ export async function autoGradeAttempt(attemptId: string): Promise<void> {
 
   let totalSkor = 0;
   let butuhManual = false;
-  const updates: Array<{ id: string; skor: number | null; isBenar: boolean | null; manual: boolean }> = [];
+  const updates: Array<{ id: string; score: number | null; isBenar: boolean | null; manual: boolean }> = [];
 
   for (const qq of quizQuestions) {
-    const poin = qq.poin_override !== null ? Number(qq.poin_override) : Number(qq.question.poin);
+    const points = qq.points_override !== null ? Number(qq.points_override) : Number(qq.question.points);
     const answer = answerByQuestion.get(qq.question_id);
-    if (!answer) continue; // tidak dijawab = 0 poin, tidak perlu grading manual
-    if (['esai', 'upload_file'].includes(qq.question.tipe)) {
+    if (!answer) continue; // no dijawab = 0 points, no perlu grading manual
+    if (['essay', 'file_upload'].includes(qq.question.type)) {
       butuhManual = true;
-      updates.push({ id: answer.id, skor: null, isBenar: null, manual: true });
+      updates.push({ id: answer.id, score: null, isBenar: null, manual: true });
       continue;
     }
-    const graded = gradeSingleAnswer(qq.question.tipe, poin, qq.options, answer.jawaban);
-    totalSkor += graded.skor;
-    updates.push({ id: answer.id, skor: graded.skor, isBenar: graded.isBenar, manual: false });
+    const graded = gradeSingleAnswer(qq.question.type, points, qq.options, answer.answer);
+    totalSkor += graded.score;
+    updates.push({ id: answer.id, score: graded.score, isBenar: graded.isBenar, manual: false });
   }
 
   await withTransaction(async (tx) => {
     for (const u of updates) {
-      await assessmentsRepo.updateAnswerGrading(u.id, { skor_didapat: u.skor, is_benar: u.isBenar, dinilai_manual: u.manual }, tx);
+      await assessmentsRepo.updateAnswerGrading(u.id, { earned_score: u.score, is_correct: u.isBenar, manually_graded: u.manual }, tx);
     }
     if (!butuhManual) {
-      await assessmentsRepo.updateAttempt(attemptId, { status: 'dinilai', skor: totalSkor }, tx);
+      await assessmentsRepo.updateAttempt(attemptId, { status: 'graded', score: totalSkor }, tx);
       const existing = await repo.findGradeBySource('quiz', attemptId);
       if (existing) {
-        await repo.updateGrade(existing.id, { skor: totalSkor, skor_maksimal: Number(quiz.total_points), dinilai_at: new Date() }, tx);
+        await repo.updateGrade(existing.id, { score: totalSkor, score_maximum: Number(quiz.total_pointsts), graded_at: new Date() }, tx);
       } else {
         await repo.insertGrade(
           {
             enrollment_id: attempt.enrollment_id,
-            sumber_tipe: 'quiz',
-            sumber_id: attemptId,
-            skor: totalSkor,
-            skor_maksimal: Number(quiz.total_points) || 1,
+            source_type: 'quiz',
+            source_id: attemptId,
+            score: totalSkor,
+            score_maximum: Number(quiz.total_pointsts) || 1,
             feedback: null,
-            dinilai_oleh: null, // NULL = auto-grade sistem
+            graded_by: null, // NULL = auto-grade sistem
           },
           tx,
         );
       }
     }
-    // status tetap 'dikumpulkan' bila ada soal esai/upload_file menunggu grading manual.
+    // status tetap 'submitted' bila ada soal esai/upload_file menunggu grading manual.
   });
 
   if (!butuhManual) await recalcGradebook(attempt.enrollment_id);
@@ -166,34 +166,34 @@ export async function manualGradeSubmission(actor: AuthContext, submissionId: st
   await assertCourseOwnership(actor, assignment.course_id);
 
   const existing = await repo.findGradeBySource('assignment', submissionId);
-  if (existing?.rilis_at) {
-    throw AppError.conflict('This grade has already been released — use the adjustment endpoint', 'grading.released_use_adjust');
+  if (existing?.released_at) {
+    throw AppError.conflict('This grade has already been released — use the adjustment endpointst', 'grading.released_use_adjust');
   }
 
   const feedback = input.feedback ?? null;
-  const rincianFeedback = input.rubrik ? { rubrik: input.rubrik, catatan: feedback } : feedback;
+  const detailsFeedback = input.rubrik ? { rubrik: input.rubrik, notes: feedback } : feedback;
 
   let grade: repo.GradeRow;
   if (existing) {
     grade = await repo.updateGrade(existing.id, {
-      skor: input.skor,
-      skor_maksimal: input.skor_maksimal,
-      feedback: JSON.stringify(rincianFeedback),
-      dinilai_oleh: actor.userId,
-      dinilai_at: new Date(),
+      score: input.score,
+      score_maximum: input.score_maximum,
+      feedback: JSON.stringify(detailsFeedback),
+      graded_by: actor.userId,
+      graded_at: new Date(),
     });
   } else {
     grade = await repo.insertGrade({
       enrollment_id: submission.enrollment_id,
-      sumber_tipe: 'assignment',
-      sumber_id: submissionId,
-      skor: input.skor,
-      skor_maksimal: input.skor_maksimal,
-      feedback: JSON.stringify(rincianFeedback),
-      dinilai_oleh: actor.userId,
+      source_type: 'assignment',
+      source_id: submissionId,
+      score: input.score,
+      score_maximum: input.score_maximum,
+      feedback: JSON.stringify(detailsFeedback),
+      graded_by: actor.userId,
     });
   }
-  await assessmentsRepo.setSubmissionStatus(submissionId, 'dinilai');
+  await assessmentsRepo.setSubmissionStatus(submissionId, 'graded');
 
   await recordAudit({
     userId: actor.userId,
@@ -201,8 +201,8 @@ export async function manualGradeSubmission(actor: AuthContext, submissionId: st
     action: existing ? 'update' : 'create',
     entity: 'grades',
     entityId: grade.id,
-    before: existing ? { skor: existing.skor, skor_maksimal: existing.skor_maksimal } : null,
-    after: { skor: input.skor, skor_maksimal: input.skor_maksimal },
+    before: existing ? { score: existing.score, score_maximum: existing.score_maximum } : null,
+    after: { score: input.score, score_maximum: input.score_maximum },
   });
 
   await recalcGradebook(submission.enrollment_id);
@@ -216,17 +216,17 @@ export async function requestRevision(actor: AuthContext, submissionId: string, 
   if (!assignment) throw AppError.notFound('Assignment not found', 'assignment.not_found');
   await assertCourseOwnership(actor, assignment.course_id);
 
-  await assessmentsRepo.setSubmissionRevision(submissionId, input.catatan);
+  await assessmentsRepo.setSubmissionRevision(submissionId, input.notes);
   await recordAudit({
     userId: actor.userId,
     module: 'grading',
     action: 'request_revision',
     entity: 'submissions',
     entityId: submissionId,
-    reason: input.catatan,
+    reason: input.notes,
   });
-  // Student kembali ke status "Belum" secara efektif melalui `submissions.status='revisi_diminta'`
-  // (siklus submit ulang dikelola modul assessments — `resubmit()` menaikkan `revisi_ke`).
+  // Student back to status "Belum" secara efektif melalui `submissions.status='revision_requested'`
+  // (siklus submit ulang managed modul assessments — `resubmit()` menaikkan `revision_number`).
   return assessmentsRepo.submissionDetail(submissionId);
 }
 
@@ -237,7 +237,7 @@ export async function releaseGrade(actor: AuthContext, gradeId: string, _input: 
   if (!grade) throw AppError.notFound('Grade not found', 'grading.not_found');
   const courseId = await repo.courseIdForEnrollment(grade.enrollment_id);
   if (courseId) await assertCourseOwnership(actor, courseId);
-  if (grade.rilis_at) throw AppError.conflict('This grade has already been released', 'grading.already_released');
+  if (grade.released_at) throw AppError.conflict('This grade has already been released', 'grading.already_released');
 
   const released = await repo.releaseGrade(gradeId);
   await recordAudit({
@@ -246,25 +246,25 @@ export async function releaseGrade(actor: AuthContext, gradeId: string, _input: 
     action: 'release',
     entity: 'grades',
     entityId: gradeId,
-    before: { rilis_at: null },
-    after: { rilis_at: released.rilis_at },
+    before: { released_at: null },
+    after: { released_at: released.released_at },
   });
-  // Catatan: pemberitahuan rilis nilai ke student ditangani modul notifikasi,
-  // bukan di sini — lihat domain 14-notifikasi-reminder.
+  // Catatan: pemberitahuan rilis value to student ditangani modul notification,
+  // bukan di sini — view domain 14-notification-reminder.
   return released;
 }
 
-/** Satu-satunya jalur ubah nilai pasca-rilis — tidak pernah menimpa diam-diam, selalu tercatat via recordAudit. */
+/** Satu-satunya channel edit value pasca-rilis — no pernah menimpa diam-diam, selalu tercatat via recordAudit. */
 export async function adjustGrade(actor: AuthContext, gradeId: string, input: AdjustGradeInput) {
   const grade = await repo.gradeDetail(gradeId);
   if (!grade) throw AppError.notFound('Grade not found', 'grading.not_found');
-  if (!grade.rilis_at) throw AppError.badRequest('This grade has not been released yet — use the normal grading endpoint', 'grading.not_released_use_grading');
+  if (!grade.released_at) throw AppError.badRequest('This grade has not been released yet — use the normal grading endpointst', 'grading.not_released_use_grading');
   const courseId = await repo.courseIdForEnrollment(grade.enrollment_id);
   if (courseId) await assertCourseOwnership(actor, courseId);
 
   const updated = await repo.updateGrade(gradeId, {
-    skor: input.skor,
-    skor_maksimal: input.skor_maksimal ?? grade.skor_maksimal,
+    score: input.score,
+    score_maximum: input.score_maximum ?? grade.score_maximum,
   });
   await recordAudit({
     userId: actor.userId,
@@ -272,9 +272,9 @@ export async function adjustGrade(actor: AuthContext, gradeId: string, input: Ad
     action: 'adjust',
     entity: 'grades',
     entityId: gradeId,
-    before: { skor: grade.skor, skor_maksimal: grade.skor_maksimal },
-    after: { skor: input.skor, skor_maksimal: input.skor_maksimal ?? grade.skor_maksimal },
-    reason: input.alasan,
+    before: { score: grade.score, score_maximum: grade.score_maximum },
+    after: { score: input.score, score_maximum: input.score_maximum ?? grade.score_maximum },
+    reason: input.reason,
   });
   await recalcGradebook(grade.enrollment_id);
   return updated;
@@ -285,17 +285,17 @@ export async function adjustGrade(actor: AuthContext, gradeId: string, input: Ad
 export async function recalcGradebook(enrollmentId: string): Promise<void> {
   const grades = await repo.listGradesForEnrollment(enrollmentId);
   if (!grades.length) {
-    await repo.upsertGradebookEntry({ enrollment_id: enrollmentId, nilai_akhir: null, status_kelulusan: 'belum_selesai', rincian: [] });
+    await repo.upsertGradebookEntry({ enrollment_id: enrollmentId, final_grade: null, graduation_status: 'incomplete', details: [] });
     return;
   }
-  const rincian = grades.map((g) => {
-    const skor = Number(g.skor);
-    const maks = Number(g.skor_maksimal) || 1;
-    return { sumber_tipe: g.sumber_tipe, sumber_id: g.sumber_id, skor, skor_maksimal: maks, persen: Math.round((skor / maks) * 10000) / 100 };
+  const details = grades.map((g) => {
+    const score = Number(g.score);
+    const maks = Number(g.score_maximum) || 1;
+    return { source_type: g.source_type, source_id: g.source_id, score, score_maximum: maks, persen: Math.round((score / maks) * 10000) / 100 };
   });
-  const nilaiAkhir = Math.round((rincian.reduce((s, r) => s + r.persen, 0) / rincian.length) * 100) / 100;
-  const status: repo.StatusKelulusan = nilaiAkhir >= DEFAULT_PASSING_SCORE ? 'lulus' : 'tidak_lulus';
-  await repo.upsertGradebookEntry({ enrollment_id: enrollmentId, nilai_akhir: nilaiAkhir, status_kelulusan: status, rincian });
+  const nilaiAkhir = Math.round((details.reduce((s, r) => s + r.persen, 0) / details.length) * 100) / 100;
+  const status: repo.StatusKelulusan = nilaiAkhir >= DEFAULT_PASSING_SCORE ? 'passed' : 'failed';
+  await repo.upsertGradebookEntry({ enrollment_id: enrollmentId, final_grade: nilaiAkhir, graduation_status: status, details });
 }
 
 export async function getGradebook(actor: AuthContext, courseId: string) {

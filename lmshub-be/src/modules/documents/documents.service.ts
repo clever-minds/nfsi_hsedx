@@ -24,14 +24,14 @@ export async function listPages(p: PageParams, f: repo.PageFilters) {
   return repo.listPages(p, f);
 }
 
-/** Halaman publik: hanya tampilkan bila `status = 'terbit'`. */
+/** Halaman publik: hanya tampilkan bila `status = 'publish'`. */
 export async function getPublicPage(slug: string) {
   const page = await repo.getPageBySlug(slug);
-  if (!page || page.status !== 'terbit') throw AppError.notFound('Page not found', 'page.not_found');
+  if (!page || page.status !== 'publish') throw AppError.notFound('Page not found', 'page.not_found');
   return page;
 }
 
-/** Daftar halaman terbit untuk footer — tanpa isi, tanpa penyunting. */
+/** register halaman publish untuk footer — tanpa content, tanpa penyunting. */
 export async function listPublicPages() {
   return repo.listPublishedPages();
 }
@@ -42,9 +42,9 @@ export async function listPublicPages() {
  * Editor Admin Panel mengirim `konten_html`; hasilnya disimpan sebagai
  * `{ format: 'html', html }` setelah disanitasi. Klien lama yang mengirim
  * `content` mentah tetap diterima, tetapi bila objek itu membawa `html`,
- * bagian itu ikut dibersihkan — tidak ada jalan menyimpan HTML kotor.
+ * bagian itu ikut dibersihkan — no ada jalan menyimpan HTML kotor.
  *
- * `undefined` berarti "tidak diubah".
+ * `undefined` berarti "no diubah".
  */
 export function normalizeKonten(input: { content?: unknown; konten_html?: string }): unknown {
   if (input.konten_html !== undefined) return { format: 'html', html: sanitizeRichText(input.konten_html) };
@@ -69,13 +69,13 @@ export async function createPage(actor: AuthContext, input: CreatePageInput) {
     slug: input.slug,
     title: input.title,
     content: normalizeKonten(input),
-    tipe: input.tipe,
+    type: input.type,
     status: input.status,
     meta_seo: input.meta_seo,
-    tanggal_terbit: input.status === 'terbit' ? new Date().toISOString() : null,
-    dikelola_oleh: actor.userId,
-    tampil_di_footer: input.tampil_di_footer,
-    urutan_footer: input.urutan_footer,
+    publish_date: input.status === 'publish' ? new Date().toISOString() : null,
+    managed_by: actor.userId,
+    show_in_footer: input.show_in_footer,
+    footer_sort_order: input.footer_sort_order,
   });
   await recordAudit({
     userId: actor.userId,
@@ -92,7 +92,7 @@ export async function updatePage(actor: AuthContext, id: string, input: UpdatePa
   const before = await repo.getPageById(id);
   if (!before) throw AppError.notFound('Page not found', 'page.not_found');
 
-  const fields: Record<string, unknown> = { dikelola_oleh: actor.userId };
+  const fields: Record<string, unknown> = { managed_by: actor.userId };
   if (input.slug !== undefined && input.slug !== before.slug) {
     await assertSlugFree(input.slug, id);
     fields.slug = input.slug;
@@ -100,14 +100,14 @@ export async function updatePage(actor: AuthContext, id: string, input: UpdatePa
   if (input.title !== undefined) fields.title = input.title;
   const content = normalizeKonten(input);
   if (content !== undefined) fields.content = JSON.stringify(content);
-  if (input.tipe !== undefined) fields.tipe = input.tipe;
-  if (input.tampil_di_footer !== undefined) fields.tampil_di_footer = input.tampil_di_footer;
-  if (input.urutan_footer !== undefined) fields.urutan_footer = input.urutan_footer;
+  if (input.type !== undefined) fields.type = input.type;
+  if (input.show_in_footer !== undefined) fields.show_in_footer = input.show_in_footer;
+  if (input.footer_sort_order !== undefined) fields.footer_sort_order = input.footer_sort_order;
   if (input.meta_seo !== undefined) fields.meta_seo = input.meta_seo === null ? null : JSON.stringify(input.meta_seo);
   if (input.status !== undefined) {
     fields.status = input.status;
-    if (input.status === 'terbit' && !before.tanggal_terbit) {
-      fields.tanggal_terbit = new Date().toISOString();
+    if (input.status === 'publish' && !before.publish_date) {
+      fields.publish_date = new Date().toISOString();
     }
   }
   await repo.updatePage(id, fields);
@@ -124,7 +124,7 @@ export async function updatePage(actor: AuthContext, id: string, input: UpdatePa
   return repo.getPageById(id);
 }
 
-/** Hapus lunak — slug-nya bebas dipakai lagi, barisnya tetap ada untuk audit. */
+/** delete lunak — slug-nya bebas dipakai lagi, barisnya tetap ada untuk audit. */
 export async function removePage(actor: AuthContext, id: string) {
   const before = await repo.getPageById(id);
   if (!before) throw AppError.notFound('Page not found', 'page.not_found');
@@ -143,38 +143,38 @@ export async function removePage(actor: AuthContext, id: string) {
 
 export async function listSettings() {
   const rows = await repo.listSettings();
-  // Samarkan nilai kredensial terenkripsi saat dibaca.
-  return rows.map((s) => (s.is_encrypted ? { ...s, nilai: s.nilai ? SECRET_MASK : '' } : s));
+  // Samarkan value kredensial terenkripsi saat read.
+  return rows.map((s) => (s.is_encrypted ? { ...s, value: s.value ? SECRET_MASK : '' } : s));
 }
 
 /**
- * Setting publik sebagai map `key -> nilai`. Dipakai FE/mobile sebelum login untuk
+ * Setting publik sebagai map `key -> value`. Dipakai FE/mobile sebelum login untuk
  * hal-hal yang memengaruhi tampilan catalog — terutama mata uang price.
  */
 export async function publicSettings(): Promise<Record<string, string>> {
   const rows = await repo.listPublicSettings();
   const out: Record<string, string> = {};
-  for (const r of rows) out[r.key] = r.nilai ?? '';
+  for (const r of rows) out[r.key] = r.value ?? '';
   return out;
 }
 
 // ── Aset merek (logo & ikon) ─────────────────────────────────────────────
 
 const BRAND_DIR = path.resolve(process.cwd(), 'uploads', 'branding');
-const BRAND_MAX_BYTES = 512 * 1024; // 512KB — logo/ikon tidak perlu lebih besar
+const BRAND_MAX_BYTES = 512 * 1024; // 512KB — logo/ikon no perlu lebih besar
 const BRAND_EXT: Record<UploadBrandAssetInput['mime_type'], string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
 };
-const BRAND_SETTING_KEY: Record<UploadBrandAssetInput['jenis'], string> = {
+const BRAND_SETTING_KEY: Record<UploadBrandAssetInput['type'], string> = {
   logo: 'brand.logo_url',
   icon: 'brand.icon_url',
 };
 
 /**
- * Simpan logo/ikon ke `uploads/branding` lalu catat path-nya di settings.
- * Nama berkas diberi cap waktu supaya cache browser tidak menahan aset lama.
+ * save logo/ikon to `uploads/branding` lalu catat path-nya di settings.
+ * name berkas diberi cap time supaya cache browser no menahan aset lama.
  */
 export async function uploadBrandAsset(actor: AuthContext, input: UploadBrandAssetInput) {
   const raw = input.data_base64.replace(/^data:[^;]+;base64,/, '');
@@ -182,15 +182,15 @@ export async function uploadBrandAsset(actor: AuthContext, input: UploadBrandAss
   if (!buffer.length) throw AppError.badRequest('The image data is not valid', 'upload.image_invalid');
   if (buffer.length > BRAND_MAX_BYTES) throw AppError.badRequest('The file must be 512KB or smaller', 'upload.max_512kb');
 
-  const key = BRAND_SETTING_KEY[input.jenis];
+  const key = BRAND_SETTING_KEY[input.type];
   const before = await repo.getSettingByKey(key);
 
-  const filename = `${input.jenis}-${Date.now()}.${BRAND_EXT[input.mime_type]}`;
+  const filename = `${input.type}-${Date.now()}.${BRAND_EXT[input.mime_type]}`;
   try {
     await mkdir(BRAND_DIR, { recursive: true });
     await writeFile(path.join(BRAND_DIR, filename), buffer);
   } catch {
-    // Direktori read-only (mis. kontainer dengan filesystem tidak bisa ditulis).
+    // Direktori read-only (mis. kontainer dengan filesystem no bisa ditulis).
     throw AppError.badRequest('Could not save the file: the uploads/branding directory is not writable', 'upload.branding_dir_not_writable');
   }
 
@@ -198,45 +198,45 @@ export async function uploadBrandAsset(actor: AuthContext, input: UploadBrandAss
   await repo.updateSetting(key, url, undefined);
   invalidateSettingsCache();
 
-  // Buang berkas lama (best-effort — kegagalan di sini tidak boleh menggagalkan unggahan).
-  if (before?.nilai?.startsWith('/uploads/branding/')) {
-    await unlink(path.join(BRAND_DIR, path.basename(before.nilai))).catch(() => {});
+  // Buang berkas lama (best-effort — kegagalan di sini no boleh menggagalkan unggahan).
+  if (before?.value?.startsWith('/uploads/branding/')) {
+    await unlink(path.join(BRAND_DIR, path.basename(before.value))).catch(() => {});
   }
 
   await recordAudit({
     userId: actor.userId,
-    module: 'pengaturan',
+    module: 'settings',
     action: 'update',
     entity: 'settings',
     entityId: before?.id ?? null,
-    before: { nilai: before?.nilai ?? null },
-    after: { nilai: url },
+    before: { value: before?.value ?? null },
+    after: { value: url },
   });
-  return { key, nilai: url };
+  return { key, value: url };
 }
 
-/** Kosongkan logo/ikon dan hapus berkasnya, mengembalikan tampilan bawaan. */
-export async function removeBrandAsset(actor: AuthContext, jenis: UploadBrandAssetInput['jenis']) {
-  const key = BRAND_SETTING_KEY[jenis];
+/** Kosongkan logo/ikon dan delete berkasnya, mengembalikan tampilan bawaan. */
+export async function removeBrandAsset(actor: AuthContext, type: UploadBrandAssetInput['type']) {
+  const key = BRAND_SETTING_KEY[type];
   const before = await repo.getSettingByKey(key);
 
   await repo.updateSetting(key, '', undefined);
   invalidateSettingsCache();
 
-  if (before?.nilai?.startsWith('/uploads/branding/')) {
-    await unlink(path.join(BRAND_DIR, path.basename(before.nilai))).catch(() => {});
+  if (before?.value?.startsWith('/uploads/branding/')) {
+    await unlink(path.join(BRAND_DIR, path.basename(before.value))).catch(() => {});
   }
 
   await recordAudit({
     userId: actor.userId,
-    module: 'pengaturan',
+    module: 'settings',
     action: 'update',
     entity: 'settings',
     entityId: before?.id ?? null,
-    before: { nilai: before?.nilai ?? null },
-    after: { nilai: '' },
+    before: { value: before?.value ?? null },
+    after: { value: '' },
   });
-  return { key, nilai: '' };
+  return { key, value: '' };
 }
 
 /** Placeholder the API returns instead of a stored secret. */
@@ -251,31 +251,31 @@ export async function updateSetting(actor: AuthContext, key: string, input: Upda
   // field posts the mask instead of the key. Written literally, that silently
   // replaces a working credential with eight dots and the gateway starts
   // failing with no visible cause. Receiving the mask means "leave it alone".
-  const keepStored = before.is_encrypted && input.nilai?.trim() === SECRET_MASK;
-  const nilai = keepStored ? before.nilai : (input.nilai ?? before.nilai);
+  const keepStored = before.is_encrypted && input.value?.trim() === SECRET_MASK;
+  const value = keepStored ? before.value : (input.value ?? before.value);
 
   // Mengganti mata uang basis membuat setiap kurs yang tersimpan berubah arti,
   // jadi kursnya dinyatakan ulang terhadap basis baru SEBELUM setting disimpan.
   // Bila mata uang barunya belum terdaftar, penyimpanan dibatalkan — lebih baik
-  // gagal terang-terangan daripada meninggalkan catalog berharga salah.
-  if (key === 'currency.code' && nilai && nilai.toUpperCase() !== (before.nilai ?? '').toUpperCase()) {
-    await rebaseRates(before.nilai ?? '', nilai);
+  // failed terang-terangan daripada meninggalkan catalog berprice salah.
+  if (key === 'currency.code' && value && value.toUpperCase() !== (before.value ?? '').toUpperCase()) {
+    await rebaseRates(before.value ?? '', value);
   }
 
-  await repo.updateSetting(key, nilai, input.nilai_json);
-  invalidateSettingsCache(); // agar mailer/google/bank memakai nilai terbaru
-  invalidatePaymentSettings(); // gateway membaca kredensial dari sini
+  await repo.updateSetting(key, value, input.value_json);
+  invalidateSettingsCache(); // agar mailer/google/bank memakai value terbaru
+  invalidatePaymentSettings(); // gateway membaca kredensial from sini
   await recordAudit({
     userId: actor.userId,
-    module: 'pengaturan',
+    module: 'settings',
     action: 'update',
     entity: 'settings',
     entityId: before.id,
-    before: { nilai: before.is_encrypted ? SECRET_MASK : before.nilai },
-    after: { nilai: before.is_encrypted ? SECRET_MASK : nilai },
+    before: { value: before.is_encrypted ? SECRET_MASK : before.value },
+    after: { value: before.is_encrypted ? SECRET_MASK : value },
   });
   const updated = await repo.getSettingByKey(key);
-  return updated && updated.is_encrypted ? { ...updated, nilai: updated.nilai ? SECRET_MASK : '' } : updated;
+  return updated && updated.is_encrypted ? { ...updated, value: updated.value ? SECRET_MASK : '' } : updated;
 }
 
 // ── audit_log ────────────────────────────────────────────────────────────
@@ -284,15 +284,15 @@ export async function listAuditLog(p: PageParams, f: repo.AuditLogFilters) {
   return repo.listAuditLog(p, f);
 }
 
-// ── Gateway payment (layar Pengaturan) ────────────────────────────────
+// ── Gateway payment (layar settings) ────────────────────────────────
 
 /**
- * Metadata tiap gateway untuk layar Pengaturan.
+ * Metadata tiap gateway untuk layar settings.
  *
  * URL webhook dihitung di server, bukan diketik pembeli. Salah satu penyebab
- * paling sering "payment berhasil tapi order tidak lunas" adalah URL webhook
- * yang salah ketik, dan itu tidak memunculkan error apa pun — order hanya diam
- * menggantung. Ditampilkan siap salin, kesalahan itu hilang.
+ * paling sering "payment success tapi order no lunas" adalah URL webhook
+ * yang salah ketik, dan itu no memunculkan error apa pun — order hanya diam
+ * menggantung. Ditampilkan siap salin, error itu hilang.
  */
 export async function paymentGateways() {
   await ensurePaymentSettings();
@@ -304,7 +304,7 @@ export async function paymentGateways() {
     return {
       id: p.id,
       label: p.label,
-      /** Kredensial sudah terisi (dari Pengaturan atau .env). */
+      /** Kredensial sudah terisi (from settings atau .env). */
       configured,
       /** Ditawarkan di checkout sekarang. */
       active: configured && gatewayEnabled(p.id, configured),

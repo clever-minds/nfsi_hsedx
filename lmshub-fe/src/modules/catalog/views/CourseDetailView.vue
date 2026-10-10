@@ -10,7 +10,7 @@ import { useCheckout } from '@/composables/useCheckout';
 import { getPaymentConfig, type GatewayOption } from '@/lib/payments';
 import Icon from '@/components/ui/Icon.vue';
 
-interface Lesson { id: string; title: string; tipe: string; duration_minutes?: number | null; gratis_preview?: boolean }
+interface Lesson { id: string; title: string; type: string; duration_minutes?: number | null; gratis_preview?: boolean }
 interface Section { id: string; title: string; lessons?: Lesson[] }
 interface CourseDetail {
   id: string;
@@ -21,20 +21,20 @@ interface CourseDetail {
   strike_price?: number | null;
   level?: string;
   language?: string;
-  category_nama?: string;
-  durasi_total_menit?: number;
+  category_name?: string;
+  total_duration_minutes?: number;
   rating_avg?: string | number;
   rating_count?: number;
   student_count?: number;
   instructor_id?: string;
-  instructor_nama?: string;
+  instructor_name?: string;
   instructor_foto?: string | null;
   instructor_bio?: string | null;
   instructor_keahlian?: string[] | null;
   instructor_rating?: string | null;
   instructor_rating_count?: number | null;
   instructor_total_siswa?: number | null;
-  instructor_jumlah_kursus?: number | null;
+  instructor_amount_kursus?: number | null;
   meta?: {
     thumbnail_url?: string;
     yang_dipelajari?: string[];
@@ -43,14 +43,14 @@ interface CourseDetail {
   } | null;
   kurikulum?: Section[];
 }
-/** Satu rekening tujuan transfer manual (master data `bank_accounts`). */
+/** Satu account tujuan transfer manual (master data `bank_accounts`). */
 interface BankAccountOption {
   id: string;
   bank: string;
-  nomor_rekening: string;
-  atas_nama: string;
-  cabang?: string | null;
-  is_utama?: boolean;
+  account_number: string;
+  account_name: string;
+  branch?: string | null;
+  is_primary?: boolean;
 }
 
 const route = useRoute();
@@ -66,7 +66,7 @@ const gateways = ref<GatewayOption[]>([]);
 const gatewayLoading = ref(false);
 const showTransferPanel = ref(false);
 const bankAccounts = ref<BankAccountOption[]>([]);
-/** Rekening yang sedang dipilih pembeli — awalnya rekening utama. */
+/** Rekening yang sedang dipilih pembeli — awalnya account primary. */
 const selectedBankId = ref<string>('');
 const bankConfig = computed<BankAccountOption | null>(
   () => bankAccounts.value.find((b) => b.id === selectedBankId.value) ?? bankAccounts.value[0] ?? null,
@@ -76,7 +76,7 @@ const bankConfigError = ref('');
 const referensi = ref('');
 const transferSukses = ref(false);
 
-// Bila sudah ter-enroll, tombol beli diganti "Mulai Belajar".
+// Bila sudah ter-enroll, tombol beli diganti "start Belajar".
 const enrolled = ref(false);
 
 // Akordeon kurikulum: seksi pertama terbuka.
@@ -87,15 +87,47 @@ function toggleSection(id: string) {
   openSections.value = new Set(openSections.value);
 }
 
+// Fitur Free Preview
+const previewContents = ref<any[]>([]);
+const previewLoading = ref(false);
+const previewError = ref('');
+async function openPreview(lesson: Lesson) {
+  if (!lesson.gratis_preview) return;
+  previewLoading.value = true;
+  previewError.value = '';
+  try {
+    const res = await apiGet<any[]>(`/courses/public/${route.params.slug}/preview/${lesson.id}`);
+    if (res && res.length > 0) {
+      previewContents.value = res;
+    } else {
+      previewError.value = t('catalog.detail.noPreviewContent', 'No content available for preview.');
+    }
+  } catch (e) {
+    previewError.value = errorMessage(e, t('catalog.detail.previewFailed', 'Could not load preview.'));
+  } finally {
+    previewLoading.value = false;
+  }
+}
+function closePreview() {
+  previewContents.value = [];
+  previewError.value = '';
+}
+
+function youtubeEmbed(url?: string): string | null {
+  if (!url) return null;
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
+  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+}
+
 const totalLesson = computed(() => (course.value?.kurikulum ?? []).reduce((a, s) => a + (s.lessons?.length ?? 0), 0));
-const totalJam = computed(() => fmtDurasiMenit(course.value?.durasi_total_menit ?? 0));
-const diskon = computed(() => {
+const totalJam = computed(() => fmtDurasiMenit(course.value?.total_duration_minutes ?? 0));
+const discount = computed(() => {
   const h = Number(course.value?.price ?? 0);
   const c = Number(course.value?.strike_price ?? 0);
   return c > h && h > 0 ? Math.round(((c - h) / c) * 100) : 0;
 });
 const inisialInstruktur = computed(() =>
-  (course.value?.instructor_nama ?? '?').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase(),
+  (course.value?.instructor_name ?? '?').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase(),
 );
 const bintang = computed(() => Math.round(Number(course.value?.rating_avg ?? 0)));
 
@@ -109,7 +141,7 @@ onMounted(async () => {
         'filter[course_id]': course.value.id,
       }).catch(() => null);
       enrolled.value = !!res?.data?.some(
-        (e) => e.course_id === course.value!.id && ['terdaftar', 'aktif', 'selesai'].includes(e.status),
+        (e) => e.course_id === course.value!.id && ['registered', 'active', 'completed'].includes(e.status),
       );
     }
   } catch (e) {
@@ -120,11 +152,11 @@ onMounted(async () => {
 async function openMethodPanel() {
   buyError.value = '';
 
-  // Course gratis tidak punya apa pun untuk dipilih. Menawarkan daftar metode
-  // payment untuk tagihan nol hanya membingungkan, dan jalur gateway-nya
+  // Course gratis no punya apa pun untuk dipilih. Menawarkan register method
+  // payment untuk invoice nol hanya membingungkan, dan channel gateway-nya
   // memang menolak order bernilai nol.
   if (Number(course.value?.price ?? 0) === 0) {
-    const ok = await buy([{ item_tipe: 'course', course_id: course.value!.id }]);
+    const ok = await buy([{ item_type: 'course', course_id: course.value!.id }]);
     if (ok) {
       enrolled.value = true;
       router.push('/d/learn');
@@ -141,7 +173,7 @@ async function openMethodPanel() {
     try {
       gateways.value = (await getPaymentConfig()).providers;
     } catch {
-      // Daftar kosong: pembeli masih bisa memakai transfer bank manual.
+      // register kosong: pembeli masih bisa memakai transfer bank manual.
       gateways.value = [];
     } finally {
       gatewayLoading.value = false;
@@ -154,8 +186,8 @@ function closeMethodPanel() {
 
 async function bayarGateway(providerId: string) {
   if (!course.value) return;
-  const ok = await buy([{ item_tipe: 'course', course_id: course.value.id }], { metode: providerId });
-  // Gateway hosted mengalihkan browser; tidak ada yang perlu dilakukan di sini.
+  const ok = await buy([{ item_type: 'course', course_id: course.value.id }], { method: providerId });
+  // Gateway hosted mengalihkan browser; no ada yang perlu dilakukan di sini.
   if (ok && status.value === 'sukses') {
     showMethodPanel.value = false;
     router.push('/d/learn');
@@ -177,15 +209,15 @@ async function openTransferPanel() {
         bank_transfer: Omit<BankAccountOption, 'id'> | null;
       }>('/orders/payment-config');
       // `bank_accounts` adalah bentuk baru; `bank_transfer` dipertahankan backend
-      // sebagai satu rekening untuk klien lama, jadi dipakai sebagai cadangan.
-      const daftar = cfg.bank_accounts?.length
+      // sebagai satu account untuk klien lama, jadi dipakai sebagai cadangan.
+      const register = cfg.bank_accounts?.length
         ? cfg.bank_accounts
         : cfg.bank_transfer
           ? [{ id: 'default', ...cfg.bank_transfer }]
           : [];
-      bankAccounts.value = daftar;
-      selectedBankId.value = (daftar.find((b) => b.is_utama) ?? daftar[0])?.id ?? '';
-      if (!daftar.length) bankConfigError.value = t('catalog.detail.pay.noBankAccount');
+      bankAccounts.value = register;
+      selectedBankId.value = (register.find((b) => b.is_primary) ?? register[0])?.id ?? '';
+      if (!register.length) bankConfigError.value = t('catalog.detail.pay.noBankAccount');
     } catch (e) {
       bankConfigError.value = errorMessage(e, t('catalog.detail.pay.loadBankFailed'));
     } finally {
@@ -199,8 +231,8 @@ function closeTransferPanel() {
 
 async function beliTransfer() {
   if (!course.value) return;
-  const ok = await buy([{ item_tipe: 'course', course_id: course.value.id }], {
-    metode: 'transfer',
+  const ok = await buy([{ item_type: 'course', course_id: course.value.id }], {
+    method: 'transfer',
     referensi: referensi.value,
   });
   if (ok) transferSukses.value = true;
@@ -214,7 +246,7 @@ async function bagikan() {
       alert(t('catalog.detail.linkCopied'));
     }
   } catch {
-    /* dibatalkan pengguna */
+    /* dibatalkan user */
   }
 }
 
@@ -270,8 +302,8 @@ const TERMASUK = computed(() => [
           <div class="flex flex-col">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <h2 class="max-w-2xl text-2xl font-extrabold leading-snug text-slate-900">{{ course.title }}</h2>
-              <span v-if="course.category_nama" class="rounded-full bg-accent-400 px-3 py-1 text-xs font-bold text-white">
-                {{ course.category_nama }}
+              <span v-if="course.category_name" class="rounded-full bg-accent-400 px-3 py-1 text-xs font-bold text-white">
+                {{ course.category_name }}
               </span>
             </div>
             <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">{{ course.summary }}</p>
@@ -293,13 +325,13 @@ const TERMASUK = computed(() => [
             </div>
 
             <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-              <RouterLink v-if="false" :to="course.instructor_id ? `/instructors/${course.instructor_id}` : '#'" class="group flex items-center gap-3">
+              <RouterLink v-if="false" :to="course?.instructor_id ? `/instructors/${course?.instructor_id}` : '#'" class="group flex items-center gap-3">
                 <span class="grid h-11 w-11 place-items-center overflow-hidden rounded-full bg-brand-100 text-sm font-bold text-brand-600">
-                  <img v-if="course.instructor_foto" :src="assetUrl(course.instructor_foto)" :alt="course.instructor_nama" class="h-full w-full object-cover" />
+                  <img v-if="course?.instructor_foto" :src="assetUrl(course?.instructor_foto)" :alt="course?.instructor_name" class="h-full w-full object-cover" />
                   <template v-else>{{ inisialInstruktur }}</template>
                 </span>
                 <span>
-                  <span class="block text-sm font-semibold text-slate-900 group-hover:text-brand-500">{{ course.instructor_nama }}</span>
+                  <span class="block text-sm font-semibold text-slate-900 group-hover:text-brand-500">{{ course?.instructor_name }}</span>
                   <span class="block text-xs text-slate-400">{{ t('catalog.detail.instructor') }}</span>
                 </span>
               </RouterLink>
@@ -307,8 +339,8 @@ const TERMASUK = computed(() => [
                 <span class="flex">
                   <Icon v-for="i in 5" :key="i" name="star" :size="15" :class="i <= bintang ? 'fill-accent-400 text-accent-400' : 'text-slate-300'" />
                 </span>
-                <span class="num text-sm font-semibold text-slate-700">{{ Number(course.rating_avg ?? 0).toFixed(1) }}</span>
-                <span class="num text-xs text-slate-400">({{ fmtAngka(course.rating_count ?? 0) }})</span>
+                <span class="num text-sm font-semibold text-slate-700">{{ Number(course?.rating_avg ?? 0).toFixed(1) }}</span>
+                <span class="num text-xs text-slate-400">({{ fmtAngka(course?.rating_count ?? 0) }})</span>
               </span>
             </div>
           </div>
@@ -321,8 +353,9 @@ const TERMASUK = computed(() => [
             <div class="card rounded-2xl p-6">
               <h3 class="text-lg font-bold text-slate-900">{{ t('catalog.detail.overview') }}</h3>
               <h4 class="mt-4 text-sm font-semibold text-slate-800">{{ t('catalog.detail.description') }}</h4>
-              <div class="mt-2 space-y-3 text-sm leading-relaxed text-slate-600">
-                <p v-for="(par, i) in (course.description || course.summary || '').split('\n\n')" :key="i">{{ par }}</p>
+              <div v-if="course.description" class="mt-2 text-sm leading-relaxed text-slate-600 prose prose-slate max-w-none" v-html="course.description"></div>
+              <div v-else class="mt-2 space-y-3 text-sm leading-relaxed text-slate-600">
+                <p v-for="(par, i) in (course.summary || '').split('\n\n')" :key="i">{{ par }}</p>
               </div>
 
               <template v-if="course.meta?.yang_dipelajari?.length">
@@ -372,7 +405,14 @@ const TERMASUK = computed(() => [
                     <Icon name="chevron-down" :size="16" class="shrink-0 text-slate-400 transition-transform" :class="openSections.has(s.id) ? 'rotate-180' : ''" />
                   </button>
                   <div v-if="openSections.has(s.id)" class="divide-y divide-slate-100">
-                    <div v-for="l in s.lessons || []" :key="l.id" class="flex items-center gap-3 px-4 py-3 text-sm">
+                    <component
+                      :is="l.gratis_preview ? 'button' : 'div'"
+                      v-for="l in s.lessons || []"
+                      :key="l.id"
+                      class="flex w-full items-center gap-3 px-4 py-3 text-sm"
+                      :class="l.gratis_preview ? 'hover:bg-slate-50 text-left transition cursor-pointer' : ''"
+                      @click="l.gratis_preview ? openPreview(l) : null"
+                    >
                       <Icon name="play-circle" :size="16" class="shrink-0 text-brand-400" />
                       <span class="min-w-0 flex-1 truncate text-slate-700">{{ l.title }}</span>
                       <span v-if="l.gratis_preview" class="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-600">
@@ -381,7 +421,7 @@ const TERMASUK = computed(() => [
                       <span v-if="l.duration_minutes" class="shrink-0 text-xs text-slate-400">
                         {{ fmtAngka(l.duration_minutes) }} {{ t('catalog.detail.minShort') }}
                       </span>
-                    </div>
+                    </component>
                   </div>
                 </div>
               </div>
@@ -391,46 +431,46 @@ const TERMASUK = computed(() => [
             <div v-if="false" class="card rounded-2xl p-6">
               <h3 class="text-lg font-bold text-slate-900">{{ t('catalog.detail.aboutInstructor') }}</h3>
               <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
-                <RouterLink :to="course.instructor_id ? `/instructors/${course.instructor_id}` : '#'" class="group flex items-center gap-3">
+                <RouterLink :to="course?.instructor_id ? `/instructors/${course?.instructor_id}` : '#'" class="group flex items-center gap-3">
                   <span class="grid h-14 w-14 place-items-center overflow-hidden rounded-full bg-brand-100 text-lg font-bold text-brand-600">
-                    <img v-if="course.instructor_foto" :src="assetUrl(course.instructor_foto)" :alt="course.instructor_nama" class="h-full w-full object-cover" />
+                    <img v-if="course?.instructor_foto" :src="assetUrl(course?.instructor_foto)" :alt="course?.instructor_name" class="h-full w-full object-cover" />
                     <template v-else>{{ inisialInstruktur }}</template>
                   </span>
                   <span>
-                    <span class="block font-bold text-slate-900 group-hover:text-brand-500">{{ course.instructor_nama }}</span>
+                    <span class="block font-bold text-slate-900 group-hover:text-brand-500">{{ course?.instructor_name }}</span>
                     <span class="block text-xs text-slate-400">
-                      {{ (course.instructor_keahlian ?? []).slice(0, 3).join(' · ') || t('catalog.instructors.defaultRole') }}
+                      {{ (course?.instructor_keahlian ?? []).slice(0, 3).join(' · ') || t('catalog.instructors.defaultRole') }}
                     </span>
                   </span>
                 </RouterLink>
                 <span class="flex items-center gap-1 text-sm">
                   <Icon name="star" :size="15" class="fill-accent-400 text-accent-400" />
-                  <span class="num font-semibold text-slate-700">{{ Number(course.instructor_rating ?? 0).toFixed(1) }}</span>
+                  <span class="num font-semibold text-slate-700">{{ Number(course?.instructor_rating ?? 0).toFixed(1) }}</span>
                   <span class="text-xs text-slate-400">
-                    ({{ t('catalog.instructors.reviewsCount', { n: fmtAngka(course.instructor_rating_count ?? 0) }) }})
+                    ({{ t('catalog.instructors.reviewsCount', { n: fmtAngka(course?.instructor_rating_count ?? 0) }) }})
                   </span>
                 </span>
               </div>
               <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-y border-slate-100 py-3 text-sm text-slate-600">
                 <span class="flex items-center gap-1.5">
                   <Icon name="play-circle" :size="15" class="text-brand-500" />
-                  {{ t('catalog.detail.instructorCourses', { n: fmtAngka(course.instructor_jumlah_kursus ?? 0) }) }}
+                  {{ t('catalog.detail.instructorCourses', { n: fmtAngka(course?.instructor_amount_kursus ?? 0) }) }}
                 </span>
                 <span class="flex items-center gap-1.5">
                   <Icon name="users" :size="15" class="text-emerald-500" />
-                  {{ t('catalog.detail.instructorStudents', { n: fmtAngka(course.instructor_total_siswa ?? 0) }) }}
+                  {{ t('catalog.detail.instructorStudents', { n: fmtAngka(course?.instructor_total_siswa ?? 0) }) }}
                 </span>
               </div>
-              <p class="mt-4 text-sm leading-relaxed text-slate-600">{{ course.instructor_bio || t('catalog.detail.defaultBio') }}</p>
-              <div v-if="course.instructor_keahlian?.length" class="mt-4">
+              <p class="mt-4 text-sm leading-relaxed text-slate-600">{{ course?.instructor_bio || t('catalog.detail.defaultBio') }}</p>
+              <div v-if="course?.instructor_keahlian?.length" class="mt-4">
                 <h4 class="text-sm font-semibold text-slate-800">{{ t('catalog.detail.expertise') }}</h4>
                 <div class="mt-2 flex flex-wrap gap-2">
-                  <span v-for="k in course.instructor_keahlian" :key="k" class="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">{{ k }}</span>
+                  <span v-for="k in course?.instructor_keahlian" :key="k" class="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">{{ k }}</span>
                 </div>
               </div>
               <RouterLink
-                v-if="course.instructor_id"
-                :to="`/instructors/${course.instructor_id}`"
+                v-if="course?.instructor_id"
+                :to="`/instructors/${course?.instructor_id}`"
                 class="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand-500 hover:underline"
               >
                 {{ t('catalog.detail.viewFullProfile') }} <Icon name="arrow-right" :size="13" class="rtl-flip" />
@@ -445,8 +485,8 @@ const TERMASUK = computed(() => [
                 <span class="text-3xl font-extrabold" :class="Number(course.price) > 0 ? 'text-slate-900' : 'text-emerald-500'">
                   {{ fmtHarga(course.price) }}
                 </span>
-                <span v-if="diskon" class="text-sm text-slate-400">
-                  <span class="line-through">{{ fmtHarga(course.strike_price!) }}</span> · {{ t('catalog.detail.off', { n: diskon }) }}
+                <span v-if="discount" class="text-sm text-slate-400">
+                  <span class="line-through">{{ fmtHarga(course.strike_price!) }}</span> · {{ t('catalog.detail.off', { n: discount }) }}
                 </span>
               </div>
 
@@ -524,7 +564,7 @@ const TERMASUK = computed(() => [
       <div v-else class="card h-72 animate-pulse rounded-2xl bg-slate-100"></div>
     </div>
 
-    <!-- Panel pemilihan metode payment -->
+    <!-- Panel pemilihan method payment -->
     <div v-if="showMethodPanel" class="fixed inset-0 z-40 grid place-items-center bg-slate-900/40 p-4">
       <div class="card w-full max-w-md rounded-2xl p-5">
         <h3 class="text-lg font-bold text-slate-900">{{ t('catalog.detail.pay.title') }}</h3>
@@ -571,12 +611,12 @@ const TERMASUK = computed(() => [
           <div v-if="bankConfigLoading" class="mt-3 text-sm text-slate-400">{{ t('catalog.detail.pay.loadingBank') }}</div>
           <div v-else-if="bankConfigError" class="mt-3 alert-error">{{ bankConfigError }}</div>
           <template v-else-if="bankConfig">
-            <!-- Lebih dari satu rekening aktif: biarkan pembeli memilih tujuan transfer. -->
+            <!-- Lebih from satu account active: biarkan pembeli memilih tujuan transfer. -->
             <div v-if="bankAccounts.length > 1" class="mt-3">
               <label class="label">{{ t('catalog.detail.pay.chooseAccount') }}</label>
               <select v-model="selectedBankId" class="input">
                 <option v-for="b in bankAccounts" :key="b.id" :value="b.id">
-                  {{ b.bank }} — {{ b.nomor_rekening }}
+                  {{ b.bank }} — {{ b.account_number }}
                 </option>
               </select>
             </div>
@@ -588,15 +628,15 @@ const TERMASUK = computed(() => [
               </div>
               <div class="flex justify-between">
                 <span>{{ t('catalog.detail.pay.accountNumber') }}</span>
-                <span class="num font-medium">{{ bankConfig.nomor_rekening }}</span>
+                <span class="num font-medium">{{ bankConfig.account_number }}</span>
               </div>
               <div class="flex justify-between">
                 <span>{{ t('catalog.detail.pay.accountName') }}</span>
-                <span class="font-medium">{{ bankConfig.atas_nama }}</span>
+                <span class="font-medium">{{ bankConfig.account_name }}</span>
               </div>
-              <div v-if="bankConfig.cabang" class="flex justify-between">
+              <div v-if="bankConfig.branch" class="flex justify-between">
                 <span>{{ t('catalog.detail.pay.branch') }}</span>
-                <span class="font-medium">{{ bankConfig.cabang }}</span>
+                <span class="font-medium">{{ bankConfig.branch }}</span>
               </div>
             </div>
           </template>
@@ -616,6 +656,39 @@ const TERMASUK = computed(() => [
               {{ buying ? t('catalog.detail.processing') : t('catalog.detail.pay.createOrder') }}
             </button>
           </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div v-if="previewLoading || previewError || previewContents.length > 0" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 p-4 backdrop-blur-sm">
+    <div class="relative w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <button @click="closePreview" class="absolute right-4 top-4 z-10 rounded-full bg-white/80 p-2 text-slate-500 hover:text-slate-800 shadow backdrop-blur-sm transition">
+        <Icon name="x" :size="24" />
+      </button>
+      
+      <div class="flex aspect-video w-full flex-col items-center justify-center bg-slate-900 p-8 text-slate-400" :class="previewContents[0]?.type === 'text' ? 'bg-white text-slate-800 items-start justify-start overflow-auto' : ''">
+        <div v-if="previewLoading" class="text-white flex flex-col items-center">
+           <Icon name="loader" class="animate-spin mb-2" :size="32" />
+           {{ t('common.state.loading') }}...
+        </div>
+        <div v-else-if="previewError" class="text-rose-500">{{ previewError }}</div>
+        <template v-else-if="previewContents.length > 0">
+          <template v-if="previewContents[0].type === 'video' && previewContents[0].url">
+            <iframe
+              v-if="youtubeEmbed(previewContents[0].url)"
+              :src="youtubeEmbed(previewContents[0].url)!"
+              class="h-full w-full object-contain aspect-video"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+            <video v-else :src="assetUrl(previewContents[0].url)" controls autoplay class="h-full w-full object-contain"></video>
+          </template>
+          <div v-else-if="previewContents[0].type === 'text'" class="prose max-w-none text-slate-800" v-html="previewContents[0].body"></div>
+          <iframe v-else-if="previewContents[0].type === 'pdf' && previewContents[0].url" :src="assetUrl(previewContents[0].url)" class="h-full w-full bg-slate-100"></iframe>
+          <div v-else class="text-slate-400">{{ t('catalog.detail.noPreviewContent', 'Content not available for preview') }}</div>
         </template>
       </div>
     </div>

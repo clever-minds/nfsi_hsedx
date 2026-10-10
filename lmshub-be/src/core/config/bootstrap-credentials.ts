@@ -9,16 +9,16 @@
 /**
  * Potongan kata yang menandai sebuah kredensial masih berupa contoh.
  *
- * Membandingkan dengan satu literal ter-hardcode adalah yang gagal pada rahasia
- * JWT: `.env.example` disunting, konstanta pembandingnya tidak, dan guard-nya
+ * Membandingkan dengan satu literal ter-hardcode adalah yang failed pada rahasia
+ * JWT: `.env.example` disunting, konstanta pembandingnya no, dan guard-nya
  * diam justru untuk pembeli yang hendak dilindungi. Bentuk placeholder bertahan
- * terhadap penyuntingan berkas contoh; nilai literal tidak.
+ * terhadap penyuntingan berkas contoh; value literal no.
  */
 const TELLTALES = ['change', 'ganti', 'replace', 'placeholder', 'example', 'lmshub.test', 'admin12345'];
 
 /** Alasan sebuah kredensial bootstrap ditolak, atau `null` bila layak pakai. */
-export function alasanKredensialBootstrapLemah(nilai: string): string | null {
-  const v = nilai.trim().toLowerCase();
+export function alasanKredensialBootstrapLemah(value: string): string | null {
+  const v = value.trim().toLowerCase();
   for (const tell of TELLTALES) {
     if (v.includes(tell)) return `still contains the placeholder text "${tell}"`;
   }

@@ -10,18 +10,18 @@ export async function list(p: PageParams, filters: repo.BankAccountFilters) {
 }
 
 /**
- * Rekening untuk checkout. Hanya field yang perlu dilihat pembeli — `catatan`
- * internal dan flag admin tidak ikut keluar.
+ * Rekening untuk checkout. Hanya field yang perlu dilihat pembeli — `notes`
+ * internal dan flag admin no ikut logout.
  */
 export async function publicList() {
   const rows = await repo.listActive();
   return rows.map((r) => ({
     id: r.id,
-    nama_bank: r.nama_bank,
-    nomor_rekening: r.nomor_rekening,
-    atas_nama: r.atas_nama,
-    cabang: r.cabang,
-    is_utama: r.is_utama,
+    bank_name: r.bank_name,
+    account_number: r.account_number,
+    account_name: r.account_name,
+    branch: r.branch,
+    is_primary: r.is_primary,
   }));
 }
 
@@ -31,39 +31,39 @@ export async function detail(id: string) {
   return row;
 }
 
-/** Pastikan selalu ada tepat satu rekening utama di antara yang aktif. */
+/** Pastikan selalu ada tepat satu account primary di antara yang active. */
 async function ensurePrimaryExists() {
-  const aktif = await repo.listActive();
-  if (aktif.length && !aktif.some((r) => r.is_utama)) {
-    await repo.update(aktif[0].id, { is_utama: true });
+  const active = await repo.listActive();
+  if (active.length && !active.some((r) => r.is_primary)) {
+    await repo.update(active[0].id, { is_primary: true });
   }
 }
 
-async function assertNoDuplicate(namaBank: string, nomor: string, exceptId?: string) {
-  const dup = await repo.findDuplicate(namaBank, nomor, exceptId);
+async function assertNoDuplicate(namaBank: string, number: string, exceptId?: string) {
+  const dup = await repo.findDuplicate(namaBank, number, exceptId);
   if (dup) throw AppError.conflict('An account with that bank and number already exists', 'bank_account.duplicate');
 }
 
 export async function create(actor: AuthContext, input: CreateBankAccountInput) {
-  await assertNoDuplicate(input.nama_bank, input.nomor_rekening);
+  await assertNoDuplicate(input.bank_name, input.account_number);
 
-  // Rekening pertama otomatis jadi utama — checkout selalu punya tujuan default.
+  // Rekening pertama otomatis jadi primary — checkout selalu punya tujuan default.
   const existing = await repo.listActive();
-  const isUtama = input.is_utama ?? existing.length === 0;
+  const isUtama = input.is_primary ?? existing.length === 0;
 
   const { id } = await repo.insert({
-    nama_bank: input.nama_bank,
-    nomor_rekening: input.nomor_rekening,
-    atas_nama: input.atas_nama,
-    cabang: input.cabang ?? null,
-    catatan: input.catatan ?? null,
+    bank_name: input.bank_name,
+    account_number: input.account_number,
+    account_name: input.account_name,
+    branch: input.branch ?? null,
+    notes: input.notes ?? null,
     is_active: input.is_active ?? true,
-    is_utama: isUtama,
+    is_primary: isUtama,
     sort_order: input.sort_order ?? 0,
   });
   await recordAudit({
     userId: actor.userId,
-    module: 'pengaturan',
+    module: 'settings',
     action: 'create',
     entity: 'bank_accounts',
     entityId: id,
@@ -75,34 +75,34 @@ export async function create(actor: AuthContext, input: CreateBankAccountInput) 
 export async function update(actor: AuthContext, id: string, input: UpdateBankAccountInput) {
   const before = await detail(id);
 
-  const namaBank = input.nama_bank ?? before.nama_bank;
-  const nomor = input.nomor_rekening ?? before.nomor_rekening;
-  if (input.nama_bank !== undefined || input.nomor_rekening !== undefined) {
-    await assertNoDuplicate(namaBank, nomor, id);
+  const namaBank = input.bank_name ?? before.bank_name;
+  const number = input.account_number ?? before.account_number;
+  if (input.bank_name !== undefined || input.account_number !== undefined) {
+    await assertNoDuplicate(namaBank, number, id);
   }
-  // Rekening utama harus tetap bisa dipakai; menonaktifkannya akan mengosongkan checkout.
-  if (input.is_active === false && before.is_utama) {
+  // Rekening primary harus tetap bisa dipakai; menonaktifkannya akan mengosongkan checkout.
+  if (input.is_active === false && before.is_primary) {
     throw AppError.conflict('The primary account cannot be deactivated. Make another account primary first', 'bank_account.primary_cannot_deactivate');
   }
 
   await repo.update(id, {
-    nama_bank: input.nama_bank,
-    nomor_rekening: input.nomor_rekening,
-    atas_nama: input.atas_nama,
-    cabang: input.cabang,
-    catatan: input.catatan,
+    bank_name: input.bank_name,
+    account_number: input.account_number,
+    account_name: input.account_name,
+    branch: input.branch,
+    notes: input.notes,
     is_active: input.is_active,
-    is_utama: input.is_utama,
+    is_primary: input.is_primary,
     sort_order: input.sort_order,
   });
 
-  // Melepas tanda utama tanpa menunjuk pengganti akan membuat checkout tidak
-  // punya default — promosikan rekening aktif pertama supaya selalu ada satu.
+  // Melepas tanda primary tanpa menunjuk pengganti akan membuat checkout no
+  // punya default — promosikan account active pertama supaya selalu ada satu.
   await ensurePrimaryExists();
 
   await recordAudit({
     userId: actor.userId,
-    module: 'pengaturan',
+    module: 'settings',
     action: 'update',
     entity: 'bank_accounts',
     entityId: id,
@@ -114,19 +114,19 @@ export async function update(actor: AuthContext, id: string, input: UpdateBankAc
 
 export async function remove(actor: AuthContext, id: string) {
   const before = await detail(id);
-  const aktif = await repo.listActive();
-  // Jangan sampai transfer manual kehilangan seluruh tujuannya.
-  if (before.is_active && aktif.length <= 1) {
+  const active = await repo.listActive();
+  // Jangan until transfer manual kehilangan seluruh tujuannya.
+  if (before.is_active && active.length <= 1) {
     throw AppError.conflict('At least one bank account must stay active', 'bank_account.keep_one_active');
   }
 
   await repo.softDelete(id);
-  // Bila yang dihapus adalah rekening utama, promosikan rekening aktif berikutnya.
+  // Bila yang dihapus adalah account primary, promosikan account active berikutnya.
   await ensurePrimaryExists();
 
   await recordAudit({
     userId: actor.userId,
-    module: 'pengaturan',
+    module: 'settings',
     action: 'delete',
     entity: 'bank_accounts',
     entityId: id,

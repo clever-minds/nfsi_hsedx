@@ -3,15 +3,15 @@ import { PageParams } from '../../core/http/pagination';
 
 export interface UserListRow {
   id: string;
-  nama_lengkap: string;
+  name_lengkap: string;
   email: string | null;
-  nomor_wa: string | null;
+  number_wa: string | null;
   role_kode: string;
-  role_nama: string;
+  role_name: string;
   status: string;
-  foto_profil?: string | null;
+  profile_picture?: string | null;
   created_by: string | null;
-  created_by_nama: string | null;
+  created_by_name: string | null;
   created_at: string;
 }
 
@@ -20,7 +20,7 @@ export interface Filters {
   status?: string;
   created_by?: string;
   q?: string;
-  subtreeOf?: string | null; // batasi ke sub-tree created_by (non-super_admin)
+  subtreeOf?: string | null; // batasi to sub-tree created_by (non-super_admin)
 }
 
 export async function list(p: PageParams, f: Filters): Promise<{ rows: UserListRow[]; total: number }> {
@@ -33,15 +33,15 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: UserListR
   if (f.role) add('r.kode = $?', f.role);
   if (f.status) add('u.status = $?', f.status);
   if (f.created_by) add('u.created_by = $?', f.created_by);
-  if (f.q) add('(u.nama_lengkap ILIKE $? OR u.email ILIKE $?)', `%${f.q}%`);
+  if (f.q) add('(u.name_lengkap ILIKE $? OR u.email ILIKE $?)', `%${f.q}%`);
   if (f.subtreeOf) add('u.created_by = $?', f.subtreeOf);
 
   const whereSql = where.join(' AND ');
-  const sortCol = ['nama_lengkap', 'status', 'created_at'].includes(p.sort ?? '') ? p.sort : 'created_at';
+  const sortCol = ['name_lengkap', 'status', 'created_at'].includes(p.sort ?? '') ? p.sort : 'created_at';
 
   const rows = await query<UserListRow>(
-    `SELECT u.id, u.nama_lengkap, u.email, u.nomor_wa, r.kode AS role_kode, r.name AS role_nama,
-            u.status, u.created_by, cb.nama_lengkap AS created_by_nama, u.created_at
+    `SELECT u.id, u.name_lengkap, u.email, u.number_wa, r.kode AS role_kode, r.name AS role_name,
+            u.status, u.created_by, cb.name_lengkap AS created_by_name, u.created_at
        FROM users u
        JOIN roles r ON r.id = u.role_id
        LEFT JOIN users cb ON cb.id = u.created_by
@@ -59,8 +59,8 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: UserListR
 
 export async function detail(id: string): Promise<UserListRow | null> {
   return queryOne<UserListRow>(
-    `SELECT u.id, u.nama_lengkap, u.email, u.nomor_wa, r.kode AS role_kode, r.name AS role_nama,
-            u.status, u.foto_profil, u.created_by, cb.nama_lengkap AS created_by_nama, u.created_at
+    `SELECT u.id, u.name_lengkap, u.email, u.number_wa, r.kode AS role_kode, r.name AS role_name,
+            u.status, u.profile_picture, u.created_by, cb.name_lengkap AS created_by_name, u.created_at
        FROM users u JOIN roles r ON r.id = u.role_id
        LEFT JOIN users cb ON cb.id = u.created_by
       WHERE u.id = $1 AND u.deleted_at IS NULL`,
@@ -69,18 +69,18 @@ export async function detail(id: string): Promise<UserListRow | null> {
 }
 
 export async function insert(data: {
-  nama_lengkap: string;
+  name_lengkap: string;
   email: string | null;
-  nomor_wa: string | null;
+  number_wa: string | null;
   password_hash: string;
   role_id: string;
   status: string;
   created_by: string;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO users (nama_lengkap, email, nomor_wa, password_hash, role_id, status, created_by)
+    `INSERT INTO users (name_lengkap, email, number_wa, password_hash, role_id, status, created_by)
      VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
-    [data.nama_lengkap, data.email, data.nomor_wa, data.password_hash, data.role_id, data.status, data.created_by],
+    [data.name_lengkap, data.email, data.number_wa, data.password_hash, data.role_id, data.status, data.created_by],
   );
   return row!;
 }
@@ -94,7 +94,7 @@ export async function update(id: string, fields: Record<string, unknown>): Promi
 
 export async function softDelete(id: string): Promise<void> {
   await query(`UPDATE users SET deleted_at = now() WHERE id = $1`, [id]);
-  await query(`UPDATE sessions SET status = 'revoked', revoked_at = now() WHERE user_id = $1 AND status = 'aktif'`, [id]);
+  await query(`UPDATE sessions SET status = 'revoked', revoked_at = now() WHERE user_id = $1 AND status = 'active'`, [id]);
 }
 
 export async function setStatus(id: string, status: string): Promise<void> {
@@ -108,7 +108,7 @@ export async function passwordHashById(id: string): Promise<{ password_hash: str
   );
 }
 
-/** Akun aktif (belum dihapus) lain yang sudah memakai email ini — `email` citext, jadi tidak peka huruf. */
+/** Akun active (belum dihapus) lain yang sudah memakai email ini — `email` citext, jadi no peka huruf. */
 export async function emailTakenByOther(email: string, exceptUserId: string): Promise<boolean> {
   const row = await queryOne<{ ok: boolean }>(
     `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1 AND id <> $2 AND deleted_at IS NULL) AS ok`,
@@ -117,7 +117,7 @@ export async function emailTakenByOther(email: string, exceptUserId: string): Pr
   return !!row?.ok;
 }
 
-/** Email baru belum terverifikasi: penanda verifikasi lama milik alamat sebelumnya. */
+/** Email baru belum terverifikasi: penanda verifikasi lama milik alamat previous. */
 export async function updateEmail(id: string, email: string): Promise<void> {
   await query(`UPDATE users SET email = $2, email_verified_at = NULL WHERE id = $1`, [id, email]);
 }
@@ -199,12 +199,12 @@ export async function roleByKode(kode: string): Promise<RoleRow | null> {
 }
 
 /**
- * Level peran TERTINGGI seorang pengguna (angka terkecil), memperhitungkan
- * peran utama `users.role_id` maupun peran tambahan di `user_roles`.
+ * Level peran TERTINGGI seorang user (angka terkecil), memperhitungkan
+ * peran primary `users.role_id` maupun peran tambahan di `user_roles`.
  *
- * Dibaca dari basis data, bukan dari klaim di dalam token: token bisa saja
+ * Dibaca from basis data, bukan from klaim di dalam token: token bisa saja
  * dicetak sebelum peran seseorang diturunkan, dan keputusan siapa-boleh-memberi-
- * peran-apa tidak boleh bersandar pada salinan yang mungkin basi.
+ * peran-apa no boleh bersandar pada salinan yang mungkin basi.
  */
 export async function highestRoleLevelOf(userId: string): Promise<number | null> {
   const r = await queryOne<{ level: number | null }>(

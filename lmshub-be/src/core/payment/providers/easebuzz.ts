@@ -34,7 +34,7 @@ export const easebuzzProvider: PaymentProvider = {
     
     const isProd = envStr === 'prod' || envStr === 'production' || envStr === 'true';
     const baseUrl = isProd ? 'https://pay.easebuzz.in' : 'https://testpay.easebuzz.in';
-    const endpoint = `${baseUrl}/payment/initiateLink`;
+    const endpointst = `${baseUrl}/payment/initiateLink`;
 
     const txnid = p.paymentId;
     const amount = p.amount.toFixed(2); // Amount must be 2 decimal float string
@@ -65,7 +65,7 @@ export const easebuzzProvider: PaymentProvider = {
 
     const res = await gatewayFetch<EasebuzzInitResponse | { status: number, error_desc: string }>({
       provider: 'easebuzz',
-      url: endpoint,
+      url: endpointst,
       method: 'POST',
       form: true,
       body: form,

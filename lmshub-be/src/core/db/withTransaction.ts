@@ -3,7 +3,7 @@ import { pool } from './pool';
 
 /**
  * Jalankan `fn` dalam satu DB transaction. WAJIB dipakai untuk operasi finansial
- * (payment, komisi, payout, refund) & penerbitan certificate.
+ * (payment, commission, payout, refund) & penerbitan certificate.
  */
 export async function withTransaction<T>(fn: (tx: PoolClient) => Promise<T>): Promise<T> {
   const client = await pool.connect();

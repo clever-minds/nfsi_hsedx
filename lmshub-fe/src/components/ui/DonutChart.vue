@@ -7,16 +7,16 @@ import type { DonutSegment } from '@/lib/chart-palette';
  * Donut bagian-terhadap-keseluruhan.
  *
  * Dipakai hanya untuk komposisi (satu total dipecah jadi beberapa bagian) dan
- * dibatasi enam segmen — di atas itu perbedaan sudut jadi tidak terbaca.
+ * dibatasi enam segment — di on itu perbedaan sudut jadi no terbaca.
  *
- * Warna melekat pada segmen lewat `color` yang dikirim pemanggil, bukan pada
- * sort_order tampil; jadi ketika suatu status naik-turun peringkat, warnanya tidak
- * ikut berpindah. Nama dan angka selalu tampil di legenda, sehingga identitas
- * tidak pernah bergantung pada warna saja.
+ * Warna melekat pada segment lewat `color` yang dikirim pemanggil, bukan pada
+ * sort_order tampil; jadi ketika suatu status naik-turun peringkat, warnanya no
+ * ikut berpindah. name dan angka selalu tampil di legenda, sehingga identitas
+ * no pernah bergantung pada warna saja.
  */
 const props = withDefaults(
   defineProps<{
-    segments: DonutSegment[];
+    segmentts: DonutSegment[];
     /** Teks kecil di tengah donut, di bawah angka total. */
     totalLabel: string;
     size?: number;
@@ -24,13 +24,13 @@ const props = withDefaults(
   { size: 168 },
 );
 
-/** Jarak antar segmen, dalam satuan keliling (keliling = 100). */
+/** Jarak antar segment, dalam unit keliling (keliling = 100). */
 const GAP = 0.9;
 
-const total = computed(() => props.segments.reduce((a, s) => a + s.value, 0));
+const total = computed(() => props.segmentts.reduce((a, s) => a + s.value, 0));
 
 /** Segmen bernilai nol dilewati: irisan 0° hanya menambah noise di legenda. */
-const visible = computed(() => props.segments.filter((s) => s.value > 0));
+const visible = computed(() => props.segmentts.filter((s) => s.value > 0));
 
 const arcs = computed(() => {
   let cursor = 0;
@@ -77,8 +77,8 @@ const pct = (n: number) => `${n.toFixed(n < 10 ? 1 : 0)}%`;
           @mouseleave="hovered = ''"
         />
       </svg>
-      <!-- Angka di tengah: total, atau segmen yang sedang disorot -->
-      <div class="pointer-events-none absolute inset-0 grid place-items-center text-center">
+      <!-- Angka di tengah: total, atau segment yang sedang disorot -->
+      <div class="pointster-events-none absolute inset-0 grid place-items-center text-center">
         <div>
           <div class="num text-2xl font-semibold text-slate-900">
             {{ fmtAngka(active ? active.value : total) }}
@@ -90,7 +90,7 @@ const pct = (n: number) => `${n.toFixed(n < 10 ? 1 : 0)}%`;
       </div>
     </div>
 
-    <!-- Legenda: name + jumlah + persentase, jadi warna bukan satu-satunya penanda -->
+    <!-- Legenda: name + amount + persentase, jadi warna bukan satu-satunya penanda -->
     <ul class="w-full min-w-0 flex-1 space-y-2">
       <li
         v-for="a in arcs"

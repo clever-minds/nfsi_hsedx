@@ -2,27 +2,27 @@ import { query, queryOne } from '../../core/db/pool';
 import { PageParams } from '../../core/http/pagination';
 
 /**
- * `instructor_id` menunjuk ke `instructor_profiles(id)`, bukan ke `users(id)`.
+ * `instructor_id` menunjuk to `instructor_profiles(id)`, bukan to `users(id)`.
  *
- * Keduanya uuid, jadi salah satu bisa dipakai tanpa error tipe tetapi selalu
+ * Keduanya uuid, jadi salah satu bisa dipakai tanpa error type tetapi selalu
  * mengembalikan nol baris. Karena itu setiap query yang menampilkan name
  * instructor menempuh dua join — `instructor_profiles` lalu `users` — dan
- * penyaringan "course milik sendiri" memakai id profil, bukan id pengguna.
+ * penyaringan "course milik sendiri" memakai id profile, bukan id user.
  */
 export interface CourseRow {
   id: string;
-  /** Quiz yang menjadi ujian akhir (NULL = tanpa ujian). */
+  /** Quiz yang menjadi exam akhir (NULL = tanpa exam). */
   final_exam_quiz_id?: string | null;
-  /** Student boleh mengulang course dari nol. */
+  /** Student boleh mengulang course from nol. */
   allow_restart?: boolean;
   title: string;
   slug: string;
   summary: string | null;
   description: string | null;
   category_id: string;
-  category_nama: string | null;
+  category_name: string | null;
   instructor_id: string;
-  instructor_nama: string | null;
+  instructor_name: string | null;
   level: string;
   price: string;
   strike_price: string | null;
@@ -30,7 +30,7 @@ export interface CourseRow {
   thumbnail_media_id: string | null;
   promo_video_media_id: string | null;
   language: string;
-  durasi_total_menit: number;
+  total_duration_minutes: number;
   rating_avg: string;
   rating_count: number;
   student_count: number;
@@ -46,15 +46,15 @@ export interface Filters {
   instructor_id?: string;
   level?: string;
   q?: string;
-  /** Row-level: non-admin instructor dibatasi ke course miliknya. */
+  /** Row-level: non-admin instructor dibatasi to course miliknya. */
   scopeInstructorId?: string | null;
 }
 
 const BASE_SELECT = `
-  SELECT c.id, c.title, c.slug, c.summary, c.description, c.category_id, cat.name AS category_nama,
-         c.instructor_id, u.nama_lengkap AS instructor_nama, c.level, c.price, c.strike_price,
+  SELECT c.id, c.title, c.slug, c.summary, c.description, c.category_id, cat.name AS category_name,
+         c.instructor_id, u.name_lengkap AS instructor_name, c.level, c.price, c.strike_price,
          c.publication_status, c.thumbnail_media_id, c.promo_video_media_id, c.language,
-         c.durasi_total_menit, c.rating_avg, c.rating_count, c.student_count, c.published_at,
+         c.total_duration_minutes, c.rating_avg, c.rating_count, c.student_count, c.published_at,
          c.meta, c.final_exam_quiz_id, c.allow_restart, c.created_at, c.updated_at
     FROM courses c
     JOIN categories cat ON cat.id = c.category_id
@@ -121,7 +121,7 @@ export async function insert(data: {
     `INSERT INTO courses
       (title, slug, summary, description, category_id, instructor_id, level, price, strike_price,
        publication_status, thumbnail_media_id, promo_video_media_id, language, meta)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'draf',$10,$11,$12,$13)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'draft',$10,$11,$12,$13)
      RETURNING id`,
     [
       data.title,
@@ -210,8 +210,8 @@ export async function mediaAssetExists(id: string): Promise<boolean> {
 export interface PublicFilters {
   category_slug?: string;
   level?: string;
-  harga_min?: number;
-  harga_max?: number;
+  price_min?: number;
+  price_max?: number;
   q?: string;
 }
 
@@ -220,16 +220,16 @@ export interface PublicCourseRow {
   title: string;
   slug: string;
   summary: string | null;
-  category_nama: string | null;
+  category_name: string | null;
   category_slug: string | null;
-  instructor_nama: string | null;
+  instructor_name: string | null;
   instructor_foto: string | null;
   level: string;
   price: string;
   strike_price: string | null;
   thumbnail_media_id: string | null;
   language: string;
-  durasi_total_menit: number;
+  total_duration_minutes: number;
   rating_avg: string;
   rating_count: number;
   student_count: number;
@@ -241,7 +241,7 @@ export async function publicList(
   p: PageParams,
   f: PublicFilters,
 ): Promise<{ rows: PublicCourseRow[]; total: number }> {
-  const where: string[] = [`c.deleted_at IS NULL`, `c.publication_status IN ('terbit','diperbarui')`];
+  const where: string[] = [`c.deleted_at IS NULL`, `c.publication_status IN ('publish','updated')`];
   const params: unknown[] = [];
   const add = (clause: string, val: unknown) => {
     params.push(val);
@@ -249,8 +249,8 @@ export async function publicList(
   };
   if (f.category_slug) add('cat.slug = $?', f.category_slug);
   if (f.level) add('c.level = $?', f.level);
-  if (f.harga_min !== undefined) add('c.price >= $?', f.harga_min);
-  if (f.harga_max !== undefined) add('c.price <= $?', f.harga_max);
+  if (f.price_min !== undefined) add('c.price >= $?', f.price_min);
+  if (f.price_max !== undefined) add('c.price <= $?', f.price_max);
   if (f.q) {
     params.push(`%${f.q}%`);
     where.push(`(c.title ILIKE $${params.length} OR c.summary ILIKE $${params.length})`);
@@ -260,9 +260,9 @@ export async function publicList(
   const sortCol = ['title', 'price', 'published_at'].includes(p.sort ?? '') ? `c.${p.sort}` : 'c.published_at';
 
   const rows = await query<PublicCourseRow>(
-    `SELECT c.id, c.title, c.slug, c.summary, cat.name AS category_nama, cat.slug AS category_slug,
-            u.nama_lengkap AS instructor_nama, u.foto_profil AS instructor_foto,
-            c.level, c.price, c.strike_price, c.thumbnail_media_id, c.language, c.durasi_total_menit,
+    `SELECT c.id, c.title, c.slug, c.summary, cat.name AS category_name, cat.slug AS category_slug,
+            u.name_lengkap AS instructor_name, u.profile_picture AS instructor_foto,
+            c.level, c.price, c.strike_price, c.thumbnail_media_id, c.language, c.total_duration_minutes,
             c.rating_avg, c.rating_count, c.student_count, c.published_at, c.meta
        FROM courses c
        JOIN categories cat ON cat.id = c.category_id
@@ -284,32 +284,32 @@ export interface PublicCourseDetail extends PublicCourseRow {
   description: string | null;
   promo_video_media_id: string | null;
   instructor_id: string;
-  // Profil instructor (untuk kartu "Tentang Instructor" & tautan ke halaman detailnya).
+  // profile instructor (untuk kartu "Tentang Instructor" & tautan to halaman detailnya).
   instructor_bio: string | null;
   instructor_keahlian: unknown;
   instructor_rating: string | null;
   instructor_rating_count: number | null;
   instructor_total_siswa: number | null;
-  instructor_jumlah_kursus: number | null;
+  instructor_amount_kursus: number | null;
 }
 
 export async function publicBySlug(slug: string): Promise<PublicCourseDetail | null> {
   return queryOne<PublicCourseDetail>(
-    `SELECT c.id, c.title, c.slug, c.summary, c.description, cat.name AS category_nama, cat.slug AS category_slug,
-            c.instructor_id, u.nama_lengkap AS instructor_nama, u.foto_profil AS instructor_foto,
+    `SELECT c.id, c.title, c.slug, c.summary, c.description, cat.name AS category_name, cat.slug AS category_slug,
+            c.instructor_id, u.name_lengkap AS instructor_name, u.profile_picture AS instructor_foto,
             ip.bio AS instructor_bio, ip.keahlian AS instructor_keahlian,
             ip.rating_avg AS instructor_rating, ip.rating_count AS instructor_rating_count,
             ip.total_siswa AS instructor_total_siswa,
             (SELECT COUNT(*)::int FROM courses cx
               WHERE cx.instructor_id = ip.id AND cx.deleted_at IS NULL
-                AND cx.publication_status IN ('terbit','diperbarui')) AS instructor_jumlah_kursus,
+                AND cx.publication_status IN ('publish','updated')) AS instructor_amount_kursus,
             c.level, c.price, c.strike_price, c.thumbnail_media_id, c.promo_video_media_id, c.language,
-            c.durasi_total_menit, c.rating_avg, c.rating_count, c.student_count, c.published_at, c.meta
+            c.total_duration_minutes, c.rating_avg, c.rating_count, c.student_count, c.published_at, c.meta
        FROM courses c
        JOIN categories cat ON cat.id = c.category_id
        JOIN instructor_profiles ip ON ip.id = c.instructor_id
     JOIN users u ON u.id = ip.user_id
-      WHERE c.slug = $1 AND c.deleted_at IS NULL AND c.publication_status IN ('terbit','diperbarui')`,
+      WHERE c.slug = $1 AND c.deleted_at IS NULL AND c.publication_status IN ('publish','updated')`,
     [slug],
   );
 }
@@ -317,7 +317,7 @@ export async function publicBySlug(slug: string): Promise<PublicCourseDetail | n
 export interface PublicCurriculumLesson {
   id: string;
   title: string;
-  tipe: string;
+  type: string;
   sort_order: number;
   duration_minutes: number | null;
   gratis_preview: boolean;
@@ -337,7 +337,7 @@ export async function publicCurriculum(courseId: string): Promise<PublicCurricul
     [courseId],
   );
   const lessons = await query<PublicCurriculumLesson & { section_id: string }>(
-    `SELECT l.id, l.title, l.tipe, l.sort_order, l.duration_minutes, l.gratis_preview, l.section_id
+    `SELECT l.id, l.title, l.type, l.sort_order, l.duration_minutes, l.gratis_preview, l.section_id
        FROM lessons l
        JOIN sections s ON s.id = l.section_id
       WHERE s.course_id = $1 AND l.deleted_at IS NULL
@@ -352,7 +352,22 @@ export async function publicCurriculum(courseId: string): Promise<PublicCurricul
   }));
 }
 
-/** Quiz milik course ini yang belum dihapus — calon ujian akhir. */
+export async function publicLessonPreview(courseId: string, lessonId: string): Promise<any[]> {
+  return query(
+    `SELECT c.id, c.type, c.sort_order, c.body, c.url
+       FROM lesson_contents c
+       JOIN lessons l ON l.id = c.lesson_id
+       JOIN sections s ON s.id = l.section_id
+      WHERE s.course_id = $1 
+        AND l.id = $2 
+        AND l.gratis_preview = true 
+        AND l.deleted_at IS NULL
+      ORDER BY c.sort_order ASC`,
+    [courseId, lessonId]
+  );
+}
+
+/** Quiz milik course ini yang belum dihapus — candidate exam akhir. */
 export async function quizBelongsToCourse(quizId: string, courseId: string): Promise<boolean> {
   const row = await queryOne<{ ok: boolean }>(
     `SELECT EXISTS(SELECT 1 FROM quizzes WHERE id = $1 AND course_id = $2 AND deleted_at IS NULL) AS ok`,

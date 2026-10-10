@@ -11,7 +11,7 @@ import { env } from '../config/env';
  *
  * Values are cached because `isConfigured()` is called synchronously while
  * building the checkout options. `ensurePaymentSettings()` fills the cache and
- * is awaited at the few entry points that need it; saving a setting clears it.
+ * is awaited at the few entry pointsts that need it; saving a setting clears it.
  */
 
 /** What the API returns in place of a stored secret. Never a real credential. */
@@ -20,10 +20,10 @@ const MASK = '••••••••';
 let cache: Map<string, string> | null = null;
 
 export async function loadPaymentSettings(): Promise<void> {
-  const rows = await query<{ key: string; nilai: string | null }>(
-    `SELECT key, nilai FROM settings WHERE grup LIKE 'payment%' AND deleted_at IS NULL`,
+  const rows = await query<{ key: string; value: string | null }>(
+    `SELECT key, value FROM settings WHERE group LIKE 'payment%' AND deleted_at IS NULL`,
   );
-  cache = new Map(rows.map((r) => [r.key, (r.nilai ?? '').trim()]));
+  cache = new Map(rows.map((r) => [r.key, (r.value ?? '').trim()]));
 }
 
 export async function ensurePaymentSettings(): Promise<void> {

@@ -23,7 +23,7 @@ export interface Filters {
   file_type?: string;
   status_transcode?: string;
   q?: string;
-  /** Row-level: non-admin dibatasi ke aset miliknya sendiri. */
+  /** Row-level: non-admin dibatasi to aset miliknya sendiri. */
   scopeUploaderId?: string | null;
 }
 
@@ -93,7 +93,7 @@ export async function insert(data: {
       data.size_bytes,
       data.checksum,
       data.meta ? JSON.stringify(data.meta) : null,
-      data.status_transcode ?? 'menunggu',
+      data.status_transcode ?? 'pending',
     ],
   );
   return row!;
@@ -120,7 +120,7 @@ export async function softDelete(id: string): Promise<void> {
   await query(`UPDATE media_assets SET deleted_at = now() WHERE id = $1`, [id]);
 }
 
-/** Guard hapus permanen: aset yang masih dipakai lesson_contents/courses tidak boleh dihapus. */
+/** Guard delete permanen: aset yang masih dipakai lesson_contents/courses no boleh dihapus. */
 export async function usageCount(id: string): Promise<number> {
   const row = await queryOne<{ count: string }>(
     `SELECT

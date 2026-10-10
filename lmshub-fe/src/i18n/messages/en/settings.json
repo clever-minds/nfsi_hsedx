@@ -37,7 +37,7 @@
     "currency": "Currency",
     "price": "Pricing",
     "checkout": "Checkout",
-    "komisi": "Commission",
+    "commission": "Commission",
     "revenue_share": "Revenue share",
     "certificate": "Certificates",
     "kontak": "Contact",
@@ -58,8 +58,8 @@
   "unit": {
     "persen": "%",
     "menit": "minutes",
-    "bulan": "months",
-    "poin": "points"
+    "month": "months",
+    "points": "points"
   },
   "tier": {
     "add": "Add tier",
@@ -71,7 +71,7 @@
       "label": "Currency",
       "desc": "Applied to every price shown across the app. Changing it does not convert any stored amount."
     },
-    "harga_default_kursus": {
+    "price_default_kursus": {
       "label": "Default course price",
       "desc": "Pre-filled price for a newly created course"
     },
@@ -79,7 +79,7 @@
       "label": "Minimum down payment",
       "desc": "Smallest down payment accepted on an instalment plan"
     },
-    "cicilan_tenor_maks_bulan": {
+    "cicilan_tenor_maks_month": {
       "label": "Maximum instalment term",
       "desc": "Longest instalment plan a buyer may choose"
     },
@@ -87,7 +87,7 @@
       "label": "Checkout timeout",
       "desc": "How long a gateway payment stays open before the order expires"
     },
-    "komisi_tier_default": {
+    "commission_tier_default": {
       "label": "Default commission tiers",
       "desc": "Commission rate per marketing category"
     },
@@ -111,7 +111,7 @@
       "label": "Minimum attendance",
       "desc": "Live class attendance required (0 = not required)"
     },
-    "kontak_nomor_wa_admin": {
+    "kontak_number_wa_admin": {
       "label": "Admin WhatsApp number",
       "desc": "Shown to visitors who have not signed in yet"
     },
@@ -147,7 +147,7 @@
       "label": "Google Client ID",
       "desc": "OAuth Client ID used for Google sign-in"
     },
-    "brand_nama_aplikasi": {
+    "brand_name_aplikasi": {
       "label": "Application name",
       "desc": "Replaces the product name everywhere your users see it"
     },
@@ -180,7 +180,7 @@
     "heroElsewhere": "The homepage hero image and the footer pages (About, Terms, Privacy…) are managed in:"
   },
   "payment": {
-    "webhookTitle": "Webhook endpoint",
+    "webhookTitle": "Webhook endpointst",
     "webhookHint": "Register this URL in the gateway dashboard. Without it a payment succeeds but the order is never marked paid.",
     "copy": "Copy",
     "copied": "Copied",

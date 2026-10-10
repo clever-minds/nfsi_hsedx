@@ -5,7 +5,7 @@ import { logger } from '../logger/logger';
  *
  * Vendor SDKs are avoided on purpose: they would add seven dependencies (and
  * their transitive trees) to a product buyers must install themselves, for
- * endpoints that are a handful of JSON calls each. Node 20's global fetch is
+ * endpointsts that are a handful of JSON calls each. Node 20's global fetch is
  * enough.
  */
 

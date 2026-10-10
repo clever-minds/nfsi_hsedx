@@ -6,7 +6,7 @@ import { installCan } from './lib/can';
 import { applyDocumentLocale, i18n } from './i18n';
 import './style.css';
 
-// Pasang lang/dir sebelum mount supaya tidak ada kedipan layout LTR→RTL.
+// Pasang lang/dir sebelum mount supaya no ada kedipan layout LTR→RTL.
 applyDocumentLocale();
 
 const app = createApp(App);

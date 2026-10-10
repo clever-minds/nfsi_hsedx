@@ -14,7 +14,7 @@ onMounted(() => {
   if (!auth.ready) auth.bootstrap();
   // Mata uang dipakai catalog pra-login juga, jadi dimuat tanpa menunggu sesi.
   appConfig.bootstrap();
-  // Daftar mata uang + kurs: tanpa ini setiap price jatuh ke mata uang basis.
+  // register mata uang + kurs: tanpa ini setiap price due to mata uang basis.
   currency.bootstrap();
   // Header & footer digambar di semua halaman — muat isinya sedini mungkin.
   siteContent.bootstrap();

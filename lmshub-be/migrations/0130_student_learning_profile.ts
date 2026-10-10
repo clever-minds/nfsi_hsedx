@@ -1,9 +1,9 @@
 import { MigrationBuilder } from 'node-pg-migrate';
 
 /**
- * 1. Grant `assessment.update` ke role student — dibutuhkan untuk menyimpan jawaban
+ * 1. Grant `assessment.update` to role student — dibutuhkan untuk menyimpan answer
  * dan submit attempt quiz (PUT /attempts/:id/answers, POST /attempts/:id/submit).
- * 2. Kolom `users.foto_profil` — path foto profil yang diunggah via POST /users/me/photo.
+ * 2. Kolom `users.profile_picture` — path photo profile yang diunggah via POST /users/me/photo.
  */
 export async function up(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`
@@ -16,7 +16,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   `);
 
   pgm.addColumn('users', {
-    foto_profil: { type: 'text', notNull: false, default: null },
+    profile_picture: { type: 'text', notNull: false, default: null },
   });
 }
 
@@ -27,5 +27,5 @@ export async function down(pgm: MigrationBuilder): Promise<void> {
      WHERE rp.role_id = r.id AND rp.permission_id = p.id
        AND r.kode = 'student' AND p.module = 'assessment' AND p.action = 'update';
   `);
-  pgm.dropColumn('users', 'foto_profil');
+  pgm.dropColumn('users', 'profile_picture');
 }

@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
 export const questionTipeEnum = z.enum([
-  'pilihan_tunggal',
-  'pilihan_ganda',
-  'benar_salah',
-  'isian_singkat',
-  'esai',
-  'upload_file',
-  'pencocokan',
+  'single_choice',
+  'multiple_choice',
+  'true_false',
+  'short_answer',
+  'essay',
+  'file_upload',
+  'matching',
 ]);
 
-export const tipePengumpulanEnum = z.enum(['file', 'text', 'url', 'campuran']);
+export const tipePengumpulanEnum = z.enum(['file', 'text', 'url', 'mixed']);
 
 export const createQuestionBankSchema = z
   .object({
@@ -27,25 +27,25 @@ export const updateQuestionBankSchema = z.object({
 });
 
 const optionSchema = z.object({
-  teks_opsi: z.string().min(1).max(1000),
-  is_benar: z.boolean().default(false),
-  pasangan_key: z.string().max(50).nullable().optional(),
+  option_text: z.string().min(1).max(1000),
+  is_correct: z.boolean().default(false),
+  pair_key: z.string().max(50).nullable().optional(),
   sort_order: z.number().int().min(0).default(0),
 });
 
 export const createQuestionSchema = z.object({
-  tipe: questionTipeEnum,
-  teks_soal: z.string().min(1),
-  poin: z.number().min(0).default(1),
-  penjelasan_jawaban: z.string().nullable().optional(),
+  type: questionTipeEnum,
+  question_text: z.string().min(1),
+  points: z.number().min(0).default(1),
+  answer_explanation: z.string().nullable().optional(),
   meta: z.record(z.unknown()).nullable().optional(),
   options: z.array(optionSchema).default([]),
 });
 
 export const updateQuestionSchema = z.object({
-  teks_soal: z.string().min(1).optional(),
-  poin: z.number().min(0).optional(),
-  penjelasan_jawaban: z.string().nullable().optional(),
+  question_text: z.string().min(1).optional(),
+  points: z.number().min(0).optional(),
+  answer_explanation: z.string().nullable().optional(),
   meta: z.record(z.unknown()).nullable().optional(),
   options: z.array(optionSchema).optional(),
 });
@@ -56,15 +56,15 @@ export const createQuizSchema = z.object({
   lesson_id: z.string().uuid().nullable().optional(),
   title: z.string().min(2).max(200),
   description: z.string().nullable().optional(),
-  batas_waktu_menit: z.number().int().positive().nullable().optional(),
-  acak_soal: z.boolean().default(false),
-  acak_opsi: z.boolean().default(false),
+  time_limit_minutes: z.number().int().positive().nullable().optional(),
+  randomize_questions: z.boolean().default(false),
+  randomize_options: z.boolean().default(false),
   /** 0 = tanpa batas percobaan. */
   max_attempts: z.number().int().min(0).max(1000).default(1),
-  /** Jeda minimum antar-percobaan, menit (0 = boleh langsung mengulang). Maks. 1 tahun. */
+  /** Jeda minimum antar-percobaan, menit (0 = boleh langsung mengulang). Maks. 1 year. */
   retry_delay_minutes: z.number().int().min(0).max(525_600).default(0),
   passing_score: z.number().min(0).max(100).nullable().optional(),
-  tampilkan_jawaban_setelah_selesai: z.boolean().default(false),
+  show_answers_after_completion: z.boolean().default(false),
   is_active: z.boolean().default(true),
 });
 
@@ -76,7 +76,7 @@ export const setQuizQuestionsSchema = z.object({
       z.object({
         question_id: z.string().uuid(),
         sort_order: z.number().int().min(0).default(0),
-        poin_override: z.number().min(0).nullable().optional(),
+        points_override: z.number().min(0).nullable().optional(),
       }),
     )
     .min(1),
@@ -90,20 +90,20 @@ export const createAssignmentSchema = z.object({
   instructions: z.string().min(1),
   due_at: z.string().datetime().nullable().optional(),
   submission_type: tipePengumpulanEnum.default('file'),
-  maksimal_ukuran_mb: z.number().int().positive().nullable().optional(),
-  poin_maksimal: z.number().min(0).default(100),
+  max_size_mb: z.number().int().positive().nullable().optional(),
+  points_maximum: z.number().min(0).default(100),
   is_active: z.boolean().default(true),
 });
 
 export const updateAssignmentSchema = createAssignmentSchema.partial().omit({ course_id: true });
 
 export const upsertRubricSchema = z.object({
-  kriteria: z
+  criteria: z
     .array(
       z.object({
         name: z.string().min(1).max(150),
         bobot: z.number().min(0).max(100),
-        deskripsi_level: z.string().optional(),
+        description_level: z.string().optional(),
       }),
     )
     .min(1),
@@ -111,11 +111,11 @@ export const upsertRubricSchema = z.object({
 
 export const saveAnswerSchema = z.object({
   question_id: z.string().uuid(),
-  jawaban: z.unknown(),
+  answer: z.unknown(),
 });
 
 export const submitAssignmentSchema = z.object({
-  isi_teks: z.string().nullable().optional(),
+  text_content: z.string().nullable().optional(),
   file_media_id: z.string().uuid().nullable().optional(),
   url: z.string().url().nullable().optional(),
 });

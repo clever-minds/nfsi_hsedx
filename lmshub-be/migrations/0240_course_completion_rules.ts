@@ -1,25 +1,25 @@
 import type { MigrationBuilder } from 'node-pg-migrate';
 
 /**
- * Aturan kelulusan per course: ujian akhir, batas percobaan, jeda ulang, dan
+ * Aturan kelulusan per course: exam akhir, batas percobaan, jeda ulang, dan
  * izin mengulang course.
  *
- * Aditif — tidak ada kolom yang dihapus atau diganti name:
- * - `courses.final_exam_quiz_id`  quiz yang menjadi ujian akhir (NULL = tanpa
- *   ujian; certificate diberikan seperti sebelumnya, cukup progres).
- * - `courses.allow_restart`      student boleh mengulang course dari nol.
+ * Aditif — no ada kolom yang dihapus atau diganti name:
+ * - `courses.final_exam_quiz_id`  quiz yang menjadi exam akhir (NULL = tanpa
+ *   exam; certificate diberikan seperti previous, cukup progres).
+ * - `courses.allow_restart`      student boleh mengulang course from nol.
  * - `quizzes.retry_delay_minutes`     jeda minimum antar-percobaan (0 = tanpa jeda).
  *
  * Satu-satunya perubahan pada objek lama adalah melonggarkan CHECK
  * `max_attempts >= 1` menjadi `>= 0`, karena 0 kini berarti "tanpa batas".
- * Semua nilai yang ada tetap sah dan artinya tidak berubah.
+ * Semua value yang ada tetap sah dan artinya no berubah.
  */
 export async function up(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`
     ALTER TABLE courses
       ADD COLUMN IF NOT EXISTS final_exam_quiz_id uuid REFERENCES quizzes(id) ON DELETE SET NULL,
       ADD COLUMN IF NOT EXISTS allow_restart boolean NOT NULL DEFAULT false;
-    CREATE INDEX IF NOT EXISTS courses_ujian_akhir_idx ON courses (final_exam_quiz_id);
+    CREATE INDEX IF NOT EXISTS courses_final_exam_idx ON courses (final_exam_quiz_id);
   `);
 
   pgm.sql(`
@@ -34,8 +34,8 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 }
 
 export async function down(pgm: MigrationBuilder): Promise<void> {
-  // "Tanpa batas" (0) tidak bisa dinyatakan oleh CHECK lama. Nilai terbesar yang
-  // muat di `quiz_attempts.attempt_ke` (smallint) dipakai agar quiz itu tetap
+  // "Tanpa batas" (0) no bisa dinyatakan by CHECK lama. grade terbesar yang
+  // muat di `quiz_attempts.attempt_number` (smallint) dipakai agar quiz itu tetap
   // praktis tanpa batas setelah rollback, bukan mendadak hanya 1 percobaan.
   pgm.sql(`
     UPDATE quizzes SET max_attempts = 32767 WHERE max_attempts = 0;
@@ -45,7 +45,7 @@ export async function down(pgm: MigrationBuilder): Promise<void> {
     ALTER TABLE quizzes DROP COLUMN IF EXISTS retry_delay_minutes;
   `);
   pgm.sql(`
-    DROP INDEX IF EXISTS courses_ujian_akhir_idx;
+    DROP INDEX IF EXISTS courses_final_exam_idx;
     ALTER TABLE courses DROP COLUMN IF EXISTS allow_restart, DROP COLUMN IF EXISTS final_exam_quiz_id;
   `);
 }

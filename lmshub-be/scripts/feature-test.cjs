@@ -62,18 +62,18 @@ const section = (t) => results.push(`\n▸ ${t}`);
   check('GET /users/:id', newUid && (await api('GET', `/users/${newUid}`, admin)).s === 200);
   check('GET /users/_roles (role catalogue)', (await api('GET', '/users/_roles', admin)).d.data?.length === 10);
   check('GET /users/_permissions (permission catalogue)', (await api('GET', '/users/_permissions', admin)).d.data?.length > 100);
-  if (newUid) check('set permissions checklist', (await api('PUT', `/users/${newUid}/permissions`, admin, { permissions: [{ module: 'kursus', action: 'view', effect: 'allow' }] })).s === 200);
+  if (newUid) check('set permissions checklist', (await api('PUT', `/users/${newUid}/permissions`, admin, { permissions: [{ module: 'course', action: 'view', effect: 'allow' }] })).s === 200);
 
   // ── E. Categories ──
   section('E. Kategori');
   check('GET /categories/public', Array.isArray((await api('GET', '/categories/public', null)).d.data));
-  const cat = await api('POST', '/categories', admin, { nama: `Test Category ${Date.now()}` });
+  const cat = await api('POST', '/categories', admin, { name: `Test Category ${Date.now()}` });
   check('admin creates a category -> 201', cat.s === 201, JSON.stringify(cat.d.error));
 
   // ── F. Courses lifecycle ──
-  section('F. Kursus & lifecycle publikasi');
+  section('F. course & lifecycle publikasi');
   const catId = (await api('GET', '/categories/public', null)).d.data[0]?.id;
-  const crs = await api('POST', '/courses', rina, { judul: `Test Course ${Date.now()}`, category_id: catId, harga: 300000, level: 'pemula', ringkasan: 'test' });
+  const crs = await api('POST', '/courses', rina, { judul: `Test Course ${Date.now()}`, category_id: catId, price: 300000, level: 'pemula', ringkasan: 'test' });
   const crsId = crs.d.data?.id; check('instructor creates a course -> 201 (draft)', crs.s === 201 && (crs.d.data.status_publikasi === 'draf'), JSON.stringify(crs.d.error));
   if (crsId) {
     check('submit → dalam_review', (await api('POST', `/courses/${crsId}/submit`, rina, {})).d.data?.status_publikasi === 'dalam_review');
@@ -98,8 +98,8 @@ const section = (t) => results.push(`\n▸ ${t}`);
   section('I. Progress belajar');
   const lesson = (await db.query(`SELECT l.id FROM lessons l JOIN sections s ON s.id=l.section_id WHERE s.course_id=$1 ORDER BY s.urutan,l.urutan LIMIT 1`, [demoCourse])).rows[0]?.id;
   if (lesson) {
-    const pr = await api('PUT', `/lessons/${lesson}/progress`, siti, { status: 'selesai', posisi_detik: 480 });
-    check('PUT progress pelajaran → selesai', pr.s === 200, JSON.stringify(pr.d.error || pr.s));
+    const pr = await api('PUT', `/lessons/${lesson}/progress`, siti, { status: 'finish', posisi_detik: 480 });
+    check('PUT progress pelajaran → finish', pr.s === 200, JSON.stringify(pr.d.error || pr.s));
     const cp = await api('GET', `/courses/${demoCourse}/progress`, siti);
     check('GET course progress (percentage)', cp.s === 200, JSON.stringify(cp.d.error || cp.s));
   } else check('pelajaran demo tersedia', false);
@@ -108,8 +108,8 @@ const section = (t) => results.push(`\n▸ ${t}`);
   section('J. Transaksi & Midtrans (dev auto-settle)');
   const cfg = await api('GET', '/orders/payment-config', siti);
   check('GET payment-config (provider midtrans)', cfg.d.data?.provider === 'midtrans');
-  const buyCourse = (await db.query(`SELECT id, harga FROM courses WHERE slug='uiux-fundamental'`)).rows[0];
-  const order = await api('POST', '/orders', siti, { items: [{ item_tipe: 'kursus', course_id: buyCourse.id }] });
+  const buyCourse = (await db.query(`SELECT id, price FROM courses WHERE slug='uiux-fundamental'`)).rows[0];
+  const order = await api('POST', '/orders', siti, { items: [{ item_tipe: 'course', course_id: buyCourse.id }] });
   const orderId = order.d.data?.id; check('checkout → order menunggu_pembayaran', order.d.data?.status === 'menunggu_pembayaran', JSON.stringify(order.d.error));
   if (orderId) {
     const pg = await api('POST', `/orders/${orderId}/pay-gateway`, siti, {});
@@ -119,7 +119,7 @@ const section = (t) => results.push(`\n▸ ${t}`);
     const enr = (await db.query(`SELECT COUNT(*)::int n FROM enrollments WHERE user_id=$1 AND course_id=$2`, [sitiId, buyCourse.id])).rows[0];
     check('enrolment created automatically', enr.n === 1);
     const rev = (await db.query(`SELECT COALESCE(SUM(nominal_share),0)::int s FROM revenue_shares WHERE course_id=$1`, [buyCourse.id])).rows[0];
-    check('instructor revenue share recorded (60%)', rev.s === Math.round(Number(buyCourse.harga) * 0.6), 'share=' + rev.s);
+    check('instructor revenue share recorded (60%)', rev.s === Math.round(Number(buyCourse.price) * 0.6), 'share=' + rev.s);
   }
 
   // -- K. Dashboards per role --
@@ -129,42 +129,42 @@ const section = (t) => results.push(`\n▸ ${t}`);
     check(`dashboard/${role} → 200`, dr.s === 200, JSON.stringify(dr.d.error || dr.s));
   }
 
-  // ── L. Konten/pengaturan/audit ──
-  section('L. Dokumen, pengaturan, audit');
+  // ── L. Konten/settings/audit ──
+  section('L. Dokumen, settings, audit');
   check('GET /pages (admin, konten.view)', (await api('GET', '/pages', admin)).s === 200);
   check('GET /settings (admin)', (await api('GET', '/settings', admin)).s === 200);
   check('GET /audit (admin)', (await api('GET', '/audit', admin)).s === 200);
 
-  // ── M. Notifikasi & marketing & sertifikat ──
-  section('M. Notifikasi / marketing / sertifikat');
+  // ── M. Notifikasi & marketing & certificate ──
+  section('M. Notifikasi / marketing / certificate');
   check('GET /notifications (student)', (await api('GET', '/notifications', siti)).s === 200);
   check('GET /marketing/leads (admin)', [200].includes((await api('GET', '/marketing/leads', admin)).s));
   const cv = await api('GET', '/public/certificates/verify/TIDAKADA', null);
   check('public certificate verification of a made-up number -> tidak_ditemukan', cv.s === 200 && cv.d.data?.status === 'tidak_ditemukan', JSON.stringify(cv.d));
 
-  // ── N. Sertifikat: terbitkan (claim) → render → verifikasi publik ──
-  section('N. Sertifikat: terbitkan, render, verifikasi');
+  // ── N. certificate: terbitkan (claim) → render → verifikasi publik ──
+  section('N. certificate: terbitkan, render, verifikasi');
   const sitiEnr = (await db.query(`SELECT id FROM enrollments WHERE user_id=$1 AND course_id=$2 AND deleted_at IS NULL LIMIT 1`, [sitiId, demoCourse])).rows[0]?.id;
   if (sitiEnr) {
-    // Selesaikan SELURUH pelajaran demo course agar progres 100% (alur nyata selesai → sertifikat)
+    // Selesaikan SELURUH pelajaran demo course agar progres 100% (alur nyata finish → certificate)
     const allLessons = (await db.query(`SELECT l.id FROM lessons l JOIN sections s ON s.id=l.section_id WHERE s.course_id=$1`, [demoCourse])).rows;
-    for (const l of allLessons) await api('PUT', `/lessons/${l.id}/progress`, siti, { status: 'selesai', posisi_detik: 480 });
+    for (const l of allLessons) await api('PUT', `/lessons/${l.id}/progress`, siti, { status: 'finish', posisi_detik: 480 });
     const cp = await api('GET', `/courses/${demoCourse}/progress`, siti);
-    check('progres siti 100% setelah semua pelajaran selesai', Number(cp.d.data?.persen_selesai) === 100, JSON.stringify(cp.d.data));
+    check('progres siti 100% setelah semua pelajaran finish', Number(cp.d.data?.persen_selesai) === 100, JSON.stringify(cp.d.data));
     const claim = await api('POST', `/enrollments/${sitiEnr}/certificate/claim`, siti, {});
     const certId = claim.d.data?.id;
     check('student claims a certificate -> issued + number', claim.d.data?.status === 'terbit' && !!claim.d.data?.nomor_sertifikat, JSON.stringify(claim.d.error || claim.s));
-    check('sertifikat memuat QR code (data URI)', typeof claim.d.data?.qr_code_url === 'string' && claim.d.data.qr_code_url.startsWith('data:image'));
+    check('certificate memuat QR code (data URI)', typeof claim.d.data?.qr_code_url === 'string' && claim.d.data.qr_code_url.startsWith('data:image'));
     const nomor = claim.d.data?.nomor_sertifikat;
     if (certId) {
       const render = await api('GET', `/certificates/${certId}/render`, siti);
-      check('render certificate (name + course + instructor)', render.d.data?.nama === 'Siti Aminah' && !!render.d.data?.kursus, JSON.stringify(render.d.error || render.s));
+      check('render certificate (name + course + instructor)', render.d.data?.name === 'Siti Aminah' && !!render.d.data?.course, JSON.stringify(render.d.error || render.s));
     }
     const claim2 = await api('POST', `/enrollments/${sitiEnr}/certificate/claim`, siti, {});
     check('claim ulang → idempoten (tetap terbit)', claim2.d.data?.status === 'terbit');
     if (nomor) {
       const v = await api('GET', `/public/certificates/verify/${nomor}`, null);
-      check('verifikasi publik → valid + data lengkap', v.d.data?.status === 'valid' && v.d.data?.nama === 'Siti Aminah' && !!v.d.data?.qr_code_url, JSON.stringify(v.d).slice(0, 120));
+      check('verifikasi publik → valid + data lengkap', v.d.data?.status === 'valid' && v.d.data?.name === 'Siti Aminah' && !!v.d.data?.qr_code_url, JSON.stringify(v.d).slice(0, 120));
     }
     // another student may not render Siti's certificate
     const other = await api('GET', `/certificates/${certId}/render`, admin);
@@ -184,18 +184,18 @@ const section = (t) => results.push(`\n▸ ${t}`);
   check('GET /auth/oauth-config', (await api('GET', '/auth/oauth-config', null)).s === 200);
   check('Google sign-in while unconfigured -> 401', (await api('POST', '/auth/google', null, { id_token: 'dummy.token' })).s === 401);
 
-  // ── P. Pembayaran transfer bank manual + konfirmasi admin ──
+  // ── P. payment transfer bank manual + konfirmasi admin ──
   section('P. Transfer bank manual → konfirmasi admin');
   const pcfg = await api('GET', '/orders/payment-config', siti);
   check('payment-config: Midtrans + info bank transfer', !!pcfg.d.data?.midtrans && !!pcfg.d.data?.bank_transfer?.nomor_rekening);
-  const tfCourse = (await db.query(`SELECT id, harga FROM courses WHERE slug='digital-marketing-praktis'`)).rows[0];
-  const tfOrder = await api('POST', '/orders', siti, { items: [{ item_tipe: 'kursus', course_id: tfCourse.id }] });
+  const tfCourse = (await db.query(`SELECT id, price FROM courses WHERE slug='digital-marketing-praktis'`)).rows[0];
+  const tfOrder = await api('POST', '/orders', siti, { items: [{ item_tipe: 'course', course_id: tfCourse.id }] });
   const tfOid = tfOrder.d.data?.id;
   if (tfOid) {
-    const tfPay = await api('POST', `/orders/${tfOid}/pay`, siti, { jenis: 'penuh', nominal: Number(tfCourse.harga), metode: 'transfer_bank', referensi_gateway: 'TF Siti - BCA' });
+    const tfPay = await api('POST', `/orders/${tfOid}/pay`, siti, { jenis: 'penuh', nominal: Number(tfCourse.price), metode: 'transfer_bank', referensi_gateway: 'TF Siti - BCA' });
     check('pay by transfer_bank -> menunggu_verifikasi (not active yet)', tfPay.d.data?.payment?.status === 'menunggu_verifikasi', JSON.stringify(tfPay.d.error || tfPay.d.data?.payment?.status));
     check('order is not akses_aktif before confirmation', (await db.query(`SELECT status FROM orders WHERE id=$1`, [tfOid])).rows[0].status !== 'akses_aktif');
-    const tfVerify = await api('POST', `/orders/${tfOid}/verify`, admin, { payment_id: tfPay.d.data?.payment?.id, aksi: 'verify' });
+    const tfVerify = await api('POST', `/orders/${tfOid}/verify`, admin, { payment_id: tfPay.d.data?.payment?.id, action: 'verify' });
     check('admin konfirmasi manual → 200', tfVerify.s === 200, JSON.stringify(tfVerify.d.error || tfVerify.s));
     check('setelah konfirmasi → order akses_aktif', (await db.query(`SELECT status FROM orders WHERE id=$1`, [tfOid])).rows[0].status === 'akses_aktif');
     check('enrolment created through a manual transfer', (await db.query(`SELECT COUNT(*)::int n FROM enrollments WHERE user_id=$1 AND course_id=$2`, [sitiId, tfCourse.id])).rows[0].n === 1);
@@ -211,7 +211,7 @@ const section = (t) => results.push(`\n▸ ${t}`);
   check('GET /cohorts (cohort list)', (await api('GET', '/cohorts', admin)).s === 200);
   check('GET /marketing/dashboard', (await api('GET', '/marketing/dashboard', admin)).s === 200);
   check('GET /marketing/leaderboard', (await api('GET', '/marketing/leaderboard', admin)).s === 200);
-  check('PATCH /users/me (profil sendiri)', (await api('PATCH', '/users/me', siti, { nama_lengkap: 'Siti Aminah' })).s === 200);
+  check('PATCH /users/me (profile sendiri)', (await api('PATCH', '/users/me', siti, { nama_lengkap: 'Siti Aminah' })).s === 200);
 
   await db.end();
   // ── Ringkasan ──

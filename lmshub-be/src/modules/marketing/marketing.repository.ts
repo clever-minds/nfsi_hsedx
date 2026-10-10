@@ -11,8 +11,8 @@ export interface MarketingCategoryRow {
   kode: string;
   name: string;
   target_default: string;
-  target_satuan: string;
-  rate_komisi_default: string;
+  target_unit: string;
+  rate_commission_default: string;
   is_active: boolean;
 }
 
@@ -20,28 +20,28 @@ export interface AffiliateProfileRow {
   id: string;
   user_id: string;
   category_id: string;
-  kode_agen: string;
+  agent_code: string;
   target: string;
-  status_verifikasi: 'menunggu' | 'terverifikasi' | 'ditolak';
+  verification_status: 'pending' | 'verified' | 'rejected';
   verified_by: string | null;
   verified_at: string | null;
-  alasan_penolakan: string | null;
-  nama_bank: string | null;
-  no_rekening: string | null;
-  nama_pemilik_rekening: string | null;
-  parent_agen_user_id: string | null;
-  bergabung_at: string | null;
+  rejection_reason: string | null;
+  bank_name: string | null;
+  no_account: string | null;
+  account_owner_name: string | null;
+  parent_agent_user_id: string | null;
+  joined_at: string | null;
   created_at: string;
 }
 
 export interface ReferralLinkRow {
   id: string;
-  agen_user_id: string;
+  agent_user_id: string;
   kode: string;
-  url_target: string;
+  target_url: string;
   title: string | null;
-  jumlah_kunjungan: string;
-  jumlah_konversi: string;
+  visit_count: string;
+  conversion_count: string;
   is_active: boolean;
   expires_at: string | null;
   created_at: string;
@@ -49,13 +49,13 @@ export interface ReferralLinkRow {
 
 export interface LeadRow {
   id: string;
-  agen_user_id: string;
-  nama_calon: string;
+  agent_user_id: string;
+  lead_name: string;
   kontak: string;
-  minat_course_id: string | null;
-  tahap: 'lead' | 'prospek' | 'closing';
-  catatan: string | null;
-  sumber_referral_link_id: string | null;
+  interested_course_id: string | null;
+  stage: 'lead' | 'prospect' | 'closing';
+  notes: string | null;
+  source_referral_link_id: string | null;
   order_id: string | null;
   closing_at: string | null;
   created_at: string;
@@ -63,18 +63,18 @@ export interface LeadRow {
 
 export interface CommissionRow {
   id: string;
-  agen_user_id: string;
+  agent_user_id: string;
   order_id: string;
   category_id: string | null;
-  dasar_perhitungan: string;
+  calculation_base: string;
   rate: string;
-  nominal: string;
-  status: 'dihitung' | 'menunggu_approval' | 'disetujui' | 'pencairan' | 'selesai' | 'ditolak';
+  amount: string;
+  status: 'calculated' | 'awaiting_approval' | 'approved' | 'disbursement' | 'completed' | 'rejected';
   approved_by: string | null;
   approved_at: string | null;
-  tanggal_cair: string | null;
-  bukti_cair: string | null;
-  catatan: string | null;
+  disbursement_date: string | null;
+  disbursement_proof: string | null;
+  notes: string | null;
   created_at: string;
 }
 
@@ -108,13 +108,13 @@ export async function affiliateProfileById(id: string): Promise<AffiliateProfile
 
 export async function listAffiliates(
   p: PageParams,
-  f: { status_verifikasi?: string },
+  f: { verification_status?: string },
 ): Promise<{ rows: AffiliateProfileRow[]; total: number }> {
   const where: string[] = ['deleted_at IS NULL'];
   const params: unknown[] = [];
-  if (f.status_verifikasi) {
-    params.push(f.status_verifikasi);
-    where.push(`status_verifikasi = $${params.length}`);
+  if (f.verification_status) {
+    params.push(f.verification_status);
+    where.push(`verification_status = $${params.length}`);
   }
   const whereSql = where.join(' AND ');
   const rows = await query<AffiliateProfileRow>(
@@ -132,27 +132,27 @@ export async function insertAffiliateProfile(
   data: {
     user_id: string;
     category_id: string;
-    kode_agen: string;
+    agent_code: string;
     target: number;
-    nama_bank: string | null;
-    no_rekening: string | null;
-    nama_pemilik_rekening: string | null;
-    parent_agen_user_id: string | null;
+    bank_name: string | null;
+    no_account: string | null;
+    account_owner_name: string | null;
+    parent_agent_user_id: string | null;
   },
   tx?: PoolClient,
 ): Promise<AffiliateProfileRow> {
   const res = await runner(tx).query<AffiliateProfileRow>(
-    `INSERT INTO affiliate_profiles (user_id, category_id, kode_agen, target, nama_bank, no_rekening, nama_pemilik_rekening, parent_agen_user_id)
+    `INSERT INTO affiliate_profiles (user_id, category_id, agent_code, target, bank_name, no_account, account_owner_name, parent_agent_user_id)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
     [
       data.user_id,
       data.category_id,
-      data.kode_agen,
+      data.agent_code,
       data.target,
-      data.nama_bank,
-      data.no_rekening,
-      data.nama_pemilik_rekening,
-      data.parent_agen_user_id,
+      data.bank_name,
+      data.no_account,
+      data.account_owner_name,
+      data.parent_agent_user_id,
     ],
   );
   return res.rows[0];
@@ -174,12 +174,12 @@ export async function updateAffiliateProfile(id: string, fields: Record<string, 
 // ── Referral links ──────────────────────────────────────────
 
 export async function insertReferralLink(
-  data: { agen_user_id: string; kode: string; url_target: string; title: string | null; expires_at: Date | null },
+  data: { agent_user_id: string; kode: string; target_url: string; title: string | null; expires_at: Date | null },
 ): Promise<ReferralLinkRow> {
   const row = await queryOne<ReferralLinkRow>(
-    `INSERT INTO referral_links (agen_user_id, kode, url_target, title, expires_at)
+    `INSERT INTO referral_links (agent_user_id, kode, target_url, title, expires_at)
      VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-    [data.agen_user_id, data.kode, data.url_target, data.title, data.expires_at],
+    [data.agent_user_id, data.kode, data.target_url, data.title, data.expires_at],
   );
   return row!;
 }
@@ -190,7 +190,7 @@ export async function referralLinkByKode(kode: string): Promise<ReferralLinkRow 
 
 export async function listReferralLinksByAgen(agenUserId: string): Promise<ReferralLinkRow[]> {
   return query<ReferralLinkRow>(
-    `SELECT * FROM referral_links WHERE agen_user_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC`,
+    `SELECT * FROM referral_links WHERE agent_user_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC`,
     [agenUserId],
   );
 }
@@ -199,7 +199,7 @@ export async function listReferralLinksByAgen(agenUserId: string): Promise<Refer
 
 export async function listLeads(
   p: PageParams,
-  f: { agen_user_id?: string; tahap?: string },
+  f: { agent_user_id?: string; stage?: string },
 ): Promise<{ rows: LeadRow[]; total: number }> {
   const where: string[] = ['deleted_at IS NULL'];
   const params: unknown[] = [];
@@ -207,8 +207,8 @@ export async function listLeads(
     params.push(val);
     where.push(clause.replace('$?', `$${params.length}`));
   };
-  if (f.agen_user_id) add('agen_user_id = $?', f.agen_user_id);
-  if (f.tahap) add('tahap = $?', f.tahap);
+  if (f.agent_user_id) add('agent_user_id = $?', f.agent_user_id);
+  if (f.stage) add('stage = $?', f.stage);
   const whereSql = where.join(' AND ');
   const rows = await query<LeadRow>(
     `SELECT * FROM leads WHERE ${whereSql} ORDER BY created_at ${p.order} LIMIT ${p.limit} OFFSET ${p.offset}`,
@@ -224,46 +224,46 @@ export async function leadById(id: string, tx?: PoolClient): Promise<LeadRow | n
 }
 
 export async function insertLead(data: {
-  agen_user_id: string;
-  nama_calon: string;
+  agent_user_id: string;
+  lead_name: string;
   kontak: string;
-  minat_course_id: string | null;
-  sumber_referral_link_id: string | null;
-  catatan: string | null;
+  interested_course_id: string | null;
+  source_referral_link_id: string | null;
+  notes: string | null;
 }): Promise<LeadRow> {
   const row = await queryOne<LeadRow>(
-    `INSERT INTO leads (agen_user_id, nama_calon, kontak, minat_course_id, sumber_referral_link_id, catatan)
+    `INSERT INTO leads (agent_user_id, lead_name, kontak, interested_course_id, source_referral_link_id, notes)
      VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-    [data.agen_user_id, data.nama_calon, data.kontak, data.minat_course_id, data.sumber_referral_link_id, data.catatan],
+    [data.agent_user_id, data.lead_name, data.kontak, data.interested_course_id, data.source_referral_link_id, data.notes],
   );
   return row!;
 }
 
 export async function updateLeadStage(
   id: string,
-  data: { tahap: LeadRow['tahap']; order_id: string | null; closing_at: Date | null; catatan?: string | null },
+  data: { stage: LeadRow['stage']; order_id: string | null; closing_at: Date | null; notes?: string | null },
   tx: PoolClient,
 ): Promise<void> {
   await tx.query(
-    `UPDATE leads SET tahap = $2, order_id = COALESCE($3, order_id), closing_at = COALESCE($4, closing_at),
-            catatan = COALESCE($5, catatan)
+    `UPDATE leads SET stage = $2, order_id = COALESCE($3, order_id), closing_at = COALESCE($4, closing_at),
+            notes = COALESCE($5, notes)
       WHERE id = $1`,
-    [id, data.tahap, data.order_id, data.closing_at, data.catatan ?? null],
+    [id, data.stage, data.order_id, data.closing_at, data.notes ?? null],
   );
 }
 
 export async function insertLeadStageHistory(
-  data: { lead_id: string; tahap_dari: string | null; tahap_ke: string; catatan: string | null; aktor_user_id: string },
+  data: { lead_id: string; stage_from: string | null; stage_to: string; notes: string | null; actor_user_id: string },
   tx: PoolClient,
 ): Promise<void> {
   await tx.query(
-    `INSERT INTO lead_stage_history (lead_id, tahap_dari, tahap_ke, catatan, aktor_user_id)
+    `INSERT INTO lead_stage_history (lead_id, stage_from, stage_to, notes, actor_user_id)
      VALUES ($1,$2,$3,$4,$5)`,
-    [data.lead_id, data.tahap_dari, data.tahap_ke, data.catatan, data.aktor_user_id],
+    [data.lead_id, data.stage_from, data.stage_to, data.notes, data.actor_user_id],
   );
 }
 
-/** Attribution terkunci: isi `orders.marketing_user_id` hanya bila masih NULL. */
+/** Attribution terkunci: content `orders.marketing_user_id` hanya bila masih NULL. */
 export async function lockOrderAttribution(orderId: string, agenUserId: string, tx: PoolClient): Promise<void> {
   await tx.query(`UPDATE orders SET marketing_user_id = COALESCE(marketing_user_id, $2) WHERE id = $1`, [
     orderId,
@@ -291,19 +291,19 @@ export async function commissionByOrderId(orderId: string, tx?: PoolClient): Pro
 
 export async function insertCommission(
   data: {
-    agen_user_id: string;
+    agent_user_id: string;
     order_id: string;
     category_id: string | null;
-    dasar_perhitungan: number;
+    calculation_base: number;
     rate: number;
-    nominal: number;
+    amount: number;
   },
   tx: PoolClient,
 ): Promise<CommissionRow> {
   const res = await tx.query<CommissionRow>(
-    `INSERT INTO commissions (agen_user_id, order_id, category_id, dasar_perhitungan, rate, nominal, status)
-     VALUES ($1,$2,$3,$4,$5,$6,'dihitung') RETURNING *`,
-    [data.agen_user_id, data.order_id, data.category_id, data.dasar_perhitungan, data.rate, data.nominal],
+    `INSERT INTO commissions (agent_user_id, order_id, category_id, calculation_base, rate, amount, status)
+     VALUES ($1,$2,$3,$4,$5,$6,'calculated') RETURNING *`,
+    [data.agent_user_id, data.order_id, data.category_id, data.calculation_base, data.rate, data.amount],
   );
   return res.rows[0];
 }
@@ -317,7 +317,7 @@ export async function commissionById(id: string, tx?: PoolClient): Promise<Commi
 
 export async function listCommissions(
   p: PageParams,
-  f: { agen_user_id?: string; status?: string },
+  f: { agent_user_id?: string; status?: string },
 ): Promise<{ rows: CommissionRow[]; total: number }> {
   const where: string[] = ['deleted_at IS NULL'];
   const params: unknown[] = [];
@@ -325,7 +325,7 @@ export async function listCommissions(
     params.push(val);
     where.push(clause.replace('$?', `$${params.length}`));
   };
-  if (f.agen_user_id) add('agen_user_id = $?', f.agen_user_id);
+  if (f.agent_user_id) add('agent_user_id = $?', f.agent_user_id);
   if (f.status) add('status = $?', f.status);
   const whereSql = where.join(' AND ');
   const rows = await query<CommissionRow>(
@@ -340,11 +340,11 @@ export async function listCommissions(
 
 export interface DashboardStatsRow {
   target: number;
-  jumlah_leads: number;
-  jumlah_prospek: number;
-  jumlah_closing: number;
-  total_komisi: number;
-  komisi_cair: number;
+  amount_leads: number;
+  amount_prospek: number;
+  amount_closing: number;
+  total_commission: number;
+  commission_cair: number;
 }
 
 /** Bila `agenUserId` null → agregasi seluruh agen (staf/admin). */
@@ -359,70 +359,70 @@ export async function dashboardStats(agenUserId: string | null): Promise<Dashboa
       );
 
   const leadsRow = agenUserId
-    ? await queryOne<{ jumlah_leads: string; jumlah_prospek: string; jumlah_closing: string }>(
-        `SELECT COUNT(*)::int AS jumlah_leads,
-                COUNT(*) FILTER (WHERE tahap = 'prospek')::int AS jumlah_prospek,
-                COUNT(*) FILTER (WHERE tahap = 'closing')::int AS jumlah_closing
-           FROM leads WHERE agen_user_id = $1 AND deleted_at IS NULL`,
+    ? await queryOne<{ amount_leads: string; amount_prospek: string; amount_closing: string }>(
+        `SELECT COUNT(*)::int AS amount_leads,
+                COUNT(*) FILTER (WHERE stage = 'prospect')::int AS amount_prospek,
+                COUNT(*) FILTER (WHERE stage = 'closing')::int AS amount_closing
+           FROM leads WHERE agent_user_id = $1 AND deleted_at IS NULL`,
         [agenUserId],
       )
-    : await queryOne<{ jumlah_leads: string; jumlah_prospek: string; jumlah_closing: string }>(
-        `SELECT COUNT(*)::int AS jumlah_leads,
-                COUNT(*) FILTER (WHERE tahap = 'prospek')::int AS jumlah_prospek,
-                COUNT(*) FILTER (WHERE tahap = 'closing')::int AS jumlah_closing
+    : await queryOne<{ amount_leads: string; amount_prospek: string; amount_closing: string }>(
+        `SELECT COUNT(*)::int AS amount_leads,
+                COUNT(*) FILTER (WHERE stage = 'prospect')::int AS amount_prospek,
+                COUNT(*) FILTER (WHERE stage = 'closing')::int AS amount_closing
            FROM leads WHERE deleted_at IS NULL`,
       );
 
   const komisiRow = agenUserId
-    ? await queryOne<{ total_komisi: string; komisi_cair: string }>(
-        `SELECT COALESCE(SUM(nominal), 0) AS total_komisi,
-                COALESCE(SUM(nominal) FILTER (WHERE status = 'selesai'), 0) AS komisi_cair
-           FROM commissions WHERE agen_user_id = $1 AND deleted_at IS NULL`,
+    ? await queryOne<{ total_commission: string; commission_cair: string }>(
+        `SELECT COALESCE(SUM(amount), 0) AS total_commission,
+                COALESCE(SUM(amount) FILTER (WHERE status = 'completed'), 0) AS commission_cair
+           FROM commissions WHERE agent_user_id = $1 AND deleted_at IS NULL`,
         [agenUserId],
       )
-    : await queryOne<{ total_komisi: string; komisi_cair: string }>(
-        `SELECT COALESCE(SUM(nominal), 0) AS total_komisi,
-                COALESCE(SUM(nominal) FILTER (WHERE status = 'selesai'), 0) AS komisi_cair
+    : await queryOne<{ total_commission: string; commission_cair: string }>(
+        `SELECT COALESCE(SUM(amount), 0) AS total_commission,
+                COALESCE(SUM(amount) FILTER (WHERE status = 'completed'), 0) AS commission_cair
            FROM commissions WHERE deleted_at IS NULL`,
       );
 
   return {
     target: Number(targetRow?.target ?? 0),
-    jumlah_leads: Number(leadsRow?.jumlah_leads ?? 0),
-    jumlah_prospek: Number(leadsRow?.jumlah_prospek ?? 0),
-    jumlah_closing: Number(leadsRow?.jumlah_closing ?? 0),
-    total_komisi: Number(komisiRow?.total_komisi ?? 0),
-    komisi_cair: Number(komisiRow?.komisi_cair ?? 0),
+    amount_leads: Number(leadsRow?.amount_leads ?? 0),
+    amount_prospek: Number(leadsRow?.amount_prospek ?? 0),
+    amount_closing: Number(leadsRow?.amount_closing ?? 0),
+    total_commission: Number(komisiRow?.total_commission ?? 0),
+    commission_cair: Number(komisiRow?.commission_cair ?? 0),
   };
 }
 
 export interface LeaderboardRow {
-  agen_nama: string;
-  jumlah_closing: number;
-  total_komisi: number;
+  agen_name: string;
+  amount_closing: number;
+  total_commission: number;
 }
 
 export async function leaderboard(limit: number): Promise<LeaderboardRow[]> {
   return query<LeaderboardRow>(
-    `SELECT u.nama_lengkap AS agen_nama,
-            COALESCE(lc.jumlah_closing, 0)::int AS jumlah_closing,
-            COALESCE(cc.total_komisi, 0) AS total_komisi
+    `SELECT u.name_lengkap AS agen_name,
+            COALESCE(lc.amount_closing, 0)::int AS amount_closing,
+            COALESCE(cc.total_commission, 0) AS total_commission
        FROM affiliate_profiles ap
        JOIN users u ON u.id = ap.user_id
        LEFT JOIN (
-         SELECT agen_user_id, COUNT(*)::int AS jumlah_closing
+         SELECT agent_user_id, COUNT(*)::int AS amount_closing
            FROM leads
-          WHERE tahap = 'closing' AND deleted_at IS NULL
-          GROUP BY agen_user_id
-       ) lc ON lc.agen_user_id = ap.user_id
+          WHERE stage = 'closing' AND deleted_at IS NULL
+          GROUP BY agent_user_id
+       ) lc ON lc.agent_user_id = ap.user_id
        LEFT JOIN (
-         SELECT agen_user_id, COALESCE(SUM(nominal), 0) AS total_komisi
+         SELECT agent_user_id, COALESCE(SUM(amount), 0) AS total_commission
            FROM commissions
           WHERE deleted_at IS NULL
-          GROUP BY agen_user_id
-       ) cc ON cc.agen_user_id = ap.user_id
+          GROUP BY agent_user_id
+       ) cc ON cc.agent_user_id = ap.user_id
       WHERE ap.deleted_at IS NULL
-      ORDER BY total_komisi DESC NULLS LAST
+      ORDER BY total_commission DESC NULLS LAST
       LIMIT $1`,
     [limit],
   );

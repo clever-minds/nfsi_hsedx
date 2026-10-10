@@ -24,19 +24,19 @@ const error = ref('');
 const success = ref(false);
 
 const form = reactive({
-  pembeli_nama: '',
+  pembeli_name: '',
   pembeli_kontak: '',
   course_id: '',
-  nominal: 0 as number | null,
-  metode: 'transfer_bank',
-  catatan: '',
+  amount: 0 as number | null,
+  method: 'transfer_bank',
+  notes: '',
   lead_id: (route.query.lead_id as string) || '',
 });
-const bukti = ref<File | null>(null);
+const proof = ref<File | null>(null);
 
 function onFile(e: Event) {
   const input = e.target as HTMLInputElement;
-  bukti.value = input.files?.[0] ?? null;
+  proof.value = input.files?.[0] ?? null;
 }
 
 async function loadCourses() {
@@ -55,10 +55,10 @@ async function prefillFromLead() {
   if (!form.lead_id) return;
   try {
     const lead = await apiGet<Record<string, unknown>>(`/marketing/leads/${form.lead_id}`);
-    form.pembeli_nama = String(lead.name ?? lead.pembeli_nama ?? '');
+    form.pembeli_name = String(lead.name ?? lead.pembeli_name ?? '');
     form.pembeli_kontak = String(lead.kontak ?? '');
-    if (lead.nilai_estimasi) form.nominal = Number(lead.nilai_estimasi);
-    if (lead.catatan) form.catatan = String(lead.catatan);
+    if (lead.value_estimasi) form.amount = Number(lead.value_estimasi);
+    if (lead.notes) form.notes = String(lead.notes);
   } catch {
     /* prefill best-effort saja */
   }
@@ -67,22 +67,22 @@ async function prefillFromLead() {
 async function submit() {
   error.value = '';
   success.value = false;
-  if (!form.pembeli_nama || !form.course_id || !form.nominal || form.nominal <= 0) {
+  if (!form.pembeli_name || !form.course_id || !form.amount || form.amount <= 0) {
     error.value = t('orders.manual.incomplete');
     return;
   }
   loading.value = true;
   try {
-    if (bukti.value) {
+    if (proof.value) {
       const fd = new FormData();
-      fd.append('pembeli_nama', form.pembeli_nama);
+      fd.append('pembeli_name', form.pembeli_name);
       fd.append('pembeli_kontak', form.pembeli_kontak);
       fd.append('course_id', form.course_id);
-      fd.append('nominal', String(form.nominal));
-      fd.append('metode', form.metode);
-      fd.append('catatan', form.catatan);
+      fd.append('amount', String(form.amount));
+      fd.append('method', form.method);
+      fd.append('notes', form.notes);
       if (form.lead_id) fd.append('lead_id', form.lead_id);
-      fd.append('bukti', bukti.value);
+      fd.append('proof', proof.value);
       await http.post('/orders/manual', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
     } else {
       await apiPost('/orders/manual', { ...form, marketing_user_id: auth.user?.id });
@@ -97,12 +97,12 @@ async function submit() {
 
 function resetForm() {
   success.value = false;
-  form.pembeli_nama = '';
+  form.pembeli_name = '';
   form.pembeli_kontak = '';
   form.course_id = '';
-  form.nominal = 0;
-  form.catatan = '';
-  bukti.value = null;
+  form.amount = 0;
+  form.notes = '';
+  proof.value = null;
 }
 
 onMounted(async () => {
@@ -127,7 +127,7 @@ onMounted(async () => {
 
       <div>
         <label class="label">{{ t('orders.manual.buyer') }}</label>
-        <input v-model="form.pembeli_nama" class="input" :placeholder="t('orders.manual.buyerPlaceholder')" required />
+        <input v-model="form.pembeli_name" class="input" :placeholder="t('orders.manual.buyerPlaceholder')" required />
       </div>
       <div>
         <label class="label">{{ t('orders.manual.contact') }}</label>
@@ -145,11 +145,11 @@ onMounted(async () => {
       <div class="grid gap-4 sm:grid-cols-2">
         <div>
           <label class="label">{{ t('orders.manual.amount') }}</label>
-          <input v-model.number="form.nominal" type="number" min="0" step="1000" class="input" required />
+          <input v-model.number="form.amount" type="number" min="0" step="1000" class="input" required />
         </div>
         <div>
           <label class="label">{{ t('orders.manual.method') }}</label>
-          <select v-model="form.metode" class="input">
+          <select v-model="form.method" class="input">
             <option value="transfer_bank">{{ t('orders.manual.methodTransfer') }}</option>
             <option value="tunai">{{ t('orders.manual.methodCash') }}</option>
             <option value="kartu">{{ t('orders.manual.methodCard') }}</option>
@@ -159,7 +159,7 @@ onMounted(async () => {
       </div>
       <div>
         <label class="label">{{ t('orders.manual.marketing') }}</label>
-        <input class="input bg-slate-50" :value="auth.user?.nama_lengkap ?? '—'" disabled />
+        <input class="input bg-slate-50" :value="auth.user?.name_lengkap ?? '—'" disabled />
         <p class="mt-1 text-xs text-slate-400">{{ t('orders.manual.marketingHint') }}</p>
       </div>
       <div>
@@ -168,7 +168,7 @@ onMounted(async () => {
       </div>
       <div>
         <label class="label">{{ t('orders.manual.notes') }}</label>
-        <textarea v-model="form.catatan" class="input" rows="3" :placeholder="t('orders.manual.notesPlaceholder')" />
+        <textarea v-model="form.notes" class="input" rows="3" :placeholder="t('orders.manual.notesPlaceholder')" />
       </div>
 
       <button class="btn-primary w-full" :disabled="loading">

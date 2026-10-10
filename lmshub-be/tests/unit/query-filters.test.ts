@@ -24,12 +24,12 @@ function appWithSimpleParser() {
 describe('query filter parsing', () => {
   it('keeps bracket filters as literal keys', async () => {
     const res = await request(appWithSimpleParser()).get(
-      '/probe?filter[dari]=2026-08-01&filter[sampai]=2026-08-31&filter[status]=lunas',
+      '/probe?filter[from]=2026-08-01&filter[until]=2026-08-31&filter[status]=lunas',
     );
 
-    expect(res.body['filter[dari]']).toBe('2026-08-01');
-    expect(res.body['filter[sampai]']).toBe('2026-08-31');
-    expect(res.body['filter[status]']).toBe('lunas');
+    expect(res.body['filter[from]']).toBe('2026-08-01');
+    expect(res.body['filter[until]']).toBe('2026-08-31');
+    expect(res.body['filter[status]']).toBe('paid_in_full');
     // The nested form must NOT appear, or controllers would read undefined.
     expect(res.body.filter).toBeUndefined();
   });
@@ -52,6 +52,6 @@ describe('query filter parsing', () => {
     const res = await request(app).get('/probe?filter[status]=lunas');
 
     expect(res.body['filter[status]']).toBeUndefined();
-    expect(res.body.filter).toEqual({ status: 'lunas' });
+    expect(res.body.filter).toEqual({ status: 'paid_in_full' });
   });
 });

@@ -10,20 +10,20 @@ import Icon from '@/components/ui/Icon.vue';
 /**
  * Master data mata uang.
  *
- * Kurs dibaca sebagai "1 <basis> = X <mata uang ini>", dan itu ditulis apa
- * adanya di layar — arah kurs adalah kesalahan yang paling mudah dibuat dan
+ * Kurs read sebagai "1 <basis> = X <mata uang ini>", dan itu ditulis apa
+ * adanya di layar — arah kurs adalah error yang paling mudah created dan
  * paling sulit disadari, karena hasilnya tetap berupa angka yang tampak wajar.
  *
- * Baris basis dikunci: kursnya selalu 1 dan tidak bisa dinonaktifkan atau
- * dihapus. Aturannya ditegakkan backend; di sini kontrolnya sekadar tidak
- * ditawarkan supaya tidak ada yang mencoba lalu ditolak.
+ * Baris basis dikunci: kursnya selalu 1 dan no bisa dinonaktifkan atau
+ * dihapus. Aturannya ditegakkan backend; di sini kontrolnya sekadar no
+ * ditawarkan supaya no ada yang mencoba lalu ditolak.
  */
 
 interface Row {
   id: string;
   kode: string;
   name: string;
-  simbol: string;
+  symbol: string;
   rate: string;
   desimal: number;
   is_active: boolean;
@@ -41,7 +41,7 @@ const error = ref('');
 const showForm = ref(false);
 const saving = ref(false);
 
-const draft = reactive({ kode: '', name: '', simbol: '', rate: 1, desimal: 2, sort_order: 0 });
+const draft = reactive({ kode: '', name: '', symbol: '', rate: 1, desimal: 2, sort_order: 0 });
 
 /** Kode yang belum dipakai — mencegah duplikat sebelum request dikirim. */
 const available = computed(() => {
@@ -64,11 +64,11 @@ async function load() {
 }
 
 function openForm() {
-  Object.assign(draft, { kode: '', name: '', simbol: '', rate: 1, desimal: 2, sort_order: rows.value.length });
+  Object.assign(draft, { kode: '', name: '', symbol: '', rate: 1, desimal: 2, sort_order: rows.value.length });
   showForm.value = true;
 }
 
-/** Nama resmi ISO diisikan otomatis begitu kode dipilih. */
+/** name resmi ISO diisikan otomatis begitu kode dipilih. */
 function onPickCode() {
   const found = CURRENCIES.find((c) => c.code === draft.kode);
   if (found && !draft.name) draft.name = found.name;
@@ -89,8 +89,8 @@ async function save() {
 }
 
 /**
- * `changes` bukan `Partial<Row>`: `rate` datang dari database sebagai string
- * numeric, sementara yang dikirim ke API adalah number. Memaksakan satu tipe
+ * `changes` bukan `Partial<Row>`: `rate` datang from database sebagai string
+ * numeric, sementara yang dikirim to API adalah number. Memaksakan satu type
  * untuk dua arah hanya menghasilkan cast yang menyembunyikan perbedaan itu.
  */
 async function patch(row: Row, changes: Record<string, unknown>) {
@@ -115,7 +115,7 @@ async function remove(row: Row) {
   }
 }
 
-/** Muat ulang daftar publik juga, supaya price di layar langsung ikut kurs baru. */
+/** Muat ulang register publik juga, supaya price di layar langsung ikut kurs baru. */
 async function refresh() {
   await load();
   store.ready = false;
@@ -160,7 +160,7 @@ onMounted(load);
               </span>
             </td>
             <td class="px-4 py-3 text-slate-600">{{ r.name }}</td>
-            <td class="px-4 py-3 text-slate-600">{{ r.simbol || '—' }}</td>
+            <td class="px-4 py-3 text-slate-600">{{ r.symbol || '—' }}</td>
             <td class="px-4 py-3">
               <span v-if="r.is_basis" class="text-slate-400">1.00</span>
               <input
@@ -190,7 +190,7 @@ onMounted(load);
 
     <p class="mt-3 text-xs leading-relaxed text-slate-400">{{ t('settings.currencies.note', { code: base }) }}</p>
 
-    <!-- Form tambah -->
+    <!-- Form add -->
     <div v-if="showForm" class="fixed inset-0 z-40 grid place-items-center bg-slate-900/40 p-4">
       <div class="card w-full max-w-md rounded-2xl p-5">
         <h3 class="card-title">{{ t('settings.currencies.add') }}</h3>
@@ -207,7 +207,7 @@ onMounted(load);
         <div class="mt-3 flex gap-3">
           <div class="flex-1">
             <label class="label">{{ t('settings.currencies.colSymbol') }}</label>
-            <input v-model="draft.simbol" class="input" placeholder="$" />
+            <input v-model="draft.symbol" class="input" placeholder="$" />
           </div>
           <div class="w-28">
             <label class="label">{{ t('settings.currencies.colDecimals') }}</label>

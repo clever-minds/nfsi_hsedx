@@ -36,7 +36,7 @@ gradingRouter.post(
   validate(releaseGradeSchema),
   asyncHandler(ctrl.releaseGrade),
 );
-// nilai final terkunci setelah rilis — perubahan pasca-rilis wajib lewat endpoint ini (recordAudit + alasan).
+// value final terkunci setelah rilis — perubahan pasca-rilis wajib lewat endpointst ini (recordAudit + reason).
 gradingRouter.post(
   '/grades/:id/adjust',
   requirePermission('gradebook', 'update'),

@@ -28,18 +28,18 @@ const routes: RouteRecordRaw[] = [
         name: 'instructor-detail',
         component: () => import('@/modules/catalog/views/InstructorDetailView.vue'),
       },
-      // Halaman statis (About, Terms, …) yang dikelola di Website → Pages.
+      // Halaman statis (About, Terms, …) yang managed di Website → Pages.
       {
         path: 'pages/:slug',
         name: 'static-page',
         component: () => import('@/modules/catalog/views/StaticPageView.vue'),
       },
       {
-        path: 'certificates/:nomor',
+        path: 'certificates/:number',
         name: 'verify-certificate',
         component: () => import('@/modules/catalog/views/PublicCertificateView.vue'),
       },
-      // Pendaratan setelah pembeli kembali dari gateway. Publik: gateway bisa
+      // Pendaratan setelah pembeli back from gateway. Publik: gateway bisa
       // memulangkan pembeli di browser yang sesinya sudah kedaluwarsa.
       {
         path: 'payment/return',

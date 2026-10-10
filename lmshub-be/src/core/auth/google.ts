@@ -22,7 +22,7 @@ export async function googleClientId(): Promise<string | null> {
   return id || null;
 }
 
-/** Verifikasi Google ID token (dari Google Identity Services di FE) → profil. */
+/** Verifikasi Google ID token (from Google Identity Services di FE) → profile. */
 export async function verifyGoogleIdToken(idToken: string): Promise<GoogleProfile> {
   const aud = await clientId();
   if (!aud) throw new Error('Google sign-in is not configured');

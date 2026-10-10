@@ -5,22 +5,22 @@ import type { MigrationBuilder } from 'node-pg-migrate';
  *
  * Satu baris = satu blok content (`kontak`, `sosial`, `menu`, `hero`,
  * `sections`, `footer`), bukan satu field. Alasannya: sebagian blok berisi
- * daftar yang panjangnya bebas (tautan sosmed, kolom footer, sort_order seksi),
+ * register yang panjangnya bebas (tautan sosmed, kolom footer, sort_order seksi),
  * dan memaksanya jadi pasangan key/value seperti tabel `settings` akan
- * melahirkan puluhan baris yang harus dibaca bersamaan setiap kali halaman
+ * melahirkan puluhan baris yang harus read bersamaan setiap kali halaman
  * depan digambar.
  *
- * Nilai bawaan tidak diseed di sini melainkan tinggal di kode
+ * grade bawaan no diseed di sini melainkan tinggal di kode
  * (`site-content.defaults.ts`) lalu ditimpa baris tabel ini. Dengan begitu
  * instalasi baru langsung tampil benar, dan field yang ditambahkan di rilis
- * berikutnya punya nilai bawaan tanpa perlu migrasi data.
+ * berikutnya punya value bawaan tanpa perlu migrasi data.
  */
 export async function up(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`
     CREATE TABLE IF NOT EXISTS site_content (
       id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       key         text NOT NULL,
-      nilai       jsonb NOT NULL DEFAULT '{}'::jsonb,
+      value       jsonb NOT NULL DEFAULT '{}'::jsonb,
       created_at  timestamptz NOT NULL DEFAULT now(),
       updated_at  timestamptz NOT NULL DEFAULT now(),
       deleted_at  timestamptz
@@ -28,7 +28,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   `);
 
   pgm.sql(`
-    CREATE UNIQUE INDEX IF NOT EXISTS site_content_key_unik
+    CREATE UNIQUE INDEX IF NOT EXISTS site_content_key_unique
       ON site_content (key) WHERE deleted_at IS NULL;
   `);
 

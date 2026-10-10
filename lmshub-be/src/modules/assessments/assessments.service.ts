@@ -23,15 +23,15 @@ import {
 
 const isSuper = (actor: AuthContext) => actor.roles.includes('super_admin');
 const isElevated = (actor: AuthContext) =>
-  isSuper(actor) || actor.roles.some((r) => ['admin_ops', 'direktur', 'ketua', 'pembina'].includes(r));
+  isSuper(actor) || actor.roles.some((r) => ['operations_admin', 'director', 'chairperson', 'supervisor'].includes(r));
 const instructorScope = (actor: AuthContext): string | null => (isElevated(actor) ? null : actor.userId);
-const isTeaching = (actor: AuthContext) => actor.roles.some((r) => ['instructor', 'asisten'].includes(r));
+const isTeaching = (actor: AuthContext) => actor.roles.some((r) => ['instructor', 'assistant'].includes(r));
 
 /**
- * Cakupan daftar assessment (quiz/assignment) per peran:
+ * Cakupan register assessment (quiz/assignment) per peran:
  * - elevated (admin/direktur/…) → semua
  * - instructor/asisten → hanya course yang diajar
- * - student/lainnya → hanya course yang enrollment-nya aktif/terdaftar
+ * - student/lainnya → hanya course yang enrollment-nya active/terdaftar
  */
 function listScope(actor: AuthContext): { ownerUserId?: string | null; enrolledUserId?: string | null } {
   if (isElevated(actor)) return {};
@@ -46,15 +46,15 @@ async function assertCourseOwnership(actor: AuthContext, courseId: string) {
 }
 
 /**
- * Cari enrollment student dengan akses ke sebuah course (dipakai attempt/submission).
+ * search enrollment student dengan akses to sebuah course (dipakai attempt/submission).
  *
- * `selesai` ikut diterima: enrollment menjadi selesai begitu pelajaran wajib
- * terakhir ditandai, dan justru setelah itulah ujian akhir dikerjakan. Tanpa
- * ini ujian di akhir course tidak pernah bisa dimulai.
+ * `finish` ikut diterima: enrollment menjadi finish begitu pelajaran wajib
+ * terakhir ditandai, dan justru setelah itulah exam akhir dikerjakan. Tanpa
+ * ini exam di akhir course no pernah bisa dimulai.
  */
 async function requireOwnEnrollment(actor: AuthContext, courseId: string) {
   const e = await enrollmentsRepo.findActiveByUserCourse(actor.userId, courseId);
-  if (!e || !['terdaftar', 'aktif', 'selesai'].includes(e.status)) {
+  if (!e || !['registered', 'active', 'completed'].includes(e.status)) {
     throw AppError.forbidden('You do not have active access to this course', 'course.no_active_access');
   }
   return e;
@@ -90,28 +90,28 @@ export async function createQuestionBank(actor: AuthContext, input: CreateQuesti
     description: input.description ?? null,
     created_by: actor.userId,
   });
-  await recordAudit({ userId: actor.userId, module: 'bank_soal', action: 'create', entity: 'question_banks', entityId: id, after: input });
+  await recordAudit({ userId: actor.userId, module: 'question_bank', action: 'create', entity: 'question_banks', entityId: id, after: input });
   return repo.questionBankDetail(id);
 }
 
 export async function updateQuestionBank(actor: AuthContext, id: string, input: UpdateQuestionBankInput) {
   const bank = await questionBankDetail(actor, id);
   await repo.updateQuestionBank(id, input);
-  await recordAudit({ userId: actor.userId, module: 'bank_soal', action: 'update', entity: 'question_banks', entityId: id, before: bank, after: input });
+  await recordAudit({ userId: actor.userId, module: 'question_bank', action: 'update', entity: 'question_banks', entityId: id, before: bank, after: input });
   return repo.questionBankDetail(id);
 }
 
 export async function removeQuestionBank(actor: AuthContext, id: string) {
   await questionBankDetail(actor, id);
   await repo.softDeleteQuestionBank(id);
-  await recordAudit({ userId: actor.userId, module: 'bank_soal', action: 'delete', entity: 'question_banks', entityId: id });
+  await recordAudit({ userId: actor.userId, module: 'question_bank', action: 'delete', entity: 'question_banks', entityId: id });
 }
 
 // ── Questions & Options ─────────────────────────────────
 
 export async function listQuestions(actor: AuthContext, bankId: string) {
   await questionBankDetail(actor, bankId); // scope check
-  // Opsi ikut dikirim (termasuk kunci jawaban) — endpoint ini hanya untuk
+  // Opsi ikut dikirim (termasuk kunci answer) — endpointst ini hanya untuk
   // pengelola bank soal, dan layar penyunting soal membutuhkannya.
   const rows = await repo.listQuestions(bankId);
   return Promise.all(rows.map(async (q) => ({ ...q, options: await repo.listOptions(q.id) })));
@@ -119,34 +119,34 @@ export async function listQuestions(actor: AuthContext, bankId: string) {
 
 export async function createQuestion(actor: AuthContext, bankId: string, input: CreateQuestionInput) {
   await questionBankDetail(actor, bankId); // scope check
-  validateQuestionOptions(input.tipe, input.options);
+  validateQuestionOptions(input.type, input.options);
 
   const { id } = await repo.insertQuestion({
     question_bank_id: bankId,
-    tipe: input.tipe,
-    teks_soal: input.teks_soal,
-    poin: input.poin,
-    penjelasan_jawaban: input.penjelasan_jawaban ?? null,
+    type: input.type,
+    question_text: input.question_text,
+    points: input.points,
+    answer_explanation: input.answer_explanation ?? null,
     meta: input.meta ?? null,
   });
   if (input.options.length) {
     await repo.replaceOptions(
       id,
-      input.options.map((o) => ({ ...o, pasangan_key: o.pasangan_key ?? null })),
+      input.options.map((o) => ({ ...o, pair_key: o.pair_key ?? null })),
     );
   }
-  await recordAudit({ userId: actor.userId, module: 'bank_soal', action: 'create', entity: 'questions', entityId: id, after: { tipe: input.tipe } });
+  await recordAudit({ userId: actor.userId, module: 'question_bank', action: 'create', entity: 'questions', entityId: id, after: { type: input.type } });
   return { ...(await repo.questionDetail(id)), options: await repo.listOptions(id) };
 }
 
-function validateQuestionOptions(tipe: CreateQuestionInput['tipe'], options: CreateQuestionInput['options']) {
-  if (tipe === 'benar_salah' && options.length && options.length !== 2) {
+function validateQuestionOptions(type: CreateQuestionInput['type'], options: CreateQuestionInput['options']) {
+  if (type === 'true_false' && options.length && options.length !== 2) {
     throw AppError.badRequest('A true/false question must have exactly two options', 'question.true_false_needs_two_options');
   }
-  if (['pilihan_tunggal', 'pilihan_ganda', 'benar_salah'].includes(tipe) && options.length) {
-    const benar = options.filter((o) => o.is_benar).length;
+  if (['single_choice', 'multiple_choice', 'true_false'].includes(type) && options.length) {
+    const benar = options.filter((o) => o.is_correct).length;
     if (benar < 1) throw AppError.badRequest('Mark at least one option as the correct answer', 'question.needs_correct_option');
-    if (tipe !== 'pilihan_ganda' && benar > 1) throw AppError.badRequest('This question type allows only one correct answer', 'question.single_answer_only');
+    if (type !== 'multiple_choice' && benar > 1) throw AppError.badRequest('This question type allows only one correct answer', 'question.single_answer_only');
   }
 }
 
@@ -156,19 +156,19 @@ export async function updateQuestion(actor: AuthContext, id: string, input: Upda
   await questionBankDetail(actor, question.question_bank_id); // scope check
 
   const fields: Record<string, unknown> = {};
-  if (input.teks_soal !== undefined) fields.teks_soal = input.teks_soal;
-  if (input.poin !== undefined) fields.poin = input.poin;
-  if (input.penjelasan_jawaban !== undefined) fields.penjelasan_jawaban = input.penjelasan_jawaban;
+  if (input.question_text !== undefined) fields.question_text = input.question_text;
+  if (input.points !== undefined) fields.points = input.points;
+  if (input.answer_explanation !== undefined) fields.answer_explanation = input.answer_explanation;
   if (input.meta !== undefined) fields.meta = input.meta ? JSON.stringify(input.meta) : null;
   await repo.updateQuestion(id, fields);
 
   if (input.options) {
     await repo.replaceOptions(
       id,
-      input.options.map((o) => ({ ...o, pasangan_key: o.pasangan_key ?? null })),
+      input.options.map((o) => ({ ...o, pair_key: o.pair_key ?? null })),
     );
   }
-  await recordAudit({ userId: actor.userId, module: 'bank_soal', action: 'update', entity: 'questions', entityId: id, before: question, after: input });
+  await recordAudit({ userId: actor.userId, module: 'question_bank', action: 'update', entity: 'questions', entityId: id, before: question, after: input });
   return { ...(await repo.questionDetail(id)), options: await repo.listOptions(id) };
 }
 
@@ -177,15 +177,15 @@ export async function removeQuestion(actor: AuthContext, id: string) {
   if (!question) throw AppError.notFound('Question not found', 'question.not_found');
   await questionBankDetail(actor, question.question_bank_id);
   await repo.softDeleteQuestion(id);
-  await recordAudit({ userId: actor.userId, module: 'bank_soal', action: 'delete', entity: 'questions', entityId: id });
+  await recordAudit({ userId: actor.userId, module: 'question_bank', action: 'delete', entity: 'questions', entityId: id });
 }
 
 // ── Quizzes ──────────────────────────────────────────────
 
 export async function listQuizzes(actor: AuthContext, filters: { course_id?: string }) {
-  // Student: sertakan status/nilai attempt miliknya (kolom Status yang benar),
-  // plus apakah ia boleh mulai lagi sekarang — dihitung dengan aturan yang sama
-  // dengan `startAttempt`, supaya tombol di layar tidak berbohong.
+  // Student: sertakan status/value attempt miliknya (kolom Status yang benar),
+  // plus apakah ia boleh start lagi sekarang — dihitung dengan rule yang sama
+  // dengan `startAttempt`, supaya tombol di layar no berbohong.
   if (!isElevated(actor) && !isTeaching(actor)) {
     const [rows, settingPassing] = await Promise.all([
       repo.listQuizzesForStudent(actor.userId, filters.course_id),
@@ -201,10 +201,10 @@ export async function listQuizzes(actor: AuthContext, filters: { course_id?: str
       return {
         ...q,
         passing_score_val: nilaiLulusEfektif(q.passing_score, settingPassing),
-        skor_terbaik_persen: q.best_score === null || q.best_score === undefined ? null : persenSkor(q.best_score, q.total_points),
+        score_terbaik_persen: q.best_score === null || q.best_score === undefined ? null : persenSkor(q.best_score, q.total_pointsts),
         sisa_percobaan: keputusan.sisa,
         can_start: keputusan.boleh,
-        can_retry_at: !keputusan.boleh && keputusan.alasan === 'jeda' ? keputusan.can_retry_at.toISOString() : null,
+        can_retry_at: !keputusan.boleh && keputusan.reason === 'jeda' ? keputusan.can_retry_at.toISOString() : null,
       };
     });
   }
@@ -218,11 +218,11 @@ export async function quizDetail(actor: AuthContext, id: string) {
   return quiz;
 }
 
-/** Detail untuk layar Quiz Builder: quiz + soal terpilih (urut) + apakah ia ujian akhir kursusnya. */
+/** detail untuk layar Quiz Builder: quiz + soal terpilih (sort_order) + apakah ia exam akhir kursusnya. */
 export async function quizDetailForEditor(actor: AuthContext, id: string) {
   const quiz = await quizDetail(actor, id);
   const [questions, isFinal] = await Promise.all([repo.quizQuestionLinks(id), repo.isFinalExamOfCourse(id, quiz.course_id)]);
-  return { ...quiz, questions, is_ujian_akhir: isFinal };
+  return { ...quiz, questions, is_final_exam: isFinal };
 }
 
 export async function createQuiz(actor: AuthContext, input: CreateQuizInput) {
@@ -233,13 +233,13 @@ export async function createQuiz(actor: AuthContext, input: CreateQuizInput) {
     lesson_id: input.lesson_id ?? null,
     title: input.title,
     description: input.description ?? null,
-    batas_waktu_menit: input.batas_waktu_menit ?? null,
-    acak_soal: input.acak_soal,
-    acak_opsi: input.acak_opsi,
+    time_limit_minutes: input.time_limit_minutes ?? null,
+    randomize_questions: input.randomize_questions,
+    randomize_options: input.randomize_options,
     max_attempts: input.max_attempts,
     retry_delay_minutes: input.retry_delay_minutes,
     passing_score: input.passing_score !== undefined && input.passing_score !== null ? String(input.passing_score) : null,
-    tampilkan_jawaban_setelah_selesai: input.tampilkan_jawaban_setelah_selesai,
+    show_answers_after_completion: input.show_answers_after_completion,
     is_active: input.is_active,
   });
   await recordAudit({ userId: actor.userId, module: 'assessment', action: 'create', entity: 'quizzes', entityId: id, after: input });
@@ -265,7 +265,7 @@ export async function setQuizQuestions(actor: AuthContext, id: string, input: Se
   await quizDetail(actor, id);
   await repo.replaceQuizQuestions(
     id,
-    input.questions.map((q) => ({ question_id: q.question_id, sort_order: q.sort_order, poin_override: q.poin_override ?? null })),
+    input.questions.map((q) => ({ question_id: q.question_id, sort_order: q.sort_order, points_override: q.points_override ?? null })),
   );
   await recordAudit({ userId: actor.userId, module: 'assessment', action: 'set_questions', entity: 'quizzes', entityId: id, after: input });
   return repo.quizQuestionsWithOptions(id);
@@ -295,8 +295,8 @@ export async function createAssignment(actor: AuthContext, input: CreateAssignme
     instructions: input.instructions,
     due_at: input.due_at ?? null,
     submission_type: input.submission_type,
-    maksimal_ukuran_mb: input.maksimal_ukuran_mb ?? null,
-    poin_maksimal: String(input.poin_maksimal),
+    max_size_mb: input.max_size_mb ?? null,
+    points_maximum: String(input.points_maximum),
     is_active: input.is_active,
   });
   await recordAudit({ userId: actor.userId, module: 'assessment', action: 'create', entity: 'assignments', entityId: id, after: input });
@@ -306,7 +306,7 @@ export async function createAssignment(actor: AuthContext, input: CreateAssignme
 export async function updateAssignment(actor: AuthContext, id: string, input: UpdateAssignmentInput) {
   const before = await assignmentDetail(actor, id);
   const fields: Record<string, unknown> = { ...input };
-  if (input.poin_maksimal !== undefined) fields.poin_maksimal = String(input.poin_maksimal);
+  if (input.points_maximum !== undefined) fields.points_maximum = String(input.points_maximum);
   await repo.updateAssignment(id, fields);
   await recordAudit({ userId: actor.userId, module: 'assessment', action: 'update', entity: 'assignments', entityId: id, before, after: input });
   return repo.assignmentDetail(id);
@@ -320,9 +320,9 @@ export async function removeAssignment(actor: AuthContext, id: string) {
 
 export async function upsertRubric(actor: AuthContext, assignmentId: string, input: UpsertRubricInput) {
   await assignmentDetail(actor, assignmentId);
-  const totalBobot = input.kriteria.reduce((s, k) => s + k.bobot, 0);
+  const totalBobot = input.criteria.reduce((s, k) => s + k.bobot, 0);
   if (Math.round(totalBobot) !== 100) throw AppError.unprocessable('Rubric criteria weights must add up to 100%', 'rubric.weights_must_total_100');
-  const { id } = await repo.upsertRubric(assignmentId, input.kriteria);
+  const { id } = await repo.upsertRubric(assignmentId, input.criteria);
   await recordAudit({ userId: actor.userId, module: 'assessment', action: 'upsert_rubric', entity: 'rubrics', entityId: id, after: input });
   return repo.rubricByAssignment(assignmentId);
 }
@@ -354,10 +354,10 @@ export async function startAttempt(actor: AuthContext, quizId: string) {
     jedaMenit: quiz.retry_delay_minutes ?? 0,
     terakhirSelesaiAt,
   });
-  if (!keputusan.boleh && keputusan.alasan === 'batas') {
+  if (!keputusan.boleh && keputusan.reason === 'batas') {
     throw AppError.conflict('You have reached the attempt limit for this quiz', 'quiz.attempt_limit_reached');
   }
-  if (!keputusan.boleh && keputusan.alasan === 'jeda') {
+  if (!keputusan.boleh && keputusan.reason === 'jeda') {
     throw AppError.conflict(
       `You can retake this quiz after ${keputusan.can_retry_at.toISOString()}`,
       'quiz.retake_cooldown',
@@ -368,23 +368,23 @@ export async function startAttempt(actor: AuthContext, quizId: string) {
   const attempt = await repo.insertAttempt({
     enrollment_id: enrollment.id,
     quiz_id: quizId,
-    attempt_ke: jumlahAttempt + 1,
-    waktu_tersisa_detik: quiz.batas_waktu_menit ? quiz.batas_waktu_menit * 60 : null,
+    attempt_number: jumlahAttempt + 1,
+    remaining_time_seconds: quiz.time_limit_minutes ? quiz.time_limit_minutes * 60 : null,
   });
 
   let quizQuestions = await repo.quizQuestionsWithOptions(quizId);
-  if (quiz.acak_soal) quizQuestions = shuffle(quizQuestions);
+  if (quiz.randomize_questions) quizQuestions = shuffle(quizQuestions);
   const soal = quizQuestions.map((qq) => ({
     question_id: qq.question.id,
-    tipe: qq.question.tipe,
-    teks_soal: qq.question.teks_soal,
-    poin: qq.poin_override ?? qq.question.poin,
+    type: qq.question.type,
+    question_text: qq.question.question_text,
+    points: qq.points_override ?? qq.question.points,
     sort_order: qq.sort_order,
-    // is_benar disembunyikan dari student selama pengerjaan.
-    opsi: (quiz.acak_opsi ? shuffle(qq.options) : qq.options).map((o) => ({
+    // is_correct disembunyikan from student selama pengerjaan.
+    opsi: (quiz.randomize_options ? shuffle(qq.options) : qq.options).map((o) => ({
       id: o.id,
-      teks_opsi: o.teks_opsi,
-      pasangan_key: o.pasangan_key,
+      option_text: o.option_text,
+      pair_key: o.pair_key,
       sort_order: o.sort_order,
     })),
   }));
@@ -416,16 +416,16 @@ export async function attemptDetail(actor: AuthContext, attemptId: string) {
 export async function saveAnswer(actor: AuthContext, attemptId: string, input: SaveAnswerInput) {
   const { attempt, enrollment } = await requireOwnAttempt(actor, attemptId);
   if (enrollment.user_id !== actor.userId) throw AppError.forbidden('Only the person taking this attempt can answer', 'quiz.answer_requires_owner');
-  if (attempt.status !== 'sedang') throw AppError.conflict('This attempt cannot be changed in its current state', 'quiz.attempt_not_editable');
-  return repo.upsertAnswer(attemptId, input.question_id, input.jawaban);
+  if (attempt.status !== 'in_progress') throw AppError.conflict('This attempt cannot be changed in its current state', 'quiz.attempt_not_editable');
+  return repo.upsertAnswer(attemptId, input.question_id, input.answer);
 }
 
 export async function submitAttempt(actor: AuthContext, attemptId: string) {
   const { attempt, enrollment } = await requireOwnAttempt(actor, attemptId);
   if (enrollment.user_id !== actor.userId) throw AppError.forbidden('Only the person taking this attempt can submit it', 'quiz.submit_requires_owner');
-  if (attempt.status !== 'sedang') throw AppError.conflict('This attempt has already been submitted', 'quiz.attempt_already_submitted');
+  if (attempt.status !== 'in_progress') throw AppError.conflict('This attempt has already been submitted', 'quiz.attempt_already_submitted');
 
-  await repo.updateAttempt(attemptId, { status: 'dikumpulkan', selesai_at: new Date() });
+  await repo.updateAttempt(attemptId, { status: 'submitted', finished_at: new Date() });
   await recordAudit({ userId: actor.userId, module: 'assessment', action: 'submit_attempt', entity: 'quiz_attempts', entityId: attemptId });
 
   // Auto-grade objektif langsung di service grading; esai/upload_file menunggu manual.
@@ -446,9 +446,9 @@ export async function submitAssignment(actor: AuthContext, assignmentId: string,
 
   const existing = await repo.findSubmission(enrollment.id, assignmentId);
   let submission: repo.SubmissionRow;
-  if (existing && existing.status === 'revisi_diminta') {
+  if (existing && existing.status === 'revision_requested') {
     submission = await repo.resubmit(existing.id, {
-      isi_teks: input.isi_teks ?? null,
+      text_content: input.text_content ?? null,
       file_media_id: input.file_media_id ?? null,
       url: input.url ?? null,
     });
@@ -458,7 +458,7 @@ export async function submitAssignment(actor: AuthContext, assignmentId: string,
     submission = await repo.insertSubmission({
       enrollment_id: enrollment.id,
       assignment_id: assignmentId,
-      isi_teks: input.isi_teks ?? null,
+      text_content: input.text_content ?? null,
       file_media_id: input.file_media_id ?? null,
       url: input.url ?? null,
     });

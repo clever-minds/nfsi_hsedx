@@ -12,7 +12,7 @@ pool.on('error', (err) => {
   logger.error({ err }, 'Unexpected error pada idle PG client');
 });
 
-/** Query helper tipis dengan tipe baris. */
+/** Query helper tipis dengan type baris. */
 export async function query<T extends QueryResultRow = QueryResultRow>(
   text: string,
   params?: unknown[],

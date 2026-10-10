@@ -13,7 +13,7 @@ interface AttendanceRecord extends Record<string, unknown> {
   user_id: string;
   name: string;
   status: string; // belum | hadir | terlambat | absen
-  waktu_join?: string;
+  time_join?: string;
   duration_minutes?: number;
 }
 
@@ -30,11 +30,11 @@ const savingId = ref<string | null>(null);
 const columns = computed(() => [
   { key: 'name', label: t('live.attendance.colParticipant') },
   { key: 'status', label: t('live.attendance.colStatus') },
-  { key: 'waktu_join', label: t('live.attendance.colJoinTime') },
+  { key: 'time_join', label: t('live.attendance.colJoinTime') },
   { key: 'duration_minutes', label: t('live.attendance.colDuration') },
 ]);
 
-const statuses = ['hadir', 'terlambat', 'absen'];
+const statuses = ['present', 'late', 'absent'];
 
 async function load() {
   loading.value = true;
@@ -82,7 +82,7 @@ onMounted(load);
       <template #cell:status="{ row }">
         <StatusChip :status="(row as AttendanceRecord).status" />
       </template>
-      <template #cell:waktu_join="{ value }">
+      <template #cell:time_join="{ value }">
         {{ value ? fmtJam(value as string) : '—' }}
       </template>
       <template #cell:duration_minutes="{ value }">

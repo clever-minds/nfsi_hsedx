@@ -16,18 +16,18 @@ interface FinancialSummary {
 }
 type EntryRow = Record<string, unknown> & {
   id: string;
-  tanggal?: string;
-  jenis: string; // pemasukan | pengeluaran
-  /** BE mengirim `kategori_nama` (alias dari kategori_biaya.name), bukan `kategori`. */
-  kategori_nama?: string;
+  date?: string;
+  type: string; // pemasukan | pengeluaran
+  /** BE mengirim `category_name` (alias from expense_category.name), bukan `category`. */
+  category_name?: string;
   description?: string;
-  nominal: number;
+  amount: number;
 };
 
 const { t } = useI18n();
 
 const now = new Date();
-const filters = reactive({ bulan: now.getMonth() + 1, tahun: now.getFullYear() });
+const filters = reactive({ month: now.getMonth() + 1, year: now.getFullYear() });
 
 const summary = ref<FinancialSummary>({ pemasukan: 0, pengeluaran: 0 });
 const entries = ref<EntryRow[]>([]);
@@ -38,36 +38,36 @@ const total = ref(0);
 const error = ref('');
 
 const columns = computed(() => [
-  { key: 'tanggal', label: t('reports.financial.colDate') },
-  { key: 'jenis', label: t('reports.financial.colType') },
-  { key: 'kategori_nama', label: t('reports.financial.colCategory') },
+  { key: 'date', label: t('reports.financial.colDate') },
+  { key: 'type', label: t('reports.financial.colType') },
+  { key: 'category_name', label: t('reports.financial.colCategory') },
   { key: 'description', label: t('reports.financial.colDescription') },
-  { key: 'nominal', label: t('reports.financial.colAmount') },
+  { key: 'amount', label: t('reports.financial.colAmount') },
 ]);
 
-/** Nama bulan sesuai locale, untuk dropdown filter periode. */
+/** name month sesuai locale, untuk dropdown filter period. */
 const monthNames = computed(() => Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: fmtNamaBulan(i + 1) })));
 
 const arusKas = computed(() => summary.value.arus_kas ?? summary.value.pemasukan - summary.value.pengeluaran);
 const laba = computed(() => summary.value.laba ?? arusKas.value);
 
-function monthRange(): { dari: string; sampai: string } {
+function monthRange(): { from: string; until: string } {
   const pad = (n: number) => String(n).padStart(2, '0');
-  const dari = `${filters.tahun}-${pad(filters.bulan)}-01`;
-  const lastDay = new Date(filters.tahun, filters.bulan, 0).getDate();
-  const sampai = `${filters.tahun}-${pad(filters.bulan)}-${pad(lastDay)}`;
-  return { dari, sampai };
+  const from = `${filters.year}-${pad(filters.month)}-01`;
+  const lastDay = new Date(filters.year, filters.month, 0).getDate();
+  const until = `${filters.year}-${pad(filters.month)}-${pad(lastDay)}`;
+  return { from, until };
 }
 
 async function load() {
   loading.value = true;
   error.value = '';
-  const { dari, sampai } = monthRange();
+  const { from, until } = monthRange();
   try {
-    // BE tidak punya GET /reports/financial; summary diambil dari /reports/cashflow (per-periode, filter[dari]/filter[sampai])
-    const rows = await apiGet<Array<{ periode: string; pemasukan: number; pengeluaran: number; laba: number }>>(
+    // BE no punya GET /reports/financial; summary diambil from /reports/cashflow (per-period, filter[from]/filter[until])
+    const rows = await apiGet<Array<{ period: string; pemasukan: number; pengeluaran: number; laba: number }>>(
       '/reports/cashflow',
-      { 'filter[dari]': dari, 'filter[sampai]': sampai },
+      { 'filter[from]': from, 'filter[until]': until },
     );
     const row = rows?.[0];
     summary.value = row
@@ -78,12 +78,12 @@ async function load() {
     summary.value = { pemasukan: 0, pengeluaran: 0 };
   }
   try {
-    // BE: reports module mount di root -> GET /financial-entries (bukan /reports/financial-entries); filter pakai filter[dari]/filter[sampai]
+    // BE: reports module mount di root -> GET /financial-entries (bukan /reports/financial-entries); filter pakai filter[from]/filter[until]
     const res = await apiGetFull<EntryRow[]>('/financial-entries', {
       page: page.value,
       limit,
-      'filter[dari]': dari,
-      'filter[sampai]': sampai,
+      'filter[from]': from,
+      'filter[until]': until,
     });
     entries.value = res.data ?? [];
     total.value = (res.meta?.total as number) ?? entries.value.length;
@@ -100,7 +100,7 @@ onMounted(load);
   <div>
     <PageHeader :title="t('reports.financial.title')" :subtitle="t('reports.financial.subtitle')">
       <template #actions>
-        <RouterLink v-can="'laporan.view'" class="btn-outline" :to="{ name: 'payouts' }">
+        <RouterLink v-can="'report.view'" class="btn-outline" :to="{ name: 'payouts' }">
           {{ t('reports.financial.payoutQueue') }}
         </RouterLink>
       </template>
@@ -123,22 +123,22 @@ onMounted(load);
           <template #toolbar>
             <div>
               <label class="label">{{ t('reports.financial.month') }}</label>
-              <select v-model.number="filters.bulan" class="input w-auto" @change="page = 1; load()">
+              <select v-model.number="filters.month" class="input w-auto" @change="page = 1; load()">
                 <option v-for="m in monthNames" :key="m.value" :value="m.value">{{ m.label }}</option>
               </select>
             </div>
             <div>
               <label class="label">{{ t('reports.financial.year') }}</label>
-              <input v-model.number="filters.tahun" type="number" class="input w-24" @change="load" />
+              <input v-model.number="filters.year" type="number" class="input w-24" @change="load" />
             </div>
           </template>
-          <template #cell:jenis="{ value }">
-            <span :class="value === 'pemasukan' ? 'text-emerald-700' : 'text-rose-700'">
-              {{ value === 'pemasukan' ? t('reports.financial.typeIncome') : t('reports.financial.typeExpense') }}
+          <template #cell:type="{ value }">
+            <span :class="value === 'income' ? 'text-emerald-700' : 'text-rose-700'">
+              {{ value === 'income' ? t('reports.financial.typeIncome') : t('reports.financial.typeExpense') }}
             </span>
           </template>
-          <template #cell:nominal="{ value }">{{ fmtRp(value as number | string) }}</template>
-          <template #cell:tanggal="{ value }">{{ value ? fmtTanggalSaja(String(value)) : '—' }}</template>
+          <template #cell:amount="{ value }">{{ fmtRp(value as number | string) }}</template>
+          <template #cell:date="{ value }">{{ value ? fmtTanggalSaja(String(value)) : '—' }}</template>
           <template #footer>
             <TablePagination :page="page" :limit="limit" :total="total" @update:page="page = $event; load()" />
           </template>

@@ -14,7 +14,7 @@ export interface Envelope<T> {
  * Resolved in three steps, most specific first:
  *
  *  1. `config.js` on the deployed server — editable after the fact, which is the
- *     point: moving the API to another domain must not require the buyer to
+ *     pointst: moving the API to another domain must not require the buyer to
  *     install Node and rebuild the site.
  *  2. `VITE_API_URL` at build time — still honoured so existing deployments and
  *     the dev workflow keep behaving exactly as before.
@@ -105,7 +105,7 @@ http.interceptors.response.use(
   },
 );
 
-/** Ambil payload `data` dari envelope; lempar Error dengan pesan backend bila gagal. */
+/** Ambil payload `data` from envelope; lempar Error dengan pesan backend bila failed. */
 export async function apiGet<T>(url: string, params?: Record<string, unknown>): Promise<T> {
   const res = await http.get<Envelope<T>>(url, { params });
   return res.data.data as T;
@@ -153,14 +153,14 @@ export async function apiUpload<T>(url: string, file: File, onProgress?: (percen
 }
 
 /**
- * Pesan error untuk ditampilkan ke pengguna.
+ * Pesan error untuk ditampilkan to user.
  *
- * Urutan: pesan spesifik dari BE → `fallback` yang diberikan pemanggil →
+ * Urutan: pesan spesifik from BE → `fallback` yang diberikan pemanggil →
  * pesan generik per status HTTP (sudah diterjemahkan).
  *
- * Catatan: pesan validasi dari BE masih berbahasa Indonesia karena i18n
+ * Catatan: pesan validasi from BE masih berlanguage Indonesia karena i18n
  * belum ada di sisi server. `fallback` yang diterjemahkan menutup kasus
- * error jaringan/timeout yang tidak punya body.
+ * error jaringan/timeout yang no punya body.
  */
 /**
  * Turn a failed request into something worth showing a person.
@@ -182,8 +182,8 @@ export function errorMessage(err: unknown, fallback?: string): string {
 
   const fromServer = serverError?.message;
   if (fromServer) return fromServer;
-  // 413 hampir selalu datang dari reverse proxy (Nginx `client_max_body_size`),
-  // bukan dari aplikasi — tanpa body JSON. Pesan umum "upload gagal" membuat
+  // 413 hampir selalu datang from reverse proxy (Nginx `client_max_body_size`),
+  // bukan from aplikasi — tanpa body JSON. Pesan umum "upload failed" membuat
   // admin mencari masalah di tempat yang salah, jadi sebut penyebabnya.
   if (ax.response?.status === 413) return t('common.error.payloadTooLarge');
   if (fallback) return fallback;

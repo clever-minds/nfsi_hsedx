@@ -8,8 +8,8 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
 import RichTextEditor from '@/components/ui/RichTextEditor.vue';
 
-type LessonType = 'video' | 'text' | 'pdf' | 'quiz' | 'assignment' | 'live_class' | 'embed' | 'scorm';
-const LESSON_TYPES: LessonType[] = ['video', 'text', 'pdf', 'quiz', 'assignment', 'live_class', 'embed', 'scorm'];
+type LessonType = 'video' | 'text' | 'pdf' | 'quiz' | 'assignment' | 'live_class' | 'scorm' | 'embed';
+const LESSON_TYPES: LessonType[] = ['video', 'text', 'pdf', 'quiz', 'assignment', 'live_class', 'scorm', 'embed'];
 
 interface CourseOption {
   id: string;
@@ -26,26 +26,26 @@ interface Lesson {
   id: string;
   section_id: string;
   title: string;
-  tipe: LessonType;
+  type: LessonType;
   sort_order: number;
   duration_minutes: number | null;
   gratis_preview: boolean;
 }
 
 /**
- * Tipe isi pelajaran. Lebih sempit dari tipe pelajaran: 'quiz', 'assignment' dan
- * 'live_class' tidak punya baris isi — masing-masing dirakit di layar Assessment
- * dan Live Class, lalu ditautkan ke pelajaran lewat tipe pelajarannya.
+ * Tipe content pelajaran. Lebih sempit from type pelajaran: 'quiz', 'assignment' dan
+ * 'live_class' no punya baris content — masing-masing dirakit di layar Assessment
+ * dan Live Class, lalu ditautkan to pelajaran lewat type pelajarannya.
  */
-type ContentType = 'video' | 'text' | 'pdf' | 'embed' | 'scorm';
-const CONTENT_TYPES: ContentType[] = ['video', 'text', 'pdf', 'embed', 'scorm'];
-/** Tipe yang isinya berupa berkas/tautan, bukan text atau paket SCORM. */
-const LINK_TYPES: ContentType[] = ['video', 'pdf', 'embed'];
+type ContentType = 'video' | 'text' | 'pdf' | 'scorm' | 'embed';
+const CONTENT_TYPES: ContentType[] = ['video', 'text', 'pdf', 'scorm', 'embed'];
+/** Tipe yang isinya berupa berkas/tautan, bukan text atau package SCORM. */
+const LINK_TYPES: ContentType[] = ['video', 'pdf'];
 
 interface LessonContent {
   id: string;
   lesson_id: string;
-  tipe: ContentType;
+  type: ContentType;
   sort_order: number;
   body: string | null;
   media_asset_id: string | null;
@@ -57,7 +57,7 @@ interface LessonContent {
 interface MediaAsset {
   id: string;
   file_name: string;
-  file_type: 'video' | 'gambar' | 'document' | 'audio';
+  file_type: 'video' | 'image' | 'document' | 'audio';
   status_transcode: string;
 }
 
@@ -65,8 +65,8 @@ const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 
-/** Label tipe pelajaran diambil dari catalog i18n agar ikut ganti language. */
-const lessonTypeLabel = (tipe: LessonType) => t(`content.lessonType.${tipe}`);
+/** Label type pelajaran diambil from catalog i18n agar ikut ganti language. */
+const lessonTypeLabel = (type: LessonType) => t(`content.lessonType.${type}`);
 
 const courses = ref<CourseOption[]>([]);
 const selectedCourseId = ref<string>((route.query.courseId as string) || '');
@@ -91,9 +91,9 @@ const newLessonType = ref<Record<string, LessonType>>({});
 const hasCourse = computed(() => !!selectedCourseId.value);
 
 // ── Isi pelajaran ─────────────────────────────────────────────────────────
-// Backend sudah lama menyediakan CRUD `lesson_contents`, tapi tidak ada layar
+// Backend sudah lama menyediakan CRUD `lesson_contents`, tapi no ada layar
 // yang memanggilnya: kurikulum bisa dirangkai namun pelajarannya tetap kosong,
-// dan video pada data demo masuk lewat seeder SQL. Panel di bawah ini yang
+// dan video pada data demo login lewat seeder SQL. Panel di bawah ini yang
 // menutup celah itu.
 
 const openLessonId = ref<string | null>(null);
@@ -111,7 +111,7 @@ const mediaAssets = ref<MediaAsset[]>([]);
 const contentSource = ref<'link' | 'media'>('media');
 
 const contentForm = ref({
-  tipe: 'video' as ContentType,
+  type: 'video' as ContentType,
   url: '',
   body: '',
   media_asset_id: '',
@@ -119,12 +119,12 @@ const contentForm = ref({
   duration_minutes: 0,
 });
 
-const contentTypeLabel = (tipe: ContentType) => t(`content.lessonType.${tipe}`);
-const isLinkType = computed(() => LINK_TYPES.includes(contentForm.value.tipe));
+const contentTypeLabel = (type: ContentType) => t(`content.lessonType.${type}`);
+const isLinkType = computed(() => LINK_TYPES.includes(contentForm.value.type));
 
-/** Aset yang masuk akal untuk tipe isi yang sedang dipilih. */
+/** Aset yang login akal untuk type content yang sedang dipilih. */
 const mediaChoices = computed(() => {
-  const want = contentForm.value.tipe === 'video' ? 'video' : 'document';
+  const want = contentForm.value.type === 'video' ? 'video' : 'document';
   return mediaAssets.value.filter((m) => m.file_type === want);
 });
 
@@ -140,7 +140,7 @@ function onAssetUploaded(asset: { id: string }) {
 function resetContentForm() {
   editingContentId.value = null;
   contentSource.value = 'media';
-  contentForm.value = { tipe: 'video', url: '', body: '', media_asset_id: '', scorm_manifest_url: '', duration_minutes: 0 };
+  contentForm.value = { type: 'video', url: '', body: '', media_asset_id: '', scorm_manifest_url: '', duration_minutes: 0 };
 }
 
 async function loadMediaAssets() {
@@ -149,8 +149,8 @@ async function loadMediaAssets() {
     const res = await apiGetFull<MediaAsset[]>('/media', { limit: 100 });
     mediaAssets.value = res.data ?? [];
   } catch {
-    // Pustaka Media memakai izin 'content.view'. Bila pengguna tidak punya, panel
-    // tetap berguna lewat alamat web — jadi kegagalan di sini tidak ditampilkan.
+    // Pustaka Media memakai izin 'content.view'. Bila user no punya, panel
+    // tetap berguna lewat alamat web — jadi kegagalan di sini no ditampilkan.
     mediaAssets.value = [];
   }
 }
@@ -176,20 +176,20 @@ async function toggleContents(lesson: Lesson) {
   }
   openLessonId.value = lesson.id;
   resetContentForm();
-  // Tipe isi mengikuti tipe pelajaran bila keduanya sepadan.
-  if (CONTENT_TYPES.includes(lesson.tipe as ContentType)) {
-    contentForm.value.tipe = lesson.tipe as ContentType;
+  // Tipe content mengikuti type pelajaran bila keduanya sepadan.
+  if (CONTENT_TYPES.includes(lesson.type as ContentType)) {
+    contentForm.value.type = lesson.type as ContentType;
   }
   await Promise.all([loadContents(lesson.id), loadMediaAssets()]);
 }
 
-/** Ringkasan satu baris untuk daftar isi yang sudah tersimpan. */
+/** Ringkasan satu baris untuk register content yang sudah tersimpan. */
 function contentSummary(c: LessonContent): string {
-  if (c.tipe === 'text') {
+  if (c.type === 'text') {
     const plain = (c.body ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     return plain.length > 90 ? `${plain.slice(0, 90)}…` : plain || t('content.contents.emptyBody');
   }
-  if (c.tipe === 'scorm') return c.scorm_manifest_url ?? '—';
+  if (c.type === 'scorm') return c.scorm_manifest_url ?? '—';
   if (c.url) return c.url;
   if (c.media_asset_id) {
     const m = mediaAssets.value.find((a) => a.id === c.media_asset_id);
@@ -200,15 +200,15 @@ function contentSummary(c: LessonContent): string {
 
 async function submitContent(lessonId: string) {
   const f = contentForm.value;
-  const payload: Record<string, unknown> = { tipe: f.tipe };
+  const payload: Record<string, unknown> = { type: f.type };
 
-  if (f.tipe === 'text') {
+  if (f.type === 'text') {
     if (!f.body.trim()) {
       contentError.value = t('content.contents.bodyRequired');
       return;
     }
     payload.body = f.body;
-  } else if (f.tipe === 'scorm') {
+  } else if (f.type === 'scorm') {
     if (!f.scorm_manifest_url.trim()) {
       contentError.value = t('content.contents.manifestRequired');
       return;
@@ -226,7 +226,7 @@ async function submitContent(lessonId: string) {
     if (editingContentId.value) payload.url = null;
   } else {
     // Dicegat di sini dengan pesan yang menjelaskan bentuk yang diterima, alih-alih
-    // 'Validation failed' dari backend yang tidak menolong. Path berawalan '/'
+    // 'Validation failed' from backend yang no menolong. Path berawalan '/'
     // ikut diterima: itu berkas di server ini sendiri, di bawah `uploads/`.
     const url = f.url.trim();
     if (!/^https?:\/\//i.test(url) && !url.startsWith('/')) {
@@ -237,7 +237,7 @@ async function submitContent(lessonId: string) {
     if (editingContentId.value) payload.media_asset_id = null;
   }
 
-  if (f.tipe === 'video' && f.duration_minutes > 0) payload.duration_seconds = Math.round(f.duration_minutes * 60);
+  if (f.type === 'video' && f.duration_minutes > 0) payload.duration_seconds = Math.round(f.duration_minutes * 60);
 
   busy.value = true;
   contentError.value = '';
@@ -261,7 +261,7 @@ function editContent(c: LessonContent) {
   editingContentId.value = c.id;
   contentSource.value = c.media_asset_id ? 'media' : 'link';
   contentForm.value = {
-    tipe: c.tipe,
+    type: c.type,
     url: c.url ?? '',
     body: c.body ?? '',
     media_asset_id: c.media_asset_id ?? '',
@@ -287,8 +287,8 @@ async function removeContent(lessonId: string, id: string) {
 }
 
 /**
- * Tidak ada endpoint reorder khusus untuk isi pelajaran, jadi sort_order ditukar
- * lewat dua kali PUT — cukup karena satu pelajaran jarang punya banyak isi.
+ * no ada endpointst reorder khusus untuk content pelajaran, jadi sort_order ditukar
+ * lewat dua kali PUT — cukup karena satu pelajaran jarang punya banyak content.
  */
 async function moveContent(lessonId: string, id: string, dir: -1 | 1) {
   const list = contents.value[lessonId] || [];
@@ -311,7 +311,7 @@ async function moveContent(lessonId: string, id: string, dir: -1 | 1) {
 async function loadCourses() {
   loadingCourses.value = true;
   try {
-    // Backend otomatis membatasi instructor non-admin ke course miliknya sendiri.
+    // Backend otomatis membatasi instructor non-admin to course miliknya sendiri.
     const res = await apiGetFull<CourseOption[]>('/courses', { limit: 100 });
     courses.value = res.data ?? [];
   } catch (e) {
@@ -364,7 +364,7 @@ async function addSection() {
     });
     newSectionTitle.value = '';
     await loadCurriculum();
-    showNotice(t('common.state.saved', 'Berhasil ditambahkan!'));
+    showNotice(t('common.state.saved', 'success ditambahkan!'));
   } catch (e) {
     error.value = errorMessage(e, t('content.builder.addSectionFailed'));
   } finally {
@@ -410,12 +410,12 @@ async function addLesson(sectionId: string) {
   try {
     await apiPost(`/sections/${sectionId}/lessons`, {
       title,
-      tipe: newLessonType.value[sectionId] || 'video',
+      type: newLessonType.value[sectionId] || 'video',
       sort_order: (lessonsBySection.value[sectionId] || []).length,
     });
     newLessonTitle.value[sectionId] = '';
     await loadCurriculum();
-    showNotice(t('common.state.saved', 'Berhasil ditambahkan!'));
+    showNotice(t('common.state.saved', 'success ditambahkan!'));
   } catch (e) {
     error.value = errorMessage(e, t('content.builder.addLessonFailed'));
   } finally {
@@ -535,7 +535,7 @@ onMounted(async () => {
           <li v-for="(l, li) in lessonsBySection[s.id] || []" :key="l.id" class="rounded-lg bg-slate-50">
           <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
             <div class="flex items-center gap-2">
-              <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-medium text-brand-800">{{ lessonTypeLabel(l.tipe) }}</span>
+              <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-medium text-brand-800">{{ lessonTypeLabel(l.type) }}</span>
               <span class="text-slate-700">{{ l.title }}</span>
               <span v-if="l.gratis_preview" class="text-[10px] font-medium text-emerald-600">
                 {{ t('content.builder.freePreview') }}
@@ -557,7 +557,7 @@ onMounted(async () => {
                 {{ l.gratis_preview ? t('content.builder.cancelPreview') : t('content.builder.freePreview') }}
               </button>
               <!-- Tanpa tombol ini pelajaran hanya berupa title: video, text dan
-                   PDF-nya tidak punya tempat untuk diisi. -->
+                   PDF-nya no punya tempat untuk diisi. -->
               <button
                 v-can="'content.view'"
                 class="btn-outline btn-sm"
@@ -573,7 +573,7 @@ onMounted(async () => {
             </div>
           </div>
 
-          <!-- Panel isi pelajaran -->
+          <!-- Panel content pelajaran -->
           <div v-if="openLessonId === l.id" class="border-t border-slate-200 px-3 py-3">
             <p v-if="contentError" class="mb-3 alert-error">{{ contentError }}</p>
             <p v-if="contentLoading" class="text-xs text-slate-400">{{ t('common.state.loading') }}</p>
@@ -586,7 +586,7 @@ onMounted(async () => {
               >
                 <div class="flex min-w-0 items-center gap-2">
                   <span class="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
-                    {{ contentTypeLabel(c.tipe) }}
+                    {{ contentTypeLabel(c.type) }}
                   </span>
                   <span class="truncate text-slate-600">{{ contentSummary(c) }}</span>
                 </div>
@@ -615,7 +615,7 @@ onMounted(async () => {
             </ul>
             <p v-else class="mb-3 text-xs text-slate-400">{{ t('content.contents.empty') }}</p>
 
-            <!-- Formulir tambah / ubah isi -->
+            <!-- Formulir add / edit content -->
             <div v-can="'content.create'" class="rounded border border-slate-200 bg-white p-3">
               <p class="mb-2 text-xs font-medium text-slate-600">
                 {{ editingContentId ? t('content.contents.formEdit') : t('content.contents.formNew') }}
@@ -624,7 +624,7 @@ onMounted(async () => {
               <div class="grid gap-2 sm:grid-cols-2">
                 <div>
                   <label class="label">{{ t('content.contents.type') }}</label>
-                  <select v-model="contentForm.tipe" class="input">
+                  <select v-model="contentForm.type" class="input">
                     <option v-for="ct in CONTENT_TYPES" :key="ct" :value="ct">{{ contentTypeLabel(ct) }}</option>
                   </select>
                 </div>
@@ -648,7 +648,7 @@ onMounted(async () => {
                   <select v-model="contentForm.media_asset_id" class="input">
                     <option value="">{{ t('common.action.choose') }}</option>
                     <option v-for="m in mediaChoices" :key="m.id" :value="m.id">
-                      {{ m.file_name }}<template v-if="m.file_type === 'video' && m.status_transcode !== 'selesai'">
+                      {{ m.file_name }}<template v-if="m.file_type === 'video' && m.status_transcode !== 'completed'">
                         — {{ t('content.contents.notReady') }}
 </template>
                     </option>
@@ -660,18 +660,18 @@ onMounted(async () => {
                   </div>
                 </div>
 
-                <div v-if="contentForm.tipe === 'text'" class="sm:col-span-2">
+                <div v-if="contentForm.type === 'text'" class="sm:col-span-2">
                   <label class="label">{{ t('content.contents.body') }}</label>
                   <RichTextEditor v-model="contentForm.body" />
                   <p class="mt-1 text-xs text-slate-400">{{ t('content.contents.bodyHint') }}</p>
                 </div>
 
-                <div v-if="contentForm.tipe === 'scorm'" class="sm:col-span-2">
+                <div v-if="contentForm.type === 'scorm'" class="sm:col-span-2">
                   <label class="label">{{ t('content.contents.manifest') }}</label>
                   <input v-model="contentForm.scorm_manifest_url" class="input" placeholder="https://…/imsmanifest.xml" />
                 </div>
 
-                <div v-if="contentForm.tipe === 'video'">
+                <div v-if="contentForm.type === 'video'">
                   <label class="label">{{ t('content.contents.duration') }}</label>
                   <input v-model.number="contentForm.duration_minutes" type="number" min="0" class="input" />
                 </div>
@@ -700,7 +700,7 @@ onMounted(async () => {
             :placeholder="t('content.builder.newLessonPlaceholder')"
             @keyup.enter="addLesson(s.id)"
           />
-          <select v-model="newLessonType[s.id]" class="input w-auto">
+          <select v-model="newLessonType[s.id]" class="input w-auto hidden">
             <option v-for="lt in LESSON_TYPES" :key="lt" :value="lt">{{ lessonTypeLabel(lt) }}</option>
           </select>
           <button class="btn-outline" :disabled="busy" @click="addLesson(s.id)">{{ t('content.builder.addLesson') }}</button>

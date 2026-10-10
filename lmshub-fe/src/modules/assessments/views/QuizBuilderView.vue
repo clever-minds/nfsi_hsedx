@@ -8,13 +8,13 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import { useCourseOptions } from '../useCourseOptions';
 
 /**
- * Buat/ubah quiz atau ujian.
+ * Buat/edit quiz atau exam.
  *
- * Versi sebelumnya mengirim field camelCase (`kursusId`, `attemptMaks`, …)
- * yang tidak dikenal backend, sehingga setiap simpan ditolak; soal yang dipilih
- * juga tidak pernah dikirim. Kini name field mengikuti API, soal disimpan lewat
+ * Versi previous mengirim field camelCase (`kursusId`, `attemptMaks`, …)
+ * yang no dikenal backend, sehingga setiap save ditolak; soal yang dipilih
+ * juga no pernah dikirim. Kini name field mengikuti API, soal disimpan lewat
  * `PUT /quizzes/:id/questions`, dan quiz bisa langsung ditetapkan sebagai
- * ujian akhir kursusnya.
+ * exam akhir kursusnya.
  */
 interface QuestionBank {
   id: string;
@@ -23,24 +23,24 @@ interface QuestionBank {
 }
 interface QuestionSummary {
   id: string;
-  teks_soal: string;
-  tipe: string;
-  poin: string | number;
+  question_text: string;
+  type: string;
+  points: string | number;
 }
 interface QuizDetail {
   id: string;
   title: string;
   description: string | null;
   course_id: string;
-  batas_waktu_menit: number | null;
-  acak_soal: boolean;
-  acak_opsi: boolean;
+  time_limit_minutes: number | null;
+  randomize_questions: boolean;
+  randomize_options: boolean;
   max_attempts: number;
   retry_delay_minutes: number;
   passing_score: string | null;
-  tampilkan_jawaban_setelah_selesai: boolean;
+  show_answers_after_completion: boolean;
   is_active: boolean;
-  is_ujian_akhir?: boolean;
+  is_final_exam?: boolean;
   questions?: Array<{ question_id: string; sort_order: number }>;
 }
 
@@ -59,7 +59,7 @@ const form = reactive({
   title: '',
   description: '',
   courseId: (route.query.course as string) || '',
-  /** 0 / kosong = tanpa batas waktu. */
+  /** 0 / kosong = tanpa batas time. */
   batasWaktuMenit: 20 as number | null,
   acakSoal: true,
   acakOpsi: true,
@@ -69,9 +69,9 @@ const form = reactive({
   passingScore: 70 as number | null,
   tampilkanJawaban: false,
   isAktif: true,
-  ujianAkhir: false,
+  finalExam: false,
 });
-/** Apakah quiz ini SEBELUMNYA ujian akhir — supaya mencentang ulang/melepas hanya mengirim yang perlu. */
+/** Apakah quiz ini previous exam akhir — supaya mencentang ulang/melepas hanya mengirim yang perlu. */
 const wasFinal = ref(false);
 
 const banks = ref<QuestionBank[]>([]);
@@ -129,17 +129,17 @@ async function loadQuiz() {
       title: q.title,
       description: q.description ?? '',
       courseId: q.course_id,
-      batasWaktuMenit: q.batas_waktu_menit,
-      acakSoal: q.acak_soal,
-      acakOpsi: q.acak_opsi,
+      batasWaktuMenit: q.time_limit_minutes,
+      acakSoal: q.randomize_questions,
+      acakOpsi: q.randomize_options,
       attemptMaks: q.max_attempts,
       jedaUlangMenit: q.retry_delay_minutes ?? 0,
       passingScore: q.passing_score === null ? null : Number(q.passing_score),
-      tampilkanJawaban: q.tampilkan_jawaban_setelah_selesai,
+      tampilkanJawaban: q.show_answers_after_completion,
       isAktif: q.is_active,
-      ujianAkhir: !!q.is_ujian_akhir,
+      finalExam: !!q.is_final_exam,
     });
-    wasFinal.value = !!q.is_ujian_akhir;
+    wasFinal.value = !!q.is_final_exam;
     selectedQuestionIds.value = (q.questions ?? []).sort((a, b) => a.sort_order - b.sort_order).map((x) => x.question_id);
   } catch (e) {
     error.value = errorMessage(e, t('assessments.builder.loadFailed'));
@@ -162,13 +162,13 @@ async function save() {
   const payload = {
     title: form.title.trim(),
     description: form.description.trim() || null,
-    batas_waktu_menit: form.batasWaktuMenit && form.batasWaktuMenit > 0 ? form.batasWaktuMenit : null,
-    acak_soal: form.acakSoal,
-    acak_opsi: form.acakOpsi,
+    time_limit_minutes: form.batasWaktuMenit && form.batasWaktuMenit > 0 ? form.batasWaktuMenit : null,
+    randomize_questions: form.acakSoal,
+    randomize_options: form.acakOpsi,
     max_attempts: Math.max(0, Number(form.attemptMaks) || 0),
     retry_delay_minutes: Math.max(0, Number(form.jedaUlangMenit) || 0),
     passing_score: form.passingScore === null || (form.passingScore as unknown) === '' ? null : Number(form.passingScore),
-    tampilkan_jawaban_setelah_selesai: form.tampilkanJawaban,
+    show_answers_after_completion: form.tampilkanJawaban,
     is_active: form.isAktif,
   };
   try {
@@ -178,9 +178,9 @@ async function save() {
     await apiPut(`/quizzes/${quiz.id}/questions`, {
       questions: selectedQuestionIds.value.map((id, i) => ({ question_id: id, sort_order: i })),
     });
-    if (form.ujianAkhir !== wasFinal.value) {
-      // Melepas centang hanya mengosongkan bila quiz ini memang ujian akhirnya.
-      await apiPut(`/courses/${form.courseId}/completion-rules`, { final_exam_quiz_id: form.ujianAkhir ? quiz.id : null });
+    if (form.finalExam !== wasFinal.value) {
+      // Melepas centang hanya mengosongkan bila quiz ini memang exam akhirnya.
+      await apiPut(`/courses/${form.courseId}/completion-rules`, { final_exam_quiz_id: form.finalExam ? quiz.id : null });
     }
     router.push({ name: 'assessments' });
   } catch (e) {
@@ -251,7 +251,7 @@ onMounted(() => {
           </div>
           <div class="flex flex-col gap-2 sm:col-span-2">
             <label class="label-inline">
-              <input v-model="form.ujianAkhir" type="checkbox" :disabled="!form.courseId" /> {{ t('assessments.builder.finalExam') }}
+              <input v-model="form.finalExam" type="checkbox" :disabled="!form.courseId" /> {{ t('assessments.builder.finalExam') }}
             </label>
             <p class="-mt-1 ms-6 text-xs text-slate-400">{{ t('assessments.builder.finalExamHint') }}</p>
             <label class="label-inline">
@@ -290,8 +290,8 @@ onMounted(() => {
         <ul v-else-if="questions.length" class="mt-3 max-h-80 space-y-1 overflow-y-auto">
           <li v-for="q in questions" :key="q.id" class="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-slate-50">
             <input :id="`q-${q.id}`" type="checkbox" :checked="selectedQuestionIds.includes(q.id)" @change="toggleQuestion(q.id)" />
-            <label :for="`q-${q.id}`" class="flex-1 cursor-pointer text-sm text-slate-700">{{ q.teks_soal }}</label>
-            <span class="text-xs text-slate-400">{{ t(`assessments.bank.tipe.${q.tipe}`) }} · {{ fmtAngka(Number(q.poin)) }}</span>
+            <label :for="`q-${q.id}`" class="flex-1 cursor-pointster text-sm text-slate-700">{{ q.question_text }}</label>
+            <span class="text-xs text-slate-400">{{ t(`assessments.bank.type.${q.type}`) }} · {{ fmtAngka(Number(q.points)) }}</span>
           </li>
         </ul>
         <p v-else-if="selectedBankId" class="mt-3 text-sm text-slate-400">{{ t('assessments.builder.bankEmpty') }}</p>
@@ -316,7 +316,7 @@ onMounted(() => {
         <p class="mt-1 text-sm text-slate-500">
           {{ form.attemptMaks ? t('assessments.builder.summaryAttempts', { n: fmtAngka(form.attemptMaks) }) : t('assessments.builder.summaryUnlimited') }}
         </p>
-        <p v-if="form.ujianAkhir" class="mt-2 rounded bg-brand-50 px-2 py-1.5 text-xs text-brand-700">{{ t('assessments.builder.summaryFinal') }}</p>
+        <p v-if="form.finalExam" class="mt-2 rounded bg-brand-50 px-2 py-1.5 text-xs text-brand-700">{{ t('assessments.builder.summaryFinal') }}</p>
         <button class="btn-primary mt-4 w-full" :disabled="saving" @click="save">
           {{ saving ? t('common.state.saving') : t('assessments.builder.save') }}
         </button>

@@ -5,12 +5,12 @@ import Icon from '@/components/ui/Icon.vue';
 
 /**
  * Logo + name aplikasi. Bila admin sudah mengunggah logo, gambar itu yang
- * dipakai; kalau belum, jatuh ke lambang bawaan + name aplikasi sebagai text,
+ * dipakai; kalau belum, due to lambang bawaan + name aplikasi sebagai text,
  * sehingga instalasi baru tetap terlihat utuh tanpa mengunggah apa pun.
  */
 const props = withDefaults(
   defineProps<{
-    /** `dark` dipakai di atas latar gelap (footer publik). */
+    /** `dark` dipakai di on latar gelap (footer publik). */
     tone?: 'light' | 'dark';
     size?: 'sm' | 'md' | 'lg';
   }>(),

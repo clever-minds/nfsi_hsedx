@@ -5,7 +5,7 @@
     "teaching": "Pengajaran",
     "management": "Manajemen",
     "reports": "Laporan",
-    "settings": "Pengaturan"
+    "settings": "settings"
   },
   "item": {
     "home": "Beranda",
@@ -20,14 +20,14 @@
     "categories": "Kategori",
     "curriculum": "Kurikulum & Konten",
     "grading": "Grading",
-    "users": "Pengguna",
+    "users": "user",
     "transactions": "Transaction",
     "marketing": "Marketing",
     "coupons": "Kupon",
     "reports": "Laporan",
     "notifications": "Notifikasi",
     "auditLog": "Audit Log",
-    "settings": "Pengaturan",
+    "settings": "settings",
     "currencies": "Mata Uang",
     "bankAccounts": "Rekening Bank",
     "website": "Website",
@@ -43,9 +43,9 @@
   "header": {
     "toggleMenu": "Buka/tutup menu",
     "menu": "Menu",
-    "searchPublic": "Cari course, instructor…",
-    "searchPublicShort": "Cari course…",
-    "searchDashboard": "Cari course, materi, pengguna…",
+    "searchPublic": "search course, instructor…",
+    "searchPublicShort": "search course…",
+    "searchDashboard": "search course, material, user…",
     "newCourse": "Buat Course Baru",
     "goToDashboard": "Dashboard",
     "switchRole": "Ganti peran",
@@ -58,11 +58,11 @@
     "helpCenter": "Pusat Bantuan",
     "privacyPolicy": "Kebijakan Privasi",
     "terms": "Syarat & Ketentuan",
-    "registerFree": "Daftar Gratis",
+    "registerFree": "register Gratis",
     "newsletter": "Berlangganan Kabar",
     "newsletterHint": "Dapatkan rekomendasi course & promo langsung di email kamu.",
     "emailPlaceholder": "Alamat email",
-    "blurb": "Platform akademi course daring — belajar skill baru dari instructor berpengalaman, kerjakan assessment, dan raih certificate.",
+    "blurb": "Platform akademi course daring — belajar skill baru from instructor berpengalaman, kerjakan assessment, dan raih certificate.",
     "copyright": "© {year} {name} · {tagline}",
     "contact": "Kontak"
   }

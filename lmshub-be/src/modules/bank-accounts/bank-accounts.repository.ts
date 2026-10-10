@@ -4,13 +4,13 @@ import { PageParams } from '../../core/http/pagination';
 
 export interface BankAccountRow {
   id: string;
-  nama_bank: string;
-  nomor_rekening: string;
-  atas_nama: string;
-  cabang: string | null;
-  catatan: string | null;
+  bank_name: string;
+  account_number: string;
+  account_name: string;
+  branch: string | null;
+  notes: string | null;
   is_active: boolean;
-  is_utama: boolean;
+  is_primary: boolean;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -21,20 +21,20 @@ export interface BankAccountFilters {
   is_active?: boolean;
 }
 
-/** Urutan baku: rekening utama dulu, lalu `sort_order`, lalu name bank. */
-const ORDER = `ORDER BY is_utama DESC, sort_order ASC, nama_bank ASC`;
+/** Urutan baku: account primary dulu, lalu `sort_order`, lalu name bank. */
+const ORDER = `ORDER BY is_primary DESC, sort_order ASC, bank_name ASC`;
 
 export async function list(p: PageParams, f: BankAccountFilters): Promise<{ rows: BankAccountRow[]; total: number }> {
   const where: string[] = ['deleted_at IS NULL'];
   const params: unknown[] = [];
-  /** `$?` diganti nomor parameter berikutnya — satu nilai bisa dipakai beberapa kali. */
+  /** `$?` diganti number parameter berikutnya — satu value bisa dipakai beberapa kali. */
   const add = (clause: string, val: unknown) => {
     params.push(val);
     where.push(clause.replace(/\$\?/g, `$${params.length}`));
   };
   if (f.q) {
     add(
-      `(nama_bank ILIKE '%' || $? || '%' OR nomor_rekening ILIKE '%' || $? || '%' OR atas_nama ILIKE '%' || $? || '%')`,
+      `(bank_name ILIKE '%' || $? || '%' OR account_number ILIKE '%' || $? || '%' OR account_name ILIKE '%' || $? || '%')`,
       f.q,
     );
   }
@@ -52,7 +52,7 @@ export async function list(p: PageParams, f: BankAccountFilters): Promise<{ rows
   return { rows, total: Number(totalRow?.count ?? 0) };
 }
 
-/** Rekening aktif untuk checkout — tanpa paginasi, sort_order sama dengan daftar admin. */
+/** Rekening active untuk checkout — tanpa paginasi, sort_order sama dengan register admin. */
 export async function listActive(): Promise<BankAccountRow[]> {
   return query<BankAccountRow>(`SELECT * FROM bank_accounts WHERE deleted_at IS NULL AND is_active ${ORDER}`);
 }
@@ -61,9 +61,9 @@ export async function detail(id: string): Promise<BankAccountRow | null> {
   return queryOne<BankAccountRow>(`SELECT * FROM bank_accounts WHERE id = $1 AND deleted_at IS NULL`, [id]);
 }
 
-export async function findDuplicate(namaBank: string, nomor: string, exceptId?: string): Promise<BankAccountRow | null> {
-  const params: unknown[] = [namaBank, nomor];
-  let sql = `SELECT * FROM bank_accounts WHERE nama_bank = $1 AND nomor_rekening = $2 AND deleted_at IS NULL`;
+export async function findDuplicate(namaBank: string, number: string, exceptId?: string): Promise<BankAccountRow | null> {
+  const params: unknown[] = [namaBank, number];
+  let sql = `SELECT * FROM bank_accounts WHERE bank_name = $1 AND account_number = $2 AND deleted_at IS NULL`;
   if (exceptId) {
     params.push(exceptId);
     sql += ` AND id <> $3`;
@@ -72,34 +72,34 @@ export async function findDuplicate(namaBank: string, nomor: string, exceptId?: 
 }
 
 export interface BankAccountData {
-  nama_bank: string;
-  nomor_rekening: string;
-  atas_nama: string;
-  cabang: string | null;
-  catatan: string | null;
+  bank_name: string;
+  account_number: string;
+  account_name: string;
+  branch: string | null;
+  notes: string | null;
   is_active: boolean;
-  is_utama: boolean;
+  is_primary: boolean;
   sort_order: number;
 }
 
 /**
- * Simpan rekening. Bila baris ini ditandai utama, tanda utama pada baris lain dilepas
- * di transaction yang sama — indeks unik parsial menolak dua baris utama sekaligus.
+ * save account. Bila baris ini ditandai primary, tanda primary pada baris lain dilepas
+ * di transaction yang sama — indeks unik parsial menolak dua baris primary sekaligus.
  */
 export async function insert(data: BankAccountData): Promise<{ id: string }> {
   return withTransaction(async (tx) => {
-    if (data.is_utama) await tx.query(`UPDATE bank_accounts SET is_utama = false WHERE is_utama AND deleted_at IS NULL`);
+    if (data.is_primary) await tx.query(`UPDATE bank_accounts SET is_primary = false WHERE is_primary AND deleted_at IS NULL`);
     const res = await tx.query<{ id: string }>(
-      `INSERT INTO bank_accounts (nama_bank, nomor_rekening, atas_nama, cabang, catatan, is_active, is_utama, sort_order)
+      `INSERT INTO bank_accounts (bank_name, account_number, account_name, branch, notes, is_active, is_primary, sort_order)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
       [
-        data.nama_bank,
-        data.nomor_rekening,
-        data.atas_nama,
-        data.cabang,
-        data.catatan,
+        data.bank_name,
+        data.account_number,
+        data.account_name,
+        data.branch,
+        data.notes,
         data.is_active,
-        data.is_utama,
+        data.is_primary,
         data.sort_order,
       ],
     );
@@ -112,8 +112,8 @@ export async function update(id: string, fields: Partial<BankAccountData>): Prom
   if (!entries.length) return;
 
   await withTransaction(async (tx) => {
-    if (fields.is_utama) {
-      await tx.query(`UPDATE bank_accounts SET is_utama = false WHERE is_utama AND id <> $1 AND deleted_at IS NULL`, [id]);
+    if (fields.is_primary) {
+      await tx.query(`UPDATE bank_accounts SET is_primary = false WHERE is_primary AND id <> $1 AND deleted_at IS NULL`, [id]);
     }
     const sets = entries.map(([k], i) => `${k} = $${i + 2}`);
     await tx.query(`UPDATE bank_accounts SET ${sets.join(', ')}, updated_at = now() WHERE id = $1`, [
@@ -124,6 +124,6 @@ export async function update(id: string, fields: Partial<BankAccountData>): Prom
 }
 
 export async function softDelete(id: string): Promise<void> {
-  // Rekening yang dihapus tidak boleh menyandera tanda "utama".
-  await query(`UPDATE bank_accounts SET deleted_at = now(), is_utama = false, updated_at = now() WHERE id = $1`, [id]);
+  // Rekening yang dihapus no boleh menyandera tanda "primary".
+  await query(`UPDATE bank_accounts SET deleted_at = now(), is_primary = false, updated_at = now() WHERE id = $1`, [id]);
 }

@@ -16,7 +16,7 @@ export function validate(schema: ZodSchema, part: Part = 'body') {
         }),
       );
     }
-    // simpan hasil parse di properti terpisah agar tidak bertabrakan dengan getter Express
+    // save hasil parse di properti terpisah agar no bertabrakan dengan getter Express
     (req as unknown as Record<string, unknown>)[`valid_${part}`] = result.data;
     if (part === 'body') req.body = result.data;
     next();

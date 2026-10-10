@@ -38,8 +38,8 @@ export async function updateEventConfig(req: Request, res: Response) {
 export async function listInbox(req: Request, res: Response) {
   const page = parsePage(req);
   const filters = {
-    jenis: req.query['filter[jenis]'] as string | undefined,
-    status: req.query['filter[status]'] as 'dibaca' | 'belum_dibaca' | undefined,
+    type: req.query['filter[type]'] as string | undefined,
+    status: req.query['filter[status]'] as 'read' | 'belum_read' | undefined,
   };
   const { rows, total } = await service.listInbox(auth(req), page, filters);
   return ok(res, rows, pageMeta(page.page, page.limit, total));
@@ -50,8 +50,8 @@ export async function markRead(req: Request, res: Response) {
 }
 
 export async function respond(req: Request, res: Response) {
-  const { isi_respons } = validated<RespondNotificationInput>(req);
-  return ok(res, await service.respond(auth(req), req.params.id, isi_respons));
+  const { response_content } = validated<RespondNotificationInput>(req);
+  return ok(res, await service.respond(auth(req), req.params.id, response_content));
 }
 
 // ── reminders ────────────────────────────────────────────────────────────
@@ -77,8 +77,8 @@ export async function markReminderRead(req: Request, res: Response) {
 }
 
 export async function respondReminder(req: Request, res: Response) {
-  const { isi_respons } = validated<RespondReminderInput>(req);
-  return ok(res, await service.respondReminder(auth(req), req.params.id, isi_respons));
+  const { response_content } = validated<RespondReminderInput>(req);
+  return ok(res, await service.respondReminder(auth(req), req.params.id, response_content));
 }
 
 // ── announcements ────────────────────────────────────────────────────────
@@ -97,8 +97,8 @@ export async function createAnnouncement(req: Request, res: Response) {
 
 export async function listMessages(req: Request, res: Response) {
   const page = parsePage(req);
-  const rawDibaca = req.query['filter[dibaca]'];
-  const filters = { dibaca: rawDibaca === undefined ? undefined : rawDibaca === 'true' };
+  const rawDibaca = req.query['filter[read]'];
+  const filters = { read: rawDibaca === undefined ? undefined : rawDibaca === 'true' };
   const { rows, total } = await service.listMessages(auth(req), page, filters);
   return ok(res, rows, pageMeta(page.page, page.limit, total));
 }

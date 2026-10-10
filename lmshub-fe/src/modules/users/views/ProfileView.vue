@@ -11,7 +11,7 @@ const auth = useAuthStore();
 const { t } = useI18n();
 
 const initials = computed(() =>
-  (auth.user?.nama_lengkap ?? '?')
+  (auth.user?.name_lengkap ?? '?')
     .split(' ')
     .slice(0, 2)
     .map((w) => w[0])
@@ -19,7 +19,7 @@ const initials = computed(() =>
     .toUpperCase(),
 );
 
-// ── Foto profil ──────────────────────────────────────────
+// ── photo profile ──────────────────────────────────────────
 const photoInput = ref<HTMLInputElement | null>(null);
 const photoUploading = ref(false);
 const photoError = ref('');
@@ -48,7 +48,7 @@ async function onPhotoPicked(e: Event) {
       reader.readAsDataURL(file);
     });
     await apiPost('/users/me/photo', { data_base64: dataUrl, mime_type: file.type });
-    await auth.fetchMe(); // refresh foto di header & halaman ini
+    await auth.fetchMe(); // refresh photo di header & halaman ini
   } catch (err) {
     photoError.value = errorMessage(err, t('users.profile.uploadFailed'));
   } finally {
@@ -59,8 +59,8 @@ async function onPhotoPicked(e: Event) {
 
 // ── Data diri ────────────────────────────────────────────
 const form = ref({
-  nama_lengkap: auth.user?.nama_lengkap ?? '',
-  nomor_wa: auth.user?.nomor_wa ?? '',
+  name_lengkap: auth.user?.name_lengkap ?? '',
+  number_wa: auth.user?.number_wa ?? '',
 });
 const savingProfile = ref(false);
 const profileMsg = ref('');
@@ -72,8 +72,8 @@ async function saveProfile() {
   profileError.value = '';
   try {
     await apiPatch('/users/me', {
-      nama_lengkap: form.value.nama_lengkap,
-      nomor_wa: form.value.nomor_wa || null,
+      name_lengkap: form.value.name_lengkap,
+      number_wa: form.value.number_wa || null,
     });
     await auth.fetchMe();
     profileMsg.value = t('users.profile.saved');
@@ -85,7 +85,7 @@ async function saveProfile() {
 }
 
 // ── Ganti email (hanya super admin) ──────────────────────
-// Akun lain diganti emailnya oleh admin di menu Users; super admin tidak punya
+// Akun lain diganti emailnya by admin di menu Users; super admin no punya
 // atasan, jadi ia menggantinya sendiri dengan konfirmasi password.
 const isSuperAdmin = computed(() => auth.roles.includes('super_admin'));
 const emailForm = ref({ email: '', password_saat_ini: '' });
@@ -148,14 +148,14 @@ async function changePassword() {
     <PageHeader :title="t('users.profile.title')" :subtitle="t('users.profile.subtitle')" />
 
     <div class="grid gap-6 lg:grid-cols-[20rem,1fr]">
-      <!-- Kartu profil (ala Cursus) -->
+      <!-- Kartu profile (ala Cursus) -->
       <div class="card h-fit p-6 text-center">
         <div class="relative mx-auto h-28 w-28">
           <div class="grid h-28 w-28 place-items-center overflow-hidden rounded-full bg-brand-500 text-3xl font-bold text-white ring-4 ring-brand-100">
             <img
-              v-if="auth.user?.foto_profil"
-              :src="assetUrl(auth.user.foto_profil)"
-              :alt="auth.user?.nama_lengkap"
+              v-if="auth.user?.profile_picture"
+              :src="assetUrl(auth.user.profile_picture)"
+              :alt="auth.user?.name_lengkap"
               class="h-full w-full object-cover"
             />
             <template v-else>{{ initials }}</template>
@@ -175,7 +175,7 @@ async function changePassword() {
         <div v-else-if="photoError" class="mt-3 text-xs text-rose-600">{{ photoError }}</div>
         <p v-else class="mt-3 text-xs text-slate-400">{{ t('users.profile.photoHint') }}</p>
 
-        <h2 class="mt-4 section-title">{{ auth.user?.nama_lengkap }}</h2>
+        <h2 class="mt-4 section-title">{{ auth.user?.name_lengkap }}</h2>
         <p class="text-sm text-slate-400">{{ auth.user?.email }}</p>
 
         <div class="mt-4 flex flex-wrap justify-center gap-1.5">
@@ -196,11 +196,11 @@ async function changePassword() {
           <div class="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <label class="label">{{ t('users.profile.fullName') }}</label>
-              <input v-model="form.nama_lengkap" class="input" required minlength="2" />
+              <input v-model="form.name_lengkap" class="input" required minlength="2" />
             </div>
             <div>
               <label class="label">{{ t('users.profile.whatsapp') }}</label>
-              <input v-model="form.nomor_wa" class="input" type="tel" :placeholder="t('users.form.whatsappPlaceholder')" />
+              <input v-model="form.number_wa" class="input" type="tel" :placeholder="t('users.form.whatsappPlaceholder')" />
             </div>
             <div>
               <label class="label">{{ t('users.profile.email') }}</label>

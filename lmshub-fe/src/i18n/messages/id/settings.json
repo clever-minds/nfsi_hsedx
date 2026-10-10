@@ -1,43 +1,43 @@
 {
-  "title": "Pengaturan",
+  "title": "settings",
   "subtitle": "Konfigurasi key/value sistem & document",
-  "myProfile": "Profil Saya →",
-  "empty": "Belum ada pengaturan tersimpan.",
-  "readOnly": "Kamu hanya dapat melihat, tidak dapat mengubah.",
-  "docsTitle": "Pengaturan Document",
-  "docsEmpty": "Belum ada pengaturan document.",
+  "myProfile": "profile Saya →",
+  "empty": "Belum ada settings tersimpan.",
+  "readOnly": "Kamu hanya dapat melihat, no dapat mengubah.",
+  "docsTitle": "settings Document",
+  "docsEmpty": "Belum ada settings document.",
   "saved": "Tersimpan",
-  "loadFailed": "Gagal memuat pengaturan",
-  "saveFailed": "Gagal menyimpan pengaturan",
+  "loadFailed": "failed memuat settings",
+  "saveFailed": "failed menyimpan settings",
   "profile": {
-    "title": "Profil Saya",
+    "title": "profile Saya",
     "subtitle": "Kelola data akun & keamanan",
-    "back": "← Pengaturan",
+    "back": "← settings",
     "personalTitle": "Data Diri",
-    "saved": "Profil tersimpan.",
-    "fullName": "Nama Lengkap",
+    "saved": "profile tersimpan.",
+    "fullName": "name Lengkap",
     "email": "Email",
     "whatsapp": "No. WhatsApp",
-    "save": "Simpan Profil",
-    "saveFailed": "Gagal menyimpan profil",
+    "save": "save profile",
+    "saveFailed": "failed menyimpan profile",
     "passwordTitle": "Ganti Kata Sandi",
-    "passwordChanged": "Kata sandi berhasil diganti.",
+    "passwordChanged": "Kata sandi success diganti.",
     "oldPassword": "Kata Sandi Lama",
     "newPassword": "Kata Sandi Baru",
     "confirmPassword": "Konfirmasi Kata Sandi Baru",
     "change": "Ganti Kata Sandi",
     "required": "Kata sandi lama dan baru wajib diisi.",
-    "mismatch": "Konfirmasi kata sandi baru tidak cocok.",
+    "mismatch": "Konfirmasi kata sandi baru no cocok.",
     "tooShort": "Kata sandi baru minimal 8 karakter.",
-    "changeFailed": "Gagal mengganti kata sandi"
+    "changeFailed": "failed mengganti kata sandi"
   },
   "bankAccounts": "Rekening bank →",
   "invalidJson": "{label} bukan JSON yang valid — perbaiki dulu nilainya sebelum disimpan.",
   "group": {
     "currency": "Mata Uang",
-    "price": "Harga",
+    "price": "price",
     "checkout": "Checkout",
-    "komisi": "Komisi",
+    "commission": "Komisi",
     "revenue_share": "Bagi Hasil",
     "certificate": "Certificate",
     "kontak": "Kontak",
@@ -58,28 +58,28 @@
   "unit": {
     "persen": "%",
     "menit": "menit",
-    "bulan": "bulan",
-    "poin": "poin"
+    "month": "month",
+    "points": "points"
   },
   "tier": {
-    "add": "Tambah tier",
-    "empty": "Belum ada tier — marketing tidak dapat komisi sampai kamu menambahkannya.",
+    "add": "add tier",
+    "empty": "Belum ada tier — marketing no dapat commission until kamu menambahkannya.",
     "categoryPlaceholder": "Kategori (mis. mahasiswa)"
   },
   "item": {
     "currency_code": {
       "label": "Mata uang",
-      "desc": "Dipakai untuk semua price di aplikasi. Menggantinya tidak mengonversi nilai yang sudah tersimpan."
+      "desc": "Dipakai untuk semua price di aplikasi. Menggantinya no mengonversi value yang sudah tersimpan."
     },
-    "harga_default_kursus": {
-      "label": "Harga default course",
-      "desc": "Harga yang terisi otomatis saat course baru dibuat"
+    "price_default_kursus": {
+      "label": "price default course",
+      "desc": "price yang terisi otomatis saat course baru created"
     },
     "dp_persen_minimal": {
       "label": "DP minimal",
       "desc": "DP terkecil yang diterima untuk skema cicilan"
     },
-    "cicilan_tenor_maks_bulan": {
+    "cicilan_tenor_maks_month": {
       "label": "Tenor cicilan maksimum",
       "desc": "Tenor terpanjang yang boleh dipilih pembeli"
     },
@@ -87,41 +87,41 @@
       "label": "Timeout checkout",
       "desc": "Berapa lama payment gateway terbuka sebelum order kedaluwarsa"
     },
-    "komisi_tier_default": {
-      "label": "Tier komisi default",
-      "desc": "Besaran komisi per kategori marketing"
+    "commission_tier_default": {
+      "label": "Tier commission default",
+      "desc": "Besaran commission per category marketing"
     },
     "revenue_share_instruktur_default": {
       "label": "Porsi instructor default",
-      "desc": "Bagian instructor dari pendapatan course"
+      "desc": "Bagian instructor from pendapatan course"
     },
     "revenue_share_lembaga_default": {
       "label": "Porsi lembaga default",
-      "desc": "Bagian lembaga dari pendapatan course"
+      "desc": "Bagian lembaga from pendapatan course"
     },
     "sertifikat_syarat_progres_min_persen": {
       "label": "Progres minimum kelulusan",
-      "desc": "Penyelesaian course yang diperlukan sebelum certificate terbit"
+      "desc": "Penyelesaian course yang diperlukan sebelum certificate publish"
     },
     "sertifikat_syarat_passing_score_min": {
-      "label": "Nilai minimum kelulusan",
-      "desc": "Nilai assessment yang diperlukan sebelum certificate terbit"
+      "label": "grade minimum kelulusan",
+      "desc": "grade assessment yang diperlukan sebelum certificate publish"
     },
     "sertifikat_syarat_kehadiran_min_persen": {
       "label": "Kehadiran minimum",
-      "desc": "Kehadiran live class yang diwajibkan (0 = tidak wajib)"
+      "desc": "Kehadiran live class yang diwajibkan (0 = no wajib)"
     },
-    "kontak_nomor_wa_admin": {
+    "kontak_number_wa_admin": {
       "label": "Nomor WhatsApp admin",
-      "desc": "Ditampilkan ke pengunjung yang belum masuk"
+      "desc": "Ditampilkan to pengunjung yang belum login"
     },
     "kontak_email_cs": {
       "label": "Email layanan",
-      "desc": "Alamat yang diberikan ke pelanggan untuk menghubungi kamu"
+      "desc": "Alamat yang diberikan to pelanggan untuk menghubungi kamu"
     },
     "smtp_host": {
       "label": "Host SMTP",
-      "desc": "Nama host server email (mis. smtp.gmail.com)"
+      "desc": "name host server email (mis. smtp.gmail.com)"
     },
     "smtp_port": {
       "label": "Port SMTP",
@@ -133,31 +133,31 @@
     },
     "smtp_user": {
       "label": "Username SMTP",
-      "desc": "Username atau email akun pengirim"
+      "desc": "Username atau email akun sender"
     },
     "smtp_pass": {
       "label": "Password SMTP",
       "desc": "Password atau app password — disimpan tersamar"
     },
     "smtp_from": {
-      "label": "Alamat pengirim",
-      "desc": "Alamat From pada email keluar"
+      "label": "Alamat sender",
+      "desc": "Alamat From pada email logout"
     },
     "google_client_id": {
       "label": "Google Client ID",
       "desc": "OAuth Client ID untuk login Google"
     },
-    "brand_nama_aplikasi": {
-      "label": "Nama aplikasi",
-      "desc": "Menggantikan name produk di semua tempat yang dilihat pengguna"
+    "brand_name_aplikasi": {
+      "label": "name aplikasi",
+      "desc": "Menggantikan name produk di semua tempat yang dilihat user"
     },
     "brand_footer": {
       "label": "Baris footer",
-      "desc": ":year menjadi tahun berjalan dan :name menjadi name aplikasi, jadi barisnya tidak pernah usang"
+      "desc": ":year menjadi year berjalan dan :name menjadi name aplikasi, jadi barisnya no pernah usang"
     },
     "brand_logo_url": {
       "label": "Logo",
-      "desc": "Tampil di sidebar dan halaman masuk"
+      "desc": "Tampil di sidebar dan halaman login"
     },
     "brand_icon_url": {
       "label": "Ikon",
@@ -171,17 +171,17 @@
     "replace": "Ganti",
     "noLogo": "Belum ada logo — lambang bawaan yang dipakai",
     "noIcon": "Belum ada ikon — bawaan yang dipakai",
-    "fileHint": "PNG, JPG, atau WEBP maksimal 512 KB. SVG tidak diterima.",
-    "nameRequired": "Nama aplikasi tidak boleh kosong.",
+    "fileHint": "PNG, JPG, atau WEBP maximum 512 KB. SVG no diterima.",
+    "nameRequired": "name aplikasi no boleh kosong.",
     "badFormat": "Format harus PNG, JPG, atau WEBP.",
-    "tooLarge": "Ukuran berkas maksimal 512 KB.",
-    "readFailed": "Gagal membaca berkas",
-    "uploadFailed": "Gagal mengunggah berkas",
-    "heroElsewhere": "Gambar hero halaman depan dan halaman footer (About, Terms, Privacy…) dikelola di:"
+    "tooLarge": "Ukuran berkas maximum 512 KB.",
+    "readFailed": "failed membaca berkas",
+    "uploadFailed": "failed mengunggah berkas",
+    "heroElsewhere": "Gambar hero halaman depan dan halaman footer (About, Terms, Privacy…) managed di:"
   },
   "payment": {
-    "webhookTitle": "Endpoint webhook",
-    "webhookHint": "Daftarkan URL ini di dashboard gateway. Tanpa itu payment berhasil tapi order tidak pernah menjadi lunas.",
+    "webhookTitle": "Endpointst webhook",
+    "webhookHint": "Daftarkan URL ini di dashboard gateway. Tanpa itu payment success tapi order no pernah menjadi lunas.",
     "copy": "Salin",
     "copied": "Tersalin",
     "statusActive": "Ditawarkan di checkout",
@@ -191,22 +191,22 @@
   },
   "currencies": {
     "title": "Mata Uang",
-    "subtitle": "Mata uang tampilan dan kursnya terhadap {code}, mata uang tempat semua nilai disimpan.",
-    "add": "Tambah mata uang",
+    "subtitle": "Mata uang tampilan dan kursnya terhadap {code}, mata uang tempat semua value disimpan.",
+    "add": "add mata uang",
     "pickCode": "Pilih mata uang…",
     "baseBadge": "BASIS",
     "colCode": "Kode",
-    "colName": "Nama",
+    "colName": "name",
     "colSymbol": "Simbol",
     "colRate": "1 {code} =",
     "colDecimals": "Desimal",
     "colActive": "Ditawarkan",
     "rateHint": "Berapa {code} yang setara dengan satu {base}.",
-    "note": "Harga dikonversi hanya untuk tampilan. Order dicatat dan ditagih dalam {code}, sehingga mengubah kurs tidak pernah mengubah order yang sudah ada.",
-    "confirmDelete": "Hapus {code} dari daftar?",
-    "loadFailed": "Gagal memuat mata uang",
-    "saveFailed": "Gagal menyimpan",
-    "deleteFailed": "Gagal menghapus",
-    "emptyForBase": "Belum ada mata uang. Tambahkan dulu di halaman Mata Uang — mata uang basis harus salah satu yang benar-benar Anda sediakan."
+    "note": "price dikonversi hanya untuk tampilan. Order dicatat dan ditagih dalam {code}, sehingga mengubah kurs no pernah mengubah order yang sudah ada.",
+    "confirmDelete": "delete {code} from register?",
+    "loadFailed": "failed memuat mata uang",
+    "saveFailed": "failed menyimpan",
+    "deleteFailed": "failed menghapus",
+    "emptyForBase": "Belum ada mata uang. add dulu di halaman Mata Uang — mata uang basis harus salah satu yang benar-benar Anda sediakan."
   }
 }

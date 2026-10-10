@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- berkas ini hanya berisi
-   deklarasi augmentasi tipe; tidak ada yang "dipakai" dalam arti runtime. */
+   deklarasi augmentasi type; no ada yang "dipakai" dalam arti runtime. */
 /// <reference types="vite/client" />
 
 declare module '*.vue' {
@@ -14,7 +14,7 @@ declare module 'vue-router' {
     requiresAuth?: boolean;
     guestOnly?: boolean;
     permission?: string;
-    /** Sembunyikan/blok rute untuk pengguna dengan salah satu peran ini. */
+    /** Sembunyikan/blok rute untuk user dengan salah satu peran ini. */
     hideForRoles?: string[];
     title?: string;
   }

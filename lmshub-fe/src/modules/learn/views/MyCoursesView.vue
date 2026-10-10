@@ -26,11 +26,11 @@ interface EnrolledCourse {
   meta?: { thumbnail_url?: string } | null;
 }
 
-const AKTIF = ['terdaftar', 'aktif', 'selesai'];
+const active = ['registered', 'active', 'completed'];
 
-/** Seluruh enrollment yang sudah tersaring status — sumber hitungan halaman. */
+/** Seluruh enrollment yang sudah tersaring status — source hitungan halaman. */
 const enrolled = ref<EnrollmentRow[]>([]);
-/** Hanya course pada halaman aktif, lengkap dengan persen progres. */
+/** Hanya course pada halaman active, lengkap dengan persen progres. */
 const courses = ref<EnrolledCourse[]>([]);
 const loading = ref(true);
 const pageLoading = ref(false);
@@ -41,30 +41,30 @@ const limit = 12; // habis dibagi 4 → tiga baris penuh di layar lebar
 const total = computed(() => enrolled.value.length);
 
 /**
- * Paginasi dikerjakan di klien, bukan lewat `page`/`limit` ke BE. Alasannya:
- * halaman ini hanya menampilkan enrollment berstatus aktif, sedangkan BE cuma
- * menerima satu nilai status (`e.status = $?`), tidak bisa tiga sekaligus.
- * Kalau dipaginasi di server, `meta.total` ikut menghitung enrollment batal dan
- * kedaluwarsa — jumlah halamannya jadi salah dan sebagian halaman tampil
+ * Paginasi dikerjakan di klien, bukan lewat `page`/`limit` to BE. Alasannya:
+ * halaman ini hanya menampilkan enrollment berstatus active, sedangkan BE cuma
+ * menerima satu value status (`e.status = $?`), no bisa tiga sekaligus.
+ * Kalau dipaginasi di server, `meta.total` ikut menghitung enrollment cancel dan
+ * kedaluwarsa — amount halamannya jadi salah dan sebagian halaman tampil
  * setengah kosong.
  *
- * Batas 100 adalah maksimum BE; seorang student dengan lebih dari 100 enrollment
+ * Batas 100 adalah maksimum BE; seorang student dengan lebih from 100 enrollment
  * perlu dukungan filter status jamak di BE sebelum bisa ditangani utuh.
  */
 async function load() {
   loading.value = true;
   error.value = '';
   try {
-    // WAJIB memfilter ke pengguna yang login. BE hanya membatasi /enrollments
-    // ke milik sendiri untuk peran student; peran dengan `enrollment.view` luas
-    // (admin, direktur, instructor, …) menerima enrollment SELURUH pengguna —
-    // halaman ini lalu menampilkannya seolah miliknya, dan tombol Mulai
+    // WAJIB memfilter to user yang login. BE hanya membatasi /enrollments
+    // to milik sendiri untuk peran student; peran dengan `enrollment.view` luas
+    // (admin, direktur, instructor, …) menerima enrollment SELURUH user —
+    // halaman ini lalu menampilkannya seolah miliknya, dan tombol start
     // Belajar berujung "Anda belum terdaftar di course ini".
     const res = await apiGetFull<EnrollmentRow[]>('/enrollments', {
       limit: 100,
       'filter[user_id]': auth.user?.id,
     });
-    enrolled.value = (res.data ?? []).filter((e) => AKTIF.includes(e.status));
+    enrolled.value = (res.data ?? []).filter((e) => active.includes(e.status));
     page.value = 1;
     await loadPage();
   } catch (e) {
@@ -77,9 +77,9 @@ async function load() {
 }
 
 /**
- * Persen progres diambil per course karena daftar enrollment BE tidak
+ * Persen progres diambil per course karena register enrollment BE no
  * menyertakannya — jadi hanya course yang benar-benar tampil yang diminta.
- * Hanya course pada halaman aktif yang diminta; meminta seluruh daftar berarti
+ * Hanya course pada halaman active yang diminta; meminta seluruh register berarti
  * seratus permintaan paralel untuk student dengan banyak course.
  */
 async function loadPage() {
@@ -137,7 +137,7 @@ onMounted(load);
 
           <div class="mt-4 flex-1"></div>
 
-          <!-- 100%: tetap bisa buka course (review materi) + lihat certificate berdampingan -->
+          <!-- 100%: tetap bisa buka course (review material) + view certificate berdampingan -->
           <div v-if="(c.progress_percent ?? 0) >= 100" class="mt-2 flex gap-2">
             <RouterLink :to="`/d/learn/${c.course_id}`" class="btn-outline flex-1 justify-center">
               {{ t('learn.my.viewCourse') }}

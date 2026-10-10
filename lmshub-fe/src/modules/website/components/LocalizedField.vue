@@ -4,9 +4,9 @@ import { useI18n } from 'vue-i18n';
 import type { Localized, LocaleKey } from '@/lib/site-content';
 
 /**
- * Satu field text yang punya nilai per language.
+ * Satu field text yang punya value per language.
  *
- * Bahasa yang sedang disunting ditentukan dari luar (satu pemilih untuk seluruh
+ * Bahasa yang sedang disunting ditentukan from luar (satu pemilih untuk seluruh
  * halaman) alih-alih tab per field: halaman Website punya puluhan field, dan
  * tab di masing-masingnya membuat admin harus mengulang klik yang sama berkali
  * -kali untuk menerjemahkan satu halaman.

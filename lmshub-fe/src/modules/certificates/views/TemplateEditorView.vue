@@ -5,19 +5,34 @@ import { apiGetFull, apiPost, apiPut, errorMessage } from '@/lib/api';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import DataTable from '@/components/ui/DataTable.vue';
 import TablePagination from '@/components/ui/TablePagination.vue';
+import RichTextEditor from '@/components/ui/RichTextEditor.vue';
 
 interface CertificateTemplate extends Record<string, unknown> {
   id: string;
   name: string;
-  kategori?: string;
+  category?: string;
+  category_id?: string;
+  category_name?: string;
   logo_url?: string;
   teks_penandatangan?: string;
-  aktif?: boolean;
+  content?: string;
+  active?: boolean;
+  is_active?: boolean;
+  layout?: {
+    content?: string;
+    [key: string]: any;
+  };
+}
+
+interface Category {
+  id: string;
+  name: string;
 }
 
 const { t } = useI18n();
 
 const templates = ref<CertificateTemplate[]>([]);
+const categories = ref<Category[]>([]);
 const loading = ref(true);
 const page = ref(1);
 const limit = 20;
@@ -28,15 +43,15 @@ const editingId = ref<string | null>(null);
 
 const form = reactive({
   name: '',
-  kategori: '',
-  logo_url: '',
-  teks_penandatangan: '',
+  category_id: '',
+  content: '',
+  is_active: true,
 });
 
 const columns = computed(() => [
   { key: 'name', label: t('certificates.template.colName') },
-  { key: 'kategori_nama', label: t('certificates.template.colCategory') },
-  { key: 'aktif', label: t('certificates.template.colStatus') },
+  { key: 'category_name', label: t('certificates.template.colCategory') },
+  { key: 'is_active', label: t('certificates.template.colStatus') },
 ]);
 
 /**
@@ -45,7 +60,7 @@ const columns = computed(() => [
  * by its meaning in the reader's language.
  */
 const PLACEHOLDER_TOKENS = computed(() =>
-  (['name', 'nomor', 'tanggal'] as const)
+  (['name', 'number', 'date'] as const)
     .map((k) => `{{${k}}} (${t(`certificates.template.token.${k}`)})`)
     .join(', '),
 );
@@ -54,9 +69,12 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    // BE: GET /certificate-templates (bukan /certificates/templates)
-    const res = await apiGetFull<CertificateTemplate[]>('/certificate-templates');
-    templates.value = res.data ?? [];
+    const [resTemplates, resCategories] = await Promise.all([
+      apiGetFull<CertificateTemplate[]>('/certificate-templates'),
+      apiGetFull<Category[]>('/categories', { limit: 100 })
+    ]);
+    templates.value = resTemplates.data ?? [];
+    categories.value = resCategories.data ?? [];
   } catch (e) {
     error.value = errorMessage(e, t('certificates.template.loadFailed'));
   } finally {
@@ -67,17 +85,17 @@ async function load() {
 function resetForm() {
   editingId.value = null;
   form.name = '';
-  form.kategori = '';
-  form.logo_url = '';
-  form.teks_penandatangan = '';
+  form.category_id = '';
+  form.content = '';
+  form.is_active = true;
 }
 
 function editTemplate(t: CertificateTemplate) {
   editingId.value = t.id;
   form.name = t.name;
-  form.kategori = t.kategori || '';
-  form.logo_url = t.logo_url || '';
-  form.teks_penandatangan = t.teks_penandatangan || '';
+  form.category_id = t.category_id || '';
+  form.content = t.layout?.content || t.content || '';
+  form.is_active = t.is_active ?? t.active ?? true;
 }
 
 async function save() {
@@ -85,11 +103,17 @@ async function save() {
   saving.value = true;
   error.value = '';
   try {
+    const payload = {
+      name: form.name,
+      category_id: form.category_id,
+      is_active: form.is_active,
+      layout: { content: form.content }
+    };
+    
     if (editingId.value) {
-      // BE: PUT /certificate-templates/:id (bukan PATCH /certificates/templates/:id)
-      await apiPut(`/certificate-templates/${editingId.value}`, { ...form });
+      await apiPut(`/certificate-templates/${editingId.value}`, payload);
     } else {
-      await apiPost('/certificate-templates', { ...form });
+      await apiPost('/certificate-templates', payload);
     }
     resetForm();
     await load();
@@ -112,7 +136,7 @@ onMounted(load);
     <div class="grid gap-6 lg:grid-cols-3">
       <div class="lg:col-span-2">
         <DataTable :columns="columns" :rows="templates" :loading="loading" :empty="t('certificates.template.empty')">
-          <template #cell:aktif="{ value }">
+          <template #cell:is_active="{ value }">
             <span :class="value ? 'text-emerald-600' : 'text-slate-400'">
               {{ value ? t('certificates.template.active') : t('certificates.template.inactive') }}
             </span>
@@ -139,24 +163,60 @@ onMounted(load);
           </div>
           <div>
             <label class="label">{{ t('certificates.template.category') }}</label>
-            <input v-model="form.kategori" class="input" :placeholder="t('certificates.template.categoryPlaceholder')" />
+            <select v-model="form.category_id" class="input">
+              <option value="">-- Select Category --</option>
+              <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+            </select>
           </div>
           <div>
-            <label class="label">{{ t('certificates.template.logoUrl') }}</label>
-            <input v-model="form.logo_url" class="input" placeholder="https://…" />
+            <label class="label">Status</label>
+            <select v-model="form.is_active" class="input">
+              <option :value="true">{{ t('certificates.template.active') }}</option>
+              <option :value="false">{{ t('certificates.template.inactive') }}</option>
+            </select>
           </div>
           <div>
-            <label class="label">{{ t('certificates.template.signatureText') }}</label>
-            <textarea
-              v-model="form.teks_penandatangan"
-              class="input"
-              rows="2"
-              :placeholder="t('certificates.template.signaturePlaceholder')"
-            ></textarea>
+            <label class="label">Content</label>
+            <RichTextEditor v-model="form.content" />
           </div>
 
-          <div class="rounded-lg border border-dashed border-slate-300 p-3 text-xs text-slate-400">
-            {{ t('certificates.template.placeholderHint', { tokens: PLACEHOLDER_TOKENS }) }}
+          <div class="mt-4">
+            <h4 class="mb-2 text-sm font-medium text-orange-400">Shortcodes</h4>
+            <div class="overflow-hidden rounded-lg border border-slate-200 text-sm">
+              <table class="w-full text-left">
+                <thead class="bg-slate-50 text-slate-700">
+                  <tr>
+                    <th class="px-4 py-3 font-medium">Code</th>
+                    <th class="px-4 py-3 font-medium">Meaning</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-600">
+                  <tr class="bg-slate-50/50">
+                    <td class="px-4 py-3 font-mono">{name}</td>
+                    <td class="px-4 py-3">Student Name</td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3 font-mono">{duration}</td>
+                    <td class="px-4 py-3">Course Duration</td>
+                  </tr>
+                  <tr class="bg-slate-50/50">
+                    <td class="px-4 py-3 font-mono">{title}</td>
+                    <td class="px-4 py-3">Course Title</td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3 font-mono">{date}</td>
+                    <td class="px-4 py-3">Course Completion Date</td>
+                  </tr>
+                  <tr class="bg-slate-50/50">
+                    <td class="px-4 py-3 font-mono">{number}</td>
+                    <td class="px-4 py-3">Certificate Number</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="mt-3 text-xs text-orange-400">
+              You can use these short codes to show dynamic data in certificate text.
+            </p>
           </div>
 
           <div class="flex gap-2">

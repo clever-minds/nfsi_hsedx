@@ -15,18 +15,18 @@ interface CourseOption {
 
 interface UserOption {
   id: string;
-  nama_lengkap: string;
+  name_lengkap: string;
 }
 
 interface Enrollment extends Record<string, unknown> {
   id: string;
-  siswa_nama?: string;
+  siswa_name?: string;
   course_title?: string;
-  cohort_nama?: string;
-  sumber?: string;
+  cohort_name?: string;
+  source?: string;
   status: string;
-  tanggal_mulai?: string;
-  tanggal_kedaluwarsa?: string;
+  start_date?: string;
+  date_kedaluwarsa?: string;
 }
 
 interface Cohort extends Record<string, unknown> {
@@ -36,20 +36,20 @@ interface Cohort extends Record<string, unknown> {
   kapasitas: number;
   terisi?: number;
   waitlist_count?: number;
-  tanggal_mulai?: string;
-  tanggal_selesai?: string;
+  start_date?: string;
+  end_date?: string;
   status?: string;
 }
 
 interface WaitlistEntry extends Record<string, unknown> {
   id: string;
-  siswa_nama: string;
+  siswa_name: string;
   posisi?: number;
 }
 
 interface CohortMember extends Record<string, unknown> {
   id: string;
-  siswa_nama: string;
+  siswa_name: string;
   status?: string;
 }
 
@@ -66,15 +66,15 @@ const filterStatus = ref('');
 const filterQuery = ref('');
 
 const enrollmentColumns = computed(() => [
-  { key: 'siswa_nama', label: t('enrollment.colStudent') },
+  { key: 'siswa_name', label: t('enrollment.colStudent') },
   { key: 'course_title', label: t('enrollment.colCourse') },
-  { key: 'sumber', label: t('enrollment.colSource') },
+  { key: 'source', label: t('enrollment.colSource') },
   { key: 'status', label: t('enrollment.colStatus') },
-  { key: 'cohort_nama', label: t('enrollment.colCohort') },
-  { key: 'tanggal_kedaluwarsa', label: t('enrollment.colAccessUntil') },
+  { key: 'cohort_name', label: t('enrollment.colCohort') },
+  { key: 'date_kedaluwarsa', label: t('enrollment.colAccessUntil') },
 ]);
 
-const STATUS_OPTIONS = ['terdaftar', 'aktif', 'selesai', 'kedaluwarsa', 'dibatalkan'];
+const STATUS_OPTIONS = ['registered', 'active', 'completed', 'expired', 'cancelled'];
 
 async function loadEnrollments() {
   enrollLoading.value = true;
@@ -134,12 +134,12 @@ async function loadUsers() {
 
 // Assign manual
 const showAssign = ref(false);
-const assignForm = reactive({ siswaId: '', kursusId: '', alasan: '', aksesKebijakan: 'seumur_hidup' });
+const assignForm = reactive({ siswaId: '', kursusId: '', reason: '', aksesKebijakan: 'seumur_hidup' });
 const assignSubmitting = ref(false);
 const assignError = ref('');
 
 async function submitAssign() {
-  if (!assignForm.siswaId.trim() || !assignForm.kursusId.trim() || !assignForm.alasan.trim()) {
+  if (!assignForm.siswaId.trim() || !assignForm.kursusId.trim() || !assignForm.reason.trim()) {
     assignError.value = t('enrollment.assignRequired');
     return;
   }
@@ -149,13 +149,13 @@ async function submitAssign() {
     await apiPost('/enrollments', {
       studentIds: assignForm.siswaId.split(',').map((s) => s.trim()).filter(Boolean),
       courseId: assignForm.kursusId.trim(),
-      alasan: assignForm.alasan.trim(),
+      reason: assignForm.reason.trim(),
       accessPolicy: assignForm.aksesKebijakan,
     });
     showAssign.value = false;
     assignForm.siswaId = '';
     assignForm.kursusId = '';
-    assignForm.alasan = '';
+    assignForm.reason = '';
     await loadEnrollments();
   } catch (e) {
     assignError.value = errorMessage(e, t('enrollment.assignFailed'));
@@ -185,7 +185,7 @@ async function submitRevoke() {
   revokeSubmitting.value = true;
   revokeError.value = '';
   try {
-    await apiPost(`/enrollments/${revokeTarget.value.id}/revoke`, { alasan: revokeReason.value.trim() });
+    await apiPost(`/enrollments/${revokeTarget.value.id}/revoke`, { reason: revokeReason.value.trim() });
     revokeTarget.value = null;
     await loadEnrollments();
   } catch (e) {
@@ -205,7 +205,7 @@ const cohortColumns = computed(() => [
   { key: 'name', label: t('enrollment.colCohortName') },
   { key: 'course_title', label: t('enrollment.colCourse') },
   { key: 'kapasitas_label', label: t('enrollment.colCapacity') },
-  { key: 'periode', label: t('enrollment.colPeriod') },
+  { key: 'period', label: t('enrollment.colPeriod') },
   { key: 'status', label: t('enrollment.colStatus') },
 ]);
 
@@ -213,7 +213,7 @@ async function loadCohorts() {
   cohortLoading.value = true;
   cohortError.value = '';
   try {
-    // (list cohort per course), belum ada endpoint list-semua-cohort lintas course.
+    // (list cohort per course), belum ada endpointst list-semua-cohort lintas course.
     const res = await apiGetFull<Cohort[]>('/cohorts');
     cohorts.value = res.data ?? [];
   } catch (e) {
@@ -229,8 +229,8 @@ const cohortRows = computed(() =>
   cohorts.value.map((c) => ({
     ...c,
     kapasitas_label: `${fmtAngka(c.terisi ?? 0)}/${fmtAngka(c.kapasitas)}${(c.terisi ?? 0) >= c.kapasitas ? t('enrollment.full') : ''}`,
-    periode: c.tanggal_mulai
-      ? `${fmtTanggalSaja(c.tanggal_mulai)} – ${c.tanggal_selesai ? fmtTanggalSaja(c.tanggal_selesai) : '?'}`
+    period: c.start_date
+      ? `${fmtTanggalSaja(c.start_date)} – ${c.end_date ? fmtTanggalSaja(c.end_date) : '?'}`
       : '—',
     status: c.status || 'terjadwal',
   })),
@@ -320,7 +320,7 @@ onMounted(() => {
             <label class="label">{{ t('enrollment.studentIds') }}</label>
             <select v-model="assignForm.siswaId" class="input" :disabled="usersLoading">
               <option value="">{{ t('common.action.choose') }}</option>
-              <option v-for="u in users" :key="u.id" :value="u.id">{{ u.nama_lengkap }}</option>
+              <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name_lengkap }}</option>
             </select>
           </div>
           <div>
@@ -340,7 +340,7 @@ onMounted(() => {
           </div>
           <div class="sm:col-span-2">
             <label class="label">{{ t('enrollment.reason') }}</label>
-            <input v-model="assignForm.alasan" class="input" :placeholder="t('enrollment.reasonPlaceholder')" />
+            <input v-model="assignForm.reason" class="input" :placeholder="t('enrollment.reasonPlaceholder')" />
           </div>
         </div>
         <div class="mt-3 flex justify-end gap-2">
@@ -367,14 +367,14 @@ onMounted(() => {
           </select>
           <button class="btn-outline" @click="applyFilter">{{ t('enrollment.apply') }}</button>
         </template>
-        <template #cell:sumber="{ value }">
+        <template #cell:source="{ value }">
           <StatusChip :status="String(value || '—')" />
         </template>
         <template #cell:status="{ value }">
           <StatusChip :status="String(value)" />
         </template>
-        <template #cell:cohort_nama="{ value }">{{ value || '—' }}</template>
-        <template #cell:tanggal_kedaluwarsa="{ value }">
+        <template #cell:cohort_name="{ value }">{{ value || '—' }}</template>
+        <template #cell:date_kedaluwarsa="{ value }">
           {{ value ? fmtTanggalSaja(String(value)) : t('enrollment.lifetime') }}
         </template>
         <template #actions="{ row }">
@@ -391,7 +391,7 @@ onMounted(() => {
       <div v-if="revokeTarget" class="fixed inset-0 z-40 grid place-items-center bg-slate-900/40 p-4">
         <div class="card w-full max-w-md p-5">
           <h3 class="card-title">
-            {{ t('enrollment.revokeTitle', { name: revokeTarget.siswa_nama || revokeTarget.id }) }}
+            {{ t('enrollment.revokeTitle', { name: revokeTarget.siswa_name || revokeTarget.id }) }}
           </h3>
           <p class="mt-1 text-xs text-slate-400">{{ t('enrollment.revokeHint') }}</p>
           <div v-if="revokeError" class="mt-2 alert-error">{{ revokeError }}</div>
@@ -438,8 +438,8 @@ onMounted(() => {
             </h4>
             <ul v-if="members.length" class="mt-2 space-y-1 text-sm text-slate-700">
               <li v-for="m in members" :key="m.id" class="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-                <span>{{ m.siswa_nama }}</span>
-                <StatusChip :status="m.status || 'aktif'" />
+                <span>{{ m.siswa_name }}</span>
+                <StatusChip :status="m.status || 'active'" />
               </li>
             </ul>
             <p v-else class="mt-2 text-sm text-slate-400">{{ t('enrollment.noMembers') }}</p>
@@ -450,7 +450,7 @@ onMounted(() => {
             </h4>
             <ul v-if="waitlist.length" class="mt-2 space-y-1 text-sm text-slate-700">
               <li v-for="w in waitlist" :key="w.id" class="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2">
-                <span>#{{ w.posisi ?? '?' }} — {{ w.siswa_nama }}</span>
+                <span>#{{ w.posisi ?? '?' }} — {{ w.siswa_name }}</span>
                 <button v-can="'enrollment.update'" class="row-link row-link-primary" @click="promote(w)">
                   {{ t('enrollment.promote') }}
                 </button>

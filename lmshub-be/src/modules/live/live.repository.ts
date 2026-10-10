@@ -7,15 +7,15 @@ export interface LiveSessionRow {
   cohort_id: string | null;
   title: string;
   description: string | null;
-  penyedia: 'zoom' | 'bbb' | 'meet';
+  provider: 'zoom' | 'bbb' | 'meet';
   url_join: string;
   host_user_id: string;
   start_time: string;
-  waktu_selesai: string;
+  end_time: string;
   kapasitas_maks: number | null;
   toleransi_terlambat_menit: number;
-  status: 'dijadwalkan' | 'berlangsung' | 'selesai' | 'rekaman_tersedia';
-  dibuat_oleh: string | null;
+  status: 'scheduled' | 'ongoing' | 'completed' | 'recording_available';
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -24,12 +24,12 @@ export interface SessionAttendanceRow {
   id: string;
   live_session_id: string;
   user_id: string;
-  status: 'belum' | 'hadir' | 'terlambat' | 'absen';
-  waktu_join: string | null;
-  waktu_leave: string | null;
+  status: 'not_started' | 'present' | 'late' | 'absent';
+  time_join: string | null;
+  time_leave: string | null;
   durasi_hadir_menit: number;
   ditandai_manual: boolean;
-  ditandai_oleh: string | null;
+  ditandai_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -43,30 +43,30 @@ export interface RecordingRow {
   status_jadi_materi: boolean;
   lesson_id: string | null;
   retensi_hingga: string | null;
-  diunggah_oleh: string | null;
+  diunggah_by: string | null;
   created_at: string;
   updated_at: string;
 }
 
 /**
- * Baris daftar sesi = kolom tabel + kolom turunan dari join. Nama course dan
- * host tidak ada di `live_sessions`; keduanya wajib di-join, kalau tidak klien
+ * Baris register sesi = kolom tabel + kolom turunan from join. name course dan
+ * host no ada di `live_sessions`; keduanya wajib di-join, kalau no klien
  * hanya menerima id dan menampilkan "—".
  */
 export interface LiveSessionListRow extends LiveSessionRow {
   course_title: string | null;
-  host_nama: string | null;
-  jumlah_hadir: number;
+  host_name: string | null;
+  amount_hadir: number;
 }
 
 export interface CalendarEventRow {
   id: string;
-  sumber: 'live_session' | 'assignment' | 'quiz' | 'lainnya';
+  source: 'live_session' | 'assignment' | 'quiz' | 'other';
   source_id: string | null;
   course_id: string | null;
   title: string;
   start_time: string;
-  waktu_selesai: string | null;
+  end_time: string | null;
   is_sepanjang_hari: boolean;
   meta: unknown;
   course_title: string | null;
@@ -76,8 +76,8 @@ export interface ListFilters {
   course_id?: string;
   cohort_id?: string;
   status?: string;
-  studentUserId?: string | null; // batasi ke sesi course yang diikuti student
-  instructorUserId?: string | null; // batasi ke sesi course/host miliknya
+  studentUserId?: string | null; // batasi to sesi course yang diikuti student
+  instructorUserId?: string | null; // batasi to sesi course/host miliknya
 }
 
 export async function list(p: PageParams, f: ListFilters): Promise<{ rows: LiveSessionListRow[]; total: number }> {
@@ -101,7 +101,7 @@ export async function list(p: PageParams, f: ListFilters): Promise<{ rows: LiveS
   if (f.status) add('ls.status = $?', f.status);
   if (f.studentUserId) {
     addMulti(
-      `(EXISTS (SELECT 1 FROM enrollments e WHERE e.course_id = ls.course_id AND e.user_id = $? AND e.deleted_at IS NULL AND e.status IN ('terdaftar','aktif'))
+      `(EXISTS (SELECT 1 FROM enrollments e WHERE e.course_id = ls.course_id AND e.user_id = $? AND e.deleted_at IS NULL AND e.status IN ('registered','active'))
         OR EXISTS (SELECT 1 FROM cohort_members cm WHERE cm.cohort_id = ls.cohort_id AND cm.user_id = $?))`,
       [f.studentUserId, f.studentUserId],
     );
@@ -117,13 +117,13 @@ export async function list(p: PageParams, f: ListFilters): Promise<{ rows: LiveS
   const whereSql = where.join(' AND ');
   const sortCol = ['start_time', 'status', 'created_at'].includes(p.sort ?? '') ? p.sort : 'start_time';
 
-  // LEFT JOIN, bukan JOIN: sesi boleh tidak terikat course (course_id nullable),
-  // dan INNER JOIN akan membuangnya dari daftar.
+  // LEFT JOIN, bukan JOIN: sesi boleh no terikat course (course_id nullable),
+  // dan INNER JOIN akan membuangnya from register.
   const rows = await query<LiveSessionListRow>(
     `SELECT ls.*,
             c.title AS course_title,
-            u.nama_lengkap AS host_nama,
-            (SELECT COUNT(*)::int FROM session_attendance sa WHERE sa.live_session_id = ls.id) AS jumlah_hadir
+            u.name_lengkap AS host_name,
+            (SELECT COUNT(*)::int FROM session_attendance sa WHERE sa.live_session_id = ls.id) AS amount_hadir
        FROM live_sessions ls
        LEFT JOIN courses c ON c.id = ls.course_id
        LEFT JOIN users u ON u.id = ls.host_user_id
@@ -148,33 +148,33 @@ export async function insert(data: {
   cohort_id: string | null;
   title: string;
   description: string | null;
-  penyedia: string;
+  provider: string;
   url_join: string;
   host_user_id: string;
   start_time: string;
-  waktu_selesai: string;
+  end_time: string;
   kapasitas_maks: number | null;
   toleransi_terlambat_menit: number;
-  dibuat_oleh: string | null;
+  created_by: string | null;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
     `INSERT INTO live_sessions
-       (course_id, cohort_id, title, description, penyedia, url_join, host_user_id,
-        start_time, waktu_selesai, kapasitas_maks, toleransi_terlambat_menit, dibuat_oleh)
+       (course_id, cohort_id, title, description, provider, url_join, host_user_id,
+        start_time, end_time, kapasitas_maks, toleransi_terlambat_menit, created_by)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
     [
       data.course_id,
       data.cohort_id,
       data.title,
       data.description,
-      data.penyedia,
+      data.provider,
       data.url_join,
       data.host_user_id,
       data.start_time,
-      data.waktu_selesai,
+      data.end_time,
       data.kapasitas_maks,
       data.toleransi_terlambat_menit,
-      data.dibuat_oleh,
+      data.created_by,
     ],
   );
   return row!;
@@ -211,7 +211,7 @@ export async function isInstructorOfSession(sessionId: string, userId: string): 
 export async function isEnrolledOrMember(session: LiveSessionRow, userId: string): Promise<boolean> {
   const row = await queryOne<{ ok: boolean }>(
     `SELECT (
-       EXISTS (SELECT 1 FROM enrollments e WHERE e.course_id = $2 AND e.user_id = $1 AND e.deleted_at IS NULL AND e.status IN ('terdaftar','aktif'))
+       EXISTS (SELECT 1 FROM enrollments e WHERE e.course_id = $2 AND e.user_id = $1 AND e.deleted_at IS NULL AND e.status IN ('registered','active'))
        OR EXISTS (SELECT 1 FROM cohort_members cm WHERE cm.cohort_id = $3 AND cm.user_id = $1)
      ) AS ok`,
     [userId, session.course_id, session.cohort_id],
@@ -239,34 +239,34 @@ export async function upsertAttendance(data: {
   live_session_id: string;
   user_id: string;
   status: string;
-  waktu_join: string | null;
-  waktu_leave: string | null;
+  time_join: string | null;
+  time_leave: string | null;
   durasi_hadir_menit: number;
   ditandai_manual: boolean;
-  ditandai_oleh: string | null;
+  ditandai_by: string | null;
 }): Promise<SessionAttendanceRow> {
   const row = await queryOne<SessionAttendanceRow>(
     `INSERT INTO session_attendance
-       (live_session_id, user_id, status, waktu_join, waktu_leave, durasi_hadir_menit, ditandai_manual, ditandai_oleh)
+       (live_session_id, user_id, status, time_join, time_leave, durasi_hadir_menit, ditandai_manual, ditandai_by)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
      ON CONFLICT (live_session_id, user_id) DO UPDATE SET
        status = EXCLUDED.status,
-       waktu_join = COALESCE(EXCLUDED.waktu_join, session_attendance.waktu_join),
-       waktu_leave = COALESCE(EXCLUDED.waktu_leave, session_attendance.waktu_leave),
+       time_join = COALESCE(EXCLUDED.time_join, session_attendance.time_join),
+       time_leave = COALESCE(EXCLUDED.time_leave, session_attendance.time_leave),
        durasi_hadir_menit = EXCLUDED.durasi_hadir_menit,
        ditandai_manual = EXCLUDED.ditandai_manual,
-       ditandai_oleh = EXCLUDED.ditandai_oleh,
+       ditandai_by = EXCLUDED.ditandai_by,
        updated_at = now()
      RETURNING *`,
     [
       data.live_session_id,
       data.user_id,
       data.status,
-      data.waktu_join,
-      data.waktu_leave,
+      data.time_join,
+      data.time_leave,
       data.durasi_hadir_menit,
       data.ditandai_manual,
-      data.ditandai_oleh,
+      data.ditandai_by,
     ],
   );
   return row!;
@@ -275,9 +275,9 @@ export async function upsertAttendance(data: {
 export async function batchMarkAbsen(liveSessionId: string, courseId: string | null, cohortId: string | null) {
   await query(
     `INSERT INTO session_attendance (live_session_id, user_id, status, durasi_hadir_menit, ditandai_manual)
-     SELECT $1, roster.user_id, 'absen', 0, false
+     SELECT $1, roster.user_id, 'absent', 0, false
        FROM (
-         SELECT user_id FROM enrollments WHERE course_id = $2 AND deleted_at IS NULL AND status IN ('terdaftar','aktif')
+         SELECT user_id FROM enrollments WHERE course_id = $2 AND deleted_at IS NULL AND status IN ('registered','active')
          UNION
          SELECT user_id FROM cohort_members WHERE cohort_id = $3
        ) roster
@@ -296,12 +296,12 @@ export async function insertRecording(data: {
   duration_minutes: number | null;
   size_bytes: number | null;
   retensi_hingga: string | null;
-  diunggah_oleh: string | null;
+  diunggah_by: string | null;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO recordings (live_session_id, url, duration_minutes, size_bytes, retensi_hingga, diunggah_oleh)
+    `INSERT INTO recordings (live_session_id, url, duration_minutes, size_bytes, retensi_hingga, diunggah_by)
      VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
-    [data.live_session_id, data.url, data.duration_minutes, data.size_bytes, data.retensi_hingga, data.diunggah_oleh],
+    [data.live_session_id, data.url, data.duration_minutes, data.size_bytes, data.retensi_hingga, data.diunggah_by],
   );
   return row!;
 }
@@ -324,29 +324,29 @@ export async function publishRecordingAsLesson(id: string, lessonId: string): Pr
 // ── Calendar ────────────────────────────────────────────
 
 export async function upsertCalendarEvent(data: {
-  sumber: string;
+  source: string;
   source_id: string;
   course_id: string | null;
   title: string;
   start_time: string;
-  waktu_selesai: string | null;
+  end_time: string | null;
 }): Promise<void> {
   const existing = await queryOne<{ id: string }>(
-    `SELECT id FROM calendar_events WHERE sumber = $1 AND source_id = $2 AND deleted_at IS NULL`,
-    [data.sumber, data.source_id],
+    `SELECT id FROM calendar_events WHERE source = $1 AND source_id = $2 AND deleted_at IS NULL`,
+    [data.source, data.source_id],
   );
   if (existing) {
     await query(
-      `UPDATE calendar_events SET course_id = $3, title = $4, start_time = $5, waktu_selesai = $6, updated_at = now()
-        WHERE id = $1 AND sumber = $2`,
-      [existing.id, data.sumber, data.course_id, data.title, data.start_time, data.waktu_selesai],
+      `UPDATE calendar_events SET course_id = $3, title = $4, start_time = $5, end_time = $6, updated_at = now()
+        WHERE id = $1 AND source = $2`,
+      [existing.id, data.source, data.course_id, data.title, data.start_time, data.end_time],
     );
     return;
   }
   await query(
-    `INSERT INTO calendar_events (sumber, source_id, course_id, title, start_time, waktu_selesai)
+    `INSERT INTO calendar_events (source, source_id, course_id, title, start_time, end_time)
      VALUES ($1,$2,$3,$4,$5,$6)`,
-    [data.sumber, data.source_id, data.course_id, data.title, data.start_time, data.waktu_selesai],
+    [data.source, data.source_id, data.course_id, data.title, data.start_time, data.end_time],
   );
 }
 
@@ -357,7 +357,7 @@ export async function aggregateCalendar(
   const where: string[] = [
     'ce.deleted_at IS NULL',
     `(ce.course_id IS NULL
-      OR EXISTS (SELECT 1 FROM enrollments e WHERE e.course_id = ce.course_id AND e.user_id = $1 AND e.deleted_at IS NULL AND e.status IN ('terdaftar','aktif'))
+      OR EXISTS (SELECT 1 FROM enrollments e WHERE e.course_id = ce.course_id AND e.user_id = $1 AND e.deleted_at IS NULL AND e.status IN ('registered','active'))
       OR EXISTS (SELECT 1 FROM courses c JOIN instructor_profiles ip ON ip.id = c.instructor_id WHERE c.id = ce.course_id AND ip.user_id = $1))`,
   ];
   const params: unknown[] = [userId];

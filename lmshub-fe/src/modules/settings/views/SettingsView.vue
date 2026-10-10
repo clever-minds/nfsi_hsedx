@@ -28,7 +28,7 @@ import {
 const auth = useAuthStore();
 const appConfig = useAppConfigStore();
 const { t } = useI18n();
-const canEdit = auth.can('pengaturan.update');
+const canEdit = auth.can('settings.update');
 
 const settings = ref<SettingItem[]>([]);
 const loading = ref(true);
@@ -40,17 +40,17 @@ const savedKey = ref<string | null>(null);
 /** Seksi yang sedang terlihat — menyorot item di panel navigasi kiri. */
 const activeGroup = ref('');
 
-/** Draft tier komisi per key, supaya tabelnya bisa diubah sebelum disimpan. */
+/** Draft tier commission per key, supaya tabelnya bisa diubah sebelum disimpan. */
 const tierDrafts = ref<Record<string, CommissionTier[]>>({});
 
 /**
- * Metadata gateway (status + URL webhook) dari server. Dimuat terpisah dari
- * daftar setting karena URL webhook dihitung dari APP_URL, bukan disimpan
- * sebagai setting — pembeli tidak boleh perlu mengetiknya.
+ * Metadata gateway (status + URL webhook) from server. Dimuat terpisah from
+ * register setting karena URL webhook dihitung from APP_URL, bukan disimpan
+ * sebagai setting — pembeli no boleh perlu mengetiknya.
  */
 const gateways = ref<GatewayMeta[]>([]);
-const gatewayFor = (grup: string) =>
-  gateways.value.find((g) => `payment_${g.id}` === grup) ?? null;
+const gatewayFor = (group: string) =>
+  gateways.value.find((g) => `payment_${g.id}` === group) ?? null;
 
 async function loadGateways() {
   try {
@@ -61,21 +61,21 @@ async function loadGateways() {
   }
 }
 
-/** Kelompokkan setting per `grup`, urut sesuai GROUP_ORDER. */
+/** Kelompokkan setting per `group`, sort_order sesuai GROUP_ORDER. */
 const groups = computed(() => {
   const map = new Map<string, SettingItem[]>();
   for (const item of settings.value) {
-    const g = item.grup || 'umum';
+    const g = item.group || 'umum';
     if (!map.has(g)) map.set(g, []);
     map.get(g)!.push(item);
   }
   return Array.from(map.entries())
     .sort(([a], [b]) => compareGroups(a, b))
-    .map(([grup, items]) => ({ grup, label: groupLabel(grup), items: [...items].sort(compareSettings) }));
+    .map(([group, items]) => ({ group, label: groupLabel(group), items: [...items].sort(compareSettings) }));
 });
 
-function sectionId(grup: string): string {
-  return `setting-group-${grup}`;
+function sectionId(group: string): string {
+  return `setting-group-${group}`;
 }
 
 async function load() {
@@ -84,15 +84,15 @@ async function load() {
   try {
     const res = await apiGetFull<SettingItem[]>('/settings');
     // Buang setting yang sudah dipensiunkan — instalasi yang belum dimigrasi
-    // masih mengirimnya, dan tidak ada kode yang membaca nilainya lagi.
+    // masih mengirimnya, dan no ada kode yang membaca nilainya lagi.
     settings.value = (res.data ?? []).filter((item) => !isRetired(item));
-    // Siapkan draft untuk setiap setting bertipe tier komisi.
+    // Siapkan draft untuk setiap setting bertipe tier commission.
     const drafts: Record<string, CommissionTier[]> = {};
     for (const item of settings.value) {
-      if (controlFor(item) === 'commissionTiers') drafts[item.key] = parseTiers(item.nilai);
+      if (controlFor(item) === 'commissionTiers') drafts[item.key] = parseTiers(item.value);
     }
     tierDrafts.value = drafts;
-    if (!activeGroup.value && groups.value.length) activeGroup.value = groups.value[0].grup;
+    if (!activeGroup.value && groups.value.length) activeGroup.value = groups.value[0].group;
   } catch (e) {
     error.value = errorMessage(e, t('settings.loadFailed'));
     settings.value = [];
@@ -106,18 +106,18 @@ async function save(item: SettingItem) {
   savedKey.value = null;
   error.value = '';
 
-  // Setting JSON dikirim sebagai text JSON sekaligus objek, agar kolom `nilai`
-  // dan `nilai_json` di backend tidak saling bertentangan.
-  let nilai = item.nilai;
+  // Setting JSON dikirim sebagai text JSON sekaligus objek, agar kolom `value`
+  // dan `value_json` di backend no saling bertentangan.
+  let value = item.value;
   let nilaiJson: unknown;
   const control = controlFor(item);
   if (control === 'commissionTiers') {
-    nilai = serializeTiers(tierDrafts.value[item.key] ?? []);
-    item.nilai = nilai;
+    value = serializeTiers(tierDrafts.value[item.key] ?? []);
+    item.value = value;
   }
-  if (item.tipe_nilai === 'json') {
+  if (item.value_type === 'json') {
     try {
-      nilaiJson = JSON.parse(nilai || 'null');
+      nilaiJson = JSON.parse(value || 'null');
     } catch {
       error.value = t('settings.invalidJson', { label: settingLabel(item) });
       savingKey.value = null;
@@ -126,9 +126,9 @@ async function save(item: SettingItem) {
   }
 
   try {
-    await apiPut(`/settings/${item.key}`, nilaiJson === undefined ? { nilai } : { nilai, nilai_json: nilaiJson });
+    await apiPut(`/settings/${item.key}`, nilaiJson === undefined ? { value } : { value, value_json: nilaiJson });
     // Mata uang memengaruhi seluruh price — terapkan tanpa perlu muat ulang.
-    if (item.key === 'currency.code') appConfig.setCurrency(nilai);
+    if (item.key === 'currency.code') appConfig.setCurrency(value);
     savedKey.value = item.key;
     successMsg.value = t('settings.saved');
     setTimeout(() => {
@@ -142,23 +142,23 @@ async function save(item: SettingItem) {
   }
 }
 
-// ── Tier komisi ────────────────────────────────────────────────
+// ── Tier commission ────────────────────────────────────────────────
 function addTier(key: string) {
-  (tierDrafts.value[key] ??= []).push({ kategori: '', rate: 0 });
+  (tierDrafts.value[key] ??= []).push({ category: '', rate: 0 });
 }
 function removeTier(key: string, index: number) {
   tierDrafts.value[key]?.splice(index, 1);
 }
 
 // ── Navigasi seksi ─────────────────────────────────────────────
-function goToGroup(grup: string) {
-  activeGroup.value = grup;
-  document.getElementById(sectionId(grup))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+function goToGroup(group: string) {
+  activeGroup.value = group;
+  document.getElementById(sectionId(group))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /**
- * Sorot seksi yang sedang dibaca. `rootMargin` atas dibuat setinggi header
- * tetap (64px) plus sedikit jarak, supaya seksi dianggap aktif tepat saat
+ * Sorot seksi yang sedang read. `rootMargin` on created setinggi header
+ * tetap (64px) plus sedikit jarak, supaya seksi dianggap active tepat saat
  * judulnya lewat di bawah header, bukan saat menyentuh tepi viewport.
  */
 let observer: IntersectionObserver | null = null;
@@ -176,7 +176,7 @@ function observeSections() {
     { rootMargin: '-80px 0px -60% 0px', threshold: 0 },
   );
   for (const g of groups.value) {
-    const el = document.getElementById(sectionId(g.grup));
+    const el = document.getElementById(sectionId(g.group));
     if (el) observer.observe(el);
   }
 }
@@ -214,19 +214,19 @@ onBeforeUnmount(() => observer?.disconnect());
       <div v-if="!settings.length" class="empty-state">{{ t('settings.empty') }}</div>
 
       <div v-else class="grid items-start gap-6 lg:grid-cols-[16rem,1fr]">
-        <!-- ── Navigasi seksi (sticky, menyorot seksi yang sedang dibaca) ── -->
+        <!-- ── Navigasi seksi (sticky, menyorot seksi yang sedang read) ── -->
         <nav class="card sticky top-20 hidden max-h-[calc(100vh-7rem)] overflow-y-auto p-2 lg:block">
           <button
             v-for="group in groups"
-            :key="group.grup"
+            :key="group.group"
             type="button"
             class="flex w-full items-center gap-2 rounded px-3 py-2 text-start text-sm transition"
             :class="
-              activeGroup === group.grup
+              activeGroup === group.group
                 ? 'bg-brand-50 font-medium text-brand-600'
                 : 'text-slate-600 hover:bg-slate-50'
             "
-            @click="goToGroup(group.grup)"
+            @click="goToGroup(group.group)"
           >
             <span class="min-w-0 flex-1 truncate">{{ group.label }}</span>
             <span class="num shrink-0 text-xs text-slate-400">{{ group.items.length }}</span>
@@ -239,20 +239,20 @@ onBeforeUnmount(() => observer?.disconnect());
             {{ t('settings.readOnly') }}
           </p>
 
-          <template v-for="group in groups" :key="group.grup">
+          <template v-for="group in groups" :key="group.group">
           <!-- Grup dengan komponen khusus (identitas merek) digambar sendiri. -->
-          <BrandIdentityCard v-if="group.grup === 'brand'" :items="group.items" :can-edit="canEdit" />
+          <BrandIdentityCard v-if="group.group === 'brand'" :items="group.items" :can-edit="canEdit" />
 
-          <section v-else :id="sectionId(group.grup)" class="card mb-6 scroll-mt-24 p-5">
+          <section v-else :id="sectionId(group.group)" class="card mb-6 scroll-mt-24 p-5">
             <h2 class="section-title">{{ group.label }}</h2>
 
             <!-- Grup kredensial gateway: status + URL webhook siap salin. -->
             <PaymentGatewayInfo
-              v-if="gatewayFor(group.grup)"
+              v-if="gatewayFor(group.group)"
               class="mt-3"
-              :gateway="gatewayFor(group.grup)!"
+              :gateway="gatewayFor(group.group)!"
             />
-            <p v-else-if="group.grup === 'payment'" class="mt-2 text-xs text-slate-400">
+            <p v-else-if="group.group === 'payment'" class="mt-2 text-xs text-slate-400">
               {{ t('settings.payment.manualNote') }}
             </p>
 
@@ -266,7 +266,7 @@ onBeforeUnmount(() => observer?.disconnect());
                 {{ settingDescription(item) }}
               </p>
 
-              <!-- Tier komisi: tabel kategori + rate, bukan JSON mentah -->
+              <!-- Tier commission: tabel category + rate, bukan JSON mentah -->
               <div v-if="controlFor(item) === 'commissionTiers'" class="space-y-2">
                 <div
                   v-for="(tier, i) in tierDrafts[item.key] ?? []"
@@ -274,7 +274,7 @@ onBeforeUnmount(() => observer?.disconnect());
                   class="flex flex-wrap items-center gap-2"
                 >
                   <input
-                    v-model="tier.kategori"
+                    v-model="tier.category"
                     class="input min-w-0 flex-1"
                     :placeholder="t('settings.tier.categoryPlaceholder')"
                     :disabled="!canEdit"
@@ -331,42 +331,42 @@ onBeforeUnmount(() => observer?.disconnect());
               <!-- Kontrol satu baris: dropdown / angka / boolean / text / JSON -->
               <div v-else class="flex flex-wrap items-start gap-2">
                 <div class="flex min-w-0 flex-1 items-center gap-2">
-                  <!-- Dropdown dengan pencarian: daftar mata uang bisa panjang,
+                  <!-- Dropdown dengan pencarian: register mata uang bisa panjang,
                        dan menggulirnya untuk satu baris adalah pekerjaan sia-sia. -->
                   <SearchableSelect
                     v-if="controlFor(item) === 'select'"
-                    v-model="item.nilai"
+                    v-model="item.value"
                     :options="selectOptions(item.key)"
                     :disabled="!canEdit"
                     :empty-hint="item.key === 'currency.code' ? t('settings.currencies.emptyForBase') : ''"
                   />
 
-                  <!-- Sakelar biner adalah kotak centang, bukan dropdown Ya/Tidak.
+                  <!-- Sakelar biner adalah kotak centang, bukan dropdown yes/no.
                        Delapan gateway berarti delapan dropdown yang harus dibuka
-                       satu per satu hanya untuk melihat mana yang aktif; dengan
-                       kotak centang statusnya terbaca sekali lihat. -->
+                       satu per satu hanya untuk melihat mana yang active; dengan
+                       kotak centang statusnya terbaca sekali view. -->
                   <label
                     v-else-if="controlFor(item) === 'boolean'"
-                    class="flex cursor-pointer items-center gap-2.5 select-none"
+                    class="flex cursor-pointster items-center gap-2.5 select-none"
                     :class="canEdit ? '' : 'cursor-not-allowed opacity-60'"
                   >
                     <input
                       :id="`setting-${item.key}`"
                       type="checkbox"
                       class="h-4 w-4 shrink-0 rounded border-slate-300 text-brand-500 focus:ring-brand-500"
-                      :checked="item.nilai === 'true'"
+                      :checked="item.value === 'true'"
                       :disabled="!canEdit"
-                      @change="item.nilai = ($event.target as HTMLInputElement).checked ? 'true' : 'false'"
+                      @change="item.value = ($event.target as HTMLInputElement).checked ? 'true' : 'false'"
                     />
                     <span class="text-sm text-slate-600">
-                      {{ item.nilai === 'true' ? t('common.action.yes') : t('common.action.no') }}
+                      {{ item.value === 'true' ? t('common.action.yes') : t('common.action.no') }}
                     </span>
                   </label>
 
                   <textarea
                     v-else-if="controlFor(item) === 'json'"
                     :id="`setting-${item.key}`"
-                    v-model="item.nilai"
+                    v-model="item.value"
                     rows="3"
                     class="input font-mono text-xs"
                     spellcheck="false"
@@ -376,7 +376,7 @@ onBeforeUnmount(() => observer?.disconnect());
                   <input
                     v-else
                     :id="`setting-${item.key}`"
-                    v-model="item.nilai"
+                    v-model="item.value"
                     class="input"
                     :type="
                       controlFor(item) === 'password' ? 'password' : controlFor(item) === 'number' ? 'number' : 'text'

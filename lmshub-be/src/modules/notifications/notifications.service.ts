@@ -24,7 +24,7 @@ export async function updateEventConfig(actor: AuthContext, jenisEvent: string, 
   await repo.updateEventConfig(jenisEvent, input);
   await recordAudit({
     userId: actor.userId,
-    module: 'notifikasi',
+    module: 'notification',
     action: 'update_event_config',
     entity: 'notification_event_config',
     entityId: before.id,
@@ -38,35 +38,35 @@ export async function updateEventConfig(actor: AuthContext, jenisEvent: string, 
 
 export interface NotifyPayload {
   title: string;
-  isi: string;
+  content: string;
   data?: unknown;
   sourceType?: string;
   sourceId?: string;
-  kanal?: string[];
+  channel?: string[];
 }
 
 /**
- * Helper dipanggil modul lain untuk mengirim notifikasi in-app (+ fan-out kanal lain).
- * `jenis` merujuk `notification_event_config.jenis_event` yang sudah terdaftar.
+ * Helper dipanggil modul lain untuk mengirim notification in-app (+ fan-out channel lain).
+ * `type` merujuk `notification_event_config.event_type` yang sudah terdaftar.
  * Idempotensi antar-retry menjadi tanggung jawab pemanggil (mis. cek dulu sebelum notify ulang).
  */
-export async function notify(userIds: string[], jenis: string, payload: NotifyPayload): Promise<void> {
+export async function notify(userIds: string[], type: string, payload: NotifyPayload): Promise<void> {
   const uniqueUserIds = Array.from(new Set(userIds)).filter(Boolean);
   if (!uniqueUserIds.length) return;
 
-  const config = await repo.getEventConfigByJenis(jenis);
-  const kanalList = payload.kanal?.length ? payload.kanal : config?.kanal?.length ? config.kanal : ['in_app'];
+  const config = await repo.getEventConfigByJenis(type);
+  const channelList = payload.channel?.length ? payload.channel : config?.channel?.length ? config.channel : ['in_app'];
 
   const notification = await repo.insertNotification({
-    jenis_event: jenis,
+    event_type: type,
     title: payload.title,
-    isi: payload.isi,
+    content: payload.content,
     payload: payload.data ?? null,
     source_type: payload.sourceType ?? null,
     source_id: payload.sourceId ?? null,
   });
 
-  const recipients = uniqueUserIds.flatMap((userId) => kanalList.map((kanal) => ({ userId, kanal })));
+  const recipients = uniqueUserIds.flatMap((userId) => channelList.map((channel) => ({ userId, channel })));
   await repo.insertRecipients(notification.id, recipients);
 }
 
@@ -80,14 +80,14 @@ export async function markRead(actor: AuthContext, notificationId: string) {
   const recipient = await repo.getRecipient(notificationId, actor.userId);
   if (!recipient) throw AppError.notFound('Notification not found', 'notification.not_found');
   await repo.markRead(notificationId, actor.userId);
-  return { status_dibaca: true };
+  return { is_read: true };
 }
 
 export async function respond(actor: AuthContext, notificationId: string, isiRespons: string) {
   const recipient = await repo.getRecipient(notificationId, actor.userId);
   if (!recipient) throw AppError.notFound('Notification not found', 'notification.not_found');
   await repo.markResponded(notificationId, actor.userId, isiRespons);
-  return { status_direspons: true };
+  return { is_responded: true };
 }
 
 // ── reminders ────────────────────────────────────────────────────────────
@@ -102,23 +102,23 @@ export async function monitorReminders(p: PageParams) {
 
 export async function createReminder(actor: AuthContext, input: CreateReminderInput) {
   const { id } = await repo.insertReminder({
-    sumber: input.sumber,
+    source: input.source,
     source_id: input.source_id ?? null,
     title: input.title,
     description: input.description ?? null,
-    jatuh_tempo: input.jatuh_tempo,
-    pengulangan: input.pengulangan,
-    aturan_eskalasi: input.aturan_eskalasi ?? null,
+    due_date: input.due_date,
+    repetition: input.repetition,
+    escalation_rules: input.escalation_rules ?? null,
     created_by: actor.userId,
   });
-  await repo.insertReminderTracking(id, input.penerima);
+  await repo.insertReminderTracking(id, input.recipient);
   await recordAudit({
     userId: actor.userId,
-    module: 'notifikasi',
+    module: 'notification',
     action: 'create_reminder',
     entity: 'reminders',
     entityId: id,
-    after: { sumber: input.sumber, title: input.title, penerima: input.penerima.length },
+    after: { source: input.source, title: input.title, recipient: input.recipient.length },
   });
   return { id };
 }
@@ -127,14 +127,14 @@ export async function markReminderRead(actor: AuthContext, reminderId: string) {
   const tracking = await repo.getReminderTracking(reminderId, actor.userId);
   if (!tracking) throw AppError.notFound('Reminder not found', 'reminder.not_found');
   await repo.markReminderRead(reminderId, actor.userId);
-  return { status_dibaca: true };
+  return { is_read: true };
 }
 
 export async function respondReminder(actor: AuthContext, reminderId: string, isiRespons: string) {
   const tracking = await repo.getReminderTracking(reminderId, actor.userId);
   if (!tracking) throw AppError.notFound('Reminder not found', 'reminder.not_found');
   await repo.markReminderResponded(reminderId, actor.userId, actor.userId, isiRespons);
-  return { status_direspons: true };
+  return { is_responded: true };
 }
 
 // ── announcements ────────────────────────────────────────────────────────
@@ -146,20 +146,20 @@ export async function listAnnouncements(p: PageParams) {
 export async function createAnnouncement(actor: AuthContext, input: CreateAnnouncementInput) {
   const { id } = await repo.insertAnnouncement({
     title: input.title,
-    isi: input.isi,
-    segmen: input.segmen,
-    tanggal_mulai: input.tanggal_mulai ?? new Date().toISOString(),
-    tanggal_selesai: input.tanggal_selesai ?? null,
+    content: input.content,
+    segment: input.segment,
+    start_date: input.start_date ?? new Date().toISOString(),
+    end_date: input.end_date ?? null,
     is_active: input.is_active,
-    dibuat_oleh: actor.userId,
+    created_by: actor.userId,
   });
   await recordAudit({
     userId: actor.userId,
-    module: 'notifikasi',
+    module: 'notification',
     action: 'create_announcement',
     entity: 'announcements',
     entityId: id,
-    after: { title: input.title, segmen: input.segmen },
+    after: { title: input.title, segment: input.segment },
   });
   return { id };
 }
@@ -171,14 +171,14 @@ export async function listMessages(actor: AuthContext, p: PageParams, f: repo.Me
 }
 
 export async function sendMessage(actor: AuthContext, input: CreateMessageInput) {
-  if (input.penerima_user_id === actor.userId) {
+  if (input.recipient_user_id === actor.userId) {
     throw AppError.badRequest('You cannot send a message to yourself', 'message.cannot_message_self');
   }
   const { id } = await repo.insertMessage({
-    pengirim_user_id: actor.userId,
-    penerima_user_id: input.penerima_user_id,
-    subjek: input.subjek ?? null,
-    isi: input.isi,
+    sender_user_id: actor.userId,
+    recipient_user_id: input.recipient_user_id,
+    subject: input.subject ?? null,
+    content: input.content,
     parent_message_id: input.parent_message_id ?? null,
   });
   return { id };
@@ -186,9 +186,9 @@ export async function sendMessage(actor: AuthContext, input: CreateMessageInput)
 
 export async function markMessageRead(actor: AuthContext, id: string) {
   const message = await repo.getMessage(id);
-  if (!message || (message.penerima_user_id !== actor.userId && !isSuper(actor))) {
+  if (!message || (message.recipient_user_id !== actor.userId && !isSuper(actor))) {
     throw AppError.notFound('Message not found', 'message.not_found');
   }
-  await repo.markMessageRead(id, message.penerima_user_id);
-  return { status_dibaca: true };
+  await repo.markMessageRead(id, message.recipient_user_id);
+  return { is_read: true };
 }

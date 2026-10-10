@@ -19,7 +19,7 @@ interface SmtpConfig {
   from: string;
 }
 
-/** Baca konfigurasi SMTP dari settings (diatur super admin), fallback ke env. */
+/** Baca konfigurasi SMTP from settings (diatur super admin), fallback to env. */
 async function resolveSmtp(): Promise<SmtpConfig> {
   const host = await getSetting('smtp.host', env.SMTP_HOST ?? '');
   const port = await getSettingInt('smtp.port', env.SMTP_PORT);
@@ -50,14 +50,14 @@ function transportFor(cfg: SmtpConfig): Transporter {
 }
 
 /**
- * Kirim email. Bila SMTP belum dikonfigurasi (dev), TIDAK gagal — cukup log isi email
+ * send email. Bila SMTP belum dikonfigurasi (dev), no failed — cukup log content email
  * agar alur (mis. verifikasi email) tetap dapat diuji tanpa server SMTP nyata.
  */
 export async function sendMail(input: MailInput): Promise<{ sent: boolean }> {
   const cfg = await resolveSmtp();
   if (!cfg.host) {
     logger.warn({ to: input.to, subject: input.subject }, 'SMTP is not configured, so this email was not sent (development mode). Contents:');
-    if (!isProd) logger.info({ html: input.html }, '📧 (dev) isi email');
+    if (!isProd) logger.info({ html: input.html }, '📧 (dev) content email');
     return { sent: false };
   }
   try {
@@ -81,7 +81,7 @@ const escapeHtml = (s: string) =>
 /** Account verification email, linking to the frontend's verify page. Signed with the site's own name. */
 export async function sendVerificationEmail(to: string, name: string, token: string): Promise<{ sent: boolean }> {
   const link = `${env.PUBLIC_WEB_URL.replace(/\/$/, '')}/verify-email?token=${encodeURIComponent(token)}`;
-  const site = escapeHtml((await getSetting('brand.nama_aplikasi', '')).trim() || 'LMS Hub');
+  const site = escapeHtml((await getSetting('brand.app_name', '')).trim() || 'LMS Hub');
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto">
       <h2 style="color:#164031">Verify your email — ${site}</h2>

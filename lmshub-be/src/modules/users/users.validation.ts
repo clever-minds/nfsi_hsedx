@@ -2,19 +2,19 @@ import { z } from 'zod';
 
 export const createUserSchema = z
   .object({
-    nama_lengkap: z.string().min(2).max(150),
+    name_lengkap: z.string().min(2).max(150),
     email: z.string().email().optional(),
-    nomor_wa: z.string().min(6).max(20).optional(),
+    number_wa: z.string().min(6).max(20).optional(),
     password: z.string().min(8).max(100),
     role_kode: z.string().min(2),
     status: z.enum(['pending', 'active']).default('active'),
   })
-  .refine((d) => d.email || d.nomor_wa, { message: 'Enter an email address or a WhatsApp number', path: ['email'] });
+  .refine((d) => d.email || d.number_wa, { message: 'Enter an email address or a WhatsApp number', path: ['email'] });
 
 export const updateUserSchema = z.object({
-  nama_lengkap: z.string().min(2).max(150).optional(),
+  name_lengkap: z.string().min(2).max(150).optional(),
   email: z.string().email().nullable().optional(),
-  nomor_wa: z.string().min(6).max(20).nullable().optional(),
+  number_wa: z.string().min(6).max(20).nullable().optional(),
   status: z.enum(['pending', 'active', 'inactive']).optional(),
   role_kode: z.string().optional(),
 });
@@ -30,19 +30,19 @@ export const setPermissionsSchema = z.object({
 });
 
 export const verifySchema = z.object({
-  aksi: z.enum(['approve', 'reject']),
-  alasan: z.string().max(500).optional(),
+  action: z.enum(['approve', 'reject']),
+  reason: z.string().max(500).optional(),
 });
 
 export const addRoleSchema = z.object({
   role_kode: z.string().min(2),
-  alasan: z.string().max(500).optional(),
+  reason: z.string().max(500).optional(),
 });
 
-// ── Self-service (profil & password sendiri) ──────────────────
+// ── Self-service (profile & password sendiri) ──────────────────
 export const updateMeSchema = z.object({
-  nama_lengkap: z.string().min(2).max(150).optional(),
-  nomor_wa: z.string().min(6).max(20).nullable().optional(),
+  name_lengkap: z.string().min(2).max(150).optional(),
+  number_wa: z.string().min(6).max(20).nullable().optional(),
 });
 
 export const changeMyPasswordSchema = z.object({
@@ -59,7 +59,7 @@ export const changeMyEmailSchema = z.object({
   password_saat_ini: z.string().min(1, 'The current password is required'),
 });
 
-// Foto profil dikirim sebagai base64 (payload JSON, limit body 2mb → gambar efektif ±1.5MB).
+// photo profile dikirim sebagai base64 (payload JSON, limit body 2mb → gambar efektif ±1.5MB).
 export const uploadMyPhotoSchema = z.object({
   data_base64: z.string().min(1, 'Image data is required'),
   mime_type: z.enum(['image/jpeg', 'image/png', 'image/webp']),

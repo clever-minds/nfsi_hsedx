@@ -68,7 +68,7 @@ export async function installDemoTransactions(): Promise<void> {
 /**
  * Remove what a previous run created, so re-seeding does not stack duplicate
  * orders on top of the ones already there. Deleting the orders is not enough:
- * enrolments point back at the order items, and that reference has to be cleared
+ * enrolments pointst back at the order items, and that reference has to be cleared
  * before the rows can go.
  */
 async function clearPreviousRun(): Promise<void> {
@@ -124,24 +124,24 @@ async function buildPaidOrders(): Promise<number> {
 
     const order = await insertOrder({
       buyer_user_id: row.user_id,
-      jalur: 'online',
-      status: 'lunas',
+      channel: 'online',
+      status: 'paid_in_full',
       total: price,
       at: placed,
-      catatan: null,
+      notes: null,
     });
 
     const item = await insertItem(order, row.course_id, price);
 
     await pool.query(
-      `INSERT INTO payments (order_id, jenis, nominal, metode, status, referensi_gateway,
+      `INSERT INTO payments (order_id, type, amount, method, status, gateway_reference,
                              verified_at, created_at, updated_at)
-       VALUES ($1,'penuh',$2,$3,'terverifikasi',$4,$5,$5,$5)`,
+       VALUES ($1,'full',$2,$3,'verified',$4,$5,$5,$5)`,
       [order, price, gateway, `${gateway.toUpperCase()}-${placed.getTime()}`, placed],
     );
 
     await pool.query(
-      `INSERT INTO invoices (order_id, nomor_invoice, diterbitkan_at, created_at, updated_at)
+      `INSERT INTO invoices (order_id, number_invoice, issued_at, created_at, updated_at)
        VALUES ($1,$2,$3,$3,$3)`,
       [order, `INV-${periodOf(placed).replace('-', '')}-${String(invoiceSeq++).padStart(4, '0')}`, placed],
     );
@@ -181,7 +181,7 @@ async function buildOpenOrders(): Promise<number> {
        CROSS JOIN LATERAL (
          SELECT c.id, c.instructor_id, c.price FROM courses c
           WHERE c.price > 0 AND c.deleted_at IS NULL
-            AND c.publication_status = 'terbit'
+            AND c.publication_status = 'publish'
             AND NOT EXISTS (SELECT 1 FROM enrollments e
                              WHERE e.course_id = c.id AND e.user_id = p.id
                                AND e.deleted_at IS NULL)
@@ -197,45 +197,45 @@ async function buildOpenOrders(): Promise<number> {
 
   const plans: Array<{
     status: string;
-    jalur: 'online' | 'manual';
-    catatan: string | null;
+    channel: 'online' | 'manual';
+    notes: string | null;
     /** null = no payment row at all (the student never got as far as paying) */
-    payment: { jenis: string; bagian: number; metode: string; status: string } | null;
+    payment: { type: string; bagian: number; method: string; status: string } | null;
   }> = [
     {
-      status: 'menunggu_pembayaran',
-      jalur: 'online',
-      catatan: null,
+      status: 'awaiting_payment',
+      channel: 'online',
+      notes: null,
       payment: null,
     },
     {
-      status: 'menunggu_pembayaran',
-      jalur: 'manual',
-      catatan: 'Bank transfer — proof uploaded, awaiting admin confirmation',
-      payment: { jenis: 'penuh', bagian: 1, metode: 'manual', status: 'menunggu_verifikasi' },
+      status: 'awaiting_payment',
+      channel: 'manual',
+      notes: 'Bank transfer — proof uploaded, awaiting admin confirmation',
+      payment: { type: 'full', bagian: 1, method: 'manual', status: 'awaiting_verification' },
     },
     {
-      status: 'dp_cicilan_berjalan',
-      jalur: 'online',
-      catatan: 'Instalment plan — 3 monthly payments',
-      payment: { jenis: 'dp', bagian: 0.4, metode: 'stripe', status: 'terverifikasi' },
+      status: 'installment_running',
+      channel: 'online',
+      notes: 'Instalment plan — 3 monthly payments',
+      payment: { type: 'down_payment', bagian: 0.4, method: 'stripe', status: 'verified' },
     },
     {
-      status: 'dp_cicilan_berjalan',
-      jalur: 'manual',
-      catatan: 'Instalment plan — down payment received at the front desk',
-      payment: { jenis: 'dp', bagian: 0.5, metode: 'manual', status: 'terverifikasi' },
+      status: 'installment_running',
+      channel: 'manual',
+      notes: 'Instalment plan — down payment received at the front desk',
+      payment: { type: 'down_payment', bagian: 0.5, method: 'manual', status: 'verified' },
     },
     {
-      status: 'batal',
-      jalur: 'online',
-      catatan: 'Cancelled — checkout window expired before payment',
+      status: 'cancelled',
+      channel: 'online',
+      notes: 'Cancelled — checkout window expired before payment',
       payment: null,
     },
     {
-      status: 'menunggu_pembayaran',
-      jalur: 'manual',
-      catatan: 'Invoice issued to a corporate buyer, net 14 days',
+      status: 'awaiting_payment',
+      channel: 'manual',
+      notes: 'Invoice issued to a corporate buyer, net 14 days',
       payment: null,
     },
   ];
@@ -248,28 +248,28 @@ async function buildOpenOrders(): Promise<number> {
 
     const order = await insertOrder({
       buyer_user_id: row.user_id,
-      jalur: plan.jalur,
+      channel: plan.channel,
       status: plan.status,
       total: price,
       at: placed,
-      catatan: plan.catatan,
+      notes: plan.notes,
     });
     await insertItem(order, row.course_id, price);
 
     if (plan.payment) {
-      const nominal = Math.round(price * plan.payment.bagian * 100) / 100;
+      const amount = Math.round(price * plan.payment.bagian * 100) / 100;
       await pool.query(
-        `INSERT INTO payments (order_id, jenis, nominal, metode, status, referensi_gateway,
+        `INSERT INTO payments (order_id, type, amount, method, status, gateway_reference,
                                verified_at, created_at, updated_at)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$8)`,
         [
           order,
-          plan.payment.jenis,
-          nominal,
-          plan.payment.metode,
+          plan.payment.type,
+          amount,
+          plan.payment.method,
           plan.payment.status,
-          plan.payment.metode === 'manual' ? null : `${plan.payment.metode.toUpperCase()}-${placed.getTime()}`,
-          plan.payment.status === 'terverifikasi' ? placed : null,
+          plan.payment.method === 'manual' ? null : `${plan.payment.method.toUpperCase()}-${placed.getTime()}`,
+          plan.payment.status === 'verified' ? placed : null,
           placed,
         ],
       );
@@ -282,24 +282,24 @@ async function buildOpenOrders(): Promise<number> {
 
 async function insertOrder(data: {
   buyer_user_id: string;
-  jalur: 'online' | 'manual';
+  channel: 'online' | 'manual';
   status: string;
   total: number;
   at: Date;
-  catatan: string | null;
+  notes: string | null;
 }): Promise<string> {
   const { rows } = await pool.query<{ id: string }>(
-    `INSERT INTO orders (buyer_user_id, jalur, status, subtotal, diskon, total,
-                         checkout_kedaluwarsa_at, catatan, created_at, updated_at)
+    `INSERT INTO orders (buyer_user_id, channel, status, subtotal, discount, total,
+                         checkout_expired_at, notes, created_at, updated_at)
      VALUES ($1,$2,$3,$4,0,$4,$5,$6,$7,$7)
      RETURNING id`,
     [
       data.buyer_user_id,
-      data.jalur,
+      data.channel,
       data.status,
       data.total,
-      data.status === 'menunggu_pembayaran' ? daysAgo(-7) : null,
-      data.catatan,
+      data.status === 'awaiting_payment' ? daysAgo(-7) : null,
+      data.notes,
       data.at,
     ],
   );
@@ -308,7 +308,7 @@ async function insertOrder(data: {
 
 async function insertItem(orderId: string, courseId: string, price: number): Promise<string> {
   const { rows } = await pool.query<{ id: string }>(
-    `INSERT INTO order_items (order_id, item_tipe, course_id, harga_satuan, kuantitas, subtotal)
+    `INSERT INTO order_items (order_id, item_type, course_id, price_unit, quantity, subtotal)
      VALUES ($1,'course',$2,$3,1,$3)
      RETURNING id`,
     [orderId, courseId, price],
@@ -325,10 +325,10 @@ async function insertRevenueShare(
 ): Promise<void> {
   const share = Math.round(price * (INSTRUCTOR_SHARE_PERCENT / 100) * 100) / 100;
   await pool.query(
-    `INSERT INTO revenue_shares (course_id, instructor_id, order_item_id, persen_share,
-                                 nominal_share, nominal_platform, periode, status,
+    `INSERT INTO revenue_shares (course_id, instructor_id, order_item_id, share_percentage,
+                                 amount_share, amount_platform, period, status,
                                  created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,'dihitung',$8,$8)`,
+     VALUES ($1,$2,$3,$4,$5,$6,$7,'calculated',$8,$8)`,
     [
       courseId,
       instructorId,
@@ -354,50 +354,50 @@ async function buildPayouts(): Promise<void> {
   const { rows } = await pool.query<{
     instructor_id: string;
     user_id: string;
-    periode: string;
+    period: string;
     total: string;
   }>(
-    `SELECT rs.instructor_id, ip.user_id, rs.periode, SUM(rs.nominal_share)::numeric AS total
+    `SELECT rs.instructor_id, ip.user_id, rs.period, SUM(rs.amount_share)::numeric AS total
        FROM revenue_shares rs
        JOIN instructor_profiles ip ON ip.id = rs.instructor_id
       WHERE rs.deleted_at IS NULL
-      GROUP BY rs.instructor_id, ip.user_id, rs.periode
-      ORDER BY rs.periode DESC, total DESC`,
+      GROUP BY rs.instructor_id, ip.user_id, rs.period
+      ORDER BY rs.period DESC, total DESC`,
   );
 
   // Cycle the lifecycle rather than walking it once and leaving every remaining
   // row at the final state, which would fill the screen with identical entries.
-  const chain = ['selesai', 'menunggu_approval', 'selesai', 'disetujui', 'selesai', 'pencairan'];
+  const chain = ['completed', 'awaiting_approval', 'completed', 'approved', 'completed', 'disbursement'];
   const admin = await firstUserWithRole('super_admin');
 
   for (const [i, row] of rows.entries()) {
-    const status = i === 0 ? 'dihitung' : chain[(i - 1) % chain.length];
-    const settled = status === 'selesai' || status === 'pencairan';
+    const status = i === 0 ? 'calculated' : chain[(i - 1) % chain.length];
+    const settled = status === 'completed' || status === 'disbursement';
 
     const { rows: made } = await pool.query<{ id: string }>(
-      `INSERT INTO instructor_payouts (instructor_id, periode, total_nominal, status,
-                                       diajukan_oleh, disetujui_oleh, disetujui_at,
-                                       dicairkan_at, metode_pencairan, catatan)
+      `INSERT INTO instructor_payouts (instructor_id, period, total_amount, status,
+                                       submitted_by, approved_by, approved_at,
+                                       disbursed_at, method_pencairan, notes)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        RETURNING id`,
       [
         row.instructor_id,
-        row.periode,
+        row.period,
         row.total,
         status,
         row.user_id,
-        status === 'dihitung' || status === 'menunggu_approval' ? null : admin,
-        status === 'dihitung' || status === 'menunggu_approval' ? null : daysAgo(10),
+        status === 'calculated' || status === 'awaiting_approval' ? null : admin,
+        status === 'calculated' || status === 'awaiting_approval' ? null : daysAgo(10),
         settled ? daysAgo(4) : null,
         settled ? 'Bank transfer' : null,
-        status === 'selesai' ? 'Disbursed and confirmed by the instructor' : null,
+        status === 'completed' ? 'Disbursed and confirmed by the instructor' : null,
       ],
     );
 
     await pool.query(
       `UPDATE revenue_shares SET instructor_payout_id = $1
-        WHERE instructor_id = $2 AND periode = $3 AND deleted_at IS NULL`,
-      [made[0].id, row.instructor_id, row.periode],
+        WHERE instructor_id = $2 AND period = $3 AND deleted_at IS NULL`,
+      [made[0].id, row.instructor_id, row.period],
     );
   }
 }
@@ -416,7 +416,7 @@ async function buildAttendance(): Promise<void> {
   // A running pattern, continued across sessions rather than restarted for each
   // one. Indexing within a session would never reach the later entries, because
   // a demo class only has a handful of students.
-  const PATTERN = ['hadir', 'terlambat', 'hadir', 'hadir', 'absen', 'hadir', 'terlambat'];
+  const PATTERN = ['present', 'late', 'present', 'present', 'absent', 'present', 'late'];
   let seat = 0;
 
   for (const session of rows) {
@@ -431,21 +431,21 @@ async function buildAttendance(): Promise<void> {
 
     for (const s of students) {
       const status = PATTERN[seat++ % PATTERN.length];
-      if (status === 'absen') {
+      if (status === 'absent') {
         await pool.query(
           `INSERT INTO session_attendance (live_session_id, user_id, status, durasi_hadir_menit, ditandai_manual)
-           VALUES ($1,$2,'absen',0,false)`,
+           VALUES ($1,$2,'absent',0,false)`,
           [session.id, s.user_id],
         );
         continue;
       }
       const join = new Date(session.start_time);
-      join.setMinutes(join.getMinutes() + (status === 'terlambat' ? 14 : 1));
+      join.setMinutes(join.getMinutes() + (status === 'late' ? 14 : 1));
       const leave = new Date(join);
       leave.setMinutes(leave.getMinutes() + 55);
 
       await pool.query(
-        `INSERT INTO session_attendance (live_session_id, user_id, status, waktu_join, waktu_leave,
+        `INSERT INTO session_attendance (live_session_id, user_id, status, time_join, time_leave,
                                          durasi_hadir_menit, ditandai_manual)
          VALUES ($1,$2,$3,$4,$5,55,false)`,
         [session.id, s.user_id, status, join, leave],
@@ -456,25 +456,25 @@ async function buildAttendance(): Promise<void> {
 
 /** A short notification history so the notification centre is not an empty page. */
 async function buildNotifications(): Promise<void> {
-  // `jenis_event` is a foreign key into notification_event_config, so only codes
+  // `event_type` is a foreign key into notification_event_config, so only codes
   // that catalogue already defines can be used here.
   const events: Array<[string, string, string, number]> = [
     ['payment.terverifikasi', 'Payment verified', 'An order was paid in full and access was granted.', 1],
     ['order.manual_masuk', 'Manual transfer submitted', 'A student uploaded proof of a bank transfer for review.', 2],
     ['live_session.h1', 'Live class starting soon', 'A live session begins in one hour.', 3],
     ['assignment.dikumpulkan', 'Assignment submitted', 'A submission is waiting in the grading queue.', 4],
-    ['nilai.dirilis', 'Grades released', 'Results for a quiz are now visible to the class.', 5],
-    ['certificate.terbit', 'Certificate issued', 'A student completed a course and earned a certificate.', 6],
-    ['komisi.cair', 'Commission paid', 'An affiliate commission was disbursed.', 7],
-    ['tagihan.jatuh_tempo', 'Instalment due', 'The next instalment on an order falls due tomorrow.', 8],
+    ['value.dirilis', 'Grades released', 'Results for a quiz are now visible to the class.', 5],
+    ['certificate.publish', 'Certificate issued', 'A student completed a course and earned a certificate.', 6],
+    ['commission.cair', 'Commission paid', 'An affiliate commission was disbursed.', 7],
+    ['invoice.due_date', 'Instalment due', 'The next instalment on an order falls due tomorrow.', 8],
     ['student.mendaftar', 'New student registered', 'A new account finished email verification.', 9],
   ];
 
-  for (const [jenis, title, isi, hari] of events) {
+  for (const [type, title, content, hari] of events) {
     await pool.query(
-      `INSERT INTO notifications (jenis_event, title, isi, source_type, waktu, created_at, updated_at)
+      `INSERT INTO notifications (event_type, title, content, source_type, time, created_at, updated_at)
        VALUES ($1,$2,$3,'demo',$4,$4,$4)`,
-      [jenis, title, isi, daysAgo(hari)],
+      [type, title, content, daysAgo(hari)],
     );
   }
 }

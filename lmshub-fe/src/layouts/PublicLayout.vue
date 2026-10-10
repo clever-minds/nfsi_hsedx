@@ -19,7 +19,7 @@ const site = useSiteContentStore();
 const mobileOpen = ref(false);
 const q = ref('');
 
-function cari() {
+function search() {
   router.push({ path: '/courses', query: q.value ? { q: q.value } : {} });
   mobileOpen.value = false;
 }
@@ -39,7 +39,7 @@ const NAV = computed(() =>
 
 /**
  * RouterLink hanya untuk path internal. Menu kustom boleh berisi alamat luar,
- * dan menyerahkannya ke router akan menghasilkan rute yang tidak cocok alih-alih
+ * dan menyerahkannya to router akan menghasilkan rute yang no cocok alih-alih
  * membuka tautannya.
  */
 const internal = (url: string) => url.startsWith('/');
@@ -64,8 +64,8 @@ const KOLOM_BAWAAN = computed(() => [
   },
   {
     title: t('nav.footer.support'),
-    // Halaman yang dikelola di Website → Pages. Backend lama yang belum punya
-    // daftar halaman tetap mendapat tautan ke slug bawaan, bukan `#`.
+    // Halaman yang managed di Website → Pages. Backend lama yang belum punya
+    // register halaman tetap mendapat tautan to slug bawaan, bukan `#`.
     tautan: site.halamanFooter.length
       ? site.halamanFooter.map((p) => ({ label: p.title, url: `/pages/${p.slug}` }))
       : [
@@ -87,16 +87,16 @@ const KOLOM = computed(() =>
     : KOLOM_BAWAAN.value,
 );
 
-const tahun = new Date().getFullYear();
+const year = new Date().getFullYear();
 
 /**
- * Baris hak cipta, dengan tiga tingkat kemunduran: text dari menu Website →
- * baris footer dari Pengaturan merek → text bawaan aplikasi.
+ * Baris hak cipta, dengan tiga tingkat kemunduran: text from menu Website →
+ * baris footer from settings merek → text bawaan aplikasi.
  */
 const copyright = computed(() => {
   const dariSite = pickText(site.footer.copyright);
   if (dariSite) {
-    return dariSite.split(':year').join(String(tahun)).split(':name').join(appConfig.appName);
+    return dariSite.split(':year').join(String(year)).split(':name').join(appConfig.appName);
   }
   return appConfig.footerText;
 });
@@ -129,7 +129,7 @@ const copyright = computed(() => {
       </div>
     </div>
 
-    <!-- ── Header utama ───────────────────────────────────────────── -->
+    <!-- ── Header primary ───────────────────────────────────────────── -->
     <header class="sticky top-0 z-40 bg-white shadow-header">
       <div class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
         <RouterLink to="/">
@@ -158,7 +158,7 @@ const copyright = computed(() => {
               type="search"
               :placeholder="t('nav.header.searchPublic')"
               class="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-              @keyup.enter="cari"
+              @keyup.enter="search"
             />
           </div>
         </div>
@@ -198,7 +198,7 @@ const copyright = computed(() => {
             type="search"
             :placeholder="t('nav.header.searchPublicShort')"
             class="w-full bg-transparent text-sm outline-none"
-            @keyup.enter="cari"
+            @keyup.enter="search"
           />
         </div>
         <template v-for="(n, i) in NAV" :key="i">
@@ -259,7 +259,7 @@ const copyright = computed(() => {
           </ul>
         </div>
 
-        <div v-if="site.footer.newsletter.aktif">
+        <div v-if="site.footer.newsletter.active">
           <h4 class="text-sm font-semibold uppercase tracking-wider text-white">
             {{ pickText(site.footer.newsletter.title, t('nav.footer.newsletter')) }}
           </h4>
@@ -281,7 +281,7 @@ const copyright = computed(() => {
       <div class="border-t border-white/10 py-5 text-center text-xs text-slate-500">
         <template v-if="copyright">{{ copyright }}</template>
         <template v-else>
-          {{ t('nav.footer.copyright', { year: tahun, name: appConfig.appName, tagline: t('common.tagline') }) }}
+          {{ t('nav.footer.copyright', { year: year, name: appConfig.appName, tagline: t('common.tagline') }) }}
         </template>
       </div>
     </footer>

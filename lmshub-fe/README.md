@@ -30,7 +30,7 @@ proxies `/api`.
 
 - `src/lib/api.ts` — axios, envelope `{ data, meta, error }`, transparent JWT refresh.
 - `src/stores/auth.ts` — Pinia: user, roles, `can('module.action')`, active role.
-- `src/lib/can.ts` — `v-can="'kursus.view'"` directive for gating UI.
+- `src/lib/can.ts` — `v-can="'course.view'"` directive for gating UI.
 - `src/router/` — `requiresAuth` + `permission` guards; module routes aggregated in `modules.ts`.
 - `src/layouts/` — `PublicLayout` (pre-login), `DashboardLayout` (sidebar + topbar).
 - `src/components/ui/` — KpiCard, StatusChip, DataTable, PageHeader, CourseCard, DonutChart, and friends.

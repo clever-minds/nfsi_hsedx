@@ -8,9 +8,10 @@ import * as ctrl from './courses.controller';
 
 export const coursesRouter = Router();
 
-// PUBLIC — catalog & detail course (dikonsumsi area pra-login lmshub-fe), hanya status terbit/diperbarui
+// PUBLIC — catalog & detail course (dikonsumsi area pra-login lmshub-fe), hanya status publish/diperbarui
 coursesRouter.get('/public', asyncHandler(ctrl.publicList));
 coursesRouter.get('/public/:slug', asyncHandler(ctrl.publicDetail));
+coursesRouter.get('/public/:slug/preview/:lessonId', asyncHandler(ctrl.publicLessonPreview));
 
 // ── Dashboard (terproteksi) ─────────────────────────
 coursesRouter.get('/', requireAuth(), requirePermission('course', 'view'), asyncHandler(ctrl.list));
@@ -29,7 +30,7 @@ coursesRouter.put(
   validate(updateCourseSchema),
   asyncHandler(ctrl.update),
 );
-// Aturan kelulusan (ujian akhir, izin ulang course) — tidak memicu review ulang.
+// Aturan kelulusan (exam akhir, izin ulang course) — no memicu review ulang.
 coursesRouter.put(
   '/:id/completion-rules',
   requireAuth(),
@@ -39,12 +40,12 @@ coursesRouter.put(
 );
 coursesRouter.delete('/:id', requireAuth(), requirePermission('course', 'delete'), asyncHandler(ctrl.remove));
 
-// ── Lifecycle publikasi: draf → dalam_review → terbit → diperbarui → diarsip
+// ── Lifecycle publikasi: draf → dalam_review → publish → diperbarui → diarsip
 coursesRouter.post('/:id/submit', requireAuth(), requirePermission('course', 'update'), asyncHandler(ctrl.submit));
 coursesRouter.post(
   '/:id/publish',
   requireAuth(),
-  requirePermission('course', 'update'), // approval admin ditegakkan lagi di service (Admin Ops/Direktur ke atas)
+  requirePermission('course', 'update'), // approval admin ditegakkan lagi di service (Admin Ops/Direktur to on)
   validate(publishCourseSchema),
   asyncHandler(ctrl.publish),
 );

@@ -3,7 +3,7 @@ import { AppError } from '../http/AppError';
 import { verifyAccessToken } from '../auth/jwt';
 import { loadEffectivePermissions } from './rbacService';
 
-/** Middleware: verifikasi Bearer access token + muat permission efektif ke req.auth. */
+/** Middleware: verifikasi Bearer access token + muat permission efektif to req.auth. */
 export function requireAuth() {
   return async (req: Request, _res: Response, next: NextFunction) => {
     try {

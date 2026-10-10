@@ -13,7 +13,7 @@ interface AttemptQuestion {
   id: string;
   text: string;
   // Sesuai enum BE: pilihan_tunggal | pilihan_ganda | benar_salah | isian_singkat | esai | upload_file | pencocokan
-  tipe: string;
+  type: string;
   opsi?: AttemptOption[];
 }
 interface Attempt {
@@ -23,14 +23,14 @@ interface Attempt {
   questions: AttemptQuestion[];
 }
 
-/** Bentuk respons BE POST /quizzes/:id/attempts */
+/** Bentuk response BE POST /quizzes/:id/attempts */
 interface StartAttemptResponse {
-  attempt: { id: string; status: string; waktu_tersisa_detik: number | null };
+  attempt: { id: string; status: string; remaining_time_seconds: number | null };
   soal: Array<{
     question_id: string;
-    tipe: string;
-    teks_soal: string;
-    opsi?: Array<{ id: string; teks_opsi: string }>;
+    type: string;
+    question_text: string;
+    opsi?: Array<{ id: string; option_text: string }>;
   }>;
 }
 
@@ -50,7 +50,7 @@ const answers = reactive<Record<string, unknown>>({});
 const flagged = ref<Set<string>>(new Set());
 const currentIndex = ref(0);
 const remaining = ref(0);
-const timed = ref(false); // quiz punya batas waktu? bila tidak, timer & auto-submit dimatikan.
+const timed = ref(false); // quiz punya batas time? bila no, timer & auto-submit dimatikan.
 const autosaveStatus = ref<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
 let tickHandle: number | undefined;
@@ -82,17 +82,17 @@ async function startAttempt() {
     attempt.value = {
       id: res.attempt.id,
       status: res.attempt.status,
-      remainingSeconds: res.attempt.waktu_tersisa_detik ?? 0,
+      remainingSeconds: res.attempt.remaining_time_seconds ?? 0,
       questions: (res.soal ?? []).map((s) => ({
         id: s.question_id,
-        text: s.teks_soal,
-        tipe: s.tipe,
-        opsi: (s.opsi ?? []).map((o) => ({ id: o.id, text: o.teks_opsi })),
+        text: s.question_text,
+        type: s.type,
+        opsi: (s.opsi ?? []).map((o) => ({ id: o.id, text: o.option_text })),
       })),
     };
     remaining.value = attempt.value.remainingSeconds ?? 0;
     timed.value = remaining.value > 0;
-    if (timed.value) tickHandle = window.setInterval(tick, 1000); // quiz tanpa batas waktu tak di-countdown
+    if (timed.value) tickHandle = window.setInterval(tick, 1000); // quiz tanpa batas time tak di-countdown
   } catch (e) {
     const err = (e as { response?: { data?: { error?: { key?: string; details?: { can_retry_at?: string } } } } }).response?.data?.error;
     error.value =
@@ -123,18 +123,18 @@ function setAnswer(questionId: string, value: unknown) {
   }, 800);
 }
 
-/** Bungkus nilai UI jadi bentuk `jawaban` yang dipahami auto-grading BE. */
-function encodeJawaban(tipe: string, val: unknown): Record<string, unknown> {
-  switch (tipe) {
-    case 'pilihan_tunggal':
-    case 'benar_salah':
+/** Bungkus value UI jadi bentuk `answer` yang dipahami auto-grading BE. */
+function encodeJawaban(type: string, val: unknown): Record<string, unknown> {
+  switch (type) {
+    case 'single_choice':
+    case 'true_false':
       return { option_id: val ?? null };
-    case 'pilihan_ganda':
+    case 'multiple_choice':
       return { option_ids: Array.isArray(val) ? val : [] };
-    case 'isian_singkat':
-    case 'esai':
+    case 'short_answer':
+    case 'essay':
       return { text: typeof val === 'string' ? val : '' };
-    case 'upload_file':
+    case 'file_upload':
       return { file_name: typeof val === 'string' ? val : '' };
     default:
       return { text: typeof val === 'string' ? val : String(val ?? '') };
@@ -147,7 +147,7 @@ async function persistAnswer(questionId: string) {
   try {
     await apiPut(`/attempts/${attempt.value.id}/answers`, {
       question_id: questionId,
-      jawaban: encodeJawaban(q?.tipe ?? '', answers[questionId]),
+      answer: encodeJawaban(q?.type ?? '', answers[questionId]),
     });
     autosaveStatus.value = 'saved';
   } catch {
@@ -175,7 +175,7 @@ async function submit(auto = false) {
   }
   submitting.value = true;
   try {
-    // Jawaban disimpan dengan jeda 800ms. Tanpa ini, jawaban yang dipilih
+    // Jawaban disimpan dengan jeda 800ms. Tanpa ini, answer yang dipilih
     // tepat sebelum menekan Kumpulkan belum terkirim dan dinilai kosong.
     const pending = Object.keys(saveTimers).filter((id) => saveTimers[id]);
     for (const id of pending) {
@@ -241,7 +241,7 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="grid gap-4 lg:grid-cols-[1fr,16rem]">
-        <!-- Soal aktif -->
+        <!-- Soal active -->
         <div v-if="currentQuestion" class="card p-4">
           <div class="mb-3 flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -254,7 +254,7 @@ onBeforeUnmount(() => {
           <p class="text-base text-slate-800">{{ currentQuestion.text }}</p>
 
           <div class="mt-4 space-y-2">
-            <template v-if="currentQuestion.tipe === 'pilihan_tunggal' || currentQuestion.tipe === 'benar_salah'">
+            <template v-if="currentQuestion.type === 'single_choice' || currentQuestion.type === 'true_false'">
               <label v-for="o in currentQuestion.opsi || []" :key="o.id" class="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 hover:bg-slate-50">
                 <input
                   type="radio"
@@ -266,7 +266,7 @@ onBeforeUnmount(() => {
               </label>
             </template>
 
-            <template v-else-if="currentQuestion.tipe === 'pilihan_ganda'">
+            <template v-else-if="currentQuestion.type === 'multiple_choice'">
               <label v-for="o in currentQuestion.opsi || []" :key="o.id" class="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 hover:bg-slate-50">
                 <input
                   type="checkbox"
@@ -285,7 +285,7 @@ onBeforeUnmount(() => {
             </template>
 
             <input
-              v-else-if="currentQuestion.tipe === 'isian_singkat'"
+              v-else-if="currentQuestion.type === 'short_answer'"
               class="input"
               :value="(answers[currentQuestion.id] as string) || ''"
               :placeholder="t('assessments.attempt.shortAnswerPlaceholder')"
@@ -293,7 +293,7 @@ onBeforeUnmount(() => {
             />
 
             <textarea
-              v-else-if="currentQuestion.tipe === 'esai'"
+              v-else-if="currentQuestion.type === 'essay'"
               class="input"
               rows="6"
               :placeholder="t('assessments.attempt.essayPlaceholder')"
@@ -302,13 +302,13 @@ onBeforeUnmount(() => {
             ></textarea>
 
             <input
-              v-else-if="currentQuestion.tipe === 'upload_file'"
+              v-else-if="currentQuestion.type === 'file_upload'"
               type="file"
               class="input"
               @change="setAnswer(currentQuestion.id, (($event.target as HTMLInputElement).files?.[0]?.name) || '')"
             />
 
-            <p v-else class="text-sm text-slate-400">{{ t('assessments.attempt.unsupportedType', { type: currentQuestion.tipe }) }}</p>
+            <p v-else class="text-sm text-slate-400">{{ t('assessments.attempt.unsupportedType', { type: currentQuestion.type }) }}</p>
           </div>
 
           <div class="mt-6 flex justify-between">

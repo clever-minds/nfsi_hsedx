@@ -172,7 +172,15 @@
     "add": "प्रश्न जोड़ें",
     "formNew": "नया प्रश्न",
     "formEdit": "प्रश्न संपादित करें",
-    "type": "प्रश्न प्रकार",
+    "type": {
+      "single_choice": "एकल विकल्प",
+      "multiple_choice": "बहुविकल्प (कई सही)",
+      "true_false": "सही / गलत",
+      "short_answer": "लघु उत्तर",
+      "essay": "निबंध (मैनुअल)",
+      "file_upload": "फ़ाइल अपलोड (मैनुअल)",
+      "pencocokan": "मिलान"
+    },
     "points": "अंक (भार)",
     "pointsHint": "स्कोर = प्राप्त अंक ÷ कुल अंक × 100%।",
     "pointsN": "{n} अंक",
@@ -196,15 +204,6 @@
     "loadFailed": "प्रश्न बैंक लोड नहीं हो सका।",
     "saveFailed": "प्रश्न सहेजा नहीं जा सका।",
     "deleteFailed": "प्रश्न हटाया नहीं जा सका।",
-    "confirmDelete": "यह प्रश्न हटाएँ?",
-    "tipe": {
-      "pilihan_tunggal": "एकल विकल्प",
-      "pilihan_ganda": "बहुविकल्प (कई सही)",
-      "benar_salah": "सही / गलत",
-      "isian_singkat": "लघु उत्तर",
-      "esai": "निबंध (मैनुअल)",
-      "upload_file": "फ़ाइल अपलोड (मैनुअल)",
-      "pencocokan": "मिलान"
-    }
+    "confirmDelete": "यह प्रश्न हटाएँ?"
   }
 }

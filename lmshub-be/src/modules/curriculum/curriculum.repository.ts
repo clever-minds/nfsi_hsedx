@@ -14,7 +14,7 @@ export interface LessonRow {
   id: string;
   section_id: string;
   title: string;
-  tipe: string;
+  type: string;
   sort_order: number;
   duration_minutes: number | null;
   gratis_preview: boolean;
@@ -27,7 +27,7 @@ export interface LessonRow {
 export interface LessonContentRow {
   id: string;
   lesson_id: string;
-  tipe: string;
+  type: string;
   sort_order: number;
   body: string | null;
   media_asset_id: string | null;
@@ -117,7 +117,7 @@ export async function reorderSections(items: Array<{ id: string; sort_order: num
 // ── Lessons ──────────────────────────────────────────
 export async function listLessonsBySection(sectionId: string): Promise<LessonRow[]> {
   return query<LessonRow>(
-    `SELECT id, section_id, title, tipe, sort_order, duration_minutes, gratis_preview, drip_release_at, must_complete, created_at, updated_at
+    `SELECT id, section_id, title, type, sort_order, duration_minutes, gratis_preview, drip_release_at, must_complete, created_at, updated_at
        FROM lessons WHERE section_id = $1 AND deleted_at IS NULL ORDER BY sort_order ASC`,
     [sectionId],
   );
@@ -125,7 +125,7 @@ export async function listLessonsBySection(sectionId: string): Promise<LessonRow
 
 export async function lessonDetail(id: string): Promise<LessonRow | null> {
   return queryOne<LessonRow>(
-    `SELECT id, section_id, title, tipe, sort_order, duration_minutes, gratis_preview, drip_release_at, must_complete, created_at, updated_at
+    `SELECT id, section_id, title, type, sort_order, duration_minutes, gratis_preview, drip_release_at, must_complete, created_at, updated_at
        FROM lessons WHERE id = $1 AND deleted_at IS NULL`,
     [id],
   );
@@ -134,7 +134,7 @@ export async function lessonDetail(id: string): Promise<LessonRow | null> {
 export async function insertLesson(data: {
   section_id: string;
   title: string;
-  tipe: string;
+  type: string;
   sort_order: number;
   duration_minutes: number | null;
   gratis_preview: boolean;
@@ -142,12 +142,12 @@ export async function insertLesson(data: {
   must_complete: boolean;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO lessons (section_id, title, tipe, sort_order, duration_minutes, gratis_preview, drip_release_at, must_complete)
+    `INSERT INTO lessons (section_id, title, type, sort_order, duration_minutes, gratis_preview, drip_release_at, must_complete)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
     [
       data.section_id,
       data.title,
-      data.tipe,
+      data.type,
       data.sort_order,
       data.duration_minutes,
       data.gratis_preview,
@@ -206,7 +206,7 @@ export async function courseIdOfLesson(lessonId: string): Promise<string | null>
 // ── Lesson Contents ──────────────────────────────────
 export async function listContents(lessonId: string): Promise<LessonContentRow[]> {
   return query<LessonContentRow>(
-    `SELECT id, lesson_id, tipe, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds, created_at, updated_at
+    `SELECT id, lesson_id, type, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds, created_at, updated_at
        FROM lesson_contents WHERE lesson_id = $1 AND deleted_at IS NULL ORDER BY sort_order ASC`,
     [lessonId],
   );
@@ -214,7 +214,7 @@ export async function listContents(lessonId: string): Promise<LessonContentRow[]
 
 export async function contentDetail(id: string): Promise<LessonContentRow | null> {
   return queryOne<LessonContentRow>(
-    `SELECT id, lesson_id, tipe, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds, created_at, updated_at
+    `SELECT id, lesson_id, type, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds, created_at, updated_at
        FROM lesson_contents WHERE id = $1 AND deleted_at IS NULL`,
     [id],
   );
@@ -222,7 +222,7 @@ export async function contentDetail(id: string): Promise<LessonContentRow | null
 
 export async function insertContent(data: {
   lesson_id: string;
-  tipe: string;
+  type: string;
   sort_order: number;
   body: string | null;
   media_asset_id: string | null;
@@ -231,11 +231,11 @@ export async function insertContent(data: {
   duration_seconds: number | null;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO lesson_contents (lesson_id, tipe, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds)
+    `INSERT INTO lesson_contents (lesson_id, type, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
     [
       data.lesson_id,
-      data.tipe,
+      data.type,
       data.sort_order,
       data.body,
       data.media_asset_id,

@@ -16,24 +16,24 @@ interface Course {
   price: number;
   strike_price?: number | null;
   level?: string;
-  category_nama?: string;
-  instructor_nama?: string;
+  category_name?: string;
+  instructor_name?: string;
   instructor_foto?: string | null;
   rating_avg?: string | number | null;
   rating_count?: number;
   student_count?: number;
   meta?: { thumbnail_url?: string } | null;
 }
-interface Kategori { id: string; name: string; slug: string; ikon?: string | null; jumlah_kursus: number }
+interface Kategori { id: string; name: string; slug: string; ikon?: string | null; amount_kursus: number }
 interface Instructor {
   id: string;
-  nama_lengkap: string;
-  foto_profil: string | null;
+  name_lengkap: string;
+  profile_picture: string | null;
   keahlian: string[] | null;
   rating_avg: string;
   rating_count: number;
   total_siswa: number;
-  jumlah_kursus: number;
+  amount_kursus: number;
 }
 
 const router = useRouter();
@@ -41,7 +41,7 @@ const { t } = useI18n();
 const site = useSiteContentStore();
 
 /**
- * Teks & susunan halaman ini dikelola lewat menu Website di admin.
+ * Teks & susunan halaman ini managed lewat menu Website di admin.
  *
  * Setiap pembacaan diberi text bawaan sebagai cadangan: field yang belum
  * pernah diisi tetap tampil dalam language pengunjung, bukan kosong.
@@ -49,8 +49,8 @@ const site = useSiteContentStore();
 const hero = computed(() => site.hero);
 const heroGambar = computed(() => assetUrl(site.hero.gambar_url));
 
-/** Seksi aktif, sudah urut sesuai susunan yang disimpan admin. */
-const urutanSeksi = computed(() => site.sectionsAktif);
+/** Seksi active, sudah sort_order sesuai susunan yang disimpan admin. */
+const sort_orderanSeksi = computed(() => site.sectionsAktif);
 
 const badgeSeksi = (key: string, bawaan: string) => pickText(site.section(key)?.badge, bawaan);
 const judulSeksi = (key: string, bawaan: string) => pickText(site.section(key)?.title, bawaan);
@@ -61,14 +61,14 @@ const instructors = ref<Instructor[]>([]);
 const totalKursus = ref(0);
 
 const q = ref('');
-const kategoriDipilih = ref('');
+const categoryDipilih = ref('');
 
 const totalSiswa = computed(() => instructors.value.reduce((a, i) => a + (i.total_siswa || 0), 0));
 
-function cari() {
+function search() {
   router.push({
     path: '/courses',
-    query: { ...(q.value ? { q: q.value } : {}), ...(kategoriDipilih.value ? { category: kategoriDipilih.value } : {}) },
+    query: { ...(q.value ? { q: q.value } : {}), ...(categoryDipilih.value ? { category: categoryDipilih.value } : {}) },
   });
 }
 
@@ -87,7 +87,7 @@ onMounted(async () => {
   ]);
   courses.value = c?.data ?? [];
   totalKursus.value = Number((c?.meta as Record<string, unknown> | null)?.total ?? courses.value.length);
-  categories.value = (cat?.data ?? []).filter((k) => k.jumlah_kursus > 0);
+  categories.value = (cat?.data ?? []).filter((k) => k.amount_kursus > 0);
   instructors.value = ins?.data ?? [];
 });
 </script>
@@ -95,9 +95,9 @@ onMounted(async () => {
 <template>
   <div>
     <!-- ── HERO ───────────────────────────────────────────────────── -->
-    <section v-if="hero.aktif" class="relative overflow-hidden bg-white">
-      <div class="pointer-events-none absolute -start-24 top-10 h-72 w-72 rounded-full bg-brand-100 blur-3xl"></div>
-      <div class="pointer-events-none absolute -end-24 bottom-0 h-80 w-80 rounded-full bg-accent-400/20 blur-3xl"></div>
+    <section v-if="hero.active" class="relative overflow-hidden bg-white">
+      <div class="pointster-events-none absolute -start-24 top-10 h-72 w-72 rounded-full bg-brand-100 blur-3xl"></div>
+      <div class="pointster-events-none absolute -end-24 bottom-0 h-80 w-80 rounded-full bg-accent-400/20 blur-3xl"></div>
 
       <div class="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 lg:grid-cols-2 lg:py-24">
         <div>
@@ -106,14 +106,14 @@ onMounted(async () => {
             {{ pickText(hero.badge, t('catalog.landing.hero.badge')) }}
           </span>
           <h1 class="mt-4 text-4xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-5xl">
-            {{ pickText(hero.judul_pre, t('catalog.landing.hero.titlePre')) }}
+            {{ pickText(hero.title_pre, t('catalog.landing.hero.titlePre')) }}
             <span class="relative inline-block whitespace-nowrap"
               ><span class="absolute inset-x-0 inset-y-1 -rotate-1 rounded-lg bg-brand-500"></span
               ><span class="relative px-2 text-white">{{
-                pickText(hero.judul_highlight, t('catalog.landing.hero.titleHighlight'))
+                pickText(hero.title_highlight, t('catalog.landing.hero.titleHighlight'))
               }}</span></span
             >
-            {{ pickText(hero.judul_post, t('catalog.landing.hero.titlePost')) }}
+            {{ pickText(hero.title_post, t('catalog.landing.hero.titlePost')) }}
           </h1>
           <p class="mt-5 max-w-lg text-slate-500">{{ pickText(hero.subjudul, t('catalog.landing.hero.subtitle')) }}</p>
 
@@ -124,7 +124,7 @@ onMounted(async () => {
           >
             <div class="hidden shrink-0 items-center gap-1.5 border-e border-slate-200 px-4 sm:flex">
               <Icon name="grid" :size="14" class="text-slate-400" />
-              <select v-model="kategoriDipilih" class="max-w-[9rem] bg-transparent text-sm text-slate-600 outline-none">
+              <select v-model="categoryDipilih" class="max-w-[9rem] bg-transparent text-sm text-slate-600 outline-none">
                 <option value="">{{ t('catalog.landing.hero.allCategories') }}</option>
                 <option v-for="k in categories" :key="k.id" :value="k.slug">{{ k.name }}</option>
               </select>
@@ -134,9 +134,9 @@ onMounted(async () => {
               type="search"
               :placeholder="t('catalog.landing.hero.searchPlaceholder')"
               class="w-full bg-transparent px-4 py-2.5 text-sm outline-none placeholder:text-slate-400"
-              @keyup.enter="cari"
+              @keyup.enter="search"
             />
-            <button class="shrink-0 rounded-full bg-slate-900 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-brand-500" @click="cari">
+            <button class="shrink-0 rounded-full bg-slate-900 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-brand-500" @click="search">
               {{ t('catalog.landing.hero.searchBtn') }}
             </button>
           </div>
@@ -146,7 +146,7 @@ onMounted(async () => {
               <Icon v-for="i in 5" :key="i" name="star" :size="15" class="fill-accent-400" />
             </span>
             <span class="num font-semibold text-slate-800">
-              {{ hero.rating_skor || t('catalog.landing.hero.ratingScore') }}
+              {{ hero.rating_score || t('catalog.landing.hero.ratingScore') }}
             </span>
             <span class="text-slate-400">{{ pickText(hero.rating_teks, t('catalog.landing.hero.ratingSuffix')) }}</span>
           </div>
@@ -174,8 +174,8 @@ onMounted(async () => {
                 :key="i"
                 class="grid h-9 w-9 place-items-center overflow-hidden rounded-full border-2 border-white bg-brand-100 text-xs font-bold text-brand-600"
               >
-                <img v-if="ins.foto_profil" :src="assetUrl(ins.foto_profil)" :alt="ins.nama_lengkap" class="h-full w-full object-cover" />
-                <template v-else>{{ ins.nama_lengkap[0] }}</template>
+                <img v-if="ins.profile_picture" :src="assetUrl(ins.profile_picture)" :alt="ins.name_lengkap" class="h-full w-full object-cover" />
+                <template v-else>{{ ins.name_lengkap[0] }}</template>
               </span>
             </div>
             <div>
@@ -201,15 +201,15 @@ onMounted(async () => {
     </section>
 
     <!-- Urutan & tampil-sembunyi seksi berikut diatur di menu Website (admin). -->
-    <template v-for="s in urutanSeksi" :key="s.key">
+    <template v-for="s in sort_orderanSeksi" :key="s.key">
       <!-- ── KATEGORI TERATAS ───────────────────────────────────────── -->
-      <section v-if="s.key === 'kategori'" class="mx-auto max-w-7xl px-4 py-16">
+      <section v-if="s.key === 'category'" class="mx-auto max-w-7xl px-4 py-16">
         <div class="text-center">
           <span class="inline-block rounded-full bg-brand-50 px-4 py-1.5 text-xs font-semibold text-brand-500">
-            {{ badgeSeksi('kategori', t('catalog.landing.categories.badge')) }}
+            {{ badgeSeksi('category', t('catalog.landing.categories.badge')) }}
           </span>
-          <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">{{ judulSeksi('kategori', t('catalog.landing.categories.title')) }}</h2>
-          <p class="mx-auto mt-2 max-w-xl text-sm text-slate-500">{{ subjudulSeksi('kategori', t('catalog.landing.categories.subtitle')) }}</p>
+          <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">{{ judulSeksi('category', t('catalog.landing.categories.title')) }}</h2>
+          <p class="mx-auto mt-2 max-w-xl text-sm text-slate-500">{{ subjudulSeksi('category', t('catalog.landing.categories.subtitle')) }}</p>
         </div>
         <div class="mt-10 flex flex-wrap justify-center">
           <div v-for="k in categories" :key="k.id" class="w-1/2 p-2 sm:w-1/3 lg:w-1/6">
@@ -220,7 +220,7 @@ onMounted(async () => {
               <span class="grid h-14 w-14 place-items-center rounded-2xl bg-slate-50 text-2xl transition group-hover:bg-brand-50">{{ k.ikon || '📚' }}</span>
               <div>
                 <div class="text-sm font-semibold text-slate-800 group-hover:text-brand-500">{{ k.name }}</div>
-                <div class="mt-0.5 text-xs text-slate-400">{{ t('catalog.landing.categories.count', { n: fmtAngka(k.jumlah_kursus) }) }}</div>
+                <div class="mt-0.5 text-xs text-slate-400">{{ t('catalog.landing.categories.count', { n: fmtAngka(k.amount_kursus) }) }}</div>
               </div>
             </RouterLink>
           </div>
@@ -245,7 +245,7 @@ onMounted(async () => {
         </div>
       </section>
 
-      <!-- ── KURSUS UNGGULAN ────────────────────────────────────────── -->
+      <!-- ── course UNGGULAN ────────────────────────────────────────── -->
       <section v-else-if="s.key === 'featured'" class="mx-auto max-w-7xl px-4 py-16">
         <div class="text-center">
           <span class="inline-block rounded-full bg-brand-50 px-4 py-1.5 text-xs font-semibold text-brand-500">
@@ -308,14 +308,14 @@ onMounted(async () => {
           >
             <span class="relative">
               <span class="grid h-28 w-28 place-items-center overflow-hidden rounded-full bg-brand-100 text-3xl font-bold text-brand-600">
-                <img v-if="ins.foto_profil" :src="assetUrl(ins.foto_profil)" :alt="ins.nama_lengkap" class="h-full w-full object-cover" />
-                <template v-else>{{ ins.nama_lengkap[0] }}</template>
+                <img v-if="ins.profile_picture" :src="assetUrl(ins.profile_picture)" :alt="ins.name_lengkap" class="h-full w-full object-cover" />
+                <template v-else>{{ ins.name_lengkap[0] }}</template>
               </span>
               <span class="absolute bottom-1 end-1 grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-white">
                 <Icon name="check" :size="12" />
               </span>
             </span>
-            <h3 class="mt-4 font-bold text-slate-900 group-hover:text-brand-500">{{ ins.nama_lengkap }}</h3>
+            <h3 class="mt-4 font-bold text-slate-900 group-hover:text-brand-500">{{ ins.name_lengkap }}</h3>
             <p class="mt-0.5 text-xs text-slate-400">
               {{ (ins.keahlian ?? []).slice(0, 2).join(' · ') || t('catalog.instructors.defaultRole') }}
             </p>
@@ -325,7 +325,7 @@ onMounted(async () => {
               <span class="text-slate-400">({{ t('catalog.instructors.reviewsCount', { n: fmtAngka(ins.rating_count) }) }})</span>
             </div>
             <div class="mt-3 flex gap-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
-              <span>{{ t('catalog.instructors.coursesCount', { n: fmtAngka(ins.jumlah_kursus) }) }}</span>
+              <span>{{ t('catalog.instructors.coursesCount', { n: fmtAngka(ins.amount_kursus) }) }}</span>
               <span>{{ t('catalog.instructors.studentsCount', { n: fmtAngka(ins.total_siswa) }) }}</span>
             </div>
           </RouterLink>
@@ -337,10 +337,10 @@ onMounted(async () => {
         </div>
       </section>
 
-      <!-- ── CTA DAFTAR ─────────────────────────────────────────────── -->
+      <!-- ── CTA register ─────────────────────────────────────────────── -->
       <section v-else-if="s.key === 'cta'" class="mx-auto max-w-7xl px-4 pb-4">
         <div class="relative overflow-hidden rounded-3xl bg-slate-900 px-8 py-14 text-white">
-          <div class="pointer-events-none absolute -end-16 -top-16 h-64 w-64 rounded-full bg-brand-500/30 blur-3xl"></div>
+          <div class="pointster-events-none absolute -end-16 -top-16 h-64 w-64 rounded-full bg-brand-500/30 blur-3xl"></div>
           <div class="relative max-w-xl">
             <h2 class="text-3xl font-extrabold tracking-tight">{{ judulSeksi('cta', t('catalog.landing.cta.title')) }}</h2>
             <p class="mt-3 text-sm text-slate-400">{{ subjudulSeksi('cta', t('catalog.landing.cta.subtitle')) }}</p>

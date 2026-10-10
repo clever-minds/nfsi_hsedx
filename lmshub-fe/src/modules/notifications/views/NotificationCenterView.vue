@@ -7,12 +7,12 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 
 interface Notification {
   id: string;
-  tipe: string;
+  type: string;
   title: string;
-  isi?: string;
+  content?: string;
   tautan?: string;
-  dibaca: boolean;
-  dibuat_at: string;
+  read: boolean;
+  created_at: string;
 }
 
 const { t } = useI18n();
@@ -22,14 +22,14 @@ const loading = ref(true);
 const error = ref('');
 const filterBaca = ref<'' | 'true' | 'false'>('');
 
-const unreadCount = computed(() => notifications.value.filter((n) => !n.dibaca).length);
+const unreadCount = computed(() => notifications.value.filter((n) => !n.read).length);
 
 async function load() {
   loading.value = true;
   error.value = '';
   try {
-    // BE membaca query filter[status] dengan nilai 'dibaca' | 'belum_dibaca' (bukan read=true/false)
-    const status = filterBaca.value === 'true' ? 'dibaca' : filterBaca.value === 'false' ? 'belum_dibaca' : undefined;
+    // BE membaca query filter[status] dengan value 'read' | 'belum_read' (bukan read=true/false)
+    const status = filterBaca.value === 'true' ? 'read' : filterBaca.value === 'false' ? 'belum_read' : undefined;
     const res = await apiGetFull<Notification[]>('/notifications', { 'filter[status]': status });
     notifications.value = res.data ?? [];
   } catch (e) {
@@ -40,21 +40,21 @@ async function load() {
 }
 
 async function markRead(n: Notification) {
-  if (n.dibaca) return;
-  n.dibaca = true; // optimistic
+  if (n.read) return;
+  n.read = true; // optimistic
   try {
     // BE: POST /notifications/:id/read (bukan PATCH)
     await apiPost(`/notifications/${n.id}/read`);
   } catch (e) {
-    n.dibaca = false; // rollback
+    n.read = false; // rollback
     error.value = errorMessage(e, t('notifications.center.markFailed'));
   }
 }
 
 async function markAllRead() {
-  const unread = notifications.value.filter((n) => !n.dibaca);
+  const unread = notifications.value.filter((n) => !n.read);
   for (const n of unread) {
-    n.dibaca = true;
+    n.read = true;
   }
   try {
     await Promise.all(unread.map((n) => apiPost(`/notifications/${n.id}/read`)));
@@ -78,9 +78,9 @@ onMounted(load);
           {{ t('notifications.center.markAllRead') }}
         </button>
         <RouterLink to="/d/notifications/preferences" class="btn-outline">{{ t('notifications.center.preferences') }}</RouterLink>
-        <!-- Halaman monitor sudah punya tombol "kembali" ke sini, tapi tidak ada
-             satu pun jalan masuk — hanya bisa dibuka dengan mengetik URL. -->
-        <RouterLink v-can="'notifikasi.update'" to="/d/notifications/monitor" class="btn-outline">
+        <!-- Halaman monitor sudah punya tombol "back" to sini, tapi no ada
+             satu pun jalan login — hanya bisa dibuka dengan mengetik URL. -->
+        <RouterLink v-can="'notification.update'" to="/d/notifications/monitor" class="btn-outline">
           {{ t('notifications.center.monitor') }}
         </RouterLink>
       </template>
@@ -102,17 +102,17 @@ onMounted(load);
         v-for="n in notifications"
         :key="n.id"
         class="card flex w-full items-start gap-3 p-3 text-start hover:shadow-md"
-        :class="!n.dibaca && 'border-s-4 border-brand-500 bg-brand-50/40'"
+        :class="!n.read && 'border-s-4 border-brand-500 bg-brand-50/40'"
         @click="markRead(n)"
       >
-        <span class="mt-1 h-2 w-2 shrink-0 rounded-full" :class="n.dibaca ? 'bg-transparent' : 'bg-accent-500'"></span>
+        <span class="mt-1 h-2 w-2 shrink-0 rounded-full" :class="n.read ? 'bg-transparent' : 'bg-accent-500'"></span>
         <div class="min-w-0 flex-1">
           <div class="flex items-center justify-between gap-2">
             <span class="font-medium text-slate-800">{{ n.title }}</span>
-            <span class="shrink-0 text-xs text-slate-400">{{ fmtRelatif(n.dibuat_at) }}</span>
+            <span class="shrink-0 text-xs text-slate-400">{{ fmtRelatif(n.created_at) }}</span>
           </div>
-          <p v-if="n.isi" class="mt-0.5 text-sm text-slate-500">{{ n.isi }}</p>
-          <span class="mt-1 inline-block text-xs text-slate-400">{{ n.tipe }}</span>
+          <p v-if="n.content" class="mt-0.5 text-sm text-slate-500">{{ n.content }}</p>
+          <span class="mt-1 inline-block text-xs text-slate-400">{{ n.type }}</span>
         </div>
       </button>
     </div>

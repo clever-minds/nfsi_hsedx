@@ -8,7 +8,7 @@ export const assessmentsRoutes: RouteRecordRaw[] = [
     meta: { permission: 'assessment.view', title: 'Assessments' },
   },
   {
-    // Soal di dalam satu bank soal (tambah/ubah/hapus).
+    // Soal di dalam satu bank soal (add/edit/delete).
     path: 'assessments/banks/:id',
     name: 'question-bank',
     component: () => import('@/modules/assessments/views/QuestionBankView.vue'),

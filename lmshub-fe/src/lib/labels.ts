@@ -1,9 +1,9 @@
 /**
- * Pelabelan nilai enum yang datang dari backend.
+ * Pelabelan value enum yang datang from backend.
  *
- * BE mengirim kode berbahasa Indonesia (`aktif`, `lunas`, `instructor`, …).
- * Helper ini memetakannya ke text terjemahan; bila kode belum ada di catalog,
- * nilai aslinya dikembalikan apa adanya (dirapikan) sehingga UI tidak pernah
+ * BE mengirim kode berlanguage Indonesia (`active`, `lunas`, `instructor`, …).
+ * Helper ini memetakannya to text terjemahan; bila kode belum ada di catalog,
+ * value aslinya dikembalikan apa adanya (dirapikan) sehingga UI no pernah
  * menampilkan kunci i18n mentah saat BE menambah enum baru.
  */
 import { t, te } from '@/i18n';
@@ -41,7 +41,7 @@ export function levelLabel(level?: string | null): string {
 }
 
 /**
- * Nama modul RBAC. Kode modul (`bank_soal`, `live_class`, …) adalah name skema
+ * name modul RBAC. Kode modul (`bank_soal`, `live_class`, …) adalah name skema
  * yang dikirim BE dan dipakai apa adanya sebagai kunci permission; yang
  * diterjemahkan hanya tampilannya. Modul baru di BE tetap tampil rapi lewat
  * fallback `lookup` walau catalog terjemahan belum menyusul.
@@ -53,7 +53,7 @@ export function moduleLabel(module?: string | null): string {
 /**
  * Label KPI dashboard. BE mengirim payload dengan kunci snake_case yang
  * berbeda-beda per peran; kunci yang belum diterjemahkan tetap tampil
- * rapi (`total_siswa_aktif` → `Total student aktif`).
+ * rapi (`total_siswa_aktif` → `Total student active`).
  */
 export function kpiLabel(key: string): string {
   return lookup('dashboard.kpi', key);

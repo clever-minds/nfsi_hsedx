@@ -7,12 +7,12 @@ import Icon from '@/components/ui/Icon.vue';
 /**
  * Pemilih mata uang tampilan, dipasang bersebelahan dengan pemilih language.
  *
- * Menggambar dirinya hanya bila memang ada pilihan: sakelar di Pengaturan
- * menyala DAN tersedia lebih dari satu mata uang aktif. Dropdown berisi satu
- * opsi adalah kontrol yang menjanjikan sesuatu lalu tidak menepatinya.
+ * Menggambar dirinya hanya bila memang ada pilihan: sakelar di settings
+ * menyala DAN tersedia lebih from satu mata uang active. Dropdown berisi satu
+ * opsi adalah kontrol yang menjanjikan sesuatu lalu no menepatinya.
  *
- * Harga yang ditampilkan dikonversi; penagihan tetap dalam mata uang basis —
- * itu dinyatakan di daftar, bukan disembunyikan.
+ * price yang ditampilkan dikonversi; penagihan tetap dalam mata uang basis —
+ * itu dinyatakan di register, bukan disembunyikan.
  */
 const props = withDefaults(
   defineProps<{ variant?: 'light' | 'dark'; showLabel?: boolean }>(),
@@ -53,7 +53,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside));
       :aria-expanded="open"
       @click="open = !open"
     >
-      <span class="shrink-0 font-semibold leading-none">{{ store.active.simbol || '¤' }}</span>
+      <span class="shrink-0 font-semibold leading-none">{{ store.active.symbol || '¤' }}</span>
       <span v-if="props.showLabel" class="hidden font-medium sm:inline">{{ label }}</span>
       <Icon name="chevron-down" :size="13" class="shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" />
     </button>
@@ -90,7 +90,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside));
           :class="store.choice === c.kode ? 'font-medium text-brand-500' : 'text-slate-600'"
           @click="pick(c.kode)"
         >
-          <span class="w-5 shrink-0 text-center font-semibold leading-none">{{ c.simbol || '¤' }}</span>
+          <span class="w-5 shrink-0 text-center font-semibold leading-none">{{ c.symbol || '¤' }}</span>
           <span class="min-w-0 flex-1 truncate">{{ c.kode }}</span>
           <Icon v-if="store.choice === c.kode" name="check" :size="15" class="shrink-0" />
         </button>

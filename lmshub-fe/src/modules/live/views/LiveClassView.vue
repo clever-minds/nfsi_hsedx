@@ -7,21 +7,21 @@ import { fmtAngka, fmtTanggal } from '@/lib/format';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import StatusChip from '@/components/ui/StatusChip.vue';
 
-// Nama field mengikuti apa yang benar-benar dikirim BE: kolom tabel
+// name field mengikuti apa yang benar-benar dikirim BE: kolom tabel
 // `live_sessions` apa adanya, ditambah kolom hasil join. Aplikasi mobile
 // membaca name yang sama, jadi ketiga lapisan memakai satu kosakata.
 interface LiveSession {
   id: string;
   title: string;
   course_title?: string | null;
-  penyedia?: string; // zoom | bbb | meet
+  provider?: string; // zoom | bbb | meet
   url_join?: string;
-  host_nama?: string | null;
+  host_name?: string | null;
   start_time: string;
-  waktu_selesai?: string;
-  status: string; // dijadwalkan | berlangsung | selesai | rekaman_tersedia
+  end_time?: string;
+  status: string; // dijadwalkan | berlangsung | finish | rekaman_tersedia
   kapasitas_maks?: number | null;
-  jumlah_hadir?: number;
+  amount_hadir?: number;
 }
 
 const auth = useAuthStore();
@@ -33,7 +33,7 @@ const statusFilter = ref('');
 
 const statusOptions = computed(() => [
   { value: '', label: t('live.list.allStatus') },
-  ...['dijadwalkan', 'berlangsung', 'selesai', 'rekaman_tersedia'].map((v) => ({
+  ...['scheduled', 'ongoing', 'completed', 'recording_available'].map((v) => ({
     value: v,
     label: t(`live.list.status.${v}`),
   })),
@@ -56,17 +56,17 @@ async function load() {
 }
 
 function isJoinable(s: LiveSession): boolean {
-  if (!['dijadwalkan', 'berlangsung'].includes(s.status)) return false;
+  if (!['scheduled', 'ongoing'].includes(s.status)) return false;
   const now = Date.now();
   const start = new Date(s.start_time).getTime();
-  const toleranceMs = 15 * 60 * 1000; // toleransi 15 menit sebelum mulai
-  const end = s.waktu_selesai ? new Date(s.waktu_selesai).getTime() : start + 2 * 60 * 60 * 1000;
+  const toleranceMs = 15 * 60 * 1000; // toleransi 15 menit sebelum start
+  const end = s.end_time ? new Date(s.end_time).getTime() : start + 2 * 60 * 60 * 1000;
   return now >= start - toleranceMs && now <= end;
 }
 
 function joinLabel(s: LiveSession): string {
-  if (s.status === 'rekaman_tersedia') return t('live.list.recording');
-  if (s.status === 'selesai') return t('live.list.ended');
+  if (s.status === 'recording_available') return t('live.list.recording');
+  if (s.status === 'completed') return t('live.list.ended');
   return isJoinable(s) ? t('live.list.join') : t('live.list.notYet');
 }
 
@@ -74,9 +74,9 @@ const grouped = computed(() => sessions.value);
 const joiningId = ref<string | null>(null);
 
 // ── Membuat sesi ──────────────────────────────────────────────────────────
-// `POST /live-sessions` sudah ada sejak awal tapi tidak pernah dipanggil layar
-// mana pun, jadi sesi hanya bisa lahir dari seeder. Formulir di bawah ini yang
-// membuatnya bisa dijadwalkan dari panel.
+// `POST /live-sessions` sudah ada sejak awal tapi no pernah dipanggil layar
+// mana pun, jadi sesi hanya bisa lahir from seeder. Formulir di bawah ini yang
+// membuatnya bisa dijadwalkan from panel.
 
 interface Pilihan {
   id: string;
@@ -84,7 +84,7 @@ interface Pilihan {
 }
 interface PenggunaRingkas {
   id: string;
-  nama_lengkap: string;
+  name_lengkap: string;
 }
 
 const canCreate = auth.can('live_class.create');
@@ -98,12 +98,12 @@ const form = ref({
   course_id: '',
   title: '',
   description: '',
-  penyedia: 'zoom' as 'zoom' | 'meet' | 'bbb',
+  provider: 'zoom' as 'zoom' | 'meet' | 'bbb',
   url_join: '',
   host_user_id: '',
-  tanggal: '',
-  jam_mulai: '',
-  jam_selesai: '',
+  date: '',
+  jam_start: '',
+  jam_finish: '',
   kapasitas_maks: '' as number | '',
   toleransi_terlambat_menit: 15,
 });
@@ -126,23 +126,23 @@ async function openForm() {
   if (!form.value.host_user_id && auth.user?.id) form.value.host_user_id = auth.user.id;
 }
 
-/** Gabungkan tanggal + jam lokal jadi ISO yang diminta backend. */
-function toIso(tanggal: string, jam: string): string | null {
-  if (!tanggal || !jam) return null;
-  const d = new Date(`${tanggal}T${jam}`);
+/** Gabungkan date + jam lokal jadi ISO yang diminta backend. */
+function toIso(date: string, jam: string): string | null {
+  if (!date || !jam) return null;
+  const d = new Date(`${date}T${jam}`);
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
 async function submitSession() {
   const f = form.value;
-  const mulai = toIso(f.tanggal, f.jam_mulai);
-  const selesai = toIso(f.tanggal, f.jam_selesai);
+  const start = toIso(f.date, f.jam_start);
+  const finish = toIso(f.date, f.jam_finish);
   if (!f.course_id) return void (formError.value = t('live.form.courseRequired'));
   if (f.title.trim().length < 2) return void (formError.value = t('live.form.titleRequired'));
   if (!f.url_join.trim()) return void (formError.value = t('live.form.linkRequired'));
   if (!f.host_user_id) return void (formError.value = t('live.form.hostRequired'));
-  if (!mulai || !selesai) return void (formError.value = t('live.form.timeRequired'));
-  if (new Date(selesai) <= new Date(mulai)) return void (formError.value = t('live.form.timeOrder'));
+  if (!start || !finish) return void (formError.value = t('live.form.timeRequired'));
+  if (new Date(finish) <= new Date(start)) return void (formError.value = t('live.form.timeOrder'));
 
   saving.value = true;
   formError.value = '';
@@ -151,16 +151,16 @@ async function submitSession() {
       course_id: f.course_id,
       title: f.title.trim(),
       description: f.description.trim() || undefined,
-      penyedia: f.penyedia,
+      provider: f.provider,
       url_join: f.url_join.trim(),
       host_user_id: f.host_user_id,
-      start_time: mulai,
-      waktu_selesai: selesai,
+      start_time: start,
+      end_time: finish,
       kapasitas_maks: f.kapasitas_maks === '' ? undefined : Number(f.kapasitas_maks),
       toleransi_terlambat_menit: Number(f.toleransi_terlambat_menit) || 0,
     });
     showForm.value = false;
-    form.value = { ...form.value, title: '', description: '', url_join: '', tanggal: '', jam_mulai: '', jam_selesai: '', kapasitas_maks: '' };
+    form.value = { ...form.value, title: '', description: '', url_join: '', date: '', jam_start: '', jam_finish: '', kapasitas_maks: '' };
     await load();
   } catch (e) {
     formError.value = errorMessage(e, t('live.form.saveFailed'));
@@ -171,14 +171,14 @@ async function submitSession() {
 
 /**
  * Gabung WAJIB lewat POST /live-sessions/:id/join, bukan membuka url_join
- * langsung. Endpoint itulah yang memeriksa pengguna benar-benar terdaftar di
- * course/cohort, menegakkan jendela waktu, lalu **mencatat kehadiran otomatis**
+ * langsung. Endpointst itulah yang memeriksa user benar-benar terdaftar di
+ * course/cohort, menegakkan jendela time, lalu **mencatat kehadiran otomatis**
  * (hadir / terlambat sesuai toleransi sesi). Membuka tautannya sendiri
- * melewatkan ketiganya — absensi tidak pernah tercatat.
+ * melewatkan ketiganya — absensi no pernah tercatat.
  */
 async function gabung(s: LiveSession) {
-  // Jendela dibuka sebelum await: peramban memblokir window.open yang tidak
-  // langsung berasal dari klik pengguna.
+  // Jendela dibuka sebelum await: peramban memblokir window.open yang no
+  // langsung berasal from klik user.
   const win = window.open('', '_blank');
   if (win) win.opener = null;
   joiningId.value = s.id;
@@ -227,7 +227,7 @@ onMounted(load);
         </div>
         <div>
           <label class="label">{{ t('live.form.provider') }}</label>
-          <select v-model="form.penyedia" class="input">
+          <select v-model="form.provider" class="input">
             <option value="zoom">Zoom</option>
             <option value="meet">Google Meet</option>
             <option value="bbb">BigBlueButton</option>
@@ -237,7 +237,7 @@ onMounted(load);
           <label class="label">{{ t('live.form.host') }}</label>
           <select v-model="form.host_user_id" class="input">
             <option value="">{{ t('common.action.choose') }}</option>
-            <option v-for="h in hosts" :key="h.id" :value="h.id">{{ h.nama_lengkap }}</option>
+            <option v-for="h in hosts" :key="h.id" :value="h.id">{{ h.name_lengkap }}</option>
           </select>
         </div>
         <div class="sm:col-span-2">
@@ -247,16 +247,16 @@ onMounted(load);
         </div>
         <div>
           <label class="label">{{ t('live.form.date') }}</label>
-          <input v-model="form.tanggal" type="date" class="input" />
+          <input v-model="form.date" type="date" class="input" />
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="label">{{ t('live.form.start') }}</label>
-            <input v-model="form.jam_mulai" type="time" class="input" />
+            <input v-model="form.jam_start" type="time" class="input" />
           </div>
           <div>
             <label class="label">{{ t('live.form.end') }}</label>
-            <input v-model="form.jam_selesai" type="time" class="input" />
+            <input v-model="form.jam_finish" type="time" class="input" />
           </div>
         </div>
         <div>
@@ -302,9 +302,9 @@ onMounted(load);
         </div>
         <div class="text-sm text-slate-500">
           <div class="num">{{ fmtTanggal(s.start_time) }}</div>
-          <div v-if="s.host_nama">{{ t('live.list.host', { name: s.host_nama }) }}</div>
+          <div v-if="s.host_name">{{ t('live.list.host', { name: s.host_name }) }}</div>
           <div v-if="s.kapasitas_maks">
-            {{ t('live.list.participants', { joined: fmtAngka(s.jumlah_hadir ?? 0), capacity: fmtAngka(s.kapasitas_maks) }) }}
+            {{ t('live.list.participants', { joined: fmtAngka(s.amount_hadir ?? 0), capacity: fmtAngka(s.kapasitas_maks) }) }}
           </div>
         </div>
         <div class="mt-auto flex flex-wrap gap-2">

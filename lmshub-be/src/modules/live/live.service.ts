@@ -21,7 +21,7 @@ async function assertManage(actor: AuthContext, sessionId: string): Promise<void
 export async function list(actor: AuthContext, p: PageParams, filters: { course_id?: string; cohort_id?: string; status?: string }) {
   const isStudentOnly = !isSuper(actor) && !actor.permissions.has('live_class.update');
   // Student: hanya scope enrollment/cohort. Instructor (punya live_class.update, bukan super):
-  // hanya scope host/pemilik course. Super: tanpa scope. Kedua filter TIDAK boleh
+  // hanya scope host/pemilik course. Super: tanpa scope. Kedua filter no boleh
   // dipasang bersamaan untuk student (akan ter-AND dan mengosongkan hasil).
   return repo.list(p, {
     ...filters,
@@ -48,22 +48,22 @@ export async function schedule(actor: AuthContext, input: CreateLiveSessionInput
     cohort_id: input.cohort_id ?? null,
     title: input.title,
     description: input.description ?? null,
-    penyedia: input.penyedia,
+    provider: input.provider,
     url_join: input.url_join,
     host_user_id: input.host_user_id,
     start_time: input.start_time,
-    waktu_selesai: input.waktu_selesai,
+    end_time: input.end_time,
     kapasitas_maks: input.kapasitas_maks ?? null,
     toleransi_terlambat_menit: input.toleransi_terlambat_menit,
-    dibuat_oleh: actor.userId,
+    created_by: actor.userId,
   });
   await repo.upsertCalendarEvent({
-    sumber: 'live_session',
+    source: 'live_session',
     source_id: id,
     course_id: input.course_id ?? null,
     title: input.title,
     start_time: input.start_time,
-    waktu_selesai: input.waktu_selesai,
+    end_time: input.end_time,
   });
   await recordAudit({
     userId: actor.userId,
@@ -80,22 +80,22 @@ export async function update(actor: AuthContext, id: string, input: UpdateLiveSe
   const before = await repo.detail(id);
   if (!before) throw AppError.notFound('Live session not found', 'live.session_not_found');
   await assertManage(actor, id);
-  if (before.status !== 'dijadwalkan') {
+  if (before.status !== 'scheduled') {
     throw AppError.conflict('Only a scheduled session can be changed', 'live.only_scheduled_editable');
   }
   const fields: Record<string, unknown> = {};
-  for (const k of ['title', 'description', 'penyedia', 'url_join', 'start_time', 'waktu_selesai', 'kapasitas_maks', 'toleransi_terlambat_menit'] as const) {
+  for (const k of ['title', 'description', 'provider', 'url_join', 'start_time', 'end_time', 'kapasitas_maks', 'toleransi_terlambat_menit'] as const) {
     if (input[k] !== undefined) fields[k] = input[k];
   }
   await repo.update(id, fields);
-  if (input.start_time || input.waktu_selesai) {
+  if (input.start_time || input.end_time) {
     await repo.upsertCalendarEvent({
-      sumber: 'live_session',
+      source: 'live_session',
       source_id: id,
       course_id: before.course_id,
       title: input.title ?? before.title,
       start_time: input.start_time ?? before.start_time,
-      waktu_selesai: input.waktu_selesai ?? before.waktu_selesai,
+      end_time: input.end_time ?? before.end_time,
     });
   }
   await recordAudit({
@@ -114,7 +114,7 @@ export async function cancel(actor: AuthContext, id: string) {
   const session = await repo.detail(id);
   if (!session) throw AppError.notFound('Live session not found', 'live.session_not_found');
   await assertManage(actor, id);
-  if (session.status === 'berlangsung' || session.status === 'selesai' || session.status === 'rekaman_tersedia') {
+  if (session.status === 'ongoing' || session.status === 'completed' || session.status === 'recording_available') {
     throw AppError.conflict('A session that has started or finished cannot be cancelled', 'live.cannot_cancel_started');
   }
   await repo.softDelete(id);
@@ -132,8 +132,8 @@ export async function start(actor: AuthContext, id: string) {
   const session = await repo.detail(id);
   if (!session) throw AppError.notFound('Live session not found', 'live.session_not_found');
   await assertManage(actor, id);
-  if (session.status !== 'dijadwalkan') throw AppError.conflict('This session is not in a scheduled state', 'live.not_scheduled');
-  await repo.setStatus(id, 'berlangsung');
+  if (session.status !== 'scheduled') throw AppError.conflict('This session is not in a scheduled state', 'live.not_scheduled');
+  await repo.setStatus(id, 'ongoing');
   await recordAudit({ userId: actor.userId, module: 'live_class', action: 'start', entity: 'live_sessions', entityId: id });
   return repo.detail(id);
 }
@@ -142,9 +142,9 @@ export async function end(actor: AuthContext, id: string) {
   const session = await repo.detail(id);
   if (!session) throw AppError.notFound('Live session not found', 'live.session_not_found');
   await assertManage(actor, id);
-  if (session.status !== 'berlangsung') throw AppError.conflict('This session is not currently running', 'live.not_in_progress');
-  await repo.setStatus(id, 'selesai');
-  // peserta terdaftar yang tidak pernah join otomatis ditandai absen
+  if (session.status !== 'ongoing') throw AppError.conflict('This session is not currently running', 'live.not_in_progress');
+  await repo.setStatus(id, 'completed');
+  // peserta terdaftar yang no pernah join otomatis ditandai absen
   await repo.batchMarkAbsen(id, session.course_id, session.cohort_id);
   await recordAudit({ userId: actor.userId, module: 'live_class', action: 'end', entity: 'live_sessions', entityId: id });
   return repo.detail(id);
@@ -170,15 +170,15 @@ export async function markAttendance(actor: AuthContext, sessionId: string, inpu
     live_session_id: sessionId,
     user_id: input.user_id,
     status: input.status,
-    waktu_join: null,
-    waktu_leave: null,
+    time_join: null,
+    time_leave: null,
     durasi_hadir_menit: input.durasi_hadir_menit ?? 0,
     ditandai_manual: true,
-    ditandai_oleh: actor.userId,
+    ditandai_by: actor.userId,
   });
   await recordAudit({
     userId: actor.userId,
-    module: 'kehadiran',
+    module: 'attendance',
     action: 'mark_manual',
     entity: 'session_attendance',
     entityId: row.id,
@@ -196,22 +196,22 @@ export async function join(actor: AuthContext, sessionId: string) {
     if (!enrolled) throw AppError.forbidden('You are not enrolled in the course or cohort for this session', 'live.not_in_session_cohort');
   }
   const now = new Date();
-  const mulai = new Date(session.start_time);
-  const selesai = new Date(session.waktu_selesai);
+  const start = new Date(session.start_time);
+  const finish = new Date(session.end_time);
   const toleransiMs = session.toleransi_terlambat_menit * 60_000;
-  if (now < new Date(mulai.getTime() - 15 * 60_000) || now > selesai) {
+  if (now < new Date(start.getTime() - 15 * 60_000) || now > finish) {
     throw AppError.badRequest('The join link only works shortly before and during the session', 'live.join_link_not_yet_active');
   }
-  const status = now.getTime() > mulai.getTime() + toleransiMs ? 'terlambat' : 'hadir';
+  const status = now.getTime() > start.getTime() + toleransiMs ? 'late' : 'present';
   const row = await repo.upsertAttendance({
     live_session_id: sessionId,
     user_id: actor.userId,
     status,
-    waktu_join: now.toISOString(),
-    waktu_leave: null,
+    time_join: now.toISOString(),
+    time_leave: null,
     durasi_hadir_menit: 0,
     ditandai_manual: false,
-    ditandai_oleh: null,
+    ditandai_by: null,
   });
   return { url_join: session.url_join, attendance: row };
 }
@@ -239,10 +239,10 @@ export async function addRecording(actor: AuthContext, sessionId: string, input:
     duration_minutes: input.duration_minutes ?? null,
     size_bytes: input.size_bytes ?? null,
     retensi_hingga: input.retensi_hingga ?? null,
-    diunggah_oleh: actor.userId,
+    diunggah_by: actor.userId,
   });
-  if (session.status === 'selesai') {
-    await repo.setStatus(sessionId, 'rekaman_tersedia');
+  if (session.status === 'completed') {
+    await repo.setStatus(sessionId, 'recording_available');
   }
   await recordAudit({
     userId: actor.userId,

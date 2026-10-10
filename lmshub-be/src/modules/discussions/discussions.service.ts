@@ -16,7 +16,7 @@ import {
 
 const isSuper = (actor: AuthContext) => actor.permissions.has('*');
 
-const REPORT_ESCALATION_THRESHOLD = 3; // ambang eskalasi laporan menumpuk (default; idealnya dari settings)
+const REPORT_ESCALATION_THRESHOLD = 3; // ambang escalation report menumpuk (default; idealnya from settings)
 
 async function assertCourseMember(actor: AuthContext, courseId: string): Promise<void> {
   if (isSuper(actor)) return;
@@ -47,9 +47,9 @@ export async function threadDetail(actor: AuthContext, threadId: string) {
 
 export async function createThread(actor: AuthContext, courseId: string, input: CreateThreadInput) {
   await assertCourseMember(actor, courseId);
-  const thread = await repo.insertThread({ course_id: courseId, title: input.title, dibuat_oleh: actor.userId });
-  if (input.isi) {
-    await repo.insertPost({ thread_id: thread.id, parent_post_id: null, user_id: actor.userId, isi: input.isi });
+  const thread = await repo.insertThread({ course_id: courseId, title: input.title, created_by: actor.userId });
+  if (input.content) {
+    await repo.insertPost({ thread_id: thread.id, parent_post_id: null, user_id: actor.userId, content: input.content });
     await repo.incrementThreadPostCount(thread.id);
   }
   return threadDetail(actor, thread.id);
@@ -68,7 +68,7 @@ export async function reply(actor: AuthContext, threadId: string, input: CreateP
     thread_id: threadId,
     parent_post_id: input.parent_post_id ?? null,
     user_id: actor.userId,
-    isi: input.isi,
+    content: input.content,
   });
   await repo.incrementThreadPostCount(threadId);
   return post;
@@ -79,7 +79,7 @@ export async function pinThread(actor: AuthContext, threadId: string, pinned: bo
   if (!thread) throw AppError.notFound('Thread not found', 'discussion.thread_not_found');
   await assertCourseInstructor(actor, thread.course_id);
   await repo.setThreadPin(threadId, pinned);
-  await recordAudit({ userId: actor.userId, module: 'diskusi', action: pinned ? 'pin' : 'unpin', entity: 'discussion_threads', entityId: threadId });
+  await recordAudit({ userId: actor.userId, module: 'discussion', action: pinned ? 'pin' : 'unpin', entity: 'discussion_threads', entityId: threadId });
   return repo.getThread(threadId);
 }
 
@@ -88,7 +88,7 @@ export async function lockThread(actor: AuthContext, threadId: string, locked: b
   if (!thread) throw AppError.notFound('Thread not found', 'discussion.thread_not_found');
   await assertCourseInstructor(actor, thread.course_id);
   await repo.setThreadLock(threadId, locked);
-  await recordAudit({ userId: actor.userId, module: 'diskusi', action: locked ? 'lock' : 'unlock', entity: 'discussion_threads', entityId: threadId });
+  await recordAudit({ userId: actor.userId, module: 'discussion', action: locked ? 'lock' : 'unlock', entity: 'discussion_threads', entityId: threadId });
   return repo.getThread(threadId);
 }
 
@@ -105,7 +105,7 @@ export async function askQuestion(actor: AuthContext, lessonId: string, input: C
   const courseId = await repo.courseIdOfLesson(lessonId);
   if (!courseId) throw AppError.notFound('Lesson not found', 'lesson.not_found');
   await assertCourseMember(actor, courseId);
-  return repo.insertQuestion({ lesson_id: lessonId, user_id: actor.userId, isi: input.isi });
+  return repo.insertQuestion({ lesson_id: lessonId, user_id: actor.userId, content: input.content });
 }
 
 export async function answerQuestion(actor: AuthContext, questionId: string, input: CreateAnswerInput) {
@@ -118,11 +118,11 @@ export async function answerQuestion(actor: AuthContext, questionId: string, inp
   const answer = await repo.insertAnswer({
     question_id: questionId,
     user_id: actor.userId,
-    isi: input.isi,
-    is_instruktur_jawaban: isInstructor,
+    content: input.content,
+    is_instructor_answer: isInstructor,
   });
-  // "status_terjawab" true begitu >=1 jawaban masuk (aturan bisnis domain 07)
-  if (!question.status_terjawab) {
+  // "is_answered" true begitu >=1 answer login (rule bisnis domain 07)
+  if (!question.is_answered) {
     await repo.setQuestionAnswered(questionId, true);
   }
   return answer;
@@ -162,7 +162,7 @@ async function toggleUpvote(actor: AuthContext, targetType: string, targetId: st
     await repo.incrementUpvote(table, targetId, -1);
     return { upvoted: false };
   }
-  await repo.insertReaction({ target_type: targetType, target_id: targetId, user_id: actor.userId, jenis: 'suka' });
+  await repo.insertReaction({ target_type: targetType, target_id: targetId, user_id: actor.userId, type: 'like' });
   await repo.incrementUpvote(table, targetId, 1);
   return { upvoted: true };
 }
@@ -176,7 +176,7 @@ export async function createComment(actor: AuthContext, input: CreateCommentInpu
     target_type: input.target_type,
     target_id: input.target_id,
     user_id: actor.userId,
-    isi: input.isi,
+    content: input.content,
   });
 }
 
@@ -184,7 +184,7 @@ export async function toggleReaction(actor: AuthContext, input: ToggleReactionIn
   const courseId = await repo.courseIdOfTarget(input.target_type, input.target_id);
   if (courseId) await assertCourseMember(actor, courseId);
   const existing = await repo.findReaction(input.target_type, input.target_id, actor.userId);
-  if (existing && existing.jenis === input.jenis) {
+  if (existing && existing.type === input.type) {
     await repo.deleteReaction(existing.id);
     return { reacted: false };
   }
@@ -195,7 +195,7 @@ export async function toggleReaction(actor: AuthContext, input: ToggleReactionIn
     target_type: input.target_type,
     target_id: input.target_id,
     user_id: actor.userId,
-    jenis: input.jenis,
+    type: input.type,
   });
   return { reacted: true, reaction: row };
 }
@@ -208,15 +208,15 @@ export async function createReport(actor: AuthContext, input: CreateReportInput)
   const report = await repo.insertReport({
     target_type: input.target_type,
     target_id: input.target_id,
-    pelapor_user_id: actor.userId,
-    alasan: input.alasan,
+    reporter_user_id: actor.userId,
+    reason: input.reason,
   });
   const pendingCount = await repo.countPendingReportsForTarget(input.target_type, input.target_id);
   const escalated = pendingCount >= REPORT_ESCALATION_THRESHOLD;
   if (escalated) {
     await recordAudit({
       userId: actor.userId,
-      module: 'diskusi',
+      module: 'discussion',
       action: 'moderation_escalated',
       entity: 'moderation_reports',
       entityId: report.id,
@@ -227,7 +227,7 @@ export async function createReport(actor: AuthContext, input: CreateReportInput)
 }
 
 export async function listReports(actor: AuthContext, p: PageParams, status?: string) {
-  if (!isSuper(actor) && !actor.permissions.has('diskusi.view')) {
+  if (!isSuper(actor) && !actor.permissions.has('discussion.view')) {
     throw AppError.forbidden('You need the discussion.view permission', 'permission.discussion_view_required');
   }
   return repo.listReports(p, status);
@@ -238,28 +238,28 @@ export async function actOnReport(actor: AuthContext, reportId: string, input: A
   if (!report) throw AppError.notFound('Report not found', 'report.not_found');
   const updated = await repo.actOnReport(reportId, {
     status: input.status,
-    tindakan: input.tindakan ?? null,
-    ditangani_oleh: actor.userId,
-    catatan_penanganan: input.catatan_penanganan ?? null,
+    action: input.action ?? null,
+    handled_by: actor.userId,
+    handling_notes: input.handling_notes ?? null,
   });
-  if (input.status === 'ditindak' && input.tindakan) {
-    if (input.tindakan === 'sembunyikan') {
-      await repo.hideTarget(report.target_type, report.target_id, input.catatan_penanganan ?? null);
-    } else if (input.tindakan === 'hapus') {
+  if (input.status === 'actioned' && input.action) {
+    if (input.action === 'hide') {
+      await repo.hideTarget(report.target_type, report.target_id, input.handling_notes ?? null);
+    } else if (input.action === 'delete') {
       await repo.softDeleteTarget(report.target_type, report.target_id);
     }
-    // 'blokir_pengguna' dicatat sebagai efek pada moderation_reports.tindakan; penegakan akses forum
-    // dilakukan aplikasi di layer lain (tidak ada tabel blocked_users terpisah pada rilis awal).
+    // 'block_user' dicatat sebagai efek pada moderation_reports.action; penegakan akses forum
+    // dilakukan aplikasi di layer lain (no ada tabel blocked_users terpisah pada rilis awal).
   }
   await recordAudit({
     userId: actor.userId,
-    module: 'diskusi',
+    module: 'discussion',
     action: 'moderation_act',
     entity: 'moderation_reports',
     entityId: reportId,
     before: { status: report.status },
-    after: { status: input.status, tindakan: input.tindakan },
-    reason: input.catatan_penanganan ?? null,
+    after: { status: input.status, action: input.action },
+    reason: input.handling_notes ?? null,
   });
   return updated;
 }

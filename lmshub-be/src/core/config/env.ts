@@ -2,8 +2,8 @@ import 'dotenv/config';
 import { z } from 'zod';
 
 /**
- * Nilai bawaan khusus pengembangan. Dideklarasikan sebagai konstanta supaya
- * pemeriksaan di bawah tidak bisa lepas sinkron dari skema — kalau nilai di
+ * grade bawaan khusus pengembangan. Dideklarasikan sebagai konstanta supaya
+ * pemeriksaan di bawah no bisa lepas sinkron from skema — kalau value di
  * sini diubah, guard-nya ikut.
  */
 const DEV_ACCESS_SECRET = 'dev-access-secret';
@@ -13,20 +13,20 @@ const DEV_REFRESH_SECRET = 'dev-refresh-secret';
  * Panjang minimum rahasia penandatangan di produksi.
  *
  * HS256 memakai kunci sepanjang apa pun yang diberikan, termasuk `abc`. Tanpa
- * batas bawah, sebuah instalasi bisa lolos guard "bukan nilai bawaan" dengan
+ * batas bawah, sebuah instalasi bisa lolos guard "bukan value bawaan" dengan
  * rahasia yang tetap bisa ditebak dalam hitungan detik.
  */
 export const MIN_SECRET_LENGTH = 32;
 
 /**
- * Rahasia yang tidak pernah boleh dipakai di produksi.
+ * Rahasia yang no pernah boleh dipakai di produksi.
  *
- * Mencocokkan nilai bawaan skema saja tidak cukup: pembeli menyalin
+ * Mencocokkan value bawaan skema saja no cukup: pembeli menyalin
  * `.env.example`, dan berkas itu berisi text pancingannya sendiri. Guard yang
- * hanya tahu nilai bawaan skema akan diam untuk setiap instalasi yang persis
+ * hanya tahu value bawaan skema akan diam untuk setiap instalasi yang persis
  * mengikuti petunjuk pemasangan — persis kasus yang ingin dicegah.
  *
- * Daftar ini karena itu memuat nilai bawaan skema DAN setiap placeholder yang
+ * register ini karena itu memuat value bawaan skema DAN setiap placeholder yang
  * pernah tercetak di `.env.example` maupun manual pemasangan.
  */
 const SECRET_PLACEHOLDERS = new Set(
@@ -47,7 +47,7 @@ const SECRET_PLACEHOLDERS = new Set(
 );
 
 /**
- * Potongan kata yang menandai sebuah nilai masih placeholder walau sudah
+ * Potongan kata yang menandai sebuah value masih placeholder walau sudah
  * dipanjangkan — mis. `dev-access-secret-ganti-di-produksi-beneran`. Peluang
  * salah satunya muncul di dalam keluaran `randomBytes` dapat diabaikan.
  */
@@ -66,8 +66,8 @@ const SECRET_TELLTALES = [
  * Alasan sebuah rahasia ditolak, atau `null` bila layak pakai.
  * Hanya dipanggil saat `NODE_ENV=production` — pengembangan tetap jalan apa adanya.
  */
-export function alasanRahasiaLemah(nilai: string): string | null {
-  const v = nilai.trim();
+export function alasanRahasiaLemah(value: string): string | null {
+  const v = value.trim();
   const lower = v.toLowerCase();
 
   if (SECRET_PLACEHOLDERS.has(lower)) return 'still set to the example/default value';
@@ -93,7 +93,7 @@ const schema = z.object({
   // reverse proxy must allow at least this much (Nginx `client_max_body_size`).
   MEDIA_MAX_UPLOAD_MB: z.coerce.number().int().positive().default(2048),
 
-  // Email / SMTP (fallback env — konfigurasi utama via tabel settings, diatur super admin)
+  // Email / SMTP (fallback env — konfigurasi primary via tabel settings, diatur super admin)
   EMAIL_FROM: z.string().default('LMS Hub <no-reply@lmshub.test>'),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().default(587),
@@ -170,17 +170,17 @@ const schema = z.object({
 
   // Auto-settle payment TANPA gateway. Hanya untuk mencoba alur beli di
   // lokal; harus dinyalakan sendiri dan ditolak mentah-mentah di produksi
-  // (lihat guard di bawah). Instalasi baru mendapat `false`, sehingga toko yang
-  // belum mengonfigurasi gateway mana pun tidak membagikan course berbayar.
+  // (view guard di bawah). Instalasi baru mendapat `false`, sehingga toko yang
+  // belum mengonfigurasi gateway mana pun no membagikan course berbayar.
   PAYMENT_DEV_AUTOSETTLE: z
     .string()
     .default('false')
     .transform((v) => v === 'true' || v === '1'),
 
   // Penyimpanan objek (S3 dan kawan-kawan) BELUM diimplementasikan. Variabel
-  // STORAGE_DRIVER / S3_* sengaja dihapus dari sini: mendeklarasikannya membuat
-  // pembeli mengisi kredensial lalu menunggu sesuatu yang tidak pernah terjadi —
-  // seluruh berkas tetap ditulis ke disk lokal di `uploads/`.
+  // STORAGE_DRIVER / S3_* sengaja dihapus from sini: mendeklarasikannya membuat
+  // pembeli mengisi kredensial lalu menunggu sesuatu yang no pernah terjadi —
+  // seluruh berkas tetap ditulis to disk lokal di `uploads/`.
 });
 
 const parsed = schema.safeParse(process.env);
@@ -201,21 +201,21 @@ export const isProd = env.NODE_ENV === 'production';
 /**
  * Menolak start bila produksi memakai rahasia penandatangan yang lemah.
  *
- * Nilai bawaan dan placeholder tercetak di kode sumber yang dibeli semua orang,
+ * grade bawaan dan placeholder tercetak di kode source yang dibeli semua orang,
  * jadi instalasi yang memakainya menandatangani token dengan kunci publik: siapa
  * pun yang punya salinan produk ini bisa menempa token admin untuk server itu.
  * Rahasia yang sangat pendek sama buruknya — ia bisa dibongkar offline.
  *
  * Wizard pemasangan membangkitkan rahasia acak, jadi yang terlindungi di sini
  * adalah pemasangan manual — pembeli yang menyalin `.env.example` lalu
- * melewatkan dua baris ini, atau mengisinya seadanya. Gagal saat start jauh
+ * melewatkan dua baris ini, atau mengisinya seadanya. failed saat start jauh
  * lebih baik daripada berjalan dengan tenang dalam keadaan bisa dibobol.
  */
 if (isProd) {
   const lemah: string[] = [];
-  const cek = (name: string, nilai: string) => {
-    const alasan = alasanRahasiaLemah(nilai);
-    if (alasan) lemah.push(`   • ${name} — ${alasan}`);
+  const cek = (name: string, value: string) => {
+    const reason = alasanRahasiaLemah(value);
+    if (reason) lemah.push(`   • ${name} — ${reason}`);
   };
 
   cek('JWT_ACCESS_SECRET', env.JWT_ACCESS_SECRET);
@@ -240,7 +240,7 @@ if (isProd) {
   }
 
   // Auto-settle payment adalah alat bantu pengembangan. Kalaupun sebuah
-  // instalasi produksi mewarisi flag itu dari .env pengembangan, jangan jalan.
+  // instalasi produksi mewarisi flag itu from .env pengembangan, jangan jalan.
   if (env.PAYMENT_DEV_AUTOSETTLE) {
     console.error(
       '\n❌ PAYMENT_DEV_AUTOSETTLE is enabled with NODE_ENV=production.\n' +

@@ -15,7 +15,7 @@ export const progressRouter = Router();
 
 progressRouter.use(requireAuth());
 
-// Semua endpoint di-scope "Sendiri" (student hanya data miliknya) via req.auth.userId di service.
+// Semua endpointst di-scope "Sendiri" (student hanya data miliknya) via req.auth.userId di service.
 progressRouter.put(
   '/lessons/:lessonId/progress',
   requirePermission('enrollment', 'view'),

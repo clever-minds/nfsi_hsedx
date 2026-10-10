@@ -18,7 +18,7 @@ const loading = ref(true);
 const layout = computed(() => {
   const role = auth.activeRole || 'student';
   if (role === 'student' || role === 'sub_user') return 'student';
-  if (role === 'instructor' || role === 'asisten') return 'instructor';
+  if (role === 'instructor' || role === 'assistant') return 'instructor';
   return 'ops';
 });
 

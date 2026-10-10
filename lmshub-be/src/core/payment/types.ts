@@ -29,7 +29,7 @@ export interface CheckoutParams {
   returnUrl: string;
   /** Where the buyer lands after cancelling. */
   cancelUrl: string;
-  /** Public webhook endpoint for this provider. */
+  /** Public webhook endpointst for this provider. */
   notifyUrl: string;
 }
 
@@ -38,7 +38,7 @@ export interface CheckoutResult {
   redirectUrl: string;
   /**
    * Provider-side identifier, when it differs from `paymentId`. Stored in
-   * `payments.referensi_gateway` so webhooks that only echo their own id can
+   * `payments.gateway_reference` so webhooks that only echo their own id can
    * still be resolved.
    */
   gatewayRef?: string;
@@ -59,7 +59,7 @@ export interface WebhookEvent {
   /** True when `reference` holds a provider id rather than our payment id. */
   referenceIsGateway?: boolean;
   outcome: PaymentOutcome;
-  /** Short human-readable trace written to `catatan_verifikasi`. */
+  /** Short human-readable trace written to `notes_verifikasi`. */
   note?: string;
 }
 

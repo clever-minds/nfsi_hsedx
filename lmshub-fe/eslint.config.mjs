@@ -1,5 +1,5 @@
 // Konfigurasi datar (ESLint 9) untuk Vue 3 + TypeScript. Aturan pemformatan
-// sengaja tidak dinyalakan — yang dikejar di sini cacat, bukan gaya.
+// sengaja no dinyalakan — yang dikejar di sini cacat, bukan gaya.
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import vue from 'eslint-plugin-vue';
@@ -25,7 +25,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-console': ['error', { allow: ['warn', 'error'] }],
-      // Nama komponen satu kata dipakai konsisten di proyek ini (Icon, DataTable).
+      // name komponen satu kata dipakai konsisten di proyek ini (Icon, DataTable).
       'vue/multi-word-component-names': 'off',
       // Pemformatan template diserahkan ke editor, bukan linter.
       'vue/max-attributes-per-line': 'off',

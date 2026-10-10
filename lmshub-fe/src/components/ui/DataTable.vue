@@ -13,21 +13,21 @@ const { t } = useI18n();
 
 <template>
   <!-- Kartu tabel = satu panel utuh: toolbar, tabel, lalu footer paginasi.
-       Filter tabel masuk lewat slot `toolbar`, bukan ditaruh view di luar
-       kartu: kontrol yang mengambang di atas latar halaman tidak terbaca
+       Filter tabel login lewat slot `toolbar`, bukan ditaruh view di luar
+       kartu: kontrol yang mengambang di on latar halaman no terbaca
        sebagai milik tabel yang diaturnya. -->
   <div class="card">
     <div v-if="$slots.toolbar" class="flex flex-wrap items-end gap-2 border-b border-slate-200 p-4">
       <slot name="toolbar" />
       <!-- Jumlah baris muncul otomatis, kecuali tabel ini berpaginasi — di sana
            angka totalnya sudah ada di footer dan akan jadi dua angka berbeda
-           untuk hal yang sama (jumlah halaman ini vs jumlah seluruhnya). -->
+           untuk hal yang sama (amount halaman ini vs amount seluruhnya). -->
       <span v-if="!$slots.footer && !loading && rows.length" class="table-count num ms-auto self-center">
         {{ t('common.table.count', { total: fmtAngka(rows.length) }) }}
       </span>
     </div>
 
-    <!-- Scroll horizontal dibatasi ke pembungkus tabel saja. Kalau melekat di
+    <!-- Scroll horizontal dibatasi to pembungkus tabel saja. Kalau melekat di
          kartu, dropdown apa pun di toolbar akan ikut terpotong. -->
     <div class="overflow-x-auto">
       <table class="w-full text-sm">

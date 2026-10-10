@@ -9,14 +9,14 @@ const { t } = useI18n();
 
 interface Instructor {
   id: string;
-  nama_lengkap: string;
-  foto_profil: string | null;
+  name_lengkap: string;
+  profile_picture: string | null;
   bio: string | null;
   keahlian: string[] | null;
   rating_avg: string;
   rating_count: number;
   total_siswa: number;
-  jumlah_kursus: number;
+  amount_kursus: number;
   sosial_media?: Record<string, string> | null;
 }
 
@@ -62,14 +62,14 @@ onMounted(async () => {
         <div v-for="ins in instructors" :key="ins.id" class="card group flex flex-col items-center rounded-xl p-6 text-center transition hover:-translate-y-1 hover:shadow-lg">
           <RouterLink :to="`/instructors/${ins.id}`" class="relative">
             <span class="grid h-28 w-28 place-items-center overflow-hidden rounded-full bg-brand-100 text-3xl font-bold text-brand-600">
-              <img v-if="ins.foto_profil" :src="assetUrl(ins.foto_profil)" :alt="ins.nama_lengkap" class="h-full w-full object-cover" />
-              <template v-else>{{ ins.nama_lengkap[0] }}</template>
+              <img v-if="ins.profile_picture" :src="assetUrl(ins.profile_picture)" :alt="ins.name_lengkap" class="h-full w-full object-cover" />
+              <template v-else>{{ ins.name_lengkap[0] }}</template>
             </span>
             <span class="absolute bottom-1 end-1 grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-white">
               <Icon name="check" :size="12" />
             </span>
           </RouterLink>
-          <RouterLink :to="`/instructors/${ins.id}`" class="mt-4 font-bold text-slate-900 group-hover:text-brand-500">{{ ins.nama_lengkap }}</RouterLink>
+          <RouterLink :to="`/instructors/${ins.id}`" class="mt-4 font-bold text-slate-900 group-hover:text-brand-500">{{ ins.name_lengkap }}</RouterLink>
           <p class="mt-0.5 text-xs text-slate-400">
             {{ (ins.keahlian ?? []).slice(0, 2).join(' · ') || t('catalog.instructors.defaultRole') }}
           </p>
@@ -79,7 +79,7 @@ onMounted(async () => {
             <span class="num text-slate-400">({{ fmtAngka(ins.rating_count) }})</span>
           </div>
           <div class="mt-3 flex gap-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
-            <span>{{ t('catalog.instructors.coursesCount', { n: fmtAngka(ins.jumlah_kursus) }) }}</span>
+            <span>{{ t('catalog.instructors.coursesCount', { n: fmtAngka(ins.amount_kursus) }) }}</span>
             <span>{{ t('catalog.instructors.studentsCount', { n: fmtAngka(ins.total_siswa) }) }}</span>
           </div>
           <div v-if="ins.sosial_media" class="mt-3 flex gap-2">

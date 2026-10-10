@@ -13,7 +13,7 @@ import { env } from '../../core/config/env';
 import * as repo from './media.repository';
 import { CreateMediaInput, UpdateStatusInput } from './media.validation';
 
-const ADMIN_ROLES = ['super_admin', 'direktur', 'ketua', 'pembina', 'admin_ops'];
+const ADMIN_ROLES = ['super_admin', 'director', 'chairperson', 'supervisor', 'operations_admin'];
 const isSuper = (actor: AuthContext) => actor.roles.includes('super_admin');
 const isAdmin = (actor: AuthContext) => actor.roles.some((r) => ADMIN_ROLES.includes(r));
 
@@ -58,7 +58,7 @@ export async function create(actor: AuthContext, input: CreateMediaInput) {
   return repo.detail(id);
 }
 
-/** Perbarui status pipeline transcode: menunggu → memproses → selesai/gagal. */
+/** Perbarui status pipeline transcode: menunggu → memproses → finish/failed. */
 export async function updateStatus(actor: AuthContext, id: string, input: UpdateStatusInput) {
   const asset = await detail(actor, id);
   await repo.updateStatus(id, input.status_transcode, input.hls_manifest_url ?? null, input.duration_seconds ?? null);
@@ -105,7 +105,7 @@ export async function remove(actor: AuthContext, id: string) {
  */
 export async function signedUrl(actor: AuthContext, id: string) {
   const asset = await detail(actor, id);
-  if (asset.file_type === 'video' && asset.status_transcode !== 'selesai') {
+  if (asset.file_type === 'video' && asset.status_transcode !== 'completed') {
     throw AppError.conflict('This video is still being processed', 'media.transcode_pending');
   }
 
@@ -138,19 +138,19 @@ const UPLOAD_URL_PREFIX = '/uploads/media';
  * accepted here must already be playable as uploaded — which is why a
  * QuickTime/MKV/AVI file is refused rather than stored and left unplayable.
  */
-const ACCEPTED: Record<string, { tipe: 'video' | 'gambar' | 'document' | 'audio'; ext: string }> = {
-  'video/mp4': { tipe: 'video', ext: 'mp4' },
-  'video/webm': { tipe: 'video', ext: 'webm' },
-  'video/ogg': { tipe: 'video', ext: 'ogv' },
-  'audio/mpeg': { tipe: 'audio', ext: 'mp3' },
-  'audio/mp4': { tipe: 'audio', ext: 'm4a' },
-  'audio/x-m4a': { tipe: 'audio', ext: 'm4a' },
-  'audio/wav': { tipe: 'audio', ext: 'wav' },
-  'audio/ogg': { tipe: 'audio', ext: 'ogg' },
-  'image/jpeg': { tipe: 'gambar', ext: 'jpg' },
-  'image/png': { tipe: 'gambar', ext: 'png' },
-  'image/webp': { tipe: 'gambar', ext: 'webp' },
-  'application/pdf': { tipe: 'document', ext: 'pdf' },
+const ACCEPTED: Record<string, { type: 'video' | 'image' | 'document' | 'audio'; ext: string }> = {
+  'video/mp4': { type: 'video', ext: 'mp4' },
+  'video/webm': { type: 'video', ext: 'webm' },
+  'video/ogg': { type: 'video', ext: 'ogv' },
+  'audio/mpeg': { type: 'audio', ext: 'mp3' },
+  'audio/mp4': { type: 'audio', ext: 'm4a' },
+  'audio/x-m4a': { type: 'audio', ext: 'm4a' },
+  'audio/wav': { type: 'audio', ext: 'wav' },
+  'audio/ogg': { type: 'audio', ext: 'ogg' },
+  'image/jpeg': { type: 'image', ext: 'jpg' },
+  'image/png': { type: 'image', ext: 'png' },
+  'image/webp': { type: 'image', ext: 'webp' },
+  'application/pdf': { type: 'document', ext: 'pdf' },
 };
 
 export const acceptedMimeTypes = Object.keys(ACCEPTED);
@@ -168,7 +168,7 @@ export async function upload(actor: AuthContext, req: Request) {
   let kind = ACCEPTED[mime];
   if (!kind) {
     const fallbackExt = mime.includes('/') ? mime.split('/')[1].replace(/[^a-zA-Z0-9]/g, '') : 'bin';
-    kind = { tipe: 'document', ext: fallbackExt || 'bin' };
+    kind = { type: 'document', ext: fallbackExt || 'bin' };
   }
 
   const maxBytes = env.MEDIA_MAX_UPLOAD_MB * 1024 * 1024;
@@ -220,14 +220,14 @@ export async function upload(actor: AuthContext, req: Request) {
 
   const { id } = await repo.insert({
     uploader_id: actor.userId,
-    file_type: kind.tipe,
+    file_type: kind.type,
     file_name: originalName,
     path_object_storage: `${UPLOAD_URL_PREFIX}/${filename}`,
     mime_type: mime,
     size_bytes: size,
     checksum: null,
     meta: { source: 'upload' },
-    status_transcode: 'selesai',
+    status_transcode: 'completed',
   });
   await recordAudit({
     userId: actor.userId,
@@ -235,7 +235,7 @@ export async function upload(actor: AuthContext, req: Request) {
     action: 'upload',
     entity: 'media_assets',
     entityId: id,
-    after: { file_type: kind.tipe, file_name: originalName, size_bytes: size },
+    after: { file_type: kind.type, file_name: originalName, size_bytes: size },
   });
   return repo.detail(id);
 }

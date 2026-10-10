@@ -26,7 +26,7 @@ export async function list(req: Request, res: Response) {
     course_id: req.query['filter[course_id]'] as string | undefined,
     cohort_id: req.query['filter[cohort_id]'] as string | undefined,
     status: req.query['filter[status]'] as string | undefined,
-    sumber: req.query['filter[sumber]'] as string | undefined,
+    source: req.query['filter[source]'] as string | undefined,
   };
   const { rows, total } = await service.list(auth(req), page, filters);
   return ok(res, rows, pageMeta(page.page, page.limit, total));

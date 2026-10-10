@@ -11,20 +11,20 @@ export const shorthands = undefined;
 export async function up(pgm: MigrationBuilder): Promise<void> {
   // ── Enum lokal domain ──
   pgm.sql(`
-    DO $$ BEGIN CREATE TYPE question_tipe AS ENUM
-      ('pilihan_tunggal','pilihan_ganda','benar_salah','isian_singkat','esai','upload_file','pencocokan');
+    DO $$ BEGIN CREATE TYPE question_type AS ENUM
+      ('single_choice','multiple_choice','true_false','short_answer','essay','file_upload','matching');
     EXCEPTION WHEN duplicate_object THEN null; END $$;
   `);
   pgm.sql(`
-    DO $$ BEGIN CREATE TYPE quiz_attempt_status AS ENUM ('belum_dikerjakan','sedang','dikumpulkan','dinilai');
+    DO $$ BEGIN CREATE TYPE quiz_attempt_status AS ENUM ('not_started','in_progress','submitted','graded');
     EXCEPTION WHEN duplicate_object THEN null; END $$;
   `);
   pgm.sql(`
-    DO $$ BEGIN CREATE TYPE submission_status AS ENUM ('belum','dikumpulkan','dinilai','revisi_diminta');
+    DO $$ BEGIN CREATE TYPE submission_status AS ENUM ('not_started','submitted','graded','revision_requested');
     EXCEPTION WHEN duplicate_object THEN null; END $$;
   `);
   pgm.sql(`
-    DO $$ BEGIN CREATE TYPE submission_type AS ENUM ('file','text','url','campuran');
+    DO $$ BEGIN CREATE TYPE submission_type AS ENUM ('file','text','url','mixed');
     EXCEPTION WHEN duplicate_object THEN null; END $$;
   `);
 
@@ -53,18 +53,18 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE questions (
       id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       question_bank_id      uuid NOT NULL REFERENCES question_banks(id) ON DELETE CASCADE,
-      tipe                  question_tipe NOT NULL,
-      teks_soal             text NOT NULL,
-      poin                  numeric(6,2) NOT NULL DEFAULT 1,
-      penjelasan_jawaban    text,
+      type                  question_type NOT NULL,
+      question_text             text NOT NULL,
+      points                  numeric(6,2) NOT NULL DEFAULT 1,
+      answer_explanation    text,
       meta                  jsonb,
       created_at            timestamptz NOT NULL DEFAULT now(),
       updated_at            timestamptz NOT NULL DEFAULT now(),
       deleted_at            timestamptz,
-      CONSTRAINT questions_poin_chk CHECK (poin >= 0)
+      CONSTRAINT questions_points_chk CHECK (points >= 0)
     );
     CREATE INDEX questions_bank_idx ON questions (question_bank_id);
-    CREATE INDEX questions_tipe_idx ON questions (tipe);
+    CREATE INDEX questions_type_idx ON questions (type);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON questions FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
 
@@ -72,16 +72,16 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE question_options (
       id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       question_id       uuid NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
-      teks_opsi         text NOT NULL,
-      is_benar          boolean NOT NULL DEFAULT false,
-      pasangan_key      varchar(50),
+      option_text         text NOT NULL,
+      is_correct          boolean NOT NULL DEFAULT false,
+      pair_key      varchar(50),
       sort_order            smallint NOT NULL DEFAULT 0,
       created_at        timestamptz NOT NULL DEFAULT now(),
       updated_at        timestamptz NOT NULL DEFAULT now(),
       deleted_at        timestamptz
     );
     CREATE INDEX question_options_question_idx ON question_options (question_id);
-    CREATE INDEX question_options_is_benar_idx ON question_options (is_benar);
+    CREATE INDEX question_options_is_correct_idx ON question_options (is_correct);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON question_options FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
 
@@ -94,14 +94,14 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       lesson_id                            uuid REFERENCES lessons(id) ON DELETE SET NULL,
       title                                varchar(200) NOT NULL,
       description                            text,
-      batas_waktu_menit                    integer,
-      acak_soal                            boolean NOT NULL DEFAULT false,
-      acak_opsi                            boolean NOT NULL DEFAULT false,
+      time_limit_minutes                    integer,
+      randomize_questions                            boolean NOT NULL DEFAULT false,
+      randomize_options                            boolean NOT NULL DEFAULT false,
       max_attempts                     integer NOT NULL DEFAULT 1,
       passing_score                        numeric(5,2),
-      tampilkan_jawaban_setelah_selesai    boolean NOT NULL DEFAULT false,
+      show_answers_after_completion    boolean NOT NULL DEFAULT false,
       is_active                             boolean NOT NULL DEFAULT true,
-      total_points                           numeric(8,2) NOT NULL DEFAULT 0,
+      total_pointsts                           numeric(8,2) NOT NULL DEFAULT 0,
       created_at                           timestamptz NOT NULL DEFAULT now(),
       updated_at                           timestamptz NOT NULL DEFAULT now(),
       deleted_at                           timestamptz,
@@ -122,13 +122,13 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       quiz_id           uuid NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
       question_id       uuid NOT NULL REFERENCES questions(id) ON DELETE RESTRICT,
       sort_order            smallint NOT NULL DEFAULT 0,
-      poin_override     numeric(6,2),
+      points_override     numeric(6,2),
       created_at        timestamptz NOT NULL DEFAULT now(),
       UNIQUE (quiz_id, question_id)
     );
     CREATE INDEX quiz_questions_quiz_idx ON quiz_questions (quiz_id);
     CREATE INDEX quiz_questions_question_idx ON quiz_questions (question_id);
-    CREATE INDEX quiz_questions_urutan_idx ON quiz_questions (sort_order);
+    CREATE INDEX quiz_questions_sort_orderan_idx ON quiz_questions (sort_order);
   `);
 
   // ── assignments ──
@@ -142,13 +142,13 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       instructions               text NOT NULL,
       due_at              timestamptz,
       submission_type        submission_type NOT NULL DEFAULT 'file',
-      maksimal_ukuran_mb      integer,
-      poin_maksimal           numeric(6,2) NOT NULL DEFAULT 100,
+      max_size_mb      integer,
+      points_maximum           numeric(6,2) NOT NULL DEFAULT 100,
       is_active                boolean NOT NULL DEFAULT true,
       created_at              timestamptz NOT NULL DEFAULT now(),
       updated_at              timestamptz NOT NULL DEFAULT now(),
       deleted_at              timestamptz,
-      CONSTRAINT assignments_poin_maks_chk CHECK (poin_maksimal >= 0)
+      CONSTRAINT assignments_points_maks_chk CHECK (points_maximum >= 0)
     );
     CREATE INDEX assignments_course_idx ON assignments (course_id);
     CREATE INDEX assignments_section_idx ON assignments (section_id);
@@ -163,7 +163,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE rubrics (
       id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       assignment_id     uuid NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
-      kriteria          jsonb NOT NULL,
+      criteria          jsonb NOT NULL,
       created_at        timestamptz NOT NULL DEFAULT now(),
       updated_at        timestamptz NOT NULL DEFAULT now(),
       deleted_at        timestamptz
@@ -178,15 +178,15 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       id                      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       enrollment_id           uuid NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,
       quiz_id                 uuid NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
-      attempt_ke              smallint NOT NULL DEFAULT 1,
-      status                  quiz_attempt_status NOT NULL DEFAULT 'belum_dikerjakan',
-      skor                    numeric(6,2),
-      mulai_at                timestamptz,
-      selesai_at              timestamptz,
-      waktu_tersisa_detik     integer,
+      attempt_number              smallint NOT NULL DEFAULT 1,
+      status                  quiz_attempt_status NOT NULL DEFAULT 'not_started',
+      score                    numeric(6,2),
+      started_at                timestamptz,
+      finished_at              timestamptz,
+      remaining_time_seconds     integer,
       created_at              timestamptz NOT NULL DEFAULT now(),
-      CONSTRAINT quiz_attempts_attempt_ke_chk CHECK (attempt_ke >= 1),
-      UNIQUE (enrollment_id, quiz_id, attempt_ke)
+      CONSTRAINT quiz_attempts_attempt_number_chk CHECK (attempt_number >= 1),
+      UNIQUE (enrollment_id, quiz_id, attempt_number)
     );
     CREATE INDEX quiz_attempts_enrollment_idx ON quiz_attempts (enrollment_id);
     CREATE INDEX quiz_attempts_quiz_idx ON quiz_attempts (quiz_id);
@@ -198,16 +198,16 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       quiz_attempt_id     uuid NOT NULL REFERENCES quiz_attempts(id) ON DELETE CASCADE,
       question_id         uuid NOT NULL REFERENCES questions(id) ON DELETE RESTRICT,
-      jawaban             jsonb NOT NULL,
-      skor_didapat        numeric(6,2),
-      is_benar            boolean,
-      dinilai_manual      boolean NOT NULL DEFAULT false,
+      answer             jsonb NOT NULL,
+      earned_score        numeric(6,2),
+      is_correct            boolean,
+      manually_graded      boolean NOT NULL DEFAULT false,
       created_at          timestamptz NOT NULL DEFAULT now(),
       UNIQUE (quiz_attempt_id, question_id)
     );
     CREATE INDEX attempt_answers_attempt_idx ON attempt_answers (quiz_attempt_id);
     CREATE INDEX attempt_answers_question_idx ON attempt_answers (question_id);
-    CREATE INDEX attempt_answers_dinilai_manual_idx ON attempt_answers (dinilai_manual);
+    CREATE INDEX attempt_answers_manually_graded_idx ON attempt_answers (manually_graded);
   `);
 
   // ── submissions ──
@@ -216,13 +216,13 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       enrollment_id       uuid NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,
       assignment_id       uuid NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
-      status              submission_status NOT NULL DEFAULT 'belum',
-      isi_teks            text,
+      status              submission_status NOT NULL DEFAULT 'not_started',
+      text_content            text,
       file_media_id       uuid REFERENCES media_assets(id) ON DELETE SET NULL,
       url                 text,
-      dikumpulkan_at      timestamptz,
-      revisi_ke           smallint NOT NULL DEFAULT 0,
-      catatan_revisi      text,
+      submitted_at      timestamptz,
+      revision_number           smallint NOT NULL DEFAULT 0,
+      revision_notes      text,
       created_at          timestamptz NOT NULL DEFAULT now(),
       updated_at          timestamptz NOT NULL DEFAULT now(),
       deleted_at          timestamptz,
@@ -240,25 +240,25 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE grades (
       id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       enrollment_id     uuid NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,
-      sumber_tipe       varchar(10) NOT NULL,
-      sumber_id         uuid NOT NULL,
-      skor              numeric(6,2) NOT NULL,
-      skor_maksimal     numeric(6,2) NOT NULL,
+      source_type       varchar(10) NOT NULL,
+      source_id         uuid NOT NULL,
+      score              numeric(6,2) NOT NULL,
+      score_maximum     numeric(6,2) NOT NULL,
       feedback          text,
-      dinilai_oleh      uuid REFERENCES users(id) ON DELETE SET NULL,
-      dinilai_at        timestamptz,
-      rilis_at          timestamptz,
+      graded_by      uuid REFERENCES users(id) ON DELETE SET NULL,
+      graded_at        timestamptz,
+      released_at          timestamptz,
       created_at        timestamptz NOT NULL DEFAULT now(),
       updated_at        timestamptz NOT NULL DEFAULT now(),
       deleted_at        timestamptz,
-      CONSTRAINT grades_sumber_tipe_chk CHECK (sumber_tipe IN ('quiz','assignment')),
-      CONSTRAINT grades_skor_chk CHECK (skor >= 0),
-      CONSTRAINT grades_skor_maksimal_chk CHECK (skor_maksimal > 0)
+      CONSTRAINT grades_source_type_chk CHECK (source_type IN ('quiz','assignment')),
+      CONSTRAINT grades_score_chk CHECK (score >= 0),
+      CONSTRAINT grades_score_maximum_chk CHECK (score_maximum > 0)
     );
     CREATE INDEX grades_enrollment_idx ON grades (enrollment_id);
-    CREATE INDEX grades_sumber_tipe_idx ON grades (sumber_tipe);
-    CREATE INDEX grades_sumber_id_idx ON grades (sumber_id);
-    CREATE INDEX grades_dinilai_oleh_idx ON grades (dinilai_oleh);
+    CREATE INDEX grades_source_type_idx ON grades (source_type);
+    CREATE INDEX grades_source_id_idx ON grades (source_id);
+    CREATE INDEX grades_graded_by_idx ON grades (graded_by);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON grades FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
 
@@ -266,17 +266,17 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE gradebook_entries (
       id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       enrollment_id         uuid NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,
-      nilai_akhir           numeric(6,2),
-      status_kelulusan      varchar(15) NOT NULL DEFAULT 'belum_selesai',
-      rincian               jsonb,
-      diperbarui_at         timestamptz NOT NULL DEFAULT now(),
+      final_grade           numeric(6,2),
+      graduation_status      varchar(15) NOT NULL DEFAULT 'incomplete',
+      details               jsonb,
+      updated_at_custom         timestamptz NOT NULL DEFAULT now(),
       created_at            timestamptz NOT NULL DEFAULT now(),
       updated_at            timestamptz NOT NULL DEFAULT now(),
       deleted_at            timestamptz,
-      CONSTRAINT gradebook_entries_status_chk CHECK (status_kelulusan IN ('lulus','tidak_lulus','belum_selesai'))
+      CONSTRAINT gradebook_entries_status_chk CHECK (graduation_status IN ('passed','failed','incomplete'))
     );
     CREATE UNIQUE INDEX gradebook_entries_enrollment_uq ON gradebook_entries (enrollment_id);
-    CREATE INDEX gradebook_entries_status_idx ON gradebook_entries (status_kelulusan);
+    CREATE INDEX gradebook_entries_status_idx ON gradebook_entries (graduation_status);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON gradebook_entries FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
 }
@@ -297,5 +297,5 @@ export async function down(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`DROP TYPE IF EXISTS submission_type;`);
   pgm.sql(`DROP TYPE IF EXISTS submission_status;`);
   pgm.sql(`DROP TYPE IF EXISTS quiz_attempt_status;`);
-  pgm.sql(`DROP TYPE IF EXISTS question_tipe;`);
+  pgm.sql(`DROP TYPE IF EXISTS question_type;`);
 }

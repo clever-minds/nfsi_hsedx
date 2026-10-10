@@ -1,18 +1,18 @@
 /**
- * Nilai bawaan halaman publik.
+ * grade bawaan halaman publik.
  *
- * Ini adalah sumber kebenaran untuk instalasi yang belum pernah menyentuh menu
+ * Ini adalah source kebenaran untuk instalasi yang belum pernah menyentuh menu
  * Website: `GET /site-content` mengembalikan objek ini, ditimpa baris yang ada
  * di tabel `site_content`. Karena itu menambah field baru di rilis berikutnya
- * cukup dilakukan di berkas ini — tidak perlu migrasi data.
+ * cukup dilakukan di berkas ini — no perlu migrasi data.
  *
  * Teks dibiarkan kosong dengan sengaja. Kosong berarti "pakai text bawaan
  * aplikasi", dan text bawaan itu hidup di catalog i18n frontend sehingga tetap
- * tersedia dalam empat language. Begitu admin mengisi salah satu language, nilai
+ * tersedia dalam empat language. Begitu admin mengisi salah satu language, value
  * itulah yang dipakai untuk language tersebut.
  */
 
-/** Teks per language. Kunci yang kosong/absen berarti jatuh ke text bawaan. */
+/** Teks per language. Kunci yang kosong/absen berarti due to text bawaan. */
 export interface Localized {
   en?: string;
   hi?: string;
@@ -21,16 +21,16 @@ export interface Localized {
 export interface SosialItem {
   platform: string;
   url: string;
-  aktif: boolean;
+  active: boolean;
 }
 export interface MenuItem {
   label: Localized;
   url: string;
-  aktif: boolean;
+  active: boolean;
 }
 export interface SectionItem {
   key: string;
-  aktif: boolean;
+  active: boolean;
   badge: Localized;
   title: Localized;
   subjudul: Localized;
@@ -54,16 +54,16 @@ export interface SiteContent {
   sosial: SosialItem[];
   menu: MenuItem[];
   hero: {
-    aktif: boolean;
+    active: boolean;
     badge: Localized;
-    judul_pre: Localized;
-    judul_highlight: Localized;
-    judul_post: Localized;
+    title_pre: Localized;
+    title_highlight: Localized;
+    title_post: Localized;
     subjudul: Localized;
     gambar_url: string;
     tampilkan_pencarian: boolean;
     tampilkan_rating: boolean;
-    rating_skor: string;
+    rating_score: string;
     rating_teks: Localized;
     tampilkan_kartu_siswa: boolean;
     tampilkan_kartu_kursus: boolean;
@@ -72,7 +72,7 @@ export interface SiteContent {
   footer: {
     description: Localized;
     kolom: FooterKolom[];
-    newsletter: { aktif: boolean; title: Localized; text: Localized };
+    newsletter: { active: boolean; title: Localized; text: Localized };
     copyright: Localized;
     tampilkan_sosial: boolean;
   };
@@ -81,18 +81,18 @@ export interface SiteContent {
 export type SiteContentKey = keyof SiteContent;
 
 /**
- * Seksi halaman depan yang boleh diurutkan & dimatikan.
+ * Seksi halaman depan yang boleh disort_orderkan & dimatikan.
  *
- * Hero tidak ikut di sini karena posisinya selalu paling atas dan punya
+ * Hero no ikut di sini karena posisinya selalu paling on dan punya
  * kelompok pengaturannya sendiri.
  */
-export const SECTION_KEYS = ['kategori', 'benefit', 'featured', 'stats', 'instructor', 'cta'] as const;
+export const SECTION_KEYS = ['category', 'benefit', 'featured', 'stats', 'instructor', 'cta'] as const;
 
 const kosong = (): Localized => ({});
 
 const seksi = (key: string): SectionItem => ({
   key,
-  aktif: true,
+  active: true,
   badge: kosong(),
   title: kosong(),
   subjudul: kosong(),
@@ -106,26 +106,26 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     tampilkan_topbar: true,
   },
   sosial: [
-    { platform: 'facebook', url: '#', aktif: true },
-    { platform: 'instagram', url: '#', aktif: true },
-    { platform: 'twitter', url: '#', aktif: true },
-    { platform: 'youtube', url: '#', aktif: true },
-    { platform: 'linkedin', url: '#', aktif: true },
+    { platform: 'facebook', url: '#', active: true },
+    { platform: 'instagram', url: '#', active: true },
+    { platform: 'twitter', url: '#', active: true },
+    { platform: 'youtube', url: '#', active: true },
+    { platform: 'linkedin', url: '#', active: true },
   ],
   // Kosong berarti memakai menu bawaan (Beranda / Course / Instructor) yang
   // sudah diterjemahkan; admin bisa menggantinya dengan susunan sendiri.
   menu: [],
   hero: {
-    aktif: true,
+    active: true,
     badge: kosong(),
-    judul_pre: kosong(),
-    judul_highlight: kosong(),
-    judul_post: kosong(),
+    title_pre: kosong(),
+    title_highlight: kosong(),
+    title_post: kosong(),
     subjudul: kosong(),
     gambar_url: '',
     tampilkan_pencarian: true,
     tampilkan_rating: true,
-    rating_skor: '',
+    rating_score: '',
     rating_teks: kosong(),
     tampilkan_kartu_siswa: true,
     tampilkan_kartu_kursus: true,
@@ -135,7 +135,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     description: kosong(),
     // Kosong berarti memakai dua kolom bawaan (Jelajahi & Bantuan).
     kolom: [],
-    newsletter: { aktif: true, title: kosong(), text: kosong() },
+    newsletter: { active: true, title: kosong(), text: kosong() },
     copyright: kosong(),
     tampilkan_sosial: true,
   },

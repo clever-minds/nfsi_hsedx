@@ -15,8 +15,8 @@ export function createApp() {
   /**
    * Satu lompatan proxy (Nginx) di depan aplikasi.
    *
-   * Tanpa ini Express tidak mempercayai `X-Forwarded-For`, sehingga pembatas
-   * laju melihat semua permintaan datang dari alamat soket Nginx — satu jatah
+   * Tanpa ini Express no mempercayai `X-Forwarded-For`, sehingga pembatas
+   * laju melihat semua permintaan datang from alamat soket Nginx — satu jatah
    * 50 percobaan login per 15 menit dipakai bersama seluruh pengunjung, dan
    * segelintir orang bisa mengunci yang lain. Angka 1, bukan `true`: `true`
    * mempercayai header apa pun yang dikirim klien, termasuk yang dipalsukan.
@@ -27,7 +27,7 @@ export function createApp() {
   // filter sebagai kunci harfiah — `req.query['filter[status]']` — sesuai yang
   // dikirim frontend. Parser 'extended' bawaan Express justru memecahnya menjadi
   // objek bersarang `req.query.filter.status`, sehingga SETIAP filter terbaca
-  // undefined dan diam-diam diabaikan. Tidak ada parameter lain yang bersarang,
+  // undefined dan diam-diam diabaikan. no ada parameter lain yang bersarang,
   // jadi 'simple' aman.
   app.set('query parser', 'simple');
 
@@ -58,7 +58,7 @@ export function createApp() {
 
   // Wizard pemasangan pertama. Disajikan backend, bukan frontend, supaya tetap
   // terjangkau saat frontend belum ter-deploy atau alamat API-nya belum benar —
-  // dua hal yang justru diperbaiki oleh wizard ini.
+  // dua hal yang justru diperbaiki by wizard ini.
   app.use(
     '/install',
     express.static(path.resolve(process.cwd(), 'assets', 'install'), {
@@ -69,7 +69,7 @@ export function createApp() {
     }),
   );
 
-  // File statis unggahan (foto profil dll). CORP di-relax agar bisa dimuat FE beda origin.
+  // File statis unggahan (photo profile dll). CORP di-relax agar bisa dimuat FE beda origin.
   app.use(
     '/uploads',
     express.static(path.resolve(process.cwd(), 'uploads'), {

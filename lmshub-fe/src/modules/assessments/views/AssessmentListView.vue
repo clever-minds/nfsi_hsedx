@@ -14,28 +14,28 @@ interface QuestionBank extends Record<string, unknown> {
   id: string;
   name: string;
   course_title?: string;
-  jumlah_soal?: number;
+  amount_soal?: number;
 }
 interface Quiz extends Record<string, unknown> {
   id: string;
   title: string;
   course_title?: string;
   course_id?: string;
-  batas_waktu_menit?: number;
+  time_limit_minutes?: number;
   max_attempts?: number;
   passing_score?: string | number;
   total_points?: string | number;
   is_active?: boolean;
-  // Diisi BE untuk student: status & nilai attempt miliknya.
+  // Diisi BE untuk student: status & value attempt miliknya.
   attempt_status?: string;
   best_score?: string | null;
   used_attempts?: number;
-  /** Ujian akhir kursusnya — membuka certificate. */
-  is_ujian_akhir?: boolean;
+  /** exam akhir kursusnya — membuka certificate. */
+  is_final_exam?: boolean;
   retry_delay_minutes?: number;
-  // Dihitung BE untuk student dengan aturan yang sama dengan saat mulai mengerjakan.
+  // Dihitung BE untuk student dengan rule yang sama dengan saat start mengerjakan.
   passing_score_val?: number;
-  skor_terbaik_persen?: number | null;
+  score_terbaik_persen?: number | null;
   sisa_percobaan?: number | null;
   can_start?: boolean;
   can_retry_at?: string | null;
@@ -70,7 +70,7 @@ const banksError = ref('');
 const bankColumns = computed(() => [
   { key: 'name', label: t('assessments.list.colBank') },
   { key: 'course_title', label: t('assessments.list.colBankCourse') },
-  { key: 'jumlah_soal', label: t('assessments.list.colQuestionCount') },
+  { key: 'amount_soal', label: t('assessments.list.colQuestionCount') },
 ]);
 const showBankForm = ref(false);
 const bankForm = reactive({ name: '', courseId: '' });
@@ -122,26 +122,26 @@ const quizzesError = ref('');
 const quizColumns = computed(() => [
   { key: 'title', label: t('assessments.list.colQuiz') },
   { key: 'course_title', label: t('assessments.list.colCourse') },
-  { key: 'batas_waktu_menit', label: t('assessments.list.colTimeLimit') },
+  { key: 'time_limit_minutes', label: t('assessments.list.colTimeLimit') },
   { key: 'max_attempts', label: t('assessments.list.colMaxAttempts') },
   { key: 'passing_score', label: t('assessments.list.colPassingScore') },
   { key: 'status', label: t('assessments.list.colStatus') },
 ]);
 
-// ── Status & aksi quiz (khusus student) ──
+// ── Status & action quiz (khusus student) ──
 function quizStatusText(q: Quiz): string {
   const s = q.attempt_status;
-  if (!s || s === 'belum' || s === 'belum_dikerjakan') return t('assessments.list.quizStatus.notStarted');
-  if (s === 'sedang') return t('assessments.list.quizStatus.inProgress');
-  if (s === 'dikumpulkan') return t('assessments.list.quizStatus.awaitingGrading');
-  if (s === 'dinilai') {
-    const skor = Number(q.best_score ?? 0);
+  if (!s || s === 'not_started' || s === 'not_started') return t('assessments.list.quizStatus.notStarted');
+  if (s === 'in_progress') return t('assessments.list.quizStatus.inProgress');
+  if (s === 'submitted') return t('assessments.list.quizStatus.awaitingGrading');
+  if (s === 'graded') {
+    const score = Number(q.best_score ?? 0);
     const total = Number(q.total_points ?? 0);
-    const pct = q.skor_terbaik_persen ?? (total ? Math.round((skor / total) * 100) : 0);
+    const pct = q.score_terbaik_persen ?? (total ? Math.round((score / total) * 100) : 0);
     const passing = q.passing_score_val ?? (q.passing_score != null ? Number(q.passing_score) : null);
     const lulus = passing != null ? pct >= passing : null;
     const base = t('assessments.list.quizStatus.scored', {
-      score: fmtAngka(skor),
+      score: fmtAngka(score),
       total: fmtAngka(total),
       percent: fmtAngka(pct),
     });
@@ -152,16 +152,16 @@ function quizStatusText(q: Quiz): string {
 }
 function quizStatusClass(q: Quiz): string {
   const s = q.attempt_status;
-  if (s === 'dinilai') {
-    const pct = q.skor_terbaik_persen ?? (Number(q.total_points) ? (Number(q.best_score ?? 0) / Number(q.total_points)) * 100 : 0);
+  if (s === 'graded') {
+    const pct = q.score_terbaik_persen ?? (Number(q.total_points) ? (Number(q.best_score ?? 0) / Number(q.total_points)) * 100 : 0);
     const passing = q.passing_score_val ?? (q.passing_score != null ? Number(q.passing_score) : null);
     const lulus = passing != null ? pct >= passing : true;
     return lulus ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700';
   }
-  if (s === 'sedang' || s === 'dikumpulkan') return 'bg-amber-100 text-amber-700';
+  if (s === 'in_progress' || s === 'submitted') return 'bg-amber-100 text-amber-700';
   return 'bg-slate-100 text-slate-500';
 }
-/** Boleh mulai sekarang? BE menghitungnya (batas + jeda); backend lama tanpa field itu → hitung batas saja. */
+/** Boleh start sekarang? BE menghitungnya (batas + jeda); backend lama tanpa field itu → hitung batas saja. */
 function bolehMulai(q: Quiz): boolean {
   if (q.can_start !== undefined) return q.can_start;
   const maks = q.max_attempts ?? 1;
@@ -198,53 +198,53 @@ const assignmentColumns = computed(() => [
   { key: 'status', label: t('assessments.list.colStatus') },
 ]);
 
-/** Label tipe pengumpulan (`file` | `tautan` | `text`) dari catalog i18n. */
-function submissionTypeLabel(tipe?: string): string {
-  if (tipe === 'tautan' || tipe === 'url') return t('assessments.list.typeLink');
-  if (tipe === 'text') return t('assessments.list.typeText');
-  if (tipe === 'file') return t('assessments.list.typeFile');
-  return tipe || '—';
+/** Label type pengumpulan (`file` | `tautan` | `text`) from catalog i18n. */
+function submissionTypeLabel(type?: string): string {
+  if (type === 'tautan' || type === 'url') return t('assessments.list.typeLink');
+  if (type === 'text') return t('assessments.list.typeText');
+  if (type === 'file') return t('assessments.list.typeFile');
+  return type || '—';
 }
 
-// ── Status & aksi assignment (khusus student) ──
+// ── Status & action assignment (khusus student) ──
 function assignmentStatusText(a: Assignment): string {
-  const s = a.submission_status ?? 'belum';
+  const s = a.submission_status ?? 'not_started';
   const key = `assessments.list.submissionStatus.${s}`;
   return te(key) ? t(key) : s;
 }
 function assignmentStatusClass(a: Assignment): string {
   const s = a.submission_status;
-  if (s === 'dinilai') return 'bg-emerald-100 text-emerald-700';
-  if (s === 'dikumpulkan') return 'bg-amber-100 text-amber-700';
-  if (s === 'revisi_diminta') return 'bg-rose-100 text-rose-700';
+  if (s === 'graded') return 'bg-emerald-100 text-emerald-700';
+  if (s === 'submitted') return 'bg-amber-100 text-amber-700';
+  if (s === 'revision_requested') return 'bg-rose-100 text-rose-700';
   return 'bg-slate-100 text-slate-500';
 }
 function canSubmit(a: Assignment): boolean {
-  const s = a.submission_status ?? 'belum';
-  return s === 'belum' || s === 'revisi_diminta';
+  const s = a.submission_status ?? 'not_started';
+  return s === 'not_started' || s === 'revision_requested';
 }
 
 // Modal pengumpulan assignment student
 const submitTarget = ref<Assignment | null>(null);
-const submitForm = reactive({ isi_teks: '', url: '' });
+const submitForm = reactive({ text_content: '', url: '' });
 const submitBusy = ref(false);
 const submitError = ref('');
 
 function openSubmit(a: Assignment) {
   submitTarget.value = a;
-  submitForm.isi_teks = '';
+  submitForm.text_content = '';
   submitForm.url = '';
   submitError.value = '';
 }
 
 async function kirimSubmission() {
   if (!submitTarget.value) return;
-  const tipe = submitTarget.value.submission_type;
-  if ((tipe === 'tautan' || tipe === 'url') && !submitForm.url.trim()) {
+  const type = submitTarget.value.submission_type;
+  if ((type === 'tautan' || type === 'url') && !submitForm.url.trim()) {
     submitError.value = t('assessments.list.linkRequired');
     return;
   }
-  if (tipe === 'text' && !submitForm.isi_teks.trim()) {
+  if (type === 'text' && !submitForm.text_content.trim()) {
     submitError.value = t('assessments.list.textRequired');
     return;
   }
@@ -252,7 +252,7 @@ async function kirimSubmission() {
   submitError.value = '';
   try {
     await apiPost(`/assignments/${submitTarget.value.id}/submissions`, {
-      isi_teks: submitForm.isi_teks.trim() || null,
+      text_content: submitForm.text_content.trim() || null,
       url: submitForm.url.trim() || null,
     });
     submitTarget.value = null;
@@ -290,7 +290,7 @@ async function submitAssignment() {
   assignmentSubmitting.value = true;
   assignmentFormError.value = '';
   try {
-    // Nama field mengikuti backend; "tautan" di UI = `url` di backend.
+    // name field mengikuti backend; "tautan" di UI = `url` di backend.
     await apiPost('/assignments', {
       title: assignmentForm.title.trim(),
       course_id: assignmentForm.courseId,
@@ -382,7 +382,7 @@ onMounted(() => {
       </div>
       <div v-if="banksError" class="mb-4 alert-error">{{ banksError }}</div>
       <DataTable :columns="bankColumns" :rows="banks" :loading="banksLoading" :empty="t('assessments.list.bankEmpty')">
-        <template #cell:jumlah_soal="{ value }">{{ t('assessments.list.questionsCount', { n: fmtAngka((value as number) ?? 0) }) }}</template>
+        <template #cell:amount_soal="{ value }">{{ t('assessments.list.questionsCount', { n: fmtAngka((value as number) ?? 0) }) }}</template>
         <template #actions="{ row }">
           <RouterLink :to="{ name: 'question-bank', params: { id: (row as QuestionBank).id } }" class="row-link row-link-primary">
             {{ t('assessments.list.manageQuestions') }}
@@ -397,7 +397,7 @@ onMounted(() => {
       <DataTable :columns="quizColumns" :rows="quizzes" :loading="quizzesLoading" :empty="t('assessments.list.quizEmpty')">
         <template #cell:title="{ row }">
           <span>{{ (row as Quiz).title }}</span>
-          <span v-if="(row as Quiz).is_ujian_akhir" class="ms-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-600">
+          <span v-if="(row as Quiz).is_final_exam" class="ms-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-600">
             {{ t('assessments.list.finalExam') }}
           </span>
         </template>
@@ -406,8 +406,8 @@ onMounted(() => {
           {{ value != null ? fmtPersen(Number(value)) : (row as Quiz).passing_score_val != null ? fmtPersen(Number((row as Quiz).passing_score_val)) : '—' }}
         </template>
         <template #cell:status="{ row }">
-          <!-- Pengelola: status aktif/nonaktif quiz. Student: status pengerjaan miliknya. -->
-          <StatusChip v-if="isPengelola" :status="(row as Quiz).is_active ? 'aktif' : 'nonaktif'" />
+          <!-- Pengelola: status active/nonaktif quiz. Student: status pengerjaan miliknya. -->
+          <StatusChip v-if="isPengelola" :status="(row as Quiz).is_active ? 'active' : 'inactive'" />
           <span v-else class="inline-block rounded-full px-2.5 py-1 text-xs font-medium" :class="quizStatusClass(row as Quiz)">
             {{ quizStatusText(row as Quiz) }}
           </span>
@@ -483,7 +483,7 @@ onMounted(() => {
         <template #cell:due_at="{ value }">{{ value ? fmtTanggal(String(value)) : '—' }}</template>
         <template #cell:submission_type="{ value }">{{ submissionTypeLabel(value as string) }}</template>
         <template #cell:status="{ row }">
-          <StatusChip v-if="isPengelola" :status="(row as Assignment).is_active ? 'aktif' : 'nonaktif'" />
+          <StatusChip v-if="isPengelola" :status="(row as Assignment).is_active ? 'active' : 'inactive'" />
           <span v-else class="inline-block rounded-full px-2.5 py-1 text-xs font-medium" :class="assignmentStatusClass(row as Assignment)">
             {{ assignmentStatusText(row as Assignment) }}
           </span>
@@ -495,7 +495,7 @@ onMounted(() => {
               class="btn-primary btn-sm"
               @click="openSubmit(row as Assignment)"
             >
-              {{ (row as Assignment).submission_status === 'revisi_diminta' ? t('assessments.list.revise') : t('assessments.list.submit') }}
+              {{ (row as Assignment).submission_status === 'revision_requested' ? t('assessments.list.revise') : t('assessments.list.submit') }}
             </button>
             <span v-else class="text-xs font-medium text-slate-400">{{ t('assessments.list.submitted') }}</span>
           </div>
@@ -533,7 +533,7 @@ onMounted(() => {
                   : t('assessments.list.textLabelOptional')
               }}
             </label>
-            <textarea v-model="submitForm.isi_teks" class="input" rows="4" :placeholder="t('assessments.list.textPlaceholder')"></textarea>
+            <textarea v-model="submitForm.text_content" class="input" rows="4" :placeholder="t('assessments.list.textPlaceholder')"></textarea>
           </div>
         </div>
 

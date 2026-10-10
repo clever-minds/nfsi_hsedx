@@ -2,11 +2,11 @@ import { defineStore } from 'pinia';
 import { apiGet, assetUrl } from '@/lib/api';
 import { DEFAULT_CURRENCY, isSupportedCurrency } from '@/lib/currencies';
 
-/** Nama yang dipakai bila admin belum mengisi apa pun. */
+/** name yang dipakai bila admin belum mengisi apa pun. */
 const DEFAULT_APP_NAME = 'LMS Hub';
 
 /**
- * Konfigurasi yang boleh dibaca siapa saja (`settings.is_public` di backend).
+ * Konfigurasi yang boleh read siapa saja (`settings.is_public` di backend).
  * Dimuat sekali saat aplikasi start karena area pra-login pun perlu tahu name
  * aplikasi, logo, dan mata uang untuk menggambar dirinya sendiri.
  */
@@ -51,19 +51,19 @@ export const useAppConfigStore = defineStore('appConfig', {
 
     apply(cfg: Record<string, string>) {
       const code = (cfg['currency.code'] ?? '').toUpperCase();
-      // Kode tak dikenal diabaikan — lebih baik jatuh ke default daripada
+      // Kode tak dikenal diabaikan — lebih baik due to default daripada
       // membuat Intl.NumberFormat melempar dan mematikan seluruh price.
       if (code && isSupportedCurrency(code)) this.currency = code;
 
-      this.appName = (cfg['brand.nama_aplikasi'] ?? '').trim() || DEFAULT_APP_NAME;
+      this.appName = (cfg['brand.app_name'] ?? '').trim() || DEFAULT_APP_NAME;
       this.footerTemplate = cfg['brand.footer'] ?? '';
-      // Path relatif dari backend diubah jadi URL absolut agar tetap termuat
+      // Path relatif from backend diubah jadi URL absolut agar tetap termuat
       // ketika FE dan API beda origin.
       this.logoUrl = assetUrl(cfg['brand.logo_url'] ?? '');
       this.iconUrl = assetUrl(cfg['brand.icon_url'] ?? '');
     },
 
-    /** Dipanggil layar Pengaturan setelah menyimpan, agar tampilan langsung ikut. */
+    /** Dipanggil layar settings setelah menyimpan, agar tampilan langsung ikut. */
     setCurrency(code: string) {
       if (isSupportedCurrency(code)) this.currency = code.toUpperCase();
     },
@@ -76,7 +76,7 @@ export const useAppConfigStore = defineStore('appConfig', {
       this.applyToDocument();
     },
 
-    /** Terapkan name & ikon ke title tab dan favicon. */
+    /** Terapkan name & ikon to title tab dan favicon. */
     applyToDocument() {
       if (typeof document === 'undefined') return;
       document.title = this.appName;

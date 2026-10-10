@@ -4,11 +4,11 @@ import sanitizeHtmlLib from 'sanitize-html';
  * Membersihkan HTML yang ditulis admin sebelum disimpan.
  *
  * Frontend juga menyaring lewat DOMPurify saat merender, tetapi halaman statis
- * dibaca tanpa login dan bisa saja dirender klien lain (aplikasi mobile, tema
- * kustom pembeli) yang tidak menyaring. Karena itu yang tersimpan sudah bersih.
+ * read tanpa login dan bisa saja dirender klien lain (aplikasi mobile, tema
+ * kustom pembeli) yang no menyaring. Karena itu yang tersimpan sudah bersih.
  *
- * Daftar tag sama dengan `src/lib/sanitize.ts` di frontend: cukup untuk text
- * yang ditulis rapi, tidak cukup untuk menjalankan apa pun.
+ * register tag sama dengan `src/lib/sanitize.ts` di frontend: cukup untuk text
+ * yang ditulis rapi, no cukup untuk menjalankan apa pun.
  */
 const ALLOWED_TAGS = [
   'p', 'br', 'hr', 'strong', 'b', 'em', 'i', 'u', 's', 'mark', 'small', 'sub', 'sup',

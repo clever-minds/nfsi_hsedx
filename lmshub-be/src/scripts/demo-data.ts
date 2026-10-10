@@ -10,7 +10,7 @@ export const CATEGORIES: Array<{ name: string; slug: string; icon: string }> = [
 ];
 
 export type InstructorKey = 'rina' | 'daniel' | 'amara' | 'kenji';
-export type Level = 'pemula' | 'menengah' | 'mahir';
+export type Level = 'beginner' | 'intermediate' | 'advanced';
 
 export interface CourseSeed {
   title: string;
@@ -24,32 +24,32 @@ export interface CourseSeed {
 
 /** Level codes are stored in the database; these are the labels shown on artwork. */
 export const LEVEL_LABEL: Record<Level, string> = {
-  pemula: 'Beginner',
-  menengah: 'Intermediate',
-  mahir: 'Advanced',
+  beginner: 'Beginner',
+  intermediate: 'Intermediate',
+  advanced: 'Advanced',
 };
 
 export const COURSES: CourseSeed[] = [
-  { title: 'Web Development Foundations', slug: 'web-development-foundations', category: 'fire', level: 'pemula', price: 49, instructor: 'rina' },
-  { title: 'Modern JavaScript from Zero', slug: 'modern-javascript', category: 'fire', level: 'menengah', price: 59, instructor: 'rina' },
-  { title: 'Python for Beginners', slug: 'python-for-beginners', category: 'fire', level: 'pemula', price: 45, instructor: 'kenji' },
-  { title: 'React from Scratch to Production', slug: 'react-from-scratch', category: 'fire', level: 'menengah', price: 69, instructor: 'rina' },
-  { title: 'Vue 3 and Vite in Practice', slug: 'vue-3-in-practice', category: 'fire', level: 'menengah', price: 65, instructor: 'rina' },
-  { title: 'Backend APIs with Node.js and Express', slug: 'node-express-backend', category: 'fire', level: 'menengah', price: 69, instructor: 'daniel' },
-  { title: 'SQL and Database Design', slug: 'sql-database-design', category: 'fire', level: 'pemula', price: 45, instructor: 'daniel' },
-  { title: 'Git and GitHub for Teams', slug: 'git-github-teams', category: 'occupational-safety', level: 'pemula', price: 35, instructor: 'daniel' },
-  { title: 'Linux and the Command Line', slug: 'linux-command-line', category: 'occupational-safety', level: 'menengah', price: 45, instructor: 'daniel' },
-  { title: 'UI/UX Design Fundamentals', slug: 'ui-ux-fundamentals', category: 'health-environment', level: 'pemula', price: 59, instructor: 'rina' },
-  { title: 'Figma from the Ground Up', slug: 'figma-for-designers', category: 'health-environment', level: 'pemula', price: 39, instructor: 'rina' },
-  { title: 'Fast Graphic Design with Canva', slug: 'graphic-design-canva', category: 'health-environment', level: 'pemula', price: 29, instructor: 'amara' },
-  { title: 'Practical Digital Marketing', slug: 'digital-marketing-practical', category: 'occupational-safety', level: 'menengah', price: 49, instructor: 'amara' },
-  { title: 'SEO for Small Business', slug: 'seo-for-business', category: 'occupational-safety', level: 'menengah', price: 45, instructor: 'amara' },
-  { title: 'Copywriting That Sells', slug: 'copywriting-that-sells', category: 'occupational-safety', level: 'pemula', price: 39, instructor: 'amara' },
-  { title: 'Data Science with Python', slug: 'data-science-python', category: 'health-environment', level: 'mahir', price: 79, instructor: 'kenji' },
-  { title: 'Excel for Data Analysis', slug: 'excel-data-analysis', category: 'health-environment', level: 'pemula', price: 29, instructor: 'kenji' },
-  { title: 'Machine Learning Foundations', slug: 'machine-learning-foundations', category: 'health-environment', level: 'mahir', price: 89, instructor: 'kenji' },
-  { title: 'Confident Public Speaking', slug: 'confident-public-speaking', category: 'personal-development', level: 'pemula', price: 25, instructor: 'amara' },
-  { title: 'Productive Time Management', slug: 'productive-time-management', category: 'personal-development', level: 'pemula', price: 25, instructor: 'kenji' },
+  { title: 'Web Development Foundations', slug: 'web-development-foundations', category: 'fire', level: 'beginner', price: 49, instructor: 'rina' },
+  { title: 'Modern JavaScript from Zero', slug: 'modern-javascript', category: 'fire', level: 'intermediate', price: 59, instructor: 'rina' },
+  { title: 'Python for Beginners', slug: 'python-for-beginners', category: 'fire', level: 'beginner', price: 45, instructor: 'kenji' },
+  { title: 'React from Scratch to Production', slug: 'react-from-scratch', category: 'fire', level: 'intermediate', price: 69, instructor: 'rina' },
+  { title: 'Vue 3 and Vite in Practice', slug: 'vue-3-in-practice', category: 'fire', level: 'intermediate', price: 65, instructor: 'rina' },
+  { title: 'Backend APIs with Node.js and Express', slug: 'node-express-backend', category: 'fire', level: 'intermediate', price: 69, instructor: 'daniel' },
+  { title: 'SQL and Database Design', slug: 'sql-database-design', category: 'fire', level: 'beginner', price: 45, instructor: 'daniel' },
+  { title: 'Git and GitHub for Teams', slug: 'git-github-teams', category: 'occupational-safety', level: 'beginner', price: 35, instructor: 'daniel' },
+  { title: 'Linux and the Command Line', slug: 'linux-command-line', category: 'occupational-safety', level: 'intermediate', price: 45, instructor: 'daniel' },
+  { title: 'UI/UX Design Fundamentals', slug: 'ui-ux-fundamentals', category: 'health-environment', level: 'beginner', price: 59, instructor: 'rina' },
+  { title: 'Figma from the Ground Up', slug: 'figma-for-designers', category: 'health-environment', level: 'beginner', price: 39, instructor: 'rina' },
+  { title: 'Fast Graphic Design with Canva', slug: 'graphic-design-canva', category: 'health-environment', level: 'beginner', price: 29, instructor: 'amara' },
+  { title: 'Practical Digital Marketing', slug: 'digital-marketing-practical', category: 'occupational-safety', level: 'intermediate', price: 49, instructor: 'amara' },
+  { title: 'SEO for Small Business', slug: 'seo-for-business', category: 'occupational-safety', level: 'intermediate', price: 45, instructor: 'amara' },
+  { title: 'Copywriting That Sells', slug: 'copywriting-that-sells', category: 'occupational-safety', level: 'beginner', price: 39, instructor: 'amara' },
+  { title: 'Data Science with Python', slug: 'data-science-python', category: 'health-environment', level: 'advanced', price: 79, instructor: 'kenji' },
+  { title: 'Excel for Data Analysis', slug: 'excel-data-analysis', category: 'health-environment', level: 'beginner', price: 29, instructor: 'kenji' },
+  { title: 'Machine Learning Foundations', slug: 'machine-learning-foundations', category: 'health-environment', level: 'advanced', price: 89, instructor: 'kenji' },
+  { title: 'Confident Public Speaking', slug: 'confident-public-speaking', category: 'personal-development', level: 'beginner', price: 25, instructor: 'amara' },
+  { title: 'Productive Time Management', slug: 'productive-time-management', category: 'personal-development', level: 'beginner', price: 25, instructor: 'kenji' },
 ];
 
 // ── Curriculum ────────────────────────────────────────────────────────────

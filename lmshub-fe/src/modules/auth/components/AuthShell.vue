@@ -9,7 +9,7 @@ defineProps<{ title: string; subtitle?: string }>();
 
 const { t } = useI18n();
 const appConfig = useAppConfigStore();
-const tahun = new Date().getFullYear();
+const year = new Date().getFullYear();
 </script>
 
 <template>
@@ -37,7 +37,7 @@ const tahun = new Date().getFullYear();
     <!-- Footer -->
     <footer class="mt-10 flex items-center gap-2 text-sm text-slate-400">
       <template v-if="appConfig.footerText">{{ appConfig.footerText }}</template>
-      <template v-else>{{ t('auth.copyright', { year: tahun, name: appConfig.appName }) }}</template>
+      <template v-else>{{ t('auth.copyright', { year: year, name: appConfig.appName }) }}</template>
     </footer>
   </div>
 </template>

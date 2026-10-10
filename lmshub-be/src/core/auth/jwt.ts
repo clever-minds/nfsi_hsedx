@@ -3,7 +3,7 @@ import { env } from '../config/env';
 
 export interface AccessTokenPayload {
   sub: string; // user id
-  role: string; // kode peran utama aktif
+  role: string; // kode peran primary active
   roles: string[]; // seluruh kode peran
 }
 

@@ -1,7 +1,7 @@
-// Helper Google Identity Services (GSI) untuk tombol "Masuk dengan Google".
-// Client ID diambil dari GET /auth/oauth-config (nilai `google_client_id`), yang di backend
-// dikonfigurasi lewat pengaturan super admin (key `google.client_id`, grup `auth` — lihat SettingsView).
-// Jika belum diisi, `google_enabled` bernilai false dan tombol Google harus disembunyikan oleh pemanggil.
+// Helper Google Identity Services (GSI) untuk tombol "login dengan Google".
+// Client ID diambil from GET /auth/oauth-config (value `google_client_id`), yang di backend
+// dikonfigurasi lewat settings super admin (key `google.client_id`, group `auth` — view SettingsView).
+// Jika belum diisi, `google_enabled` bernilai false dan tombol Google harus disembunyikan by pemanggil.
 
 declare global {
   interface Window {
@@ -60,7 +60,7 @@ export function loadGoogleSignInScript(): Promise<void> {
 
 /**
  * Muat skrip GSI, inisialisasi dengan client id, lalu render tombol Google di elemen `el`.
- * `onCredential` dipanggil dengan JWT `credential` (id_token) saat pengguna berhasil memilih akun.
+ * `onCredential` dipanggil dengan JWT `credential` (id_token) saat user success memilih akun.
  */
 export async function renderGoogleSignInButton(
   el: HTMLElement,

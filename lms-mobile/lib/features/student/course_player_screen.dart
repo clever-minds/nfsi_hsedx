@@ -136,7 +136,7 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> {
           : null,
       trailing: locked
           ? const Icon(Icons.lock_rounded, size: 18, color: AppColors.inkFaint)
-          : lesson.selesai
+          : lesson.finish
           ? const Icon(
               Icons.check_circle_rounded,
               size: 20,
@@ -165,7 +165,7 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> {
   }
 }
 
-/// Tampilan detail satu pelajaran (video / content) + tombol tandai selesai.
+/// Tampilan detail satu pelajaran (video / content) + tombol tandai finish.
 class _LessonView extends StatefulWidget {
   const _LessonView({required this.lesson});
   final LearnLesson lesson;
@@ -220,7 +220,7 @@ class _LessonViewState extends State<_LessonView> {
   Future<void> _markDone() async {
     setState(() => _marking = true);
     try {
-      await LearnService.updateLessonProgress(widget.lesson.id, selesai: true);
+      await LearnService.updateLessonProgress(widget.lesson.id, finish: true);
       if (!mounted) return;
       showSnack(context, AppLocalizations.of(context).lessonMarkedDone);
       Navigator.of(context).pop(true);
@@ -248,9 +248,9 @@ class _LessonViewState extends State<_LessonView> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: (_marking || l.selesai) ? null : _markDone,
-                icon: Icon(l.selesai ? Icons.check_circle : Icons.check),
-                label: Text(l.selesai
+                onPressed: (_marking || l.finish) ? null : _markDone,
+                icon: Icon(l.finish ? Icons.check_circle : Icons.check),
+                label: Text(l.finish
                     ? AppLocalizations.of(context).alreadyDone
                     : AppLocalizations.of(context).markDone),
               ),

@@ -17,7 +17,7 @@ import {
 const isSuper = (actor: AuthContext) => actor.roles.includes('super_admin');
 const isSiswa = (actor: AuthContext) => actor.roles.includes('student') && !isSuper(actor);
 const isInstructorScoped = (actor: AuthContext) =>
-  !isSuper(actor) && actor.roles.includes('instructor') && !actor.roles.some((r) => ['admin_ops', 'direktur', 'ketua', 'pembina'].includes(r));
+  !isSuper(actor) && actor.roles.includes('instructor') && !actor.roles.some((r) => ['operations_admin', 'director', 'chairperson', 'supervisor'].includes(r));
 
 export async function list(actor: AuthContext, p: PageParams, filters: repo.EnrollmentFilters) {
   const f: repo.EnrollmentFilters = { ...filters };
@@ -33,7 +33,7 @@ export async function detail(actor: AuthContext, id: string) {
   return e;
 }
 
-/** Enroll (beli/assign/bundle/path) — dipanggil admin/instructor untuk assign manual, atau internal untuk sumber lain. */
+/** Enroll (beli/assign/bundle/path) — dipanggil admin/instructor untuk assign manual, atau internal untuk source lain. */
 export async function create(actor: AuthContext, input: CreateEnrollmentInput) {
   const existing = await repo.findActiveByUserCourse(input.user_id, input.course_id);
   if (existing) throw AppError.conflict('This user is already actively enrolled in this course', 'enrollment.already_active');
@@ -42,11 +42,11 @@ export async function create(actor: AuthContext, input: CreateEnrollmentInput) {
     user_id: input.user_id,
     course_id: input.course_id,
     cohort_id: input.cohort_id ?? null,
-    sumber: input.sumber,
+    source: input.source,
     order_item_id: input.order_item_id ?? null,
-    assigned_by: input.sumber === 'assign' ? actor.userId : null,
+    assigned_by: input.source === 'assign' ? actor.userId : null,
     akses_kedaluwarsa_at: input.akses_kedaluwarsa_at ?? null,
-    catatan: input.catatan ?? null,
+    notes: input.notes ?? null,
   });
 
   await recordAudit({
@@ -55,8 +55,8 @@ export async function create(actor: AuthContext, input: CreateEnrollmentInput) {
     action: 'create',
     entity: 'enrollments',
     entityId: id,
-    after: { user_id: input.user_id, course_id: input.course_id, sumber: input.sumber },
-    reason: input.catatan ?? null,
+    after: { user_id: input.user_id, course_id: input.course_id, source: input.source },
+    reason: input.notes ?? null,
   });
   return repo.detail(id);
 }
@@ -68,12 +68,12 @@ export async function transfer(actor: AuthContext, id: string, input: TransferEn
       const cohort = await repo.lockCohort(input.cohort_id as string, tx);
       if (!cohort) throw AppError.notFound('Destination cohort not found', 'cohort.target_not_found');
       const activeCount = await repo.countActiveCohortMembers(cohort.id, tx);
-      if (cohort.kuota_maksimal !== null && activeCount >= cohort.kuota_maksimal) {
+      if (cohort.max_quota !== null && activeCount >= cohort.max_quota) {
         throw AppError.conflict('The destination cohort is full', 'cohort.target_full');
       }
       await repo.setCohort(id, input.cohort_id as string);
       const member = await repo.findCohortMember(cohort.id, e.user_id, tx);
-      if (!member) await repo.insertCohortMember({ cohort_id: cohort.id, user_id: e.user_id, status: 'aktif', waitlist_urutan: null }, tx);
+      if (!member) await repo.insertCohortMember({ cohort_id: cohort.id, user_id: e.user_id, status: 'active', waitlist_sort_orderan: null }, tx);
     });
   } else {
     await repo.setCohort(id, null);
@@ -86,15 +86,15 @@ export async function transfer(actor: AuthContext, id: string, input: TransferEn
     entityId: id,
     before: { cohort_id: e.cohort_id },
     after: { cohort_id: input.cohort_id ?? null },
-    reason: input.catatan ?? null,
+    reason: input.notes ?? null,
   });
   return repo.detail(id);
 }
 
 export async function revoke(actor: AuthContext, id: string, input: RevokeEnrollmentInput) {
   const e = await detail(actor, id);
-  if (e.status === 'batal') throw AppError.badRequest('This enrolment has been cancelled', 'enrollment.cancelled');
-  await repo.updateStatus(id, 'batal', { catatan: input.alasan });
+  if (e.status === 'cancelled') throw AppError.badRequest('This enrolment has been cancelled', 'enrollment.cancelled');
+  await repo.updateStatus(id, 'cancelled', { notes: input.reason });
   await recordAudit({
     userId: actor.userId,
     module: 'enrollment',
@@ -102,24 +102,24 @@ export async function revoke(actor: AuthContext, id: string, input: RevokeEnroll
     entity: 'enrollments',
     entityId: id,
     before: { status: e.status },
-    after: { status: 'batal' },
-    reason: input.alasan,
+    after: { status: 'cancelled' },
+    reason: input.reason,
   });
   return repo.detail(id);
 }
 
 const isStaff = (actor: AuthContext) =>
-  isSuper(actor) || actor.roles.some((r) => ['admin_ops', 'direktur', 'ketua', 'pembina'].includes(r));
+  isSuper(actor) || actor.roles.some((r) => ['operations_admin', 'director', 'chairperson', 'supervisor'].includes(r));
 
 /**
- * Ulang course dari awal (reset progres).
+ * Ulang course from awal (reset progres).
  *
  * Student hanya bisa mengulang enrollment miliknya, dan hanya bila course itu
  * mengizinkan (`courses.allow_restart`, diatur per course di Admin Panel).
  * Admin selalu bisa mereset progres student mana pun.
  *
- * Percobaan ujian TIDAK dikembalikan: kalau iya, mengulang course menjadi cara
- * melewati batas percobaan ujian. Certificate yang sudah terbit tetap berlaku.
+ * Percobaan exam no dikembalikan: kalau iya, mengulang course menjadi cara
+ * melewati batas percobaan exam. Certificate yang sudah publish tetap valid.
  */
 export async function restart(actor: AuthContext, id: string) {
   const e = await repo.detail(id);
@@ -131,7 +131,7 @@ export async function restart(actor: AuthContext, id: string) {
       throw AppError.forbidden('Restarting this course is not allowed', 'enrollment.restart_not_allowed');
     }
   }
-  if (!['terdaftar', 'aktif', 'selesai'].includes(e.status)) {
+  if (!['registered', 'active', 'completed'].includes(e.status)) {
     throw AppError.conflict('Only an active or completed enrolment can be restarted', 'enrollment.restart_invalid_status');
   }
 
@@ -145,7 +145,7 @@ export async function restart(actor: AuthContext, id: string) {
         entity: 'enrollments',
         entityId: id,
         before: { status: e.status },
-        after: { status: 'aktif', progress: 0, by_staff: staff && e.user_id !== actor.userId },
+        after: { status: 'active', progress: 0, by_staff: staff && e.user_id !== actor.userId },
       },
       tx,
     );
@@ -163,11 +163,11 @@ export async function bulkImport(actor: AuthContext, input: BulkImportInput) {
         user_id: userId,
         course_id: input.course_id,
         cohort_id: input.cohort_id ?? null,
-        sumber: 'assign',
+        source: 'assign',
         order_item_id: null,
         assigned_by: actor.userId,
         akses_kedaluwarsa_at: null,
-        catatan: input.alasan ?? null,
+        notes: input.reason ?? null,
       });
       hasil.push({ user_id: userId, ok: true });
       await recordAudit({
@@ -177,7 +177,7 @@ export async function bulkImport(actor: AuthContext, input: BulkImportInput) {
         entity: 'enrollments',
         entityId: id,
         after: { course_id: input.course_id, user_id: userId },
-        reason: input.alasan ?? null,
+        reason: input.reason ?? null,
       });
     } catch (err) {
       hasil.push({ user_id: userId, ok: false, error: (err as Error).message });
@@ -185,9 +185,9 @@ export async function bulkImport(actor: AuthContext, input: BulkImportInput) {
   }
   return {
     total: input.user_ids.length,
-    berhasil: hasil.filter((h) => h.ok).length,
-    gagal: hasil.filter((h) => !h.ok).length,
-    rincian: hasil,
+    success: hasil.filter((h) => h.ok).length,
+    failed: hasil.filter((h) => !h.ok).length,
+    details: hasil,
   };
 }
 
@@ -201,9 +201,9 @@ export async function createCohort(actor: AuthContext, courseId: string, input: 
   const { id } = await repo.insertCohort({
     course_id: courseId,
     name: input.name,
-    tanggal_mulai: input.tanggal_mulai,
-    tanggal_selesai: input.tanggal_selesai ?? null,
-    kuota_maksimal: input.kuota_maksimal ?? null,
+    start_date: input.start_date,
+    end_date: input.end_date ?? null,
+    max_quota: input.max_quota ?? null,
   });
   await recordAudit({ userId: actor.userId, module: 'cohort', action: 'create', entity: 'cohorts', entityId: id, after: input });
   return repo.cohortDetail(id);
@@ -214,9 +214,9 @@ export async function updateCohort(actor: AuthContext, id: string, input: Update
   if (!before) throw AppError.notFound('Cohort not found', 'cohort.not_found');
   const fields: Record<string, unknown> = {};
   if (input.name !== undefined) fields.name = input.name;
-  if (input.tanggal_mulai !== undefined) fields.tanggal_mulai = input.tanggal_mulai;
-  if (input.tanggal_selesai !== undefined) fields.tanggal_selesai = input.tanggal_selesai;
-  if (input.kuota_maksimal !== undefined) fields.kuota_maksimal = input.kuota_maksimal;
+  if (input.start_date !== undefined) fields.start_date = input.start_date;
+  if (input.end_date !== undefined) fields.end_date = input.end_date;
+  if (input.max_quota !== undefined) fields.max_quota = input.max_quota;
   if (input.status !== undefined) fields.status = input.status;
   await repo.updateCohort(id, fields);
   await recordAudit({ userId: actor.userId, module: 'cohort', action: 'update', entity: 'cohorts', entityId: id, before, after: input });
@@ -240,7 +240,7 @@ export async function listCohortWaitlist(cohortId: string) {
   return repo.listCohortWaitlist(cohortId);
 }
 
-/** Promosikan satu anggota waitlist → aktif; hormati kapasitas cohort bila terisi penuh. */
+/** Promosikan satu anggota waitlist → active; hormati kapasitas cohort bila terisi penuh. */
 export async function promoteWaitlistMember(actor: AuthContext, cohortId: string, memberId: string) {
   return withTransaction(async (tx) => {
     const cohort = await repo.lockCohort(cohortId, tx);
@@ -250,7 +250,7 @@ export async function promoteWaitlistMember(actor: AuthContext, cohortId: string
     if (member.status !== 'waitlist') throw AppError.conflict('This member is not on the waiting list', 'cohort.member_not_waitlisted');
 
     const activeCount = await repo.countActiveCohortMembers(cohortId, tx);
-    if (cohort.kuota_maksimal !== null && activeCount >= cohort.kuota_maksimal) {
+    if (cohort.max_quota !== null && activeCount >= cohort.max_quota) {
       throw AppError.conflict('This cohort is full, so no one can be promoted from the waiting list', 'cohort.full_cannot_promote');
     }
 
@@ -263,7 +263,7 @@ export async function promoteWaitlistMember(actor: AuthContext, cohortId: string
         entity: 'cohort_members',
         entityId: memberId,
         before: { status: 'waitlist' },
-        after: { status: 'aktif' },
+        after: { status: 'active' },
       },
       tx,
     );
@@ -271,31 +271,31 @@ export async function promoteWaitlistMember(actor: AuthContext, cohortId: string
   });
 }
 
-/** Student mendaftar cohort: aktif bila ada slot, else masuk waitlist FIFO. */
+/** Student mendaftar cohort: active bila ada slot, else login waitlist FIFO. */
 export async function joinCohort(actor: AuthContext, cohortId: string) {
   return withTransaction(async (tx) => {
     const cohort = await repo.lockCohort(cohortId, tx);
     if (!cohort) throw AppError.notFound('Cohort not found', 'cohort.not_found');
-    if (cohort.status === 'dibatalkan' || cohort.status === 'selesai') {
+    if (cohort.status === 'cancelled' || cohort.status === 'completed') {
       throw AppError.conflict('This cohort is not accepting new enrolments', 'cohort.closed');
     }
     const existing = await repo.findCohortMember(cohortId, actor.userId, tx);
-    if (existing && existing.status !== 'keluar') throw AppError.conflict('You are already a member of this cohort', 'cohort.already_member');
+    if (existing && existing.status !== 'left') throw AppError.conflict('You are already a member of this cohort', 'cohort.already_member');
 
     const activeCount = await repo.countActiveCohortMembers(cohortId, tx);
-    const isFull = cohort.kuota_maksimal !== null && activeCount >= cohort.kuota_maksimal;
+    const isFull = cohort.max_quota !== null && activeCount >= cohort.max_quota;
     if (isFull) {
       const posisi = await repo.nextWaitlistPosition(cohortId, tx);
-      const { id } = await repo.insertCohortMember({ cohort_id: cohortId, user_id: actor.userId, status: 'waitlist', waitlist_urutan: posisi }, tx);
+      const { id } = await repo.insertCohortMember({ cohort_id: cohortId, user_id: actor.userId, status: 'waitlist', waitlist_sort_orderan: posisi }, tx);
       await recordAudit({ userId: actor.userId, module: 'cohort', action: 'join_waitlist', entity: 'cohort_members', entityId: id }, tx);
-      return { status: 'waitlist' as const, waitlist_urutan: posisi };
+      return { status: 'waitlist' as const, waitlist_sort_orderan: posisi };
     }
-    const { id } = await repo.insertCohortMember({ cohort_id: cohortId, user_id: actor.userId, status: 'aktif', waitlist_urutan: null }, tx);
+    const { id } = await repo.insertCohortMember({ cohort_id: cohortId, user_id: actor.userId, status: 'active', waitlist_sort_orderan: null }, tx);
     await repo.findActiveByUserCourse(actor.userId, cohort.course_id).then(async (e) => {
-      if (e && !e.cohort_id) await repo.setCohort(e.id, cohortId); // tempel enrollment ke cohort bila belum tertaut
+      if (e && !e.cohort_id) await repo.setCohort(e.id, cohortId); // tempel enrollment to cohort bila belum tertaut
     });
     await recordAudit({ userId: actor.userId, module: 'cohort', action: 'join_aktif', entity: 'cohort_members', entityId: id }, tx);
-    return { status: 'aktif' as const, waitlist_urutan: null };
+    return { status: 'active' as const, waitlist_sort_orderan: null };
   });
 }
 
@@ -304,8 +304,8 @@ export async function openSlot(actor: AuthContext, cohortId: string, input: Open
   return withTransaction(async (tx) => {
     const cohort = await repo.lockCohort(cohortId, tx);
     if (!cohort) throw AppError.notFound('Cohort not found', 'cohort.not_found');
-    const kuotaBaru = cohort.kuota_maksimal === null ? null : cohort.kuota_maksimal + input.tambahan_slot;
-    if (kuotaBaru !== null) await repo.updateCohort(cohortId, { kuota_maksimal: kuotaBaru });
+    const kuotaBaru = cohort.max_quota === null ? null : cohort.max_quota + input.tambahan_slot;
+    if (kuotaBaru !== null) await repo.updateCohort(cohortId, { max_quota: kuotaBaru });
 
     const activeCount = await repo.countActiveCohortMembers(cohortId, tx);
     const slotTersedia = kuotaBaru === null ? input.tambahan_slot : Math.max(0, kuotaBaru - activeCount);
@@ -317,6 +317,6 @@ export async function openSlot(actor: AuthContext, cohortId: string, input: Open
         tx,
       );
     }
-    return { kuota_maksimal: kuotaBaru, dipromosikan: promoted.length };
+    return { max_quota: kuotaBaru, dipromosikan: promoted.length };
   });
 }

@@ -1,14 +1,14 @@
 /**
- * Daftar mata uang ISO 4217 yang masih berlaku — dipakai dropdown Pengaturan.
+ * register mata uang ISO 4217 yang masih valid — dipakai dropdown settings.
  *
- * Sengaja hard-coded (bukan dari API) supaya dropdown tetap terisi walau backend
- * belum siap, dan supaya daftarnya stabil lintas rilis. Nama ditulis dalam language
+ * Sengaja hard-coded (bukan from API) supaya dropdown tetap terisi walau backend
+ * belum siap, dan supaya daftarnya stabil lintas rilis. name ditulis dalam language
  * Inggris karena itu name resmi ISO; kode-nya yang dipakai untuk memformat.
  */
 export interface CurrencyDef {
-  /** Kode ISO 4217 tiga huruf — nilai yang disimpan di setting `currency.code`. */
+  /** Kode ISO 4217 tiga huruf — value yang disimpan di setting `currency.code`. */
   code: string;
-  /** Nama resmi ISO. */
+  /** name resmi ISO. */
   name: string;
 }
 
@@ -175,7 +175,7 @@ export const DEFAULT_CURRENCY = 'INR';
 /**
  * Mata uang yang dalam praktik sehari-hari ditulis tanpa pecahan, walau ISO 4217
  * mencantumkan dua desimal. `Intl` sudah benar untuk JPY/KRW/VND/CLP/ISK, jadi
- * daftar ini hanya untuk yang menyimpang dari standar.
+ * register ini hanya untuk yang menyimpang from standar.
  */
 const TANPA_PECAHAN = new Set(['IDR']);
 

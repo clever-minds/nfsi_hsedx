@@ -1,15 +1,15 @@
 {
   "title": "Website",
-  "subtitle": "Ubah tampilan halaman publik tanpa menyentuh kode.",
+  "subtitle": "edit tampilan halaman publik tanpa menyentuh kode.",
   "viewSite": "Buka situs",
   "saved": "Tersimpan",
-  "saveFailed": "Gagal menyimpan.",
-  "loadFailed": "Gagal memuat isi website.",
-  "readOnly": "Anda dapat melihat halaman ini, tetapi tidak dapat mengubahnya.",
+  "saveFailed": "failed menyimpan.",
+  "loadFailed": "failed memuat content website.",
+  "readOnly": "Anda dapat melihat halaman ini, tetapi no dapat mengubahnya.",
   "editingLanguage": "Bahasa yang disunting",
   "editingLanguageHint": "Berlaku untuk semua field text di halaman ini. Biarkan kosong untuk memakai text bawaan.",
   "defaultPlaceholder": "Kosongkan untuk memakai text bawaan",
-  "active": "Aktif",
+  "active": "active",
   "show": "Tampil",
   "moveUp": "Naikkan",
   "moveDown": "Turunkan",
@@ -22,27 +22,27 @@
     "footer": "Footer"
   },
   "kontak": {
-    "intro": "Tampil di bilah gelap di atas header.",
+    "intro": "Tampil di bilah gelap di on header.",
     "address": "Alamat",
     "phone": "Telepon",
     "email": "Email",
-    "showTopbar": "Tampilkan bilah atas"
+    "showTopbar": "Tampilkan bilah on"
   },
   "sosial": {
-    "intro": "Muncul di bilah atas dan footer. Tautan kosong disembunyikan.",
-    "add": "Tambah tautan",
+    "intro": "Muncul di bilah on dan footer. Tautan kosong disembunyikan.",
+    "add": "add tautan",
     "empty": "Belum ada tautan sosial."
   },
   "menu": {
     "intro": "Menggantikan menu bawaan (Beranda / Course / Instructor). Kosongkan untuk memakai bawaan.",
     "label": "Label",
     "url": "Tautan",
-    "add": "Tambah menu",
+    "add": "add menu",
     "empty": "Memakai menu bawaan."
   },
   "hero": {
     "intro": "Bagian pertama yang dilihat pengunjung.",
-    "badge": "Label kecil di atas title",
+    "badge": "Label kecil di on title",
     "titleHint": "Judul dipecah tiga bagian; bagian tengah disorot dengan warna merek.",
     "titlePre": "Sebelum sorotan",
     "titleHighlight": "Bagian disorot",
@@ -51,11 +51,11 @@
     "image": "Gambar hero",
     "imageHint": "JPG, PNG, atau WebP · maks 5MB. Kosong berarti memakai blok gradien.",
     "noImage": "Belum ada gambar",
-    "replace": "Unggah gambar",
+    "replace": "upload gambar",
     "badFormat": "Format harus JPG, PNG, atau WebP.",
-    "tooLarge": "Ukuran berkas maksimal 5MB.",
-    "readFailed": "Berkas tidak dapat dibaca.",
-    "uploadFailed": "Unggahan gagal.",
+    "tooLarge": "Ukuran berkas maximum 5MB.",
+    "readFailed": "Berkas no dapat read.",
+    "uploadFailed": "Unggahan failed.",
     "ratingScore": "Skor rating",
     "ratingText": "Keterangan rating",
     "showSearch": "Tampilkan kotak pencarian",
@@ -70,47 +70,47 @@
     "subheading": "Subjudul"
   },
   "section": {
-    "kategori": {
+    "category": {
       "name": "Kategori Teratas",
-      "desc": "Kisi kategori yang menuju catalog."
+      "desc": "Kisi category yang menuju catalog."
     },
     "benefit": {
       "name": "Keunggulan",
-      "desc": "Tiga alasan belajar di sini, pada bidang gelap."
+      "desc": "Tiga reason belajar di sini, pada bidang gelap."
     },
     "featured": {
       "name": "Course Unggulan",
-      "desc": "Delapan course beserta tautan ke catalog."
+      "desc": "Delapan course beserta tautan to catalog."
     },
     "stats": {
       "name": "Statistik",
-      "desc": "Student, course, kategori, dan instructor."
+      "desc": "Student, course, category, dan instructor."
     },
     "instructor": {
       "name": "Instructor Terbaik",
-      "desc": "Kartu instructor dengan rating dan jumlah student."
+      "desc": "Kartu instructor dengan rating dan amount student."
     },
     "cta": {
-      "name": "Ajakan Daftar",
-      "desc": "Panel gelap berisi tombol daftar dan jelajah catalog."
+      "name": "Ajakan register",
+      "desc": "Panel gelap berisi tombol register dan jelajah catalog."
     }
   },
   "footer": {
     "intro": "Bidang gelap di bagian bawah semua halaman publik.",
-    "blurb": "Deskripsi singkat",
+    "blurb": "description singkat",
     "columns": "Kolom tautan",
     "columnsHint": "Maksimal 4 kolom. Kosongkan untuk memakai kolom bawaan Jelajahi dan Bantuan.",
     "columnsEmpty": "Memakai kolom bawaan.",
     "columnTitle": "Judul kolom",
-    "addColumn": "Tambah kolom",
+    "addColumn": "add kolom",
     "linkLabel": "Label",
     "linkUrl": "Tautan",
-    "addLink": "Tambah tautan",
+    "addLink": "add tautan",
     "newsletterShow": "Tampilkan kotak newsletter",
     "newsletterTitle": "Judul newsletter",
     "newsletterText": "Teks newsletter",
     "showSocial": "Tampilkan ikon sosial di footer",
     "copyright": "Baris hak cipta",
-    "copyrightHint": "Gunakan :year untuk tahun berjalan dan :name untuk name aplikasi."
+    "copyrightHint": "Gunakan :year untuk year berjalan dan :name untuk name aplikasi."
   }
 }

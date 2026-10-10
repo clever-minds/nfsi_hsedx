@@ -68,8 +68,8 @@
     "saveFailed": "Failed to save the template",
     "token": {
       "name": "student name",
-      "nomor": "certificate number",
-      "tanggal": "issue date"
+      "number": "certificate number",
+      "date": "issue date"
     }
   },
   "doc": {

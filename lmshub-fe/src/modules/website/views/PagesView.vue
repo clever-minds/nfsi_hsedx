@@ -11,28 +11,28 @@ import RichTextEditor from '@/components/ui/RichTextEditor.vue';
 
 /**
  * Halaman statis situs — About, Help Center, Privacy, Terms, Contact, dan
- * halaman lain yang dibuat admin. Halaman bertanda "Tampil di footer" muncul
- * di kolom Support footer, berurutan menurut angka urutannya.
+ * halaman lain yang created admin. Halaman bertanda "Tampil di footer" muncul
+ * di kolom Support footer, bersort_orderan mensort_order angka sort_orderannya.
  *
- * Backend sudah lama menyimpan `content_pages`, tetapi tidak ada layar yang
- * mengelolanya dan footer menautkan semuanya ke `#`.
+ * Backend sudah lama menyimpan `content_pages`, tetapi no ada layar yang
+ * mengelolanya dan footer menautkan semuanya to `#`.
  */
 interface ContentPage extends Record<string, unknown> {
   id: string;
   slug: string;
   title: string;
   content: { format?: string; html?: string } | null;
-  tipe: 'tentang' | 'faq' | 'kebijakan' | 'halaman';
-  status: 'draft' | 'terbit' | 'arsip';
-  tampil_di_footer: boolean;
-  urutan_footer: number;
+  type: 'about' | 'faq' | 'policy' | 'page';
+  status: 'draft' | 'publish' | 'archived';
+  show_in_footer: boolean;
+  footer_sort_order: number;
   updated_at: string;
 }
 
 const auth = useAuthStore();
 const site = useSiteContentStore();
 const { t } = useI18n();
-const canEdit = auth.can('pengaturan.update');
+const canEdit = auth.can('settings.update');
 
 const rows = ref<ContentPage[]>([]);
 const loading = ref(true);
@@ -44,26 +44,26 @@ const showForm = ref(false);
 const editingId = ref<string | null>(null);
 const saving = ref(false);
 const formError = ref('');
-/** Slug mengikuti title sampai admin mengetiknya sendiri. */
+/** Slug mengikuti title until admin mengetiknya sendiri. */
 const slugTouched = ref(false);
 
 const form = reactive({
   title: '',
   slug: '',
-  tipe: 'halaman' as ContentPage['tipe'],
+  type: 'page' as ContentPage['type'],
   status: 'draft' as ContentPage['status'],
-  tampil_di_footer: false,
-  urutan_footer: 0,
+  show_in_footer: false,
+  footer_sort_order: 0,
   html: '',
 });
 
-const TIPE = ['tentang', 'faq', 'kebijakan', 'halaman'] as const;
-const STATUS = ['draft', 'terbit', 'arsip'] as const;
+const TIPE = ['about', 'faq', 'policy', 'page'] as const;
+const STATUS = ['draft', 'publish', 'archived'] as const;
 
 const columns = computed(() => [
   { key: 'title', label: t('pages.admin.colTitle') },
   { key: 'status', label: t('pages.admin.colStatus') },
-  { key: 'tampil_di_footer', label: t('pages.admin.colFooter') },
+  { key: 'show_in_footer', label: t('pages.admin.colFooter') },
   { key: 'updated_at', label: t('pages.admin.colUpdated') },
 ]);
 
@@ -87,7 +87,7 @@ async function load() {
   try {
     const res = await apiGetFull<ContentPage[]>('/pages', { limit: 100 });
     rows.value = (res.data ?? []).sort(
-      (a, b) => Number(b.tampil_di_footer) - Number(a.tampil_di_footer) || a.urutan_footer - b.urutan_footer || a.title.localeCompare(b.title),
+      (a, b) => Number(b.show_in_footer) - Number(a.show_in_footer) || a.footer_sort_order - b.footer_sort_order || a.title.localeCompare(b.title),
     );
   } catch (e) {
     error.value = errorMessage(e, t('pages.admin.loadFailed'));
@@ -104,10 +104,10 @@ function openCreate() {
   Object.assign(form, {
     title: '',
     slug: '',
-    tipe: 'halaman',
+    type: 'page',
     status: 'draft',
-    tampil_di_footer: false,
-    urutan_footer: rows.value.reduce((m, r) => Math.max(m, r.urutan_footer), 0) + 1,
+    show_in_footer: false,
+    footer_sort_order: rows.value.reduce((m, r) => Math.max(m, r.footer_sort_order), 0) + 1,
     html: '',
   });
   showForm.value = true;
@@ -120,10 +120,10 @@ function openEdit(row: ContentPage) {
   Object.assign(form, {
     title: row.title,
     slug: row.slug,
-    tipe: row.tipe,
+    type: row.type,
     status: row.status,
-    tampil_di_footer: row.tampil_di_footer,
-    urutan_footer: row.urutan_footer,
+    show_in_footer: row.show_in_footer,
+    footer_sort_order: row.footer_sort_order,
     html: row.content?.html ?? '',
   });
   showForm.value = true;
@@ -144,10 +144,10 @@ async function submit() {
   const payload = {
     title: form.title.trim(),
     slug: form.slug,
-    tipe: form.tipe,
+    type: form.type,
     status: form.status,
-    tampil_di_footer: form.tampil_di_footer,
-    urutan_footer: Number(form.urutan_footer) || 0,
+    show_in_footer: form.show_in_footer,
+    footer_sort_order: Number(form.footer_sort_order) || 0,
     konten_html: form.html,
   };
   try {
@@ -163,12 +163,12 @@ async function submit() {
   }
 }
 
-/** Terbit ↔ draft cepat dari tabel. */
+/** Terbit ↔ draft cepat from tabel. */
 async function togglePublish(row: ContentPage) {
   busyId.value = row.id;
   error.value = '';
   try {
-    await apiPut(`/pages/${row.id}`, { status: row.status === 'terbit' ? 'draft' : 'terbit' });
+    await apiPut(`/pages/${row.id}`, { status: row.status === 'publish' ? 'draft' : 'publish' });
     await Promise.all([load(), site.loadHalaman()]);
   } catch (e) {
     error.value = errorMessage(e, t('pages.admin.saveFailed'));
@@ -232,8 +232,8 @@ onMounted(load);
         </div>
         <div>
           <label class="label" for="page-type">{{ t('pages.admin.type') }}</label>
-          <select id="page-type" v-model="form.tipe" class="input" :disabled="!canEdit">
-            <option v-for="x in TIPE" :key="x" :value="x">{{ t(`pages.tipe.${x}`) }}</option>
+          <select id="page-type" v-model="form.type" class="input" :disabled="!canEdit">
+            <option v-for="x in TIPE" :key="x" :value="x">{{ t(`pages.type.${x}`) }}</option>
           </select>
         </div>
         <div>
@@ -245,12 +245,12 @@ onMounted(load);
         </div>
         <div class="flex items-end gap-4 pb-1">
           <label class="label-inline">
-            <input v-model="form.tampil_di_footer" type="checkbox" :disabled="!canEdit" /> {{ t('pages.admin.showInFooter') }}
+            <input v-model="form.show_in_footer" type="checkbox" :disabled="!canEdit" /> {{ t('pages.admin.showInFooter') }}
           </label>
         </div>
         <div>
           <label class="label" for="page-order">{{ t('pages.admin.footerOrder') }}</label>
-          <input id="page-order" v-model.number="form.urutan_footer" type="number" min="0" max="999" class="input" :disabled="!canEdit" />
+          <input id="page-order" v-model.number="form.footer_sort_order" type="number" min="0" max="999" class="input" :disabled="!canEdit" />
         </div>
         <div class="sm:col-span-2">
           <label class="label">{{ t('pages.admin.content') }}</label>
@@ -261,7 +261,7 @@ onMounted(load);
 
       <div class="mt-4 flex flex-wrap justify-end gap-2">
         <a
-          v-if="editingId && form.status === 'terbit'"
+          v-if="editingId && form.status === 'publish'"
           :href="`/pages/${form.slug}`"
           target="_blank"
           rel="noopener"
@@ -284,14 +284,14 @@ onMounted(load);
       <template #cell:status="{ row }">
         <span
           class="rounded-full px-2.5 py-0.5 text-xs font-medium"
-          :class="(row as ContentPage).status === 'terbit' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'"
+          :class="(row as ContentPage).status === 'publish' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'"
         >
           {{ t(`pages.status.${(row as ContentPage).status}`) }}
         </span>
       </template>
-      <template #cell:tampil_di_footer="{ row }">
-        <span v-if="(row as ContentPage).tampil_di_footer" class="text-sm text-slate-600">
-          ✓ <span class="num text-xs text-slate-400">#{{ (row as ContentPage).urutan_footer }}</span>
+      <template #cell:show_in_footer="{ row }">
+        <span v-if="(row as ContentPage).show_in_footer" class="text-sm text-slate-600">
+          ✓ <span class="num text-xs text-slate-400">#{{ (row as ContentPage).footer_sort_order }}</span>
         </span>
         <span v-else class="text-slate-300">—</span>
       </template>
@@ -299,7 +299,7 @@ onMounted(load);
       <template #actions="{ row }">
         <div class="flex justify-end gap-1.5">
           <a
-            v-if="(row as ContentPage).status === 'terbit'"
+            v-if="(row as ContentPage).status === 'publish'"
             :href="`/pages/${(row as ContentPage).slug}`"
             target="_blank"
             rel="noopener"
@@ -312,7 +312,7 @@ onMounted(load);
           </button>
           <template v-if="canEdit">
             <button class="btn-outline btn-sm" :disabled="busyId === (row as ContentPage).id" @click="togglePublish(row as ContentPage)">
-              {{ (row as ContentPage).status === 'terbit' ? t('pages.admin.unpublish') : t('pages.admin.publish') }}
+              {{ (row as ContentPage).status === 'publish' ? t('pages.admin.unpublish') : t('pages.admin.publish') }}
             </button>
             <button class="btn-outline btn-sm text-rose-600" :disabled="busyId === (row as ContentPage).id" @click="remove(row as ContentPage)">
               {{ t('common.action.delete') }}

@@ -11,16 +11,16 @@ interface Report extends Record<string, unknown> {
   id: string;
   target_type: string;
   konten_ringkas?: string;
-  pelapor_nama?: string;
-  alasan: string;
+  pelapor_name?: string;
+  reason: string;
   status: string; // menunggu | disembunyikan | dihapus | ditolak
-  dibuat_at?: string;
+  created_at?: string;
 }
 
 const reports = ref<Report[]>([]);
 const loading = ref(true);
 const error = ref('');
-const statusFilter = ref('menunggu');
+const statusFilter = ref('pending');
 const page = ref(1);
 const limit = 20;
 const total = ref(0);
@@ -30,12 +30,12 @@ const { t } = useI18n();
 
 const columns = computed(() => [
   { key: 'konten_ringkas', label: t('discussions.moderationPage.colContent') },
-  { key: 'pelapor_nama', label: t('discussions.moderationPage.colReporter') },
-  { key: 'alasan', label: t('discussions.moderationPage.colReason') },
+  { key: 'pelapor_name', label: t('discussions.moderationPage.colReporter') },
+  { key: 'reason', label: t('discussions.moderationPage.colReason') },
   { key: 'status', label: t('discussions.moderationPage.colStatus') },
 ]);
 
-const STATUS_OPTIONS = ['menunggu', 'disembunyikan', 'dihapus', 'ditolak'];
+const STATUS_OPTIONS = ['pending', 'disembunyikan', 'dihapus', 'rejected'];
 
 async function load() {
   loading.value = true;
@@ -56,22 +56,22 @@ async function load() {
   }
 }
 
-const TINDAKAN_MAP: Record<'sembunyikan' | 'hapus' | 'blokir', 'sembunyikan' | 'hapus' | 'blokir_pengguna'> = {
-  sembunyikan: 'sembunyikan',
-  hapus: 'hapus',
-  blokir: 'blokir_pengguna',
+const TINDAKAN_MAP: Record<'hide' | 'delete' | 'blokir', 'hide' | 'delete' | 'block_user'> = {
+  sembunyikan: 'hide',
+  delete: 'delete',
+  blokir: 'block_user',
 };
 
-async function act(r: Report, aksi: 'sembunyikan' | 'hapus' | 'blokir') {
-  const catatan = window.prompt(t('discussions.moderationPage.promptReason', { action: t(`discussions.moderationPage.action.${aksi}`) }));
-  if (!catatan) return;
+async function act(r: Report, action: 'hide' | 'delete' | 'blokir') {
+  const notes = window.prompt(t('discussions.moderationPage.promptReason', { action: t(`discussions.moderationPage.action.${action}`) }));
+  if (!notes) return;
   busyId.value = r.id;
   try {
-    // BE: PATCH /discussions/reports/:id dengan body { status: 'ditindak', tindakan, catatan_penanganan }
+    // BE: PATCH /discussions/reports/:id dengan body { status: 'actioned', action, handling_notes }
     await apiPatch(`/discussions/reports/${r.id}`, {
-      status: 'ditindak',
-      tindakan: TINDAKAN_MAP[aksi],
-      catatan_penanganan: catatan,
+      status: 'actioned',
+      action: TINDAKAN_MAP[action],
+      handling_notes: notes,
     });
     await load();
   } catch (e) {
@@ -109,14 +109,14 @@ onMounted(load);
           <button
             class="btn-outline text-xs"
             :disabled="busyId === (row as Report).id"
-            @click="act(row as Report, 'sembunyikan')"
+            @click="act(row as Report, 'hide')"
           >
             {{ t('discussions.moderationPage.hide') }}
           </button>
           <button
             class="btn-outline text-xs text-rose-600"
             :disabled="busyId === (row as Report).id"
-            @click="act(row as Report, 'hapus')"
+            @click="act(row as Report, 'delete')"
           >
             {{ t('discussions.moderationPage.delete') }}
           </button>

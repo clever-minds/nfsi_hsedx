@@ -9,7 +9,7 @@ import type { SettingItem } from '../settings-schema';
 /**
  * Identitas merek: name aplikasi, baris footer, logo, dan ikon browser.
  *
- * Dipisah dari daftar setting generik karena dua field-nya adalah unggahan
+ * Dipisah from register setting generik karena dua field-nya adalah unggahan
  * berkas, bukan pasangan key/value — dan karena admin memerlukan pratinjau
  * untuk menilai hasilnya.
  */
@@ -19,7 +19,7 @@ const { t } = useI18n();
 const appConfig = useAppConfigStore();
 
 const KEY = {
-  name: 'brand.nama_aplikasi',
+  name: 'brand.app_name',
   footer: 'brand.footer',
   logo: 'brand.logo_url',
   icon: 'brand.icon_url',
@@ -27,8 +27,8 @@ const KEY = {
 
 const find = (key: string) => props.items.find((i) => i.key === key);
 
-const name = ref(find(KEY.name)?.nilai ?? '');
-const footer = ref(find(KEY.footer)?.nilai ?? '');
+const name = ref(find(KEY.name)?.value ?? '');
+const footer = ref(find(KEY.footer)?.value ?? '');
 
 const saving = ref(false);
 const saved = ref(false);
@@ -50,8 +50,8 @@ async function saveText() {
   error.value = '';
   saved.value = false;
   try {
-    await apiPut(`/settings/${KEY.name}`, { nilai: name.value.trim() });
-    await apiPut(`/settings/${KEY.footer}`, { nilai: footer.value });
+    await apiPut(`/settings/${KEY.name}`, { value: name.value.trim() });
+    await apiPut(`/settings/${KEY.footer}`, { value: footer.value });
     appConfig.setBrand({ appName: name.value.trim(), footerTemplate: footer.value });
     saved.value = true;
     setTimeout(() => (saved.value = false), 1500);
@@ -62,7 +62,7 @@ async function saveText() {
   }
 }
 
-async function onPick(jenis: 'logo' | 'icon', event: Event) {
+async function onPick(type: 'logo' | 'icon', event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   input.value = ''; // agar memilih berkas yang sama lagi tetap memicu change
@@ -78,7 +78,7 @@ async function onPick(jenis: 'logo' | 'icon', event: Event) {
     return;
   }
 
-  uploading.value = jenis;
+  uploading.value = type;
   try {
     const dataUrl = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -86,12 +86,12 @@ async function onPick(jenis: 'logo' | 'icon', event: Event) {
       reader.onerror = () => reject(new Error(t('settings.brand.readFailed')));
       reader.readAsDataURL(file);
     });
-    const res = await apiPost<{ key: string; nilai: string }>('/settings/brand-asset', {
-      jenis,
+    const res = await apiPost<{ key: string; value: string }>('/settings/brand-asset', {
+      type,
       data_base64: dataUrl,
       mime_type: file.type,
     });
-    appConfig.setBrand(jenis === 'logo' ? { logoUrl: res.nilai } : { iconUrl: res.nilai });
+    appConfig.setBrand(type === 'logo' ? { logoUrl: res.value } : { iconUrl: res.value });
   } catch (e) {
     error.value = errorMessage(e, t('settings.brand.uploadFailed'));
   } finally {
@@ -99,12 +99,12 @@ async function onPick(jenis: 'logo' | 'icon', event: Event) {
   }
 }
 
-async function clearAsset(jenis: 'logo' | 'icon') {
-  uploading.value = jenis;
+async function clearAsset(type: 'logo' | 'icon') {
+  uploading.value = type;
   error.value = '';
   try {
-    await apiDelete(`/settings/brand-asset/${jenis}`);
-    appConfig.setBrand(jenis === 'logo' ? { logoUrl: '' } : { iconUrl: '' });
+    await apiDelete(`/settings/brand-asset/${type}`);
+    appConfig.setBrand(type === 'logo' ? { logoUrl: '' } : { iconUrl: '' });
   } catch (e) {
     error.value = errorMessage(e, t('settings.brand.uploadFailed'));
   } finally {
@@ -127,10 +127,10 @@ async function clearAsset(jenis: 'logo' | 'icon') {
 
     <div v-if="error" class="mt-3 alert-error">{{ error }}</div>
 
-    <!-- Nama aplikasi -->
+    <!-- name aplikasi -->
     <div class="mt-4 border-t border-slate-100 pt-4">
-      <label class="label" for="brand-name">{{ t('settings.item.brand_nama_aplikasi.label') }}</label>
-      <p class="mb-1.5 text-xs text-slate-400">{{ t('settings.item.brand_nama_aplikasi.desc') }}</p>
+      <label class="label" for="brand-name">{{ t('settings.item.brand_name_aplikasi.label') }}</label>
+      <p class="mb-1.5 text-xs text-slate-400">{{ t('settings.item.brand_name_aplikasi.desc') }}</p>
       <input id="brand-name" v-model="name" class="input" :disabled="!canEdit" />
     </div>
 

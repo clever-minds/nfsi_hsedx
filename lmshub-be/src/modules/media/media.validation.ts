@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-export const mediaTipeFileEnum = z.enum(['video', 'gambar', 'document', 'audio']);
-export const transcodeStatusEnum = z.enum(['menunggu', 'memproses', 'selesai', 'gagal']);
+export const mediaTipeFileEnum = z.enum(['video', 'image', 'document', 'audio']);
+export const transcodeStatusEnum = z.enum(['pending', 'memproses', 'completed', 'failed']);
 
 export const createMediaSchema = z.object({
   file_type: mediaTipeFileEnum,

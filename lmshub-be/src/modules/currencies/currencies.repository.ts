@@ -5,14 +5,14 @@ export interface CurrencyRow {
   id: string;
   kode: string;
   name: string;
-  simbol: string;
+  symbol: string;
   rate: string;
   desimal: number;
   is_active: boolean;
   sort_order: number;
 }
 
-const COLUMNS = 'id, kode, name, simbol, rate, desimal, is_active, sort_order';
+const COLUMNS = 'id, kode, name, symbol, rate, desimal, is_active, sort_order';
 
 export async function list(activeOnly = false): Promise<CurrencyRow[]> {
   return query<CurrencyRow>(
@@ -35,9 +35,9 @@ export async function byKode(kode: string): Promise<CurrencyRow | null> {
 
 export async function insert(input: CreateCurrencyInput): Promise<CurrencyRow> {
   return (await queryOne<CurrencyRow>(
-    `INSERT INTO currencies (kode, name, simbol, rate, desimal, is_active, sort_order)
+    `INSERT INTO currencies (kode, name, symbol, rate, desimal, is_active, sort_order)
      VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING ${COLUMNS}`,
-    [input.kode, input.name, input.simbol, input.rate, input.desimal, input.is_active, input.sort_order],
+    [input.kode, input.name, input.symbol, input.rate, input.desimal, input.is_active, input.sort_order],
   ))!;
 }
 
@@ -47,7 +47,7 @@ export async function update(id: string, input: UpdateCurrencyInput): Promise<Cu
   return queryOne<CurrencyRow>(
     `UPDATE currencies SET
        name = COALESCE($2, name),
-       simbol = COALESCE($3, simbol),
+       symbol = COALESCE($3, symbol),
        rate = COALESCE($4, rate),
        desimal = COALESCE($5, desimal),
        is_active = COALESCE($6, is_active),
@@ -57,7 +57,7 @@ export async function update(id: string, input: UpdateCurrencyInput): Promise<Cu
     [
       id,
       input.name ?? null,
-      input.simbol ?? null,
+      input.symbol ?? null,
       input.rate ?? null,
       input.desimal ?? null,
       input.is_active ?? null,

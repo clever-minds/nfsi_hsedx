@@ -34,7 +34,7 @@
       "dp_cicilan_berjalan": "Deposit / Instalment",
       "lunas": "Paid",
       "akses_aktif": "Access Active",
-      "batal": "Cancelled / Expired"
+      "cancel": "Cancelled / Expired"
     }
   },
   "manual": {

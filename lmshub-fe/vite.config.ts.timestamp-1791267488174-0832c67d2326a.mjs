@@ -11,9 +11,9 @@ var vite_config_default = defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Vendor dipisah dari kode aplikasi supaya pembaruan aplikasi tidak
+        // Vendor dipisah dari kode aplikasi supaya pembaruan aplikasi no
         // membatalkan cache pustaka yang jarang berubah, dan layar pertama
-        // tidak menunggu seluruh bundel selesai diunduh.
+        // no menunggu seluruh bundel finish diunduh.
         manualChunks: {
           vue: ["vue", "vue-router", "pinia"],
           i18n: ["vue-i18n"],

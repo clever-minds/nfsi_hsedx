@@ -10,11 +10,11 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 
 interface SubmissionItem extends Record<string, unknown> {
   id: string;
-  siswa_nama?: string;
+  siswa_name?: string;
   course_title?: string;
-  jenis?: string; // quiz | assignment | esai
-  judul_asesmen?: string;
-  tanggal_kumpul?: string;
+  type?: string; // quiz | assignment | esai
+  title_asesmen?: string;
+  date_kumpul?: string;
   status: string;
 }
 
@@ -22,13 +22,13 @@ interface RubricCriteria {
   id: string;
   name: string;
   bobot?: number;
-  skorMaks?: number;
+  scoreMaks?: number;
 }
 
 interface SubmissionDetail {
   id: string;
-  siswa_nama?: string;
-  judul_asesmen?: string;
+  siswa_name?: string;
+  title_asesmen?: string;
   konten_teks?: string;
   file_url?: string;
   tautan?: string;
@@ -48,11 +48,11 @@ const limit = 20;
 const total = ref(0);
 
 const columns = computed(() => [
-  { key: 'siswa_nama', label: t('grading.queue.colStudent') },
-  { key: 'judul_asesmen', label: t('grading.queue.colAssessment') },
-  { key: 'jenis', label: t('grading.queue.colType') },
+  { key: 'siswa_name', label: t('grading.queue.colStudent') },
+  { key: 'title_asesmen', label: t('grading.queue.colAssessment') },
+  { key: 'type', label: t('grading.queue.colType') },
   { key: 'course_title', label: t('grading.queue.colCourse') },
-  { key: 'tanggal_kumpul', label: t('grading.queue.colSubmittedAt') },
+  { key: 'date_kumpul', label: t('grading.queue.colSubmittedAt') },
   { key: 'status', label: t('grading.queue.colStatus') },
 ]);
 
@@ -90,10 +90,10 @@ const revisionSubmitting = ref(false);
 
 const rubric = computed(() => selected.value?.rubric ?? []);
 
-// Nilai keseluruhan, dipakai saat pengumpulan tidak punya rubrik. Tanpa ini tidak
+// grade keseluruhan, dipakai saat pengumpulan no punya rubrik. Tanpa ini no
 // ada tempat memasukkan angka sama sekali: penilai hanya bisa menulis feedback.
-const skor = ref<number | null>(null);
-const skorMaksimal = ref(100);
+const score = ref<number | null>(null);
+const scoreMaksimal = ref(100);
 
 const totalScore = computed(() => {
   if (!rubric.value.length) return 0;
@@ -101,23 +101,23 @@ const totalScore = computed(() => {
   return Math.round(rubric.value.reduce((acc, c) => acc + (scores[c.id] ?? 0) * ((c.bobot ?? equalWeight) / 100), 0));
 });
 
-/** Nilai yang dikirim: total berbobot bila ada rubrik, angka keseluruhan bila tidak. */
-const effectiveScore = computed(() => (rubric.value.length ? totalScore.value : (skor.value ?? 0)));
+/** grade yang dikirim: total berbobot bila ada rubrik, angka keseluruhan bila no. */
+const effectiveScore = computed(() => (rubric.value.length ? totalScore.value : (score.value ?? 0)));
 const isComplete = computed(() => rubric.value.length > 0 && rubric.value.every((c) => scores[c.id] !== undefined && scores[c.id] !== null));
 
 async function openGrading(row: SubmissionItem) {
   detailLoading.value = true;
   detailError.value = '';
   Object.keys(scores).forEach((k) => delete scores[k]);
-  // Direset juga, agar nilai pengumpulan sebelumnya tidak terbawa ke berikutnya.
-  skor.value = null;
-  skorMaksimal.value = 100;
+  // Direset juga, agar value pengumpulan previous no terbawa to berikutnya.
+  score.value = null;
+  scoreMaksimal.value = 100;
   feedback.value = '';
   gradeId.value = null;
   try {
-    // Respons berisi baris mentah `{ submission, grade }` tanpa join. Nama student
-    // diambil dari baris antrean yang sudah dimuat, dan rubrik belum ikut di sini —
-    // karena itu panel penilaian memakai input nilai keseluruhan bila rubrik kosong.
+    // Respons berisi baris mentah `{ submission, grade }` tanpa join. name student
+    // diambil from baris antrean yang sudah dimuat, dan rubrik belum ikut di sini —
+    // karena itu panel penilaian memakai input value keseluruhan bila rubrik kosong.
     const detail = await apiGet<{
       submission: Record<string, unknown>;
       grade: { id: string; feedback?: string | null } | null;
@@ -125,9 +125,9 @@ async function openGrading(row: SubmissionItem) {
     const sub = detail.submission || {};
     selected.value = {
       id: row.id,
-      siswa_nama: row.siswa_nama,
-      judul_asesmen: row.judul_asesmen,
-      konten_teks: (sub.isi_teks as string) ?? undefined,
+      siswa_name: row.siswa_name,
+      title_asesmen: row.title_asesmen,
+      konten_teks: (sub.text_content as string) ?? undefined,
       tautan: (sub.url as string) ?? undefined,
       status: (sub.status as string) ?? row.status,
       rubric: [],
@@ -137,7 +137,7 @@ async function openGrading(row: SubmissionItem) {
     feedback.value = selected.value.feedback || '';
   } catch (e) {
     detailError.value = errorMessage(e, t('grading.queue.detailFailed'));
-    selected.value = { id: row.id, siswa_nama: row.siswa_nama, judul_asesmen: row.judul_asesmen, status: row.status, rubric: [] };
+    selected.value = { id: row.id, siswa_name: row.siswa_name, title_asesmen: row.title_asesmen, status: row.status, rubric: [] };
   } finally {
     detailLoading.value = false;
   }
@@ -154,19 +154,19 @@ async function saveGrade() {
   saving.value = true;
   detailError.value = '';
   try {
-    // Nama field harus persis seperti gradeSubmissionSchema di backend: `skor` dan
-    // `skor_maksimal` wajib, dan `rubrik` adalah array bernama — bukan map skor
+    // name field harus persis seperti gradeSubmissionSchema di backend: `score` dan
+    // `score_maximum` wajib, dan `rubrik` adalah array bernama — bukan map score
     // per-id seperti bentuk yang dipakai di dalam komponen ini.
     const grade = await apiPost<{ id: string }>(`/submissions/${selected.value.id}/grade`, {
-      skor: effectiveScore.value,
-      skor_maksimal: rubric.value.length ? 100 : skorMaksimal.value,
+      score: effectiveScore.value,
+      score_maximum: rubric.value.length ? 100 : scoreMaksimal.value,
       feedback: feedback.value || null,
       ...(rubric.value.length
         ? {
             rubrik: rubric.value.map((c) => ({
               name: c.name,
-              skor: scores[c.id] ?? 0,
-              skor_maks: c.skorMaks ?? 100,
+              score: scores[c.id] ?? 0,
+              score_maks: c.scoreMaks ?? 100,
             })),
           }
         : {}),
@@ -202,7 +202,7 @@ async function submitRevision() {
   revisionSubmitting.value = true;
   detailError.value = '';
   try {
-    await apiPost(`/submissions/${selected.value.id}/request-revision`, { catatan: revisionNote.value.trim() });
+    await apiPost(`/submissions/${selected.value.id}/request-revision`, { notes: revisionNote.value.trim() });
     closePanel();
     revisionNote.value = '';
     await loadQueue();
@@ -238,7 +238,7 @@ onMounted(loadQueue);
         <button class="btn-outline" @click="applyFilter">{{ t('grading.queue.apply') }}</button>
       </template>
       <template #cell:status="{ value }"><StatusChip :status="String(value)" /></template>
-      <template #cell:tanggal_kumpul="{ value }">{{ value ? fmtTanggalSaja(String(value)) : '—' }}</template>
+      <template #cell:date_kumpul="{ value }">{{ value ? fmtTanggalSaja(String(value)) : '—' }}</template>
       <template #actions="{ row }">
         <button v-can="'grading.update'" class="row-link row-link-primary" @click="openGrading(row as SubmissionItem)">
           {{ t('grading.queue.grade') }}
@@ -254,7 +254,7 @@ onMounted(loadQueue);
       <div class="h-full w-full max-w-xl overflow-y-auto bg-white p-5 shadow-xl">
         <div class="flex items-center justify-between">
           <h3 class="section-title">
-            {{ selected.judul_asesmen || t('grading.queue.panelTitle') }} — {{ selected.siswa_nama }}
+            {{ selected.title_asesmen || t('grading.queue.panelTitle') }} — {{ selected.siswa_name }}
           </h3>
           <button class="text-slate-400 hover:text-slate-600" :aria-label="t('grading.queue.closeAria')" @click="closePanel">✕</button>
         </div>
@@ -280,14 +280,14 @@ onMounted(loadQueue);
               <div>
                 <div class="text-sm text-slate-700">{{ c.name }}</div>
                 <div class="text-xs text-slate-400">
-                  {{ t('grading.queue.weight', { weight: c.bobot ?? Math.round(100 / rubric.length), max: c.skorMaks ?? 100 }) }}
+                  {{ t('grading.queue.weight', { weight: c.bobot ?? Math.round(100 / rubric.length), max: c.scoreMaks ?? 100 }) }}
                 </div>
               </div>
               <input
                 type="number"
                 class="input w-24"
                 min="0"
-                :max="c.skorMaks ?? 100"
+                :max="c.scoreMaks ?? 100"
                 :value="scores[c.id] ?? ''"
                 @input="scores[c.id] = Number(($event.target as HTMLInputElement).value)"
               />
@@ -301,15 +301,15 @@ onMounted(loadQueue);
             <div class="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2">
               <span class="text-sm text-slate-700">{{ t('grading.queue.scoreTitle') }}</span>
               <input
-                v-model.number="skor"
+                v-model.number="score"
                 type="number"
                 class="input w-24"
                 min="0"
-                :max="skorMaksimal"
+                :max="scoreMaksimal"
                 inputmode="numeric"
               />
               <span class="text-xs text-slate-400">{{ t('grading.queue.scoreOf') }}</span>
-              <input v-model.number="skorMaksimal" type="number" class="input w-20" min="1" inputmode="numeric" />
+              <input v-model.number="scoreMaksimal" type="number" class="input w-20" min="1" inputmode="numeric" />
             </div>
           </div>
 

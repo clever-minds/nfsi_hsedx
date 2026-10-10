@@ -7,11 +7,11 @@ export interface CourseOption {
 }
 
 /**
- * Daftar course untuk dropdown di layar assessment.
+ * register course untuk dropdown di layar assessment.
  *
  * Layar-layar ini dulu meminta "Course ID" diketik sebagai text — dan
- * mengirimnya dengan name field yang tidak dikenal backend, sehingga bank soal,
- * quiz, dan assignment tidak pernah bisa dibuat. Backend sudah membatasi daftar ke
+ * mengirimnya dengan name field yang no dikenal backend, sehingga bank soal,
+ * quiz, dan assignment no pernah bisa created. Backend sudah membatasi register to
  * course milik instructor, jadi yang tampil di sini memang yang boleh dipilih.
  */
 export function useCourseOptions() {

@@ -24,36 +24,36 @@ export const assessmentsRouter = Router();
 assessmentsRouter.use(requireAuth());
 
 // ── Bank Soal ────────────────────────────────────────────
-assessmentsRouter.get('/question-banks', requirePermission('bank_soal', 'view'), asyncHandler(ctrl.listQuestionBanks));
+assessmentsRouter.get('/question-banks', requirePermission('question_bank', 'view'), asyncHandler(ctrl.listQuestionBanks));
 assessmentsRouter.post(
   '/question-banks',
-  requirePermission('bank_soal', 'create'),
+  requirePermission('question_bank', 'create'),
   validate(createQuestionBankSchema),
   asyncHandler(ctrl.createQuestionBank),
 );
-assessmentsRouter.get('/question-banks/:id', requirePermission('bank_soal', 'view'), asyncHandler(ctrl.questionBankDetail));
+assessmentsRouter.get('/question-banks/:id', requirePermission('question_bank', 'view'), asyncHandler(ctrl.questionBankDetail));
 assessmentsRouter.put(
   '/question-banks/:id',
-  requirePermission('bank_soal', 'update'),
+  requirePermission('question_bank', 'update'),
   validate(updateQuestionBankSchema),
   asyncHandler(ctrl.updateQuestionBank),
 );
-assessmentsRouter.delete('/question-banks/:id', requirePermission('bank_soal', 'delete'), asyncHandler(ctrl.removeQuestionBank));
+assessmentsRouter.delete('/question-banks/:id', requirePermission('question_bank', 'delete'), asyncHandler(ctrl.removeQuestionBank));
 
-assessmentsRouter.get('/question-banks/:id/questions', requirePermission('bank_soal', 'view'), asyncHandler(ctrl.listQuestions));
+assessmentsRouter.get('/question-banks/:id/questions', requirePermission('question_bank', 'view'), asyncHandler(ctrl.listQuestions));
 assessmentsRouter.post(
   '/question-banks/:id/questions',
-  requirePermission('bank_soal', 'create'),
+  requirePermission('question_bank', 'create'),
   validate(createQuestionSchema),
   asyncHandler(ctrl.createQuestion),
 );
 assessmentsRouter.put(
   '/questions/:id',
-  requirePermission('bank_soal', 'update'),
+  requirePermission('question_bank', 'update'),
   validate(updateQuestionSchema),
   asyncHandler(ctrl.updateQuestion),
 );
-assessmentsRouter.delete('/questions/:id', requirePermission('bank_soal', 'delete'), asyncHandler(ctrl.removeQuestion));
+assessmentsRouter.delete('/questions/:id', requirePermission('question_bank', 'delete'), asyncHandler(ctrl.removeQuestion));
 
 // ── Quiz ───────────────────────────────────────────────
 assessmentsRouter.get('/quizzes', requirePermission('assessment', 'view'), asyncHandler(ctrl.listQuizzes));
@@ -91,7 +91,7 @@ assessmentsRouter.put(
   asyncHandler(ctrl.upsertRubric),
 );
 
-// ── Attempts (student, Sendiri — enrollment aktif) ─────────
+// ── Attempts (student, Sendiri — enrollment active) ─────────
 assessmentsRouter.post('/quizzes/:id/attempts', requirePermission('assessment', 'create'), asyncHandler(ctrl.startAttempt));
 assessmentsRouter.get('/attempts/:id', requirePermission('assessment', 'view'), asyncHandler(ctrl.attemptDetail));
 assessmentsRouter.put(
@@ -102,7 +102,7 @@ assessmentsRouter.put(
 );
 assessmentsRouter.post('/attempts/:id/submit', requirePermission('assessment', 'update'), asyncHandler(ctrl.submitAttempt));
 
-// ── Assignment Submissions (student, Sendiri — enrollment aktif) ──
+// ── Assignment Submissions (student, Sendiri — enrollment active) ──
 assessmentsRouter.post(
   '/assignments/:id/submissions',
   requirePermission('assessment', 'create'),

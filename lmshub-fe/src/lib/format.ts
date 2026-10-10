@@ -1,14 +1,14 @@
 /**
  * Util format tampilan — sadar-locale dan sadar-mata-uang.
  *
- * Locale diambil dari vue-i18n; mata uang dari setting `currency.code` yang
+ * Locale diambil from vue-i18n; mata uang from setting `currency.code` yang
  * dimuat store appConfig. Jadi language mengatur CARA menulis angka (pemisah
- * ribuan, posisi simbol) dan setting mengatur MATA UANG-nya.
+ * ribuan, posisi symbol) dan setting mengatur MATA UANG-nya.
  *
- * Sejak dukungan multi-mata-uang: setiap nilai yang disimpan berada dalam mata
+ * Sejak dukungan multi-mata-uang: setiap value yang disimpan berada dalam mata
  * uang BASIS toko. Memilih mata uang lain mengalikannya dengan kurs saat
- * dirender — hanya di `fmtRp`, tidak di tempat lain. Tidak ada nilai tersimpan
- * yang ditulis ulang, sehingga mengubah kurs tidak dapat mengubah order yang
+ * dirender — hanya di `fmtRp`, no di tempat lain. no ada value tersimpan
+ * yang ditulis ulang, sehingga mengubah kurs no dapat mengubah order yang
  * sudah terjadi.
  */
 import { currentLocaleDef } from '@/i18n';
@@ -18,9 +18,9 @@ import { useAppConfigStore } from '@/stores/appConfig';
 import { useCurrencyStore } from '@/stores/currency';
 
 /**
- * Mata uang aktif. Dibaca lewat store supaya perubahan di layar Pengaturan
- * langsung terpakai; bila Pinia belum siap (dipanggil sangat awal) jatuh ke
- * default agar tidak ada layar yang gagal render.
+ * Mata uang active. Dibaca lewat store supaya perubahan di layar settings
+ * langsung used; bila Pinia belum siap (dipanggil sangat awal) due to
+ * default agar no ada layar yang failed render.
  */
 function activeCurrency(): string {
   try {
@@ -33,8 +33,8 @@ function activeCurrency(): string {
 /**
  * Mata uang tampilan beserta kursnya.
  *
- * Jatuh ke basis (kurs 1) bila store mata uang belum siap — dipanggil sangat
- * awal, dan price yang gagal render lebih buruk daripada price dalam mata uang
+ * Jatuh to basis (kurs 1) bila store mata uang belum siap — dipanggil sangat
+ * awal, dan price yang failed render lebih buruk daripada price dalam mata uang
  * bawaan.
  */
 function displayCurrency(): { kode: string; rate: number; desimal?: number } {
@@ -50,7 +50,7 @@ function displayCurrency(): { kode: string; rate: number; desimal?: number } {
   return { kode: activeCurrency(), rate: 1 };
 }
 
-/** Cache formatter: Intl.* relatif mahal untuk dibuat berulang. */
+/** Cache formatter: Intl.* relatif mahal untuk created berulang. */
 const cache = new Map<string, Intl.NumberFormat | Intl.DateTimeFormat | Intl.RelativeTimeFormat>();
 
 function numberFmt(key: string, opts: Intl.NumberFormatOptions): Intl.NumberFormat {
@@ -87,19 +87,19 @@ function relFmt(): Intl.RelativeTimeFormat {
 }
 
 /**
- * Harga, ditulis sesuai konvensi locale aktif.
+ * price, ditulis sesuai konvensi locale active.
  *
  * `n` SELALU dalam mata uang basis toko — itulah satu-satunya angka yang
- * disimpan. Bila pembaca memilih mata uang lain, konversi terjadi di sini dan
- * tidak di tempat lain, sehingga tidak ada nilai tersimpan yang pernah ditulis
- * ulang: mengubah kurs tidak bisa mengubah order yang sudah terjadi.
+ * disimpan. Bila pembaca memilih mata uang lain, conversion terjadi di sini dan
+ * no di tempat lain, sehingga no ada value tersimpan yang pernah ditulis
+ * ulang: mengubah kurs no bisa mengubah order yang sudah terjadi.
  */
 export function fmtRp(n: number | string | null | undefined): string {
   const display = displayCurrency();
   const v = Number(n ?? 0) * display.rate;
   const currency = display.kode;
 
-  // Desimal diambil dari master mata uang bila ada; selain itu ikut Intl,
+  // Desimal diambil from master mata uang bila ada; selain itu ikut Intl,
   // dengan pengecualian mata uang yang dalam praktiknya ditulis tanpa pecahan.
   const decimals = display.desimal ?? (isZeroDecimal(currency) ? 0 : undefined);
   const opts: Intl.NumberFormatOptions = {
@@ -112,7 +112,7 @@ export function fmtRp(n: number | string | null | undefined): string {
     return numberFmt(`cur:${currency}`, opts).format(v);
   } catch {
     try {
-      // Safari lama tidak mendukung narrowSymbol.
+      // Safari lama no mendukung narrowSymbol.
       return numberFmt(`cur-sym:${currency}`, { ...opts, currencyDisplay: 'symbol' }).format(v);
     } catch {
       return `${currency} ${fmtAngka(v)}`;
@@ -120,7 +120,7 @@ export function fmtRp(n: number | string | null | undefined): string {
   }
 }
 
-/** Harga, atau label "Gratis" bila 0/null. */
+/** price, atau label "Gratis" bila 0/null. */
 export function fmtHarga(n: number | string | null | undefined): string {
   return Number(n ?? 0) > 0 ? fmtRp(n) : t('common.free');
 }
@@ -135,7 +135,7 @@ export function fmtCompact(n: number | string | null | undefined): string {
   return numberFmt('compact', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(n ?? 0));
 }
 
-/** Persen dari nilai 0–100. */
+/** Persen from value 0–100. */
 export function fmtPersen(n: number | string | null | undefined, digits = 0): string {
   return numberFmt(`pct${digits}`, {
     style: 'percent',
@@ -150,21 +150,21 @@ function toDate(s?: string | number | Date | null): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-/** Tanggal + jam singkat, mis. "17 Aug, 09:30". */
+/** date + jam singkat, mis. "17 Aug, 09:30". */
 export function fmtTanggal(s?: string | Date | null): string {
   const d = toDate(s);
   if (!d) return '—';
   return dateFmt('dt', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(d);
 }
 
-/** Tanggal saja, mis. "17 Aug 2026". */
+/** date saja, mis. "17 Aug 2026". */
 export function fmtTanggalSaja(s?: string | Date | null): string {
   const d = toDate(s);
   if (!d) return '—';
   return dateFmt('d', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
 }
 
-/** Tanggal panjang, mis. "17 August 2026". */
+/** date panjang, mis. "17 August 2026". */
 export function fmtTanggalPanjang(s?: string | Date | null): string {
   const d = toDate(s);
   if (!d) return '—';
@@ -178,23 +178,23 @@ export function fmtJam(s?: string | Date | null): string {
   return dateFmt('t', { hour: '2-digit', minute: '2-digit' }).format(d);
 }
 
-/** Nama hari singkat, mis. "Mon". */
+/** name hari singkat, mis. "Mon". */
 export function fmtHari(s: string | Date): string {
   const d = toDate(s);
   if (!d) return '—';
   return dateFmt('wd', { weekday: 'short' }).format(d);
 }
 
-/** Nama bulan panjang, untuk header kalender. */
+/** name month panjang, untuk header calendar. */
 export function fmtBulan(s: string | Date): string {
   const d = toDate(s);
   if (!d) return '—';
   return dateFmt('mo', { month: 'long', year: 'numeric' }).format(d);
 }
 
-/** Nama bulan saja dari nomor bulan 1–12 (untuk dropdown filter periode). */
-export function fmtNamaBulan(bulan: number): string {
-  return dateFmt('mn', { month: 'long' }).format(new Date(2000, bulan - 1, 1));
+/** name month saja from number month 1–12 (untuk dropdown filter period). */
+export function fmtNamaBulan(month: number): string {
+  return dateFmt('mn', { month: 'long' }).format(new Date(2000, month - 1, 1));
 }
 
 /** Inisial name untuk avatar fallback. */
@@ -209,7 +209,7 @@ export function initialsOf(name?: string | null): string {
 }
 
 /**
- * Waktu relatif ("5 min ago", "3 hari lagi", "منذ ٣ أيام") lewat
+ * time relatif ("5 min ago", "3 hari lagi", "منذ ٣ أيام") lewat
  * Intl.RelativeTimeFormat — otomatis benar untuk keempat language.
  */
 export function fmtRelatif(s?: string | Date | null): string {
@@ -227,7 +227,7 @@ export function fmtRelatif(s?: string | Date | null): string {
   return fmtTanggalSaja(d);
 }
 
-/** Durasi detik → "1j 05m" / "45m" / "30d", dengan satuan terlokalisasi. */
+/** Durasi detik → "1j 05m" / "45m" / "30d", dengan unit terlokalisasi. */
 export function fmtDurasi(detik?: number | string | null): string {
   const s = Math.max(0, Math.round(Number(detik ?? 0)));
   const jam = Math.floor(s / 3600);
@@ -238,7 +238,7 @@ export function fmtDurasi(detik?: number | string | null): string {
   return `${fmtAngka(sisa)}${t('common.unit.secondShort')}`;
 }
 
-/** Durasi dalam menit → "2j 15m" (dipakai untuk durasi course dari BE). */
+/** Durasi dalam menit → "2j 15m" (dipakai untuk durasi course from BE). */
 export function fmtDurasiMenit(menit?: number | string | null): string {
   return fmtDurasi(Number(menit ?? 0) * 60);
 }

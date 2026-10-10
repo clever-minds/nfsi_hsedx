@@ -16,19 +16,19 @@ import Icon from '@/components/ui/Icon.vue';
 import LocalizedField from '../components/LocalizedField.vue';
 
 /**
- * Menu Website — mengubah isi halaman depan tanpa menyentuh kode.
+ * Menu Website — mengubah content halaman depan tanpa menyentuh kode.
  *
- * Disimpan per blok, bukan per field: tombol simpan ada di tiap kartu dan
- * mengirim seluruh isi kartu itu. Alasannya ada di sisi backend — daftar
- * (sosmed, kolom footer, sort_order seksi) tidak bisa dipangkas lewat penyimpanan
- * sebagian, karena tidak ada cara menyatakan "elemen ini dihapus".
+ * Disimpan per blok, bukan per field: tombol save ada di tiap kartu dan
+ * mengirim seluruh content kartu itu. Alasannya ada di sisi backend — register
+ * (sosmed, kolom footer, sort_order seksi) no bisa dipangkas lewat penyimpanan
+ * sebagian, karena no ada cara menyatakan "elemen ini dihapus".
  */
 const auth = useAuthStore();
 const site = useSiteContentStore();
 const { t } = useI18n();
-const canEdit = auth.can('pengaturan.update');
+const canEdit = auth.can('settings.update');
 
-/** Bahasa yang sedang disunting — berlaku untuk semua field di halaman ini. */
+/** Bahasa yang sedang disunting — valid untuk semua field di halaman ini. */
 const language = ref<LocaleKey>('en');
 
 const draft = ref<SiteContent>(structuredClone(DEFAULT_SITE_CONTENT));
@@ -46,11 +46,11 @@ const groups = computed(() =>
   GROUPS.map((g) => ({ key: g, label: t(`website.group.${g}`), count: hitung(g) })),
 );
 
-/** Angka kecil di navigasi — berapa item yang sedang dikelola di kartu itu. */
+/** Angka kecil di navigasi — berapa item yang sedang managed di kartu itu. */
 function hitung(g: GroupKey): number | null {
   if (g === 'sosial') return draft.value.sosial.length;
   if (g === 'menu') return draft.value.menu.length;
-  if (g === 'sections') return draft.value.sections.filter((s) => s.aktif).length;
+  if (g === 'sections') return draft.value.sections.filter((s) => s.active).length;
   if (g === 'footer') return draft.value.footer.kolom.length;
   return null;
 }
@@ -75,10 +75,10 @@ async function save(key: GroupKey) {
   savedKey.value = '';
   error.value = '';
   try {
-    const nilai = draft.value[key];
-    await apiPut(`/site-content/${key}`, nilai);
-    // Terapkan ke store agar header/footer di layar ini pun langsung ikut.
-    site.patch(key, nilai as never);
+    const value = draft.value[key];
+    await apiPut(`/site-content/${key}`, value);
+    // Terapkan to store agar header/footer di layar ini pun langsung ikut.
+    site.patch(key, value as never);
     savedKey.value = key;
     setTimeout(() => (savedKey.value === key ? (savedKey.value = '') : null), 1500);
   } catch (e) {
@@ -88,17 +88,17 @@ async function save(key: GroupKey) {
   }
 }
 
-// ── Daftar yang bisa ditambah/dihapus ──────────────────────────────────────
+// ── register yang bisa ditambah/dihapus ──────────────────────────────────────
 
 const kosong = () => ({});
 
 function tambahSosial() {
   const dipakai = new Set(draft.value.sosial.map((s) => s.platform));
   const berikut = SOSIAL_PLATFORMS.find((p) => !dipakai.has(p)) ?? SOSIAL_PLATFORMS[0];
-  draft.value.sosial.push({ platform: berikut, url: '', aktif: true });
+  draft.value.sosial.push({ platform: berikut, url: '', active: true });
 }
 function tambahMenu() {
-  draft.value.menu.push({ label: kosong(), url: '/', aktif: true });
+  draft.value.menu.push({ label: kosong(), url: '/', active: true });
 }
 function tambahKolom() {
   draft.value.footer.kolom.push({ title: kosong(), tautan: [{ label: kosong(), url: '/' }] });
@@ -108,10 +108,10 @@ function tambahTautan(i: number) {
 }
 
 /** Geser elemen dalam array; dipakai untuk menyusun ulang seksi & menu. */
-function geser<T>(arr: T[], dari: number, arah: -1 | 1) {
-  const ke = dari + arah;
-  if (ke < 0 || ke >= arr.length) return;
-  arr.splice(ke, 0, arr.splice(dari, 1)[0]);
+function geser<T>(arr: T[], from: number, arah: -1 | 1) {
+  const to = from + arah;
+  if (to < 0 || to >= arr.length) return;
+  arr.splice(to, 0, arr.splice(from, 1)[0]);
 }
 
 // ── Gambar hero ────────────────────────────────────────────────────────────
@@ -124,9 +124,9 @@ const uploading = ref(false);
 const uploadPct = ref(0);
 
 /**
- * Unggah langsung sebagai byte mentah (mekanisme Media Library), bukan data
- * URL base64 di dalam JSON. Jalur lama membengkakkan berkas ±33% sehingga foto
- * hero biasa ditolak — sering oleh batas 1MB bawaan Nginx sebelum sampai ke
+ * upload langsung sebagai byte mentah (mekanisme Media Library), bukan data
+ * URL base64 di dalam JSON. Jalur lama membengkakkan berkas ±33% sehingga photo
+ * hero biasa ditolak — sering by batas 1MB bawaan Nginx sebelum until to
  * aplikasi.
  */
 async function pilihGambar(event: Event) {
@@ -182,8 +182,8 @@ function goToGroup(g: string) {
 }
 
 /**
- * Sorot kartu yang sedang dibaca. `rootMargin` atas setinggi header tetap
- * (64px) plus sedikit jarak, supaya kartu dianggap aktif tepat saat judulnya
+ * Sorot kartu yang sedang read. `rootMargin` on setinggi header tetap
+ * (64px) plus sedikit jarak, supaya kartu dianggap active tepat saat judulnya
  * lewat di bawah header, bukan saat menyentuh tepi viewport.
  */
 let observer: IntersectionObserver | null = null;
@@ -232,7 +232,7 @@ onBeforeUnmount(() => observer?.disconnect());
       </p>
 
       <div class="grid items-start gap-6 lg:grid-cols-[16rem,1fr]">
-        <!-- ── Navigasi kartu (sticky, menyorot kartu yang sedang dibaca) ── -->
+        <!-- ── Navigasi kartu (sticky, menyorot kartu yang sedang read) ── -->
         <div class="sticky top-20 hidden space-y-3 lg:block">
           <nav class="card max-h-[calc(100vh-14rem)] overflow-y-auto p-2">
             <button
@@ -248,7 +248,7 @@ onBeforeUnmount(() => observer?.disconnect());
             </button>
           </nav>
 
-          <!-- Pemilih language berlaku untuk seluruh field text di halaman ini -->
+          <!-- Pemilih language valid untuk seluruh field text di halaman ini -->
           <div class="card p-3">
             <div class="mb-2 text-xs font-medium text-slate-500">{{ t('website.editingLanguage') }}</div>
             <div class="flex flex-wrap gap-1.5">
@@ -328,7 +328,7 @@ onBeforeUnmount(() => observer?.disconnect());
                 </select>
                 <input v-model="s.url" class="input min-w-0 flex-1" placeholder="https://…" :disabled="!canEdit" />
                 <label class="flex shrink-0 items-center gap-1.5 text-xs text-slate-500">
-                  <input v-model="s.aktif" type="checkbox" :disabled="!canEdit" /> {{ t('website.active') }}
+                  <input v-model="s.active" type="checkbox" :disabled="!canEdit" /> {{ t('website.active') }}
                 </label>
                 <button
                   v-if="canEdit"
@@ -375,7 +375,7 @@ onBeforeUnmount(() => observer?.disconnect());
                   </div>
                   <div class="flex shrink-0 items-center gap-1 pb-1">
                     <label class="flex items-center gap-1.5 text-xs text-slate-500">
-                      <input v-model="m.aktif" type="checkbox" :disabled="!canEdit" /> {{ t('website.active') }}
+                      <input v-model="m.active" type="checkbox" :disabled="!canEdit" /> {{ t('website.active') }}
                     </label>
                     <template v-if="canEdit">
                       <button type="button" class="btn-outline btn-icon" :title="t('website.moveUp')" @click="geser(draft.menu, i, -1)">
@@ -422,21 +422,21 @@ onBeforeUnmount(() => observer?.disconnect());
                 <p class="mb-3 text-xs text-slate-400">{{ t('website.hero.titleHint') }}</p>
                 <div class="grid gap-3 sm:grid-cols-3">
                   <LocalizedField
-                    v-model="draft.hero.judul_pre"
+                    v-model="draft.hero.title_pre"
                     :locale="language"
                     :label="t('website.hero.titlePre')"
                     :fallback="t('catalog.landing.hero.titlePre')"
                     :disabled="!canEdit"
                   />
                   <LocalizedField
-                    v-model="draft.hero.judul_highlight"
+                    v-model="draft.hero.title_highlight"
                     :locale="language"
                     :label="t('website.hero.titleHighlight')"
                     :fallback="t('catalog.landing.hero.titleHighlight')"
                     :disabled="!canEdit"
                   />
                   <LocalizedField
-                    v-model="draft.hero.judul_post"
+                    v-model="draft.hero.title_post"
                     :locale="language"
                     :label="t('website.hero.titlePost')"
                     :fallback="t('catalog.landing.hero.titlePost')"
@@ -481,10 +481,10 @@ onBeforeUnmount(() => observer?.disconnect());
 
               <div class="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label class="label" for="hero-skor">{{ t('website.hero.ratingScore') }}</label>
+                  <label class="label" for="hero-score">{{ t('website.hero.ratingScore') }}</label>
                   <input
-                    id="hero-skor"
-                    v-model="draft.hero.rating_skor"
+                    id="hero-score"
+                    v-model="draft.hero.rating_score"
                     class="input"
                     :placeholder="t('catalog.landing.hero.ratingScore')"
                     :disabled="!canEdit"
@@ -534,7 +534,7 @@ onBeforeUnmount(() => observer?.disconnect());
                 v-for="(s, i) in draft.sections"
                 :key="s.key"
                 class="rounded border p-3"
-                :class="s.aktif ? 'border-slate-200' : 'border-dashed border-slate-200 bg-slate-50/60'"
+                :class="s.active ? 'border-slate-200' : 'border-dashed border-slate-200 bg-slate-50/60'"
               >
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="num grid h-7 w-7 shrink-0 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">
@@ -545,7 +545,7 @@ onBeforeUnmount(() => observer?.disconnect());
                     <div class="text-xs text-slate-400">{{ t(`website.section.${s.key}.desc`) }}</div>
                   </div>
                   <label class="flex shrink-0 items-center gap-1.5 text-xs text-slate-500">
-                    <input v-model="s.aktif" type="checkbox" :disabled="!canEdit" /> {{ t('website.show') }}
+                    <input v-model="s.active" type="checkbox" :disabled="!canEdit" /> {{ t('website.show') }}
                   </label>
                   <template v-if="canEdit">
                     <button type="button" class="btn-outline btn-icon shrink-0" :title="t('website.moveUp')" @click="geser(draft.sections, i, -1)">
@@ -558,7 +558,7 @@ onBeforeUnmount(() => observer?.disconnect());
                 </div>
 
                 <!-- Judul seksi bisa ditimpa; kosong = pakai text bawaan -->
-                <div v-if="s.aktif" class="mt-3 grid gap-3 border-t border-slate-100 pt-3 sm:grid-cols-3">
+                <div v-if="s.active" class="mt-3 grid gap-3 border-t border-slate-100 pt-3 sm:grid-cols-3">
                   <LocalizedField
                     v-model="s.badge"
                     :locale="language"
@@ -669,10 +669,10 @@ onBeforeUnmount(() => observer?.disconnect());
               <!-- Newsletter -->
               <div class="space-y-3 border-t border-slate-100 pt-4">
                 <label class="label-inline">
-                  <input v-model="draft.footer.newsletter.aktif" type="checkbox" :disabled="!canEdit" />
+                  <input v-model="draft.footer.newsletter.active" type="checkbox" :disabled="!canEdit" />
                   {{ t('website.footer.newsletterShow') }}
                 </label>
-                <div v-if="draft.footer.newsletter.aktif" class="grid gap-3 sm:grid-cols-2">
+                <div v-if="draft.footer.newsletter.active" class="grid gap-3 sm:grid-cols-2">
                   <LocalizedField
                     v-model="draft.footer.newsletter.title"
                     :locale="language"

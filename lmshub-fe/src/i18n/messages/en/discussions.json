@@ -57,7 +57,7 @@
     "actionFailed": "Failed to process the moderation action",
     "action": {
       "sembunyikan": "hide this content",
-      "hapus": "delete this content",
+      "delete": "delete this content",
       "blokir": "block this user"
     },
     "status": {

@@ -13,7 +13,7 @@ import {
   UpdateSectionInput,
 } from './curriculum.validation';
 
-const ADMIN_ROLES = ['super_admin', 'direktur', 'ketua', 'pembina', 'admin_ops'];
+const ADMIN_ROLES = ['super_admin', 'director', 'chairperson', 'supervisor', 'operations_admin'];
 const isSuper = (actor: AuthContext) => actor.roles.includes('super_admin');
 const isAdmin = (actor: AuthContext) => actor.roles.some((r) => ADMIN_ROLES.includes(r));
 
@@ -50,7 +50,7 @@ export async function createSection(actor: AuthContext, courseId: string, input:
   });
   await recordAudit({
     userId: actor.userId,
-    module: 'kurikulum',
+    module: 'curriculum',
     action: 'create_section',
     entity: 'sections',
     entityId: id,
@@ -72,7 +72,7 @@ export async function updateSection(actor: AuthContext, id: string, input: Updat
   await repo.updateSection(id, fields);
   await recordAudit({
     userId: actor.userId,
-    module: 'kurikulum',
+    module: 'curriculum',
     action: 'update_section',
     entity: 'sections',
     entityId: id,
@@ -87,7 +87,7 @@ export async function removeSection(actor: AuthContext, id: string) {
   if (!section) throw AppError.notFound('Section not found', 'section.not_found');
   await assertOwnsCourse(actor, section.course_id);
   await repo.softDeleteSection(id);
-  await recordAudit({ userId: actor.userId, module: 'kurikulum', action: 'delete_section', entity: 'sections', entityId: id });
+  await recordAudit({ userId: actor.userId, module: 'curriculum', action: 'delete_section', entity: 'sections', entityId: id });
 }
 
 export async function reorderSections(actor: AuthContext, courseId: string, input: ReorderSectionsInput) {
@@ -98,7 +98,7 @@ export async function reorderSections(actor: AuthContext, courseId: string, inpu
   await repo.reorderSections(input.items);
   await recordAudit({
     userId: actor.userId,
-    module: 'kurikulum',
+    module: 'curriculum',
     action: 'reorder_sections',
     entity: 'sections',
     entityId: courseId,
@@ -124,7 +124,7 @@ export async function createLesson(actor: AuthContext, sectionId: string, input:
   const { id } = await repo.insertLesson({
     section_id: sectionId,
     title: input.title,
-    tipe: input.tipe,
+    type: input.type,
     sort_order,
     duration_minutes: input.duration_minutes ?? null,
     gratis_preview: input.gratis_preview ?? false,
@@ -133,7 +133,7 @@ export async function createLesson(actor: AuthContext, sectionId: string, input:
   });
   await recordAudit({
     userId: actor.userId,
-    module: 'kurikulum',
+    module: 'curriculum',
     action: 'create_lesson',
     entity: 'lessons',
     entityId: id,
@@ -158,7 +158,7 @@ export async function updateLesson(actor: AuthContext, id: string, input: Update
 
   const fields: Record<string, unknown> = {};
   if (input.title !== undefined) fields.title = input.title;
-  if (input.tipe !== undefined) fields.tipe = input.tipe;
+  if (input.type !== undefined) fields.type = input.type;
   if (input.sort_order !== undefined) fields.sort_order = input.sort_order;
   if (input.duration_minutes !== undefined) fields.duration_minutes = input.duration_minutes;
   if (input.gratis_preview !== undefined) fields.gratis_preview = input.gratis_preview;
@@ -169,7 +169,7 @@ export async function updateLesson(actor: AuthContext, id: string, input: Update
   await repo.updateLesson(id, fields);
   await recordAudit({
     userId: actor.userId,
-    module: 'kurikulum',
+    module: 'curriculum',
     action: 'update_lesson',
     entity: 'lessons',
     entityId: id,
@@ -186,7 +186,7 @@ export async function removeLesson(actor: AuthContext, id: string) {
   if (!courseId) throw AppError.notFound('Course not found', 'course.not_found');
   await assertOwnsCourse(actor, courseId);
   await repo.softDeleteLesson(id);
-  await recordAudit({ userId: actor.userId, module: 'kurikulum', action: 'delete_lesson', entity: 'lessons', entityId: id });
+  await recordAudit({ userId: actor.userId, module: 'curriculum', action: 'delete_lesson', entity: 'lessons', entityId: id });
 }
 
 export async function reorderLessons(actor: AuthContext, input: ReorderLessonsInput) {
@@ -199,7 +199,7 @@ export async function reorderLessons(actor: AuthContext, input: ReorderLessonsIn
   await repo.reorderLessons(input.items);
   await recordAudit({
     userId: actor.userId,
-    module: 'kurikulum',
+    module: 'curriculum',
     action: 'reorder_lessons',
     entity: 'lessons',
     after: input.items,
@@ -223,7 +223,7 @@ export async function createContent(actor: AuthContext, lessonId: string, input:
   const sort_order = input.sort_order ?? (await repo.nextContentUrutan(lessonId));
   const { id } = await repo.insertContent({
     lesson_id: lessonId,
-    tipe: input.tipe,
+    type: input.type,
     sort_order,
     body: input.body ?? null,
     media_asset_id: input.media_asset_id ?? null,
@@ -250,7 +250,7 @@ export async function updateContent(actor: AuthContext, id: string, input: Updat
   await assertOwnsCourse(actor, courseId);
 
   const fields: Record<string, unknown> = {};
-  if (input.tipe !== undefined) fields.tipe = input.tipe;
+  if (input.type !== undefined) fields.type = input.type;
   if (input.sort_order !== undefined) fields.sort_order = input.sort_order;
   if (input.body !== undefined) fields.body = input.body;
   if (input.media_asset_id !== undefined) fields.media_asset_id = input.media_asset_id;

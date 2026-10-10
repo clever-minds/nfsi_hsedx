@@ -10,11 +10,11 @@ export const shorthands = undefined;
 export async function up(pgm: MigrationBuilder): Promise<void> {
   // enum lokal domain
   pgm.sql(`
-    DO $$ BEGIN CREATE TYPE session_status AS ENUM ('aktif','revoked','expired');
+    DO $$ BEGIN CREATE TYPE session_status AS ENUM ('active','revoked','expired');
     EXCEPTION WHEN duplicate_object THEN null; END $$;
   `);
   pgm.sql(`
-    DO $$ BEGIN CREATE TYPE auth_token_jenis AS ENUM ('otp_login','verifikasi_email','verifikasi_wa','reset_password','sso');
+    DO $$ BEGIN CREATE TYPE auth_token_type AS ENUM ('otp_login','verifikasi_email','verifikasi_wa','reset_password','sso');
     EXCEPTION WHEN duplicate_object THEN null; END $$;
   `);
 
@@ -62,9 +62,9 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`
     CREATE TABLE users (
       id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      nama_lengkap    varchar(150) NOT NULL,
+      name_lengkap    varchar(150) NOT NULL,
       email           citext,
-      nomor_wa        varchar(20),
+      number_wa        varchar(20),
       password_hash   text,
       role_id         uuid NOT NULL REFERENCES roles(id) ON DELETE RESTRICT,
       status          user_status NOT NULL DEFAULT 'pending',
@@ -77,10 +77,10 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       created_at      timestamptz NOT NULL DEFAULT now(),
       updated_at      timestamptz NOT NULL DEFAULT now(),
       deleted_at      timestamptz,
-      CONSTRAINT users_kontak_chk CHECK (email IS NOT NULL OR nomor_wa IS NOT NULL)
+      CONSTRAINT users_kontak_chk CHECK (email IS NOT NULL OR number_wa IS NOT NULL)
     );
     CREATE UNIQUE INDEX users_email_uq ON users (email) WHERE deleted_at IS NULL AND email IS NOT NULL;
-    CREATE UNIQUE INDEX users_wa_uq ON users (nomor_wa) WHERE deleted_at IS NULL AND nomor_wa IS NOT NULL;
+    CREATE UNIQUE INDEX users_wa_uq ON users (number_wa) WHERE deleted_at IS NULL AND number_wa IS NOT NULL;
     CREATE INDEX users_role_status_idx ON users (role_id, status);
     CREATE INDEX users_created_by_idx ON users (created_by);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -93,7 +93,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       role_id     uuid NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
       is_primary  boolean NOT NULL DEFAULT false,
       assigned_by uuid REFERENCES users(id) ON DELETE SET NULL,
-      alasan      text,
+      reason      text,
       created_at  timestamptz NOT NULL DEFAULT now(),
       UNIQUE (user_id, role_id)
     );
@@ -119,7 +119,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id            uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       refresh_token_hash text NOT NULL,
-      status             session_status NOT NULL DEFAULT 'aktif',
+      status             session_status NOT NULL DEFAULT 'active',
       user_agent         text,
       ip_address         inet,
       device_label       varchar(100),
@@ -137,9 +137,9 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE auth_tokens (
       id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id     uuid REFERENCES users(id) ON DELETE CASCADE,
-      jenis       auth_token_jenis NOT NULL,
+      type       auth_token_type NOT NULL,
       token_hash  text NOT NULL,
-      channel     kanal_notifikasi,
+      channel     channel_notification,
       target      citext,
       expires_at  timestamptz NOT NULL,
       consumed_at timestamptz,
@@ -147,7 +147,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       created_at  timestamptz NOT NULL DEFAULT now()
     );
     CREATE INDEX auth_tokens_user_idx ON auth_tokens (user_id);
-    CREATE INDEX auth_tokens_lookup_idx ON auth_tokens (jenis, target);
+    CREATE INDEX auth_tokens_lookup_idx ON auth_tokens (type, target);
   `);
 }
 
@@ -160,6 +160,6 @@ export async function down(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`DROP TABLE IF EXISTS role_permissions;`);
   pgm.sql(`DROP TABLE IF EXISTS permissions;`);
   pgm.sql(`DROP TABLE IF EXISTS roles;`);
-  pgm.sql(`DROP TYPE IF EXISTS auth_token_jenis;`);
+  pgm.sql(`DROP TYPE IF EXISTS auth_token_type;`);
   pgm.sql(`DROP TYPE IF EXISTS session_status;`);
 }

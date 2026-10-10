@@ -6,14 +6,14 @@ interface PermRow {
 }
 
 /**
- * Hitung permission efektif seorang pengguna:
- * preset role (role utama + user_roles) ⊕ override user_permissions (allow/deny).
- * `deny` menang atas `allow`. Mengembalikan Set of `module.action`.
+ * Hitung permission efektif seorang user:
+ * preset role (role primary + user_roles) ⊕ override user_permissions (allow/deny).
+ * `deny` menang on `allow`. Mengembalikan Set of `module.action`.
  *
  * super_admin mendapat wildcard: Set berisi '*' → helper `can()` selalu true.
  */
 export async function loadEffectivePermissions(userId: string): Promise<Set<string>> {
-  // role kode pengguna (utama + tambahan)
+  // role kode user (primary + tambahan)
   const roleRows = await query<{ kode: string }>(
     `SELECT DISTINCT r.kode
        FROM roles r
@@ -24,7 +24,7 @@ export async function loadEffectivePermissions(userId: string): Promise<Set<stri
   const roleKodes = roleRows.map((r) => r.kode);
   if (roleKodes.includes('super_admin')) return new Set<string>(['*']);
 
-  // preset dari role_permissions
+  // preset from role_permissions
   const preset = await query<PermRow>(
     `SELECT DISTINCT p.module, p.action
        FROM permissions p

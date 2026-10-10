@@ -24,7 +24,7 @@ const isSuper = (actor: AuthContext) => actor.roles.includes('super_admin');
  * Aturan tangga peran, dipisahkan supaya bisa diuji tanpa basis data:
  * sebuah peran hanya boleh diberikan bila ia berada DI BAWAH peran pemberinya.
  * `roles.level` 0 = super_admin … 9 = sub_user, jadi "di bawah" berarti angkanya
- * lebih besar. Sama level pun ditolak — dua admin sederajat tidak saling
+ * lebih besar. Sama level pun ditolak — dua admin sederajat no saling
  * mengangkat.
  */
 export function bolehMemberiPeran(actorLevel: number, roleLevel: number): boolean {
@@ -32,8 +32,8 @@ export function bolehMemberiPeran(actorLevel: number, roleLevel: number): boolea
 }
 
 /**
- * Level peran seorang aktor, dibaca dari basis data. `null` diperlakukan sebagai
- * "tidak berperan apa pun", yaitu paling rendah — bukan paling tinggi.
+ * Level peran seorang aktor, read from basis data. `null` diperlakukan sebagai
+ * "no berperan apa pun", yaitu paling rendah — bukan paling tinggi.
  */
 async function levelOf(userId: string): Promise<number> {
   const level = await repo.highestRoleLevelOf(userId);
@@ -45,12 +45,12 @@ async function levelOf(userId: string): Promise<number> {
  *
  * `roles.level` adalah tangga wewenang: 0 = super_admin … 9 = sub_user; makin
  * kecil makin tinggi. Aturannya satu kalimat: Anda hanya boleh memberikan peran
- * yang berada di bawah peran Anda sendiri, dan tidak pernah kepada diri sendiri.
+ * yang berada di bawah peran Anda sendiri, dan no pernah kepada diri sendiri.
  *
  * Tanpa ini, medan `role_kode` pada `PUT /users/:id` menerima name peran apa pun
  * dan menuliskannya begitu saja. Karena seseorang berhak menyunting datanya
- * sendiri, satu akun staf ber-izin `pengguna.update` cukup mengirimkan
- * `{"role_kode":"super_admin"}` ke record miliknya untuk menjadi super admin —
+ * sendiri, satu akun staf ber-izin `user.update` cukup mengirimkan
+ * `{"role_kode":"super_admin"}` to record miliknya untuk menjadi super admin —
  * satu permintaan, tanpa halangan apa pun.
  */
 async function assertBolehMemberiPeran(
@@ -62,8 +62,8 @@ async function assertBolehMemberiPeran(
   if (!role) throw AppError.badRequest('Unknown role', 'rbac.unknown_role');
   if (isSuper(actor)) return role.id;
 
-  // Menaikkan peran diri sendiri selalu ditolak, bahkan ke peran yang lebih
-  // rendah: satu-satunya alasan melakukannya adalah untuk menghindari batas.
+  // Menaikkan peran diri sendiri selalu ditolak, bahkan to peran yang lebih
+  // rendah: satu-satunya reason melakukannya adalah untuk menghindari batas.
   if (targetUserId && targetUserId === actor.userId) {
     throw AppError.forbidden('You cannot change your own role', 'user.cannot_change_own_role');
   }
@@ -80,9 +80,9 @@ async function assertBolehMemberiPeran(
 }
 
 /**
- * Menolak tindakan terhadap akun yang wewenangnya lebih tinggi dari pelaku.
- * Batas `created_by` di `detail()` saja tidak cukup: akun berperan tinggi bisa
- * saja dibuat oleh staf yang kini lebih rendah, dan setelah itu tetap berada di
+ * Menolak action terhadap akun yang wewenangnya lebih tinggi from pelaku.
+ * Batas `created_by` di `detail()` saja no cukup: akun berperan tinggi bisa
+ * saja created by staf yang kini lebih rendah, dan setelah itu tetap berada di
  * dalam sub-tree miliknya.
  */
 async function assertTidakDilangkahi(actor: AuthContext, targetUserId: string): Promise<void> {
@@ -110,7 +110,7 @@ async function assertSubset(
 }
 
 export async function list(actor: AuthContext, p: PageParams, filters: repo.Filters) {
-  // non-super_admin dibatasi ke sub-tree created_by miliknya
+  // non-super_admin dibatasi to sub-tree created_by miliknya
   const subtreeOf = isSuper(actor) ? null : actor.userId;
   return repo.list(p, { ...filters, subtreeOf });
 }
@@ -129,9 +129,9 @@ export async function create(actor: AuthContext, input: CreateUserInput) {
   const roleId = await assertBolehMemberiPeran(actor, null, input.role_kode);
   const password_hash = await hashPassword(input.password);
   const { id } = await repo.insert({
-    nama_lengkap: input.nama_lengkap,
+    name_lengkap: input.name_lengkap,
     email: input.email ?? null,
-    nomor_wa: input.nomor_wa ?? null,
+    number_wa: input.number_wa ?? null,
     password_hash,
     role_id: roleId,
     status: input.status,
@@ -139,7 +139,7 @@ export async function create(actor: AuthContext, input: CreateUserInput) {
   });
   await recordAudit({
     userId: actor.userId,
-    module: 'pengguna',
+    module: 'users',
     action: 'create',
     entity: 'users',
     entityId: id,
@@ -152,9 +152,9 @@ export async function update(actor: AuthContext, id: string, input: UpdateUserIn
   const before = await detail(actor, id); // enforces scope
   await assertTidakDilangkahi(actor, id);
   const fields: Record<string, unknown> = {};
-  if (input.nama_lengkap !== undefined) fields.nama_lengkap = input.nama_lengkap;
+  if (input.name_lengkap !== undefined) fields.name_lengkap = input.name_lengkap;
   if (input.email !== undefined) fields.email = input.email;
-  if (input.nomor_wa !== undefined) fields.nomor_wa = input.nomor_wa;
+  if (input.number_wa !== undefined) fields.number_wa = input.number_wa;
   if (input.status !== undefined) fields.status = input.status;
   if (input.role_kode !== undefined && input.role_kode !== before.role_kode) {
     fields.role_id = await assertBolehMemberiPeran(actor, id, input.role_kode);
@@ -162,7 +162,7 @@ export async function update(actor: AuthContext, id: string, input: UpdateUserIn
   await repo.update(id, fields);
   await recordAudit({
     userId: actor.userId,
-    module: 'pengguna',
+    module: 'users',
     action: 'update',
     entity: 'users',
     entityId: id,
@@ -177,7 +177,7 @@ export async function remove(actor: AuthContext, id: string) {
   await assertTidakDilangkahi(actor, id);
   if (id === actor.userId) throw AppError.badRequest('You cannot delete your own account', 'user.cannot_delete_self');
   await repo.softDelete(id);
-  await recordAudit({ userId: actor.userId, module: 'pengguna', action: 'delete', entity: 'users', entityId: id });
+  await recordAudit({ userId: actor.userId, module: 'users', action: 'delete', entity: 'users', entityId: id });
 }
 
 export async function getPermissions(actor: AuthContext, id: string) {
@@ -190,7 +190,7 @@ export async function setPermissions(actor: AuthContext, id: string, input: SetP
   await detail(actor, id);
   // Menyunting checklist izin sendiri hanya berguna untuk melepas batasan yang
   // dipasang atasan — `deny` yang menyempitkan sebuah peran ada justru supaya
-  // tidak bisa dilepas oleh pemiliknya.
+  // no bisa dilepas by pemiliknya.
   if (!isSuper(actor) && id === actor.userId) {
     throw AppError.forbidden('You cannot edit your own permissions', 'user.cannot_edit_own_permissions');
   }
@@ -199,7 +199,7 @@ export async function setPermissions(actor: AuthContext, id: string, input: SetP
   await repo.replaceUserPermissions(id, actor.userId, input.permissions);
   await recordAudit({
     userId: actor.userId,
-    module: 'pengguna',
+    module: 'users',
     action: 'set_permissions',
     entity: 'user_permissions',
     entityId: id,
@@ -211,32 +211,32 @@ export async function setPermissions(actor: AuthContext, id: string, input: SetP
 export async function verify(actor: AuthContext, id: string, input: VerifyInput) {
   const u = await detail(actor, id);
   await assertTidakDilangkahi(actor, id);
-  const newStatus = input.aksi === 'approve' ? 'active' : 'inactive';
+  const newStatus = input.action === 'approve' ? 'active' : 'inactive';
   await repo.setStatus(id, newStatus);
   await recordAudit({
     userId: actor.userId,
-    module: 'pengguna',
-    action: `verify_${input.aksi}`,
+    module: 'users',
+    action: `verify_${input.action}`,
     entity: 'users',
     entityId: id,
     before: { status: u.status },
     after: { status: newStatus },
-    reason: input.alasan ?? null,
+    reason: input.reason ?? null,
   });
   return repo.detail(id);
 }
 
-// ── Self-service (profil & password sendiri) ──────────────────
+// ── Self-service (profile & password sendiri) ──────────────────
 
 export async function updateMe(actor: AuthContext, input: UpdateMeInput) {
   const fields: Record<string, unknown> = {};
-  if (input.nama_lengkap !== undefined) fields.nama_lengkap = input.nama_lengkap;
-  if (input.nomor_wa !== undefined) fields.nomor_wa = input.nomor_wa;
+  if (input.name_lengkap !== undefined) fields.name_lengkap = input.name_lengkap;
+  if (input.number_wa !== undefined) fields.number_wa = input.number_wa;
   if (Object.keys(fields).length) {
     await repo.update(actor.userId, fields);
     await recordAudit({
       userId: actor.userId,
-      module: 'pengguna',
+      module: 'users',
       action: 'update_me',
       entity: 'users',
       entityId: actor.userId,
@@ -254,11 +254,11 @@ const AVATAR_EXT: Record<UploadMyPhotoInput['mime_type'], string> = {
   'image/webp': 'webp',
 };
 
-/** Simpan foto profil (base64) ke uploads/avatars dan catat path-nya di users.foto_profil. */
+/** save photo profile (base64) to uploads/avatars dan catat path-nya di users.profile_picture. */
 export async function uploadMyPhoto(actor: AuthContext, input: UploadMyPhotoInput) {
   let buffer: Buffer;
   try {
-    // Terima juga bentuk data URL ("data:image/png;base64,....").
+    // accept juga bentuk data URL ("data:image/png;base64,....").
     const raw = input.data_base64.replace(/^data:[^;]+;base64,/, '');
     buffer = Buffer.from(raw, 'base64');
   } catch {
@@ -275,20 +275,20 @@ export async function uploadMyPhoto(actor: AuthContext, input: UploadMyPhotoInpu
   await writeFile(path.join(AVATAR_DIR, filename), buffer);
 
   const fotoPath = `/uploads/avatars/${filename}`;
-  await repo.update(actor.userId, { foto_profil: fotoPath });
+  await repo.update(actor.userId, { profile_picture: fotoPath });
 
-  // Hapus file lama (best-effort, jangan gagalkan request).
-  if (before.foto_profil?.startsWith('/uploads/avatars/')) {
-    await unlink(path.join(AVATAR_DIR, path.basename(before.foto_profil))).catch(() => {});
+  // delete file lama (best-effort, jangan gagalkan request).
+  if (before.profile_picture?.startsWith('/uploads/avatars/')) {
+    await unlink(path.join(AVATAR_DIR, path.basename(before.profile_picture))).catch(() => {});
   }
 
   await recordAudit({
     userId: actor.userId,
-    module: 'pengguna',
+    module: 'users',
     action: 'update_me',
     entity: 'users',
     entityId: actor.userId,
-    after: { foto_profil: fotoPath },
+    after: { profile_picture: fotoPath },
   });
   return repo.detail(actor.userId);
 }
@@ -302,7 +302,7 @@ export async function changeMyPassword(actor: AuthContext, input: ChangeMyPasswo
   await repo.updatePasswordHash(actor.userId, password_hash);
   await recordAudit({
     userId: actor.userId,
-    module: 'pengguna',
+    module: 'users',
     action: 'change_password',
     entity: 'users',
     entityId: actor.userId,
@@ -312,14 +312,14 @@ export async function changeMyPassword(actor: AuthContext, input: ChangeMyPasswo
 /**
  * Ganti email akun sendiri.
  *
- * Hanya super admin: akun lain diganti emailnya oleh admin lewat Users, karena
- * email adalah identitas login dan alamat pemulihan password. Super admin tidak
+ * Hanya super admin: akun lain diganti emailnya by admin lewat Users, karena
+ * email adalah identitas login dan alamat pemulihan password. Super admin no
  * punya atasan yang bisa melakukannya, jadi ia mengganti sendiri — dengan
- * konfirmasi password saat ini supaya sesi yang tertinggal terbuka tidak cukup
+ * konfirmasi password saat ini supaya sesi yang tertinggal terbuka no cukup
  * untuk mengambil alih akun.
  *
  * Password salah dibalas 400, bukan 401: 401 membuat frontend menganggap sesi
- * habis dan mengeluarkan pengguna.
+ * habis dan mengeluarkan user.
  */
 export async function changeMyEmail(actor: AuthContext, input: ChangeMyEmailInput) {
   if (!isSuper(actor)) {
@@ -342,7 +342,7 @@ export async function changeMyEmail(actor: AuthContext, input: ChangeMyEmailInpu
   await repo.updateEmail(actor.userId, input.email);
   await recordAudit({
     userId: actor.userId,
-    module: 'pengguna',
+    module: 'users',
     action: 'change_email',
     entity: 'users',
     entityId: actor.userId,

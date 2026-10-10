@@ -8,19 +8,19 @@ export interface ContentPageRow {
   slug: string;
   title: string;
   content: unknown;
-  tipe: 'tentang' | 'faq' | 'kebijakan' | 'halaman';
-  status: 'draft' | 'terbit' | 'arsip';
+  type: 'about' | 'faq' | 'policy' | 'page';
+  status: 'draft' | 'publish' | 'archived';
   meta_seo: unknown;
-  tampil_di_footer: boolean;
-  urutan_footer: number;
-  dikelola_oleh: string | null;
-  tanggal_terbit: string | null;
+  show_in_footer: boolean;
+  footer_sort_order: number;
+  managed_by: string | null;
+  publish_date: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface PageFilters {
-  tipe?: string;
+  type?: string;
   status?: string;
 }
 
@@ -31,7 +31,7 @@ export async function listPages(p: PageParams, f: PageFilters): Promise<{ rows: 
     params.push(val);
     where.push(clause.replace('$?', `$${params.length}`));
   };
-  if (f.tipe) add('tipe = $?', f.tipe);
+  if (f.type) add('type = $?', f.type);
   if (f.status) add('status = $?', f.status);
   const whereSql = where.join(' AND ');
 
@@ -57,18 +57,18 @@ export async function getPageById(id: string): Promise<ContentPageRow | null> {
 export interface PublicPageListRow {
   slug: string;
   title: string;
-  tipe: ContentPageRow['tipe'];
-  tampil_di_footer: boolean;
-  urutan_footer: number;
+  type: ContentPageRow['type'];
+  show_in_footer: boolean;
+  footer_sort_order: number;
 }
 
-/** Halaman terbit tanpa isinya — cukup untuk menyusun tautan footer. */
+/** Halaman publish tanpa isinya — cukup untuk menyusun tautan footer. */
 export async function listPublishedPages(): Promise<PublicPageListRow[]> {
   return query<PublicPageListRow>(
-    `SELECT slug, title, tipe, tampil_di_footer, urutan_footer
+    `SELECT slug, title, type, show_in_footer, footer_sort_order
        FROM content_pages
-      WHERE deleted_at IS NULL AND status = 'terbit'
-      ORDER BY urutan_footer, title`,
+      WHERE deleted_at IS NULL AND status = 'publish'
+      ORDER BY footer_sort_order, title`,
   );
 }
 
@@ -80,29 +80,29 @@ export async function insertPage(data: {
   slug: string;
   title: string;
   content: unknown;
-  tipe: string;
+  type: string;
   status: string;
   meta_seo: unknown;
-  tanggal_terbit: string | null;
-  dikelola_oleh: string;
-  tampil_di_footer: boolean;
-  urutan_footer: number;
+  publish_date: string | null;
+  managed_by: string;
+  show_in_footer: boolean;
+  footer_sort_order: number;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO content_pages (slug, title, content, tipe, status, meta_seo, tanggal_terbit, dikelola_oleh,
-                                tampil_di_footer, urutan_footer)
+    `INSERT INTO content_pages (slug, title, content, type, status, meta_seo, publish_date, managed_by,
+                                show_in_footer, footer_sort_order)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
     [
       data.slug,
       data.title,
       data.content === undefined ? null : JSON.stringify(data.content),
-      data.tipe,
+      data.type,
       data.status,
       data.meta_seo === undefined ? null : JSON.stringify(data.meta_seo),
-      data.tanggal_terbit,
-      data.dikelola_oleh,
-      data.tampil_di_footer,
-      data.urutan_footer,
+      data.publish_date,
+      data.managed_by,
+      data.show_in_footer,
+      data.footer_sort_order,
     ],
   );
   return row!;
@@ -120,12 +120,12 @@ export async function updatePage(id: string, fields: Record<string, unknown>): P
 export interface SettingRow {
   id: string;
   key: string;
-  grup: string;
+  group: string;
   label: string;
-  tipe_nilai: 'string' | 'integer' | 'numeric' | 'boolean' | 'json';
-  nilai: string | null;
-  nilai_json: unknown;
-  satuan: string | null;
+  value_type: 'string' | 'integer' | 'numeric' | 'boolean' | 'json';
+  value: string | null;
+  value_json: unknown;
+  unit: string | null;
   description: string | null;
   is_public: boolean;
   is_editable: boolean;
@@ -134,13 +134,13 @@ export interface SettingRow {
 }
 
 export async function listSettings(): Promise<SettingRow[]> {
-  return query<SettingRow>(`SELECT * FROM settings WHERE deleted_at IS NULL ORDER BY grup, key`);
+  return query<SettingRow>(`SELECT * FROM settings WHERE deleted_at IS NULL ORDER BY group, key`);
 }
 
-/** Setting bertanda `is_public` — dibaca area pra-login (mata uang, kontak, name lembaga). */
-export async function listPublicSettings(): Promise<Array<Pick<SettingRow, 'key' | 'nilai' | 'tipe_nilai'>>> {
-  return query<Pick<SettingRow, 'key' | 'nilai' | 'tipe_nilai'>>(
-    `SELECT key, nilai, tipe_nilai FROM settings WHERE deleted_at IS NULL AND is_public AND NOT is_encrypted ORDER BY key`,
+/** Setting bertanda `is_public` — read area pra-login (mata uang, kontak, name lembaga). */
+export async function listPublicSettings(): Promise<Array<Pick<SettingRow, 'key' | 'value' | 'value_type'>>> {
+  return query<Pick<SettingRow, 'key' | 'value' | 'value_type'>>(
+    `SELECT key, value, value_type FROM settings WHERE deleted_at IS NULL AND is_public AND NOT is_encrypted ORDER BY key`,
   );
 }
 
@@ -148,12 +148,12 @@ export async function getSettingByKey(key: string): Promise<SettingRow | null> {
   return queryOne<SettingRow>(`SELECT * FROM settings WHERE key = $1 AND deleted_at IS NULL`, [key]);
 }
 
-export async function updateSetting(key: string, nilai: string | null, nilaiJson: unknown | undefined): Promise<void> {
-  const fields: string[] = ['nilai = $2'];
-  const params: unknown[] = [key, nilai];
+export async function updateSetting(key: string, value: string | null, nilaiJson: unknown | undefined): Promise<void> {
+  const fields: string[] = ['value = $2'];
+  const params: unknown[] = [key, value];
   if (nilaiJson !== undefined) {
     params.push(JSON.stringify(nilaiJson));
-    fields.push(`nilai_json = $${params.length}`);
+    fields.push(`value_json = $${params.length}`);
   }
   await query(`UPDATE settings SET ${fields.join(', ')}, updated_at = now() WHERE key = $1`, params);
 }
@@ -163,22 +163,22 @@ export async function updateSetting(key: string, nilai: string | null, nilaiJson
 export interface AuditLogRow {
   id: string;
   user_id: string | null;
-  user_nama: string | null;
+  user_name: string | null;
   module: string;
-  aksi: string;
+  action: string;
   entity_type: string | null;
   entity_id: string | null;
-  nilai_lama: unknown;
-  nilai_baru: unknown;
-  alasan: string | null;
-  waktu: string;
+  old_value: unknown;
+  new_value: unknown;
+  reason: string | null;
+  time: string;
 }
 
 export interface AuditLogFilters {
   modul?: string;
   userId?: string;
-  dari?: string;
-  sampai?: string;
+  from?: string;
+  until?: string;
 }
 
 export async function listAuditLog(
@@ -193,13 +193,13 @@ export async function listAuditLog(
   };
   if (f.modul) add('a.module = $?', f.modul);
   if (f.userId) add('a.user_id = $?', f.userId);
-  if (f.dari) add('a.created_at >= $?', f.dari);
-  if (f.sampai) add('a.created_at <= $?', f.sampai);
+  if (f.from) add('a.created_at >= $?', f.from);
+  if (f.until) add('a.created_at <= $?', f.until);
   const whereSql = where.join(' AND ');
 
   const rows = await query<AuditLogRow>(
-    `SELECT a.id, a.user_id, u.nama_lengkap AS user_nama, a.module, a.action AS aksi,
-            a.entity AS entity_type, a.entity_id, a.nilai_lama, a.nilai_baru, a.alasan, a.created_at AS waktu
+    `SELECT a.id, a.user_id, u.name_lengkap AS user_name, a.module, a.action AS action,
+            a.entity AS entity_type, a.entity_id, a.old_value, a.new_value, a.reason, a.created_at AS time
        FROM audit_log a
        LEFT JOIN users u ON u.id = a.user_id
       WHERE ${whereSql} ORDER BY a.created_at DESC LIMIT ${p.limit} OFFSET ${p.offset}`,

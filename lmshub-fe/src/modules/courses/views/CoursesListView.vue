@@ -14,9 +14,9 @@ interface CourseRow extends Record<string, unknown> {
   id: string;
   title: string;
   slug: string;
-  category_nama: string | null;
+  category_name: string | null;
   instructor_id: string;
-  instructor_nama: string | null;
+  instructor_name: string | null;
   level: string;
   price: string;
   publication_status: string;
@@ -40,10 +40,10 @@ const q = ref('');
 const statusFilter = ref('');
 const categoryFilter = ref('');
 // Cakupan awal mengikuti siapa yang membuka halaman. Untuk instructor, "course
-// saya" memang yang dicari lebih dulu. Untuk admin yang tidak mengampu course,
-// cakupan itu selalu menghasilkan tabel kosong — halaman terbaca seperti tidak
+// saya" memang yang dicari lebih dulu. Untuk admin yang no mengampu course,
+// cakupan itu selalu menghasilkan tabel kosong — halaman terbaca seperti no
 // ada course sama sekali padahal isinya penuh.
-const onlyMine = ref(auth.roles.includes('instructor') || auth.roles.includes('asisten'));
+const onlyMine = ref(auth.roles.includes('instructor') || auth.roles.includes('assistant'));
 
 const loading = ref(true);
 const error = ref('');
@@ -51,13 +51,13 @@ const busyId = ref<string | null>(null);
 
 const columns = computed(() => [
   { key: 'title', label: t('courses.list.colCourse') },
-  { key: 'category_nama', label: t('courses.list.colCategory') },
+  { key: 'category_name', label: t('courses.list.colCategory') },
   { key: 'level', label: t('courses.list.colLevel') },
   { key: 'price', label: t('courses.list.colPrice') },
   { key: 'publication_status', label: t('courses.list.colStatus') },
 ]);
 
-const STATUS_OPTIONS = ['draf', 'dalam_review', 'terbit', 'diperbarui', 'diarsip'];
+const STATUS_OPTIONS = ['draft', 'in_review', 'publish', 'updated', 'archived'];
 
 async function load() {
   loading.value = true;
@@ -166,7 +166,7 @@ onMounted(() => {
       </template>
       <template #cell:title="{ row }">
         <div class="font-medium text-slate-800">{{ (row as unknown as CourseRow).title }}</div>
-        <div class="text-xs text-slate-400">{{ (row as unknown as CourseRow).instructor_nama || '—' }}</div>
+        <div class="text-xs text-slate-400">{{ (row as unknown as CourseRow).instructor_name || '—' }}</div>
       </template>
       <template #cell:level="{ value }">{{ levelLabel(String(value)) }}</template>
       <template #cell:price="{ value }">{{ fmtRp(value as string | number) }}</template>
@@ -176,7 +176,7 @@ onMounted(() => {
       <template #actions="{ row }">
         <div class="flex flex-wrap justify-end gap-2">
           <button
-            v-if="(row as unknown as CourseRow).publication_status === 'draf'"
+            v-if="(row as unknown as CourseRow).publication_status === 'draft'"
             v-can="'course.update'"
             class="row-link row-link-primary"
             :disabled="busyId === (row as unknown as CourseRow).id"
@@ -185,7 +185,7 @@ onMounted(() => {
             {{ t('courses.list.submitReview') }}
           </button>
           <button
-            v-if="['dalam_review', 'diperbarui'].includes((row as unknown as CourseRow).publication_status)"
+            v-if="['in_review', 'updated'].includes((row as unknown as CourseRow).publication_status)"
             v-can="'course.update'"
             class="row-link row-link-positive"
             :disabled="busyId === (row as unknown as CourseRow).id"
@@ -194,7 +194,7 @@ onMounted(() => {
             {{ t('courses.list.publish') }}
           </button>
           <button
-            v-if="!['diarsip'].includes((row as unknown as CourseRow).publication_status)"
+            v-if="!['archived'].includes((row as unknown as CourseRow).publication_status)"
             v-can="'course.update'"
             class="row-link row-link-danger"
             :disabled="busyId === (row as unknown as CourseRow).id"

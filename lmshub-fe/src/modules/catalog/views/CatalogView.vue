@@ -16,16 +16,16 @@ interface Course {
   price: number;
   strike_price?: number | null;
   level?: string;
-  category_nama?: string;
+  category_name?: string;
   category_slug?: string;
-  instructor_nama?: string;
+  instructor_name?: string;
   instructor_foto?: string | null;
   rating_avg?: string | number | null;
   rating_count?: number;
   student_count?: number;
   meta?: { thumbnail_url?: string } | null;
 }
-interface Kategori { id: string; name: string; slug: string; jumlah_kursus: number }
+interface Kategori { id: string; name: string; slug: string; amount_kursus: number }
 
 const route = useRoute();
 // Komponen dipakai di dua tempat: catalog publik (/courses) dan dalam dashboard (/d/catalog).
@@ -41,8 +41,8 @@ const limit = 9;
 
 // ── Filter ──
 const q = ref((route.query.q as string) || '');
-// `kategori` is the pre-English query name; old shared links still carry it.
-const kategori = ref((route.query.category as string) || (route.query.kategori as string) || '');
+// `category` is the pre-English query name; old shared links still carry it.
+const category = ref((route.query.category as string) || (route.query.category as string) || '');
 const level = ref('');
 const price = ref<'semua' | 'gratis' | 'berbayar'>('semua');
 const sort = ref('-published_at'); // Terbaru dulu
@@ -55,16 +55,16 @@ const rentang = computed(() => {
   return t('catalog.list.range', { from: fmtAngka(awal), to: fmtAngka(akhir), total: fmtAngka(total.value) });
 });
 
-const adaFilter = computed(() => !!(q.value || kategori.value || level.value || price.value !== 'semua'));
+const adaFilter = computed(() => !!(q.value || category.value || level.value || price.value !== 'semua'));
 
-// Nilai (`v`) tetap kode BE; hanya labelnya yang diterjemahkan.
+// grade (`v`) tetap kode BE; hanya labelnya yang diterjemahkan.
 const LEVELS = computed(() => [
   { v: '', t: t('catalog.list.allLevels') },
-  { v: 'pemula', t: t('common.level.pemula') },
-  { v: 'menengah', t: t('common.level.menengah') },
-  { v: 'mahir', t: t('common.level.mahir') },
+  { v: 'beginner', t: t('common.level.pemula') },
+  { v: 'intermediate', t: t('common.level.menengah') },
+  { v: 'advanced', t: t('common.level.mahir') },
 ]);
-const HARGA = computed(() => [
+const prices = computed(() => [
   { v: 'semua', t: t('catalog.list.priceAll') },
   { v: 'gratis', t: t('catalog.list.priceFree') },
   { v: 'berbayar', t: t('catalog.list.pricePaid') },
@@ -75,10 +75,10 @@ async function load() {
   try {
     const res = await apiGetFull<Course[]>('/courses/public', {
       q: q.value || undefined,
-      'filter[kategori]': kategori.value || undefined,
+      'filter[category]': category.value || undefined,
       'filter[level]': level.value || undefined,
-      'filter[harga_min]': price.value === 'berbayar' ? 1 : undefined,
-      'filter[harga_max]': price.value === 'gratis' ? 0 : undefined,
+      'filter[price_min]': price.value === 'berbayar' ? 1 : undefined,
+      'filter[price_max]': price.value === 'gratis' ? 0 : undefined,
       sort: sort.value,
       page: page.value,
       limit,
@@ -99,23 +99,23 @@ function terapkan() {
 }
 function bersihkan() {
   q.value = '';
-  kategori.value = '';
+  category.value = '';
   level.value = '';
   price.value = 'semua';
   terapkan();
 }
 
-watch([kategori, level, price, sort], terapkan);
+watch([category, level, price, sort], terapkan);
 watch(page, load);
-// Sinkron dengan query dari header/landing (e.g. /courses?q=…&category=…).
+// Sinkron dengan query from header/landing (e.g. /courses?q=…&category=…).
 watch(
   () => route.query,
   (nq) => {
     const nQ = (nq.q as string) || '';
-    const nKat = (nq.category as string) || (nq.kategori as string) || '';
-    if (nQ !== q.value || nKat !== kategori.value) {
+    const nKat = (nq.category as string) || (nq.category as string) || '';
+    if (nQ !== q.value || nKat !== category.value) {
       q.value = nQ;
-      kategori.value = nKat;
+      category.value = nKat;
       terapkan();
     }
   },
@@ -124,7 +124,7 @@ watch(
 onMounted(async () => {
   load();
   const cat = await apiGetFull<Kategori[]>('/categories/public').catch(() => null);
-  categories.value = (cat?.data ?? []).filter((k) => k.jumlah_kursus > 0);
+  categories.value = (cat?.data ?? []).filter((k) => k.amount_kursus > 0);
 });
 </script>
 
@@ -158,13 +158,13 @@ onMounted(async () => {
           <div class="card rounded-xl p-4">
             <h3 class="text-sm font-semibold text-slate-800">{{ t('catalog.list.category') }}</h3>
             <div class="mt-3 space-y-2">
-              <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
-                <input v-model="kategori" type="radio" value="" class="accent-brand-500" /> {{ t('catalog.list.allCategories') }}
+              <label class="flex cursor-pointster items-center gap-2 text-sm text-slate-600">
+                <input v-model="category" type="radio" value="" class="accent-brand-500" /> {{ t('catalog.list.allCategories') }}
               </label>
-              <label v-for="k in categories" :key="k.id" class="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
-                <input v-model="kategori" type="radio" :value="k.slug" class="accent-brand-500" />
+              <label v-for="k in categories" :key="k.id" class="flex cursor-pointster items-center gap-2 text-sm text-slate-600">
+                <input v-model="category" type="radio" :value="k.slug" class="accent-brand-500" />
                 <span class="flex-1">{{ k.name }}</span>
-                <span class="text-xs text-slate-400">({{ k.jumlah_kursus }})</span>
+                <span class="text-xs text-slate-400">({{ k.amount_kursus }})</span>
               </label>
             </div>
           </div>
@@ -172,7 +172,7 @@ onMounted(async () => {
           <div class="card rounded-xl p-4">
             <h3 class="text-sm font-semibold text-slate-800">{{ t('catalog.list.level') }}</h3>
             <div class="mt-3 space-y-2">
-              <label v-for="l in LEVELS" :key="l.v" class="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+              <label v-for="l in LEVELS" :key="l.v" class="flex cursor-pointster items-center gap-2 text-sm text-slate-600">
                 <input v-model="level" type="radio" :value="l.v" class="accent-brand-500" /> {{ l.t }}
               </label>
             </div>
@@ -181,7 +181,7 @@ onMounted(async () => {
           <div class="card rounded-xl p-4">
             <h3 class="text-sm font-semibold text-slate-800">{{ t('catalog.list.price') }}</h3>
             <div class="mt-3 space-y-2">
-              <label v-for="h in HARGA" :key="h.v" class="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+              <label v-for="h in prices" :key="h.v" class="flex cursor-pointster items-center gap-2 text-sm text-slate-600">
                 <input v-model="price" type="radio" :value="h.v" class="accent-brand-500" /> {{ h.t }}
               </label>
             </div>

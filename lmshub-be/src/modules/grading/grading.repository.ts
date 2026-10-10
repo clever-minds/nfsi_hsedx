@@ -2,25 +2,25 @@ import { PoolClient } from 'pg';
 import { query, queryOne, pool } from '../../core/db/pool';
 
 export type SumberTipe = 'quiz' | 'assignment';
-export type StatusKelulusan = 'lulus' | 'tidak_lulus' | 'belum_selesai';
+export type StatusKelulusan = 'passed' | 'failed' | 'incomplete';
 
 export interface GradeRow {
   id: string;
   enrollment_id: string;
-  sumber_tipe: SumberTipe;
-  sumber_id: string;
-  skor: string;
-  skor_maksimal: string;
+  source_type: SumberTipe;
+  source_id: string;
+  score: string;
+  score_maximum: string;
   feedback: string | null;
-  dinilai_oleh: string | null;
-  dinilai_at: string | null;
+  graded_by: string | null;
+  graded_at: string | null;
   /**
-   * Waktu nilai dirilis ke student. Null berarti sudah dinilai tetapi belum
+   * time value dirilis to student. Null berarti sudah dinilai tetapi belum
    * terlihat — itulah yang memungkinkan satu angkatan dinilai lalu dibuka
-   * bersamaan. Setelah terisi, nilai terkunci: perubahan hanya lewat endpoint
-   * penyesuaian yang mencatat alasan ke audit log.
+   * bersamaan. Setelah terisi, value terkunci: perubahan hanya lewat endpointst
+   * penyesuaian yang mencatat reason to audit log.
    */
-  rilis_at: string | null;
+  released_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -28,17 +28,17 @@ export interface GradeRow {
 export interface GradebookEntryRow {
   id: string;
   enrollment_id: string;
-  nilai_akhir: string | null;
-  status_kelulusan: StatusKelulusan;
-  rincian: unknown;
-  diperbarui_at: string;
+  final_grade: string | null;
+  graduation_status: StatusKelulusan;
+  details: unknown;
+  updated_at_custom: string;
   created_at: string;
   updated_at: string;
 }
 
 export async function findGradeBySource(sumberTipe: SumberTipe, sumberId: string): Promise<GradeRow | null> {
   return queryOne<GradeRow>(
-    `SELECT * FROM grades WHERE sumber_tipe = $1 AND sumber_id = $2 AND deleted_at IS NULL`,
+    `SELECT * FROM grades WHERE source_type = $1 AND source_id = $2 AND deleted_at IS NULL`,
     [sumberTipe, sumberId],
   );
 }
@@ -50,20 +50,20 @@ export async function gradeDetail(id: string): Promise<GradeRow | null> {
 export async function insertGrade(
   data: {
     enrollment_id: string;
-    sumber_tipe: SumberTipe;
-    sumber_id: string;
-    skor: number;
-    skor_maksimal: number;
+    source_type: SumberTipe;
+    source_id: string;
+    score: number;
+    score_maximum: number;
     feedback: string | null;
-    dinilai_oleh: string | null;
+    graded_by: string | null;
   },
   tx?: PoolClient,
 ): Promise<GradeRow> {
   const runner = tx ?? pool;
   const res = await runner.query<GradeRow>(
-    `INSERT INTO grades (enrollment_id, sumber_tipe, sumber_id, skor, skor_maksimal, feedback, dinilai_oleh, dinilai_at)
+    `INSERT INTO grades (enrollment_id, source_type, source_id, score, score_maximum, feedback, graded_by, graded_at)
      VALUES ($1,$2,$3,$4,$5,$6,$7, now()) RETURNING *`,
-    [data.enrollment_id, data.sumber_tipe, data.sumber_id, data.skor, data.skor_maksimal, data.feedback, data.dinilai_oleh],
+    [data.enrollment_id, data.source_type, data.source_id, data.score, data.score_maximum, data.feedback, data.graded_by],
   );
   return res.rows[0];
 }
@@ -84,7 +84,7 @@ export async function updateGrade(
 }
 
 export async function releaseGrade(id: string): Promise<GradeRow> {
-  const row = await queryOne<GradeRow>(`UPDATE grades SET rilis_at = now(), updated_at = now() WHERE id = $1 RETURNING *`, [id]);
+  const row = await queryOne<GradeRow>(`UPDATE grades SET released_at = now(), updated_at = now() WHERE id = $1 RETURNING *`, [id]);
   return row!;
 }
 
@@ -98,21 +98,21 @@ export async function gradebookEntry(enrollmentId: string): Promise<GradebookEnt
 
 export async function upsertGradebookEntry(data: {
   enrollment_id: string;
-  nilai_akhir: number | null;
-  status_kelulusan: StatusKelulusan;
-  rincian: unknown;
+  final_grade: number | null;
+  graduation_status: StatusKelulusan;
+  details: unknown;
 }): Promise<GradebookEntryRow> {
   const row = await queryOne<GradebookEntryRow>(
-    `INSERT INTO gradebook_entries (enrollment_id, nilai_akhir, status_kelulusan, rincian, diperbarui_at)
+    `INSERT INTO gradebook_entries (enrollment_id, final_grade, graduation_status, details, updated_at_custom)
      VALUES ($1,$2,$3,$4, now())
      ON CONFLICT (enrollment_id) DO UPDATE SET
-       nilai_akhir = EXCLUDED.nilai_akhir,
-       status_kelulusan = EXCLUDED.status_kelulusan,
-       rincian = EXCLUDED.rincian,
-       diperbarui_at = now(),
+       final_grade = EXCLUDED.final_grade,
+       graduation_status = EXCLUDED.graduation_status,
+       details = EXCLUDED.details,
+       updated_at_custom = now(),
        updated_at = now()
      RETURNING *`,
-    [data.enrollment_id, data.nilai_akhir, data.status_kelulusan, JSON.stringify(data.rincian)],
+    [data.enrollment_id, data.final_grade, data.graduation_status, JSON.stringify(data.details)],
   );
   return row!;
 }
@@ -120,22 +120,22 @@ export async function upsertGradebookEntry(data: {
 export interface GradebookRowForCourse {
   enrollment_id: string;
   user_id: string;
-  nama_lengkap: string;
-  nilai_akhir: string | null;
-  status_kelulusan: StatusKelulusan | null;
-  rincian: unknown;
-  diperbarui_at: string | null;
+  name_lengkap: string;
+  final_grade: string | null;
+  graduation_status: StatusKelulusan | null;
+  details: unknown;
+  updated_at_custom: string | null;
 }
 
 export async function gradebookForCourse(courseId: string): Promise<GradebookRowForCourse[]> {
   return query<GradebookRowForCourse>(
-    `SELECT e.id AS enrollment_id, e.user_id, u.nama_lengkap,
-            ge.nilai_akhir, ge.status_kelulusan, ge.rincian, ge.diperbarui_at
+    `SELECT e.id AS enrollment_id, e.user_id, u.name_lengkap,
+            ge.final_grade, ge.graduation_status, ge.details, ge.updated_at_custom
        FROM enrollments e
        JOIN users u ON u.id = e.user_id
        LEFT JOIN gradebook_entries ge ON ge.enrollment_id = e.id AND ge.deleted_at IS NULL
       WHERE e.course_id = $1 AND e.deleted_at IS NULL
-      ORDER BY u.nama_lengkap`,
+      ORDER BY u.name_lengkap`,
     [courseId],
   );
 }
@@ -161,11 +161,11 @@ export async function isCourseOwnedByInstructor(courseId: string, userId: string
 export interface SubmissionQueueRow {
   id: string;
   status: string;
-  jenis: string;
-  tanggal_kumpul: string | null;
-  revisi_ke: number;
-  siswa_nama: string;
-  judul_asesmen: string;
+  type: string;
+  date_kumpul: string | null;
+  revision_number: number;
+  siswa_name: string;
+  title_asesmen: string;
   course_id: string;
   course_title: string;
 }
@@ -186,8 +186,8 @@ export async function listSubmissionsQueue(
   }
   const whereSql = where.join(' AND ');
   const rows = await query<SubmissionQueueRow>(
-    `SELECT s.id, s.status, 'assignment' AS jenis, s.dikumpulkan_at AS tanggal_kumpul, s.revisi_ke,
-            u.nama_lengkap AS siswa_nama, a.title AS judul_asesmen,
+    `SELECT s.id, s.status, 'assignment' AS type, s.submitted_at AS date_kumpul, s.revision_number,
+            u.name_lengkap AS siswa_name, a.title AS title_asesmen,
             c.id AS course_id, c.title AS course_title
        FROM submissions s
        JOIN enrollments e ON e.id = s.enrollment_id
@@ -195,7 +195,7 @@ export async function listSubmissionsQueue(
        JOIN assignments a ON a.id = s.assignment_id
        JOIN courses c ON c.id = a.course_id
       WHERE ${whereSql}
-      ORDER BY s.dikumpulkan_at DESC NULLS LAST
+      ORDER BY s.submitted_at DESC NULLS LAST
       LIMIT ${p.limit} OFFSET ${p.offset}`,
     params,
   );

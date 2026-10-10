@@ -15,23 +15,23 @@ import { logger } from '../core/logger/logger';
 
 /** Old course slugs with no counterpart in the new catalogue. */
 const LEGACY_COURSE_SLUGS = [
-  'dasar-pemrograman-web',
+  'base-pemrograman-web',
   'javascript-modern',
   'python-untuk-pemula',
-  'reactjs-dari-nol',
+  'reactjs-from-nol',
   'vue-3-vite-praktis',
   'backend-nodejs-express',
   'git-github-untuk-tim',
   'uiux-fundamental',
-  'figma-dari-dasar',
+  'figma-from-base',
   'desain-grafis-canva',
   'digital-marketing-praktis',
   'seo-untuk-bisnis',
   'copywriting-menjual',
   'excel-analisis-data',
-  'machine-learning-dasar',
+  'machine-learning-base',
   'public-speaking',
-  'manajemen-waktu',
+  'manajemen-time',
 ];
 
 /**
@@ -108,7 +108,7 @@ export async function retireLegacyDemoData(): Promise<void> {
     const ids = courses.rows.map((r) => r.id);
 
     // Enrolments outlive a soft-deleted course and would otherwise show up in
-    // dashboards and student lists pointing at a course nobody can open.
+    // dashboards and student lists pointsting at a course nobody can open.
     await pool.query(
       `UPDATE enrollments SET deleted_at = now() WHERE course_id = ANY($1) AND deleted_at IS NULL`,
       [ids],
@@ -159,8 +159,8 @@ export async function retireLegacyDemoData(): Promise<void> {
   // The old income rows used this category code; the new seeder uses DEMO-SALES.
   await pool.query(
     `UPDATE financial_entries fe SET deleted_at = now()
-       FROM kategori_biaya kb
-      WHERE kb.id = fe.kategori_id AND kb.kode = 'PENJUALAN' AND fe.deleted_at IS NULL`,
+       FROM expense_category kb
+      WHERE kb.id = fe.category_id AND kb.kode = 'PENJUALAN' AND fe.deleted_at IS NULL`,
   );
 
   if (courses.rowCount) {

@@ -130,12 +130,12 @@
   "grading": {
     "already_released": "This grade has already been released",
     "not_found": "Grade not found",
-    "not_released_use_grading": "This grade has not been released yet — use the normal grading endpoint",
-    "released_use_adjust": "This grade has already been released — use the adjustment endpoint"
+    "not_released_use_grading": "This grade has not been released yet — use the normal grading endpointst",
+    "released_use_adjust": "This grade has already been released — use the adjustment endpointst"
   },
   "http": {
     "internal": "Something went wrong on our side",
-    "route_not_found": "That page or endpoint does not exist"
+    "route_not_found": "That page or endpointst does not exist"
   },
   "instructor": {
     "not_found": "Instructor not found"

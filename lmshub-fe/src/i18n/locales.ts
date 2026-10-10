@@ -1,19 +1,19 @@
 /**
- * Daftar language yang didukung aplikasi.
+ * register language yang didukung aplikasi.
  *
  * `code`   — kode yang dipakai vue-i18n & disimpan di localStorage.
  * `intl`   — BCP-47 tag untuk Intl.NumberFormat / Intl.DateTimeFormat.
- * `dir`    — arah tulisan; dipasang ke <html dir> agar Tailwind logical
+ * `dir`    — arah tulisan; dipasang to <html dir> agar Tailwind logical
  *            properties (ps-/pe-/ms-/me-/start-/end-) otomatis membalik.
  */
 export interface LocaleDef {
   code: SupportedLocale;
-  /** Nama language dalam language itu sendiri (dipakai di language switcher). */
+  /** name language dalam language itu sendiri (dipakai di language switcher). */
   native: string;
-  /** Nama language dalam language Inggris (untuk aria-label & tooltip). */
+  /** name language dalam language Inggris (untuk aria-label & tooltip). */
   english: string;
   dir: 'ltr' | 'rtl';
-  /** Tag Intl untuk tanggal & text. */
+  /** Tag Intl untuk date & text. */
   intl: string;
   /** Tag Intl khusus angka — Arab dipaksa angka Latin agar price tetap terbaca. */
   intlNumber: string;

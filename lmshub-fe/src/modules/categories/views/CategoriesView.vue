@@ -8,11 +8,11 @@ import DataTable from '@/components/ui/DataTable.vue';
 import Icon from '@/components/ui/Icon.vue';
 
 /**
- * Master data kategori course — dan tag, yang memakai izin serta endpoint yang
- * sama. Backend sudah lama menyediakan CRUD-nya, tapi tidak ada layar yang
- * memanggilnya: kategori hanya muncul sebagai dropdown di editor course.
+ * Master data category course — dan tag, yang memakai izin serta endpointst yang
+ * sama. Backend sudah lama menyediakan CRUD-nya, tapi no ada layar yang
+ * memanggilnya: category hanya muncul sebagai dropdown di editor course.
  * Karena `courses.category_id` NOT NULL, pemasangan baru yang belum punya satu
- * kategori pun tidak bisa membuat course sama sekali.
+ * category pun no bisa membuat course sama sekali.
  */
 interface Category extends Record<string, unknown> {
   id: string;
@@ -22,7 +22,7 @@ interface Category extends Record<string, unknown> {
   ikon: string | null;
   sort_order: number;
   is_active: boolean;
-  jumlah_kursus: number;
+  amount_kursus: number;
 }
 
 interface Tag extends Record<string, unknown> {
@@ -33,9 +33,9 @@ interface Tag extends Record<string, unknown> {
 
 const auth = useAuthStore();
 const { t } = useI18n();
-const canCreate = auth.can('kategori.create');
-const canUpdate = auth.can('kategori.update');
-const canDelete = auth.can('kategori.delete');
+const canCreate = auth.can('category.create');
+const canUpdate = auth.can('category.update');
+const canDelete = auth.can('category.delete');
 
 // ── Kategori ──────────────────────────────────────────────────────────────
 
@@ -64,7 +64,7 @@ const form = reactive({
 const columns = computed(() => [
   { key: 'name', label: t('categories.colName') },
   { key: 'sort_order', label: t('categories.colOrder') },
-  { key: 'jumlah_kursus', label: t('categories.colCourses') },
+  { key: 'amount_kursus', label: t('categories.colCourses') },
   { key: 'is_active', label: t('categories.colStatus') },
 ]);
 
@@ -94,7 +94,7 @@ function resetForm() {
 function openCreate() {
   resetForm();
   // Kategori baru diletakkan di belakang; sort_order 0 akan menyelipkannya di depan
-  // kategori yang sudah ditata rapi oleh admin.
+  // category yang sudah ditata rapi by admin.
   form.sort_order = rows.value.reduce((max, r) => Math.max(max, r.sort_order), 0) + 1;
   showForm.value = true;
 }
@@ -120,8 +120,8 @@ async function submit() {
   }
   saving.value = true;
   formError.value = '';
-  // `slug` dikosongkan berarti "turunkan dari name" — backend yang membuatnya.
-  // Kirim `undefined`, bukan string kosong: skemanya menolak slug < 2 karakter.
+  // `slug` dikosongkan berarti "turunkan from name" — backend yang membuatnya.
+  // send `undefined`, bukan string kosong: skemanya menolak slug < 2 karakter.
   const payload = {
     name: form.name.trim(),
     slug: form.slug.trim() || undefined,
@@ -143,7 +143,7 @@ async function submit() {
   }
 }
 
-/** Aktif/nonaktif cepat — jalan keluar untuk kategori yang tak bisa dihapus. */
+/** active/nonaktif cepat — jalan logout untuk category yang tak bisa dihapus. */
 async function toggleAktif(row: Category) {
   busyId.value = row.id;
   error.value = '';
@@ -264,7 +264,7 @@ onMounted(() => {
 
     <div v-if="error" class="mb-4 alert-error">{{ error }}</div>
 
-    <!-- Formulir tambah/ubah kategori -->
+    <!-- Formulir add/edit category -->
     <div v-if="showForm" class="card mb-4 p-5">
       <h3 class="card-title">
         {{ editingId ? t('categories.formTitleEdit') : t('categories.formTitleNew') }}
@@ -349,7 +349,7 @@ onMounted(() => {
         <span class="num">{{ value }}</span>
       </template>
 
-      <template #cell:jumlah_kursus="{ value }">
+      <template #cell:amount_kursus="{ value }">
         <span class="num">{{ value }}</span>
       </template>
 
@@ -382,9 +382,9 @@ onMounted(() => {
             v-if="canDelete"
             class="row-link row-link-danger"
             :disabled="
-              busyId === (row as unknown as Category).id || (row as unknown as Category).jumlah_kursus > 0
+              busyId === (row as unknown as Category).id || (row as unknown as Category).amount_kursus > 0
             "
-            :title="(row as unknown as Category).jumlah_kursus > 0 ? t('categories.inUseHint') : ''"
+            :title="(row as unknown as Category).amount_kursus > 0 ? t('categories.inUseHint') : ''"
             @click="remove(row as unknown as Category)"
           >
             {{ t('common.action.delete') }}

@@ -3,18 +3,18 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 
 /**
  * Domain 08 — Certificate & Gamifikasi — keamanan & keabsahan certificate
- * certificate_templates, certificates, badges, user_badges, points_ledger, leaderboards, streaks.
+ * certificate_templates, certificates, badges, user_badges, pointsts_ledger, leaderboards, streaks.
  */
 export const shorthands = undefined;
 
 export async function up(pgm: MigrationBuilder): Promise<void> {
   // ── Enum lokal domain ──
   pgm.sql(`
-    DO $$ BEGIN CREATE TYPE certificate_status AS ENUM ('belum_memenuhi_syarat','memenuhi_syarat','terbit');
+    DO $$ BEGIN CREATE TYPE certificate_status AS ENUM ('not_eligible','eligible','publish');
     EXCEPTION WHEN duplicate_object THEN null; END $$;
   `);
   pgm.sql(`
-    DO $$ BEGIN CREATE TYPE points_ledger_jenis AS ENUM ('earn','spend');
+    DO $$ BEGIN CREATE TYPE pointsts_ledger_type AS ENUM ('earn','spend');
     EXCEPTION WHEN duplicate_object THEN null; END $$;
   `);
 
@@ -33,7 +33,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       updated_at      timestamptz NOT NULL DEFAULT now(),
       deleted_at      timestamptz
     );
-    CREATE UNIQUE INDEX certificate_templates_nama_uq ON certificate_templates (name) WHERE deleted_at IS NULL;
+    CREATE UNIQUE INDEX certificate_templates_name_uq ON certificate_templates (name) WHERE deleted_at IS NULL;
     CREATE UNIQUE INDEX certificate_templates_default_uq ON certificate_templates (is_default) WHERE is_default AND deleted_at IS NULL;
     CREATE INDEX certificate_templates_category_idx ON certificate_templates (category_id);
     CREATE INDEX certificate_templates_course_idx ON certificate_templates (course_id);
@@ -53,22 +53,22 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       verification_code               citext,
       qr_code_url                   text,
       pdf_url                       text,
-      status                        certificate_status NOT NULL DEFAULT 'belum_memenuhi_syarat',
-      syarat_snapshot               jsonb,
-      tanggal_terbit                timestamptz,
+      status                        certificate_status NOT NULL DEFAULT 'not_eligible',
+      criteria_snapshot               jsonb,
+      publish_date                timestamptz,
       is_revoked                    boolean NOT NULL DEFAULT false,
       revoked_reason                text,
       supersedes_certificate_id     uuid REFERENCES certificates(id) ON DELETE SET NULL,
-      diterbitkan_oleh              uuid REFERENCES users(id) ON DELETE SET NULL,
+      issued_by              uuid REFERENCES users(id) ON DELETE SET NULL,
       created_at                    timestamptz NOT NULL DEFAULT now(),
       updated_at                    timestamptz NOT NULL DEFAULT now(),
       deleted_at                    timestamptz,
-      CONSTRAINT certificates_terbit_lengkap_chk CHECK (
-        status <> 'terbit' OR (certificate_number IS NOT NULL AND verification_code IS NOT NULL AND tanggal_terbit IS NOT NULL)
+      CONSTRAINT certificates_publish_lengkap_chk CHECK (
+        status <> 'publish' OR (certificate_number IS NOT NULL AND verification_code IS NOT NULL AND publish_date IS NOT NULL)
       ),
       CONSTRAINT certificates_revoked_reason_chk CHECK (is_revoked = false OR revoked_reason IS NOT NULL)
     );
-    CREATE UNIQUE INDEX certificates_nomor_uq ON certificates (certificate_number);
+    CREATE UNIQUE INDEX certificates_number_uq ON certificates (certificate_number);
     CREATE UNIQUE INDEX certificates_kode_verifikasi_uq ON certificates (verification_code);
     CREATE UNIQUE INDEX certificates_enrollment_aktif_uq ON certificates (enrollment_id) WHERE is_revoked = false AND deleted_at IS NULL;
     CREATE INDEX certificates_user_idx ON certificates (user_id);
@@ -76,11 +76,11 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE INDEX certificates_enrollment_idx ON certificates (enrollment_id);
     CREATE INDEX certificates_template_idx ON certificates (template_id);
     CREATE INDEX certificates_status_idx ON certificates (status);
-    CREATE INDEX certificates_syarat_snapshot_gin_idx ON certificates USING GIN (syarat_snapshot);
-    CREATE INDEX certificates_tanggal_terbit_idx ON certificates (tanggal_terbit);
+    CREATE INDEX certificates_criteria_snapshot_gin_idx ON certificates USING GIN (criteria_snapshot);
+    CREATE INDEX certificates_date_publish_idx ON certificates (publish_date);
     CREATE INDEX certificates_is_revoked_idx ON certificates (is_revoked);
     CREATE INDEX certificates_supersedes_idx ON certificates (supersedes_certificate_id);
-    CREATE INDEX certificates_diterbitkan_oleh_idx ON certificates (diterbitkan_oleh);
+    CREATE INDEX certificates_issued_by_idx ON certificates (issued_by);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON certificates FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
 
@@ -91,7 +91,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       kode            citext NOT NULL,
       name            varchar(150) NOT NULL,
       description       text,
-      kriteria        jsonb NOT NULL,
+      criteria        jsonb NOT NULL,
       icon_url        text,
       is_active        boolean NOT NULL DEFAULT true,
       created_at      timestamptz NOT NULL DEFAULT now(),
@@ -110,7 +110,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       user_id           uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       badge_id          uuid NOT NULL REFERENCES badges(id) ON DELETE CASCADE,
       course_id         uuid REFERENCES courses(id) ON DELETE SET NULL,
-      tanggal_diraih    timestamptz NOT NULL DEFAULT now(),
+      date_earned    timestamptz NOT NULL DEFAULT now(),
       created_at        timestamptz NOT NULL DEFAULT now(),
       updated_at        timestamptz NOT NULL DEFAULT now(),
       deleted_at        timestamptz
@@ -119,56 +119,56 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE INDEX user_badges_user_idx ON user_badges (user_id);
     CREATE INDEX user_badges_badge_idx ON user_badges (badge_id);
     CREATE INDEX user_badges_course_idx ON user_badges (course_id);
-    CREATE INDEX user_badges_tanggal_diraih_idx ON user_badges (tanggal_diraih);
+    CREATE INDEX user_badges_date_earned_idx ON user_badges (date_earned);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON user_badges FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
 
-  // ── points_ledger (append-only) ──
+  // ── pointsts_ledger (append-only) ──
   pgm.sql(`
-    CREATE TABLE points_ledger (
+    CREATE TABLE pointsts_ledger (
       id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id           uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      jenis             points_ledger_jenis NOT NULL,
-      jumlah            integer NOT NULL,
-      saldo_setelah     integer NOT NULL,
-      sumber_type       varchar(30),
-      sumber_id         uuid,
+      type             pointsts_ledger_type NOT NULL,
+      amount            integer NOT NULL,
+      balance_after     integer NOT NULL,
+      source_type       varchar(30),
+      source_id         uuid,
       description         text,
       created_at        timestamptz NOT NULL DEFAULT now(),
-      CONSTRAINT points_ledger_jumlah_chk CHECK (jumlah > 0),
-      CONSTRAINT points_ledger_saldo_chk CHECK (saldo_setelah >= 0),
-      CONSTRAINT points_ledger_sumber_type_chk CHECK (
-        sumber_type IS NULL OR sumber_type IN ('lesson_progress','quiz_attempt','streak','badge','manual_admin')
+      CONSTRAINT pointsts_ledger_amount_chk CHECK (amount > 0),
+      CONSTRAINT pointsts_ledger_saldo_chk CHECK (balance_after >= 0),
+      CONSTRAINT pointsts_ledger_source_type_chk CHECK (
+        source_type IS NULL OR source_type IN ('lesson_progress','quiz_attempt','streak','badge','manual_admin')
       )
     );
-    CREATE INDEX points_ledger_user_idx ON points_ledger (user_id);
-    CREATE INDEX points_ledger_jenis_idx ON points_ledger (jenis);
-    CREATE INDEX points_ledger_sumber_idx ON points_ledger (sumber_type, sumber_id);
-    CREATE INDEX points_ledger_created_at_idx ON points_ledger (created_at);
+    CREATE INDEX pointsts_ledger_user_idx ON pointsts_ledger (user_id);
+    CREATE INDEX pointsts_ledger_type_idx ON pointsts_ledger (type);
+    CREATE INDEX pointsts_ledger_source_idx ON pointsts_ledger (source_type, source_id);
+    CREATE INDEX pointsts_ledger_created_at_idx ON pointsts_ledger (created_at);
   `);
 
   // ── leaderboards ──
   pgm.sql(`
     CREATE TABLE leaderboards (
       id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      periode_jenis       varchar(20) NOT NULL,
-      periode_mulai       date NOT NULL,
-      periode_selesai     date NOT NULL,
+      period_type       varchar(20) NOT NULL,
+      period_start       date NOT NULL,
+      period_finish     date NOT NULL,
       course_id           uuid REFERENCES courses(id) ON DELETE SET NULL,
       data                jsonb NOT NULL,
-      dihitung_at         timestamptz NOT NULL DEFAULT now(),
+      calculated_at         timestamptz NOT NULL DEFAULT now(),
       created_at          timestamptz NOT NULL DEFAULT now(),
       updated_at          timestamptz NOT NULL DEFAULT now(),
       deleted_at          timestamptz,
-      CONSTRAINT leaderboards_periode_jenis_chk CHECK (periode_jenis IN ('mingguan','bulanan','sepanjang_waktu')),
-      CONSTRAINT leaderboards_periode_chk CHECK (periode_selesai >= periode_mulai)
+      CONSTRAINT leaderboards_period_type_chk CHECK (period_type IN ('weekly','monthly','all_time')),
+      CONSTRAINT leaderboards_period_chk CHECK (period_finish >= period_start)
     );
-    CREATE UNIQUE INDEX leaderboards_periode_scope_uq ON leaderboards (
-      periode_jenis, periode_mulai, periode_selesai, COALESCE(course_id, '00000000-0000-0000-0000-000000000000')
+    CREATE UNIQUE INDEX leaderboards_period_scope_uq ON leaderboards (
+      period_type, period_start, period_finish, COALESCE(course_id, '00000000-0000-0000-0000-000000000000')
     ) WHERE deleted_at IS NULL;
-    CREATE INDEX leaderboards_periode_jenis_idx ON leaderboards (periode_jenis);
-    CREATE INDEX leaderboards_periode_mulai_idx ON leaderboards (periode_mulai);
-    CREATE INDEX leaderboards_periode_selesai_idx ON leaderboards (periode_selesai);
+    CREATE INDEX leaderboards_period_type_idx ON leaderboards (period_type);
+    CREATE INDEX leaderboards_period_start_idx ON leaderboards (period_start);
+    CREATE INDEX leaderboards_period_finish_idx ON leaderboards (period_finish);
     CREATE INDEX leaderboards_course_idx ON leaderboards (course_id);
     CREATE INDEX leaderboards_data_gin_idx ON leaderboards USING GIN (data);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON leaderboards FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -179,18 +179,18 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     CREATE TABLE streaks (
       id                          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id                     uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      streak_hari_berjalan        integer NOT NULL DEFAULT 0,
-      streak_terpanjang           integer NOT NULL DEFAULT 0,
-      tanggal_terakhir_aktif      date,
+      current_streak_days        integer NOT NULL DEFAULT 0,
+      longest_streak           integer NOT NULL DEFAULT 0,
+      last_active_date      date,
       created_at                  timestamptz NOT NULL DEFAULT now(),
       updated_at                  timestamptz NOT NULL DEFAULT now(),
       deleted_at                  timestamptz,
-      CONSTRAINT streaks_berjalan_chk CHECK (streak_hari_berjalan >= 0),
-      CONSTRAINT streaks_terpanjang_chk CHECK (streak_terpanjang >= 0)
+      CONSTRAINT streaks_berjalan_chk CHECK (current_streak_days >= 0),
+      CONSTRAINT streaks_terpanjang_chk CHECK (longest_streak >= 0)
     );
     CREATE UNIQUE INDEX streaks_user_uq ON streaks (user_id) WHERE deleted_at IS NULL;
-    CREATE INDEX streaks_berjalan_idx ON streaks (streak_hari_berjalan);
-    CREATE INDEX streaks_tanggal_terakhir_idx ON streaks (tanggal_terakhir_aktif);
+    CREATE INDEX streaks_berjalan_idx ON streaks (current_streak_days);
+    CREATE INDEX streaks_date_terakhir_idx ON streaks (last_active_date);
     CREATE TRIGGER set_updated_at BEFORE UPDATE ON streaks FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
 
@@ -198,14 +198,14 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`
     INSERT INTO certificate_templates (name, description, layout, is_default, is_active)
     VALUES ('Template Standar', 'Template certificate bawaan lembaga',
-      '{"placeholder":["{{name}}","{{course}}","{{nomor}}"]}'::jsonb, true, true)
+      '{"placeholder":["{{name}}","{{course}}","{{number}}"]}'::jsonb, true, true)
     ON CONFLICT (name) WHERE deleted_at IS NULL DO NOTHING;
   `);
   pgm.sql(`
-    INSERT INTO badges (kode, name, description, kriteria, is_active) VALUES
-      ('kursus_pertama_selesai', 'Course Pertama Selesai', 'Menyelesaikan course pertama', '{"jenis":"course_selesai","threshold":1}'::jsonb, true),
-      ('nilai_sempurna', 'Nilai Sempurna', 'Mendapat skor sempurna pada sebuah quiz', '{"jenis":"quiz_sempurna","threshold":100}'::jsonb, true),
-      ('streak_7_hari', 'Streak 7 Hari', 'Belajar 7 hari beruntun', '{"jenis":"streak_hari","threshold":7}'::jsonb, true)
+    INSERT INTO badges (kode, name, description, criteria, is_active) VALUES
+      ('first_course_finished', 'Course Pertama finish', 'Menyelesaikan course pertama', '{"type":"course_finish","threshold":1}'::jsonb, true),
+      ('perfect_score', 'grade Sempurna', 'Mendapat score sempurna pada sebuah quiz', '{"type":"quiz_sempurna","threshold":100}'::jsonb, true),
+      ('7_day_streak', 'Streak 7 Hari', 'Belajar 7 hari beruntun', '{"type":"streak_hari","threshold":7}'::jsonb, true)
     ON CONFLICT (kode) WHERE deleted_at IS NULL DO NOTHING;
   `);
 }
@@ -213,11 +213,11 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 export async function down(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`DROP TABLE IF EXISTS streaks;`);
   pgm.sql(`DROP TABLE IF EXISTS leaderboards;`);
-  pgm.sql(`DROP TABLE IF EXISTS points_ledger;`);
+  pgm.sql(`DROP TABLE IF EXISTS pointsts_ledger;`);
   pgm.sql(`DROP TABLE IF EXISTS user_badges;`);
   pgm.sql(`DROP TABLE IF EXISTS badges;`);
   pgm.sql(`DROP TABLE IF EXISTS certificates;`);
   pgm.sql(`DROP TABLE IF EXISTS certificate_templates;`);
-  pgm.sql(`DROP TYPE IF EXISTS points_ledger_jenis;`);
+  pgm.sql(`DROP TYPE IF EXISTS pointsts_ledger_type;`);
   pgm.sql(`DROP TYPE IF EXISTS certificate_status;`);
 }

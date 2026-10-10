@@ -7,11 +7,11 @@ import { logger } from '../core/logger/logger';
  *
  * Idempoten: aman dijalankan berkali-kali. Membuat (bila belum ada):
  * - 1 instructor dev pemilik course/quiz
- * - 3 course terbit (slug dev-quiz-*) + enrollment AKTIF milik student
- * - 1 quiz aktif per course (4 soal pilihan tunggal + opsi), attempt maks 3
+ * - 3 course publish (slug dev-quiz-*) + enrollment active milik student
+ * - 1 quiz active per course (4 soal pilihan tunggal + opsi), attempt maks 3
  *
- * Kenapa perlu enrollment aktif? Memulai attempt quiz (POST /quizzes/:id/attempts)
- * memvalidasi student punya akses aktif ke course quiz tsb (assessments.service).
+ * Kenapa perlu enrollment active? Memulai attempt quiz (POST /quizzes/:id/attempts)
+ * memvalidasi student punya akses active to course quiz tsb (assessments.service).
  *
  * Jalankan: npm run seed:student-quiz (target default: siti@lmshub.test)
  * npm run seed:student-quiz -- email@student.test (target lain)
@@ -86,17 +86,17 @@ async function main() {
   const siswaId =
     existingSiswa?.id ??
     (await one<{ id: string }>(
-      `INSERT INTO users (nama_lengkap, email, password_hash, role_id, status, email_verified_at)
+      `INSERT INTO users (name_lengkap, email, password_hash, role_id, status, email_verified_at)
        VALUES ($1,$2,$3,$4,'active',now()) RETURNING id`,
       [TARGET_NAMA, TARGET_EMAIL, pass, siswaRole],
     ))!.id;
   logger.info(`${existingSiswa ? 'Using' : 'Creating'} student: ${TARGET_EMAIL}`);
 
-  // 2) Instructor dev + profil (pemilik course/quiz) ------------------------------
+  // 2) Instructor dev + profile (pemilik course/quiz) ------------------------------
   const instrukturId =
     (await one<{ id: string }>(`SELECT id FROM users WHERE email = $1 AND deleted_at IS NULL`, ['dev.instructor@lmshub.test']))?.id ??
     (await one<{ id: string }>(
-      `INSERT INTO users (nama_lengkap, email, password_hash, role_id, status, email_verified_at)
+      `INSERT INTO users (name_lengkap, email, password_hash, role_id, status, email_verified_at)
        VALUES ('Instructor Dev','dev.instructor@lmshub.test',$1,$2,'active',now()) RETURNING id`,
       [pass, instrukturRole],
     ))!.id;
@@ -112,26 +112,26 @@ async function main() {
      ON CONFLICT (slug) WHERE deleted_at IS NULL DO UPDATE SET name = EXCLUDED.name RETURNING id`,
   ))!.id;
 
-  // 4) Per-spec: course + enrollment aktif + quiz + soal --------------------------
+  // 4) Per-spec: course + enrollment active + quiz + soal --------------------------
   for (const spec of QUIZ_SPECS) {
-    // 4a) Course dev — sengaja 'draf' agar TIDAK muncul di catalog publik.
-    // Student tetap bisa mengerjakan kuisnya karena akses lewat enrollment (bukan status terbit).
+    // 4a) Course dev — sengaja 'draft' agar no muncul di catalog publik.
+    // Student tetap bisa mengerjakan kuisnya karena akses lewat enrollment (bukan status publish).
     const courseId = (await one<{ id: string }>(
       `INSERT INTO courses (title, slug, summary, category_id, instructor_id, level, price,
                             publication_status, language)
-       VALUES ($1,$2,$3,$4,$5,'pemula',0,'draf','id')
+       VALUES ($1,$2,$3,$4,$5,'beginner',0,'draft','id')
        ON CONFLICT (slug) WHERE deleted_at IS NULL
-         DO UPDATE SET publication_status='draf', title = EXCLUDED.title
+         DO UPDATE SET publication_status='draft', title = EXCLUDED.title
        RETURNING id`,
       [spec.course, spec.slug, `Development course for trying out ${spec.quiz}.`, categoryId, instrukturProfilId],
     ))!.id;
 
-    // 4b) Enrollment AKTIF milik student (guard: unique index user+course saat aktif)
+    // 4b) Enrollment active milik student (guard: unique index user+course saat active)
     await q(
-      `INSERT INTO enrollments (user_id, course_id, sumber, status)
-       SELECT $1,$2,'assign','aktif'
+      `INSERT INTO enrollments (user_id, course_id, source, status)
+       SELECT $1,$2,'assign','active'
        WHERE NOT EXISTS (
-         SELECT 1 FROM enrollments WHERE user_id=$1 AND course_id=$2 AND deleted_at IS NULL AND status <> 'batal'
+         SELECT 1 FROM enrollments WHERE user_id=$1 AND course_id=$2 AND deleted_at IS NULL AND status <> 'cancelled'
        )`,
       [siswaId, courseId],
     );
@@ -153,26 +153,26 @@ async function main() {
     ))!.id;
 
     const quizId = (await one<{ id: string }>(
-      `INSERT INTO quizzes (course_id, title, description, batas_waktu_menit, max_attempts,
-                            passing_score, tampilkan_jawaban_setelah_selesai, is_active, total_points)
+      `INSERT INTO quizzes (course_id, title, description, time_limit_minutes, max_attempts,
+                            passing_score, show_answers_after_completion, is_active, total_pointsts)
        VALUES ($1,$2,'Take this to test your understanding (development data).',10,3,70,true,true,$3) RETURNING id`,
       [courseId, spec.quiz, spec.soal.length],
     ))!.id;
 
-    let urut = 1;
+    let sort_order = 1;
     for (const [text, opsi, benarIdx] of spec.soal) {
       const questionId = (await one<{ id: string }>(
-        `INSERT INTO questions (question_bank_id, tipe, teks_soal, poin)
-         VALUES ($1,'pilihan_tunggal',$2,1) RETURNING id`,
+        `INSERT INTO questions (question_bank_id, type, question_text, points)
+         VALUES ($1,'single_choice',$2,1) RETURNING id`,
         [bankId, text],
       ))!.id;
       for (let o = 0; o < opsi.length; o++) {
         await q(
-          `INSERT INTO question_options (question_id, teks_opsi, is_benar, sort_order) VALUES ($1,$2,$3,$4)`,
+          `INSERT INTO question_options (question_id, option_text, is_correct, sort_order) VALUES ($1,$2,$3,$4)`,
           [questionId, opsi[o], o === benarIdx, o + 1],
         );
       }
-      await q(`INSERT INTO quiz_questions (quiz_id, question_id, sort_order) VALUES ($1,$2,$3)`, [quizId, questionId, urut++]);
+      await q(`INSERT INTO quiz_questions (quiz_id, question_id, sort_order) VALUES ($1,$2,$3)`, [quizId, questionId, sort_order++]);
     }
     logger.info(`✅ Quiz created: ${spec.quiz} (${spec.soal.length} questions)`);
   }

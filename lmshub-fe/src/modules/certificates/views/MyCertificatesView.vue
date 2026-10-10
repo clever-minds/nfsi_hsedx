@@ -15,7 +15,7 @@ interface Certificate {
   course_id: string;
   course_title?: string | null;
   status: string;
-  tanggal_terbit?: string | null;
+  publish_date?: string | null;
 }
 interface Enrollment {
   id: string;
@@ -38,9 +38,9 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    // Keduanya WAJIB difilter ke pengguna yang login — lihat catatan sama di
+    // Keduanya WAJIB difilter to user yang login — view notes sama di
     // MyCoursesView. Tanpa ini, "Certificate Saya" menampilkan certificate milik
-    // pengguna lain kepada siapa pun yang izinnya luas.
+    // user lain kepada siapa pun yang izinnya luas.
     const uid = auth.user?.id;
     const [cRes, eRes] = await Promise.all([
       apiGetFull<Certificate[]>('/certificates', { limit: 100, 'filter[user_id]': uid }),
@@ -58,41 +58,41 @@ async function load() {
 }
 
 /**
- * Dipotong di klien: kedua daftar diambil sekali (batas 100 dari BE) lalu
- * disaring — `hasCert` butuh daftar certificate **utuh** untuk menandai course
- * yang sudah terbit, jadi memaginasi di server akan membuat tanda itu meleset
+ * Dipotong di klien: kedua register diambil sekali (batas 100 from BE) lalu
+ * disaring — `hasCert` need register certificate **utuh** untuk menandai course
+ * yang sudah publish, jadi memaginasi di server akan membuat tanda itu meleset
  * pada halaman kedua dan seterusnya.
  *
  * Ukuran halaman berbeda karena bentuknya berbeda: kartu tersusun 3 kolom
- * (9 = tiga baris penuh), sedangkan daftar klaim satu baris per item.
+ * (9 = tiga baris penuh), sedangkan register klaim satu baris per item.
  */
 const ISSUED_PER_PAGE = 9;
 const CLAIM_PER_PAGE = 10;
 const issuedPage = ref(1);
 const claimPage = ref(1);
 
-const issued = computed(() => certificates.value.filter((c) => c.status === 'terbit'));
+const issued = computed(() => certificates.value.filter((c) => c.status === 'publish'));
 const issuedShown = computed(() =>
   issued.value.slice((issuedPage.value - 1) * ISSUED_PER_PAGE, issuedPage.value * ISSUED_PER_PAGE),
 );
 const claimShown = computed(() =>
   enrollments.value.slice((claimPage.value - 1) * CLAIM_PER_PAGE, claimPage.value * CLAIM_PER_PAGE),
 );
-const hasCert = (courseId: string) => certificates.value.some((c) => c.course_id === courseId && c.status === 'terbit');
+const hasCert = (courseId: string) => certificates.value.some((c) => c.course_id === courseId && c.status === 'publish');
 
 /**
- * Certificate terkunci karena ujian akhir: sebutkan ujiannya, skor terbaik, dan
- * nilai lulusnya — "persyaratan belum terpenuhi" saja tidak memberi tahu student
+ * Certificate terkunci karena exam akhir: sebutkan ujiannya, score terbaik, dan
+ * value lulusnya — "persyaratan belum terpenuhi" saja no memberi tahu student
  * apa yang harus dilakukan.
  */
 function examLockMessage(e: unknown): string | null {
   const err = (e as { response?: { data?: { error?: { key?: string; details?: unknown } } } }).response?.data?.error;
   if (err?.key !== 'certificate.final_exam_not_passed') return null;
-  const u = (err.details as { ujian_akhir?: { title?: string; passing_score_val?: number; skor_terbaik_persen?: number | null } })?.ujian_akhir;
+  const u = (err.details as { final_exam?: { title?: string; passing_score_val?: number; score_terbaik_persen?: number | null } })?.final_exam;
   if (!u) return null;
-  return u.skor_terbaik_persen == null
+  return u.score_terbaik_persen == null
     ? t('certificates.my.examNotTaken', { exam: u.title ?? '', pass: u.passing_score_val ?? '' })
-    : t('certificates.my.examNotPassed', { exam: u.title ?? '', score: u.skor_terbaik_persen, pass: u.passing_score_val ?? '' });
+    : t('certificates.my.examNotPassed', { exam: u.title ?? '', score: u.score_terbaik_persen, pass: u.passing_score_val ?? '' });
 }
 
 async function terbitkan(enr: Enrollment) {
@@ -131,7 +131,7 @@ onMounted(load);
           <div>
             <div class="line-clamp-1 font-medium text-slate-800">{{ c.course_title || t('certificates.my.course') }}</div>
             <div class="num text-xs text-slate-400">{{ c.certificate_number }}</div>
-            <StatusChip status="terbit" />
+            <StatusChip status="publish" />
           </div>
             <RouterLink :to="`/d/certificates/view/${c.id}`" class="btn-primary mt-auto justify-center">
               {{ t('certificates.my.view') }}

@@ -21,12 +21,12 @@ export async function create(actor: AuthContext, input: CreateCouponInput) {
 
   const { id } = await repo.insert({
     kode: input.kode,
-    tipe_potongan: input.tipe_potongan,
-    nilai_potongan: input.nilai_potongan,
-    kuota_maksimal: input.kuota_maksimal ?? null,
-    minimum_pembelian: input.minimum_pembelian ?? null,
-    berlaku_mulai: input.berlaku_mulai ?? null,
-    berlaku_sampai: input.berlaku_sampai ?? null,
+    discount_type: input.discount_type,
+    discount_value: input.discount_value,
+    max_quota: input.max_quota ?? null,
+    min_purchase: input.min_purchase ?? null,
+    valid_from: input.valid_from ?? null,
+    valid_until: input.valid_until ?? null,
     is_active: input.is_active ?? true,
   });
   await recordAudit({
@@ -35,7 +35,7 @@ export async function create(actor: AuthContext, input: CreateCouponInput) {
     action: 'create',
     entity: 'coupons',
     entityId: id,
-    after: { kode: input.kode, tipe_potongan: input.tipe_potongan, nilai_potongan: input.nilai_potongan },
+    after: { kode: input.kode, discount_type: input.discount_type, discount_value: input.discount_value },
   });
   return repo.detail(id);
 }
@@ -49,17 +49,17 @@ export async function update(actor: AuthContext, id: string, input: UpdateCoupon
     if (clash && clash.id !== id) throw AppError.conflict('That coupon code is already in use', 'coupon.code_taken');
     fields.kode = input.kode;
   }
-  if (input.tipe_potongan !== undefined) fields.tipe_potongan = input.tipe_potongan;
-  if (input.nilai_potongan !== undefined) fields.nilai_potongan = input.nilai_potongan;
-  if (input.kuota_maksimal !== undefined) fields.kuota_maksimal = input.kuota_maksimal;
-  if (input.minimum_pembelian !== undefined) fields.minimum_pembelian = input.minimum_pembelian;
-  if (input.berlaku_mulai !== undefined) fields.berlaku_mulai = input.berlaku_mulai;
-  if (input.berlaku_sampai !== undefined) fields.berlaku_sampai = input.berlaku_sampai;
+  if (input.discount_type !== undefined) fields.discount_type = input.discount_type;
+  if (input.discount_value !== undefined) fields.discount_value = input.discount_value;
+  if (input.max_quota !== undefined) fields.max_quota = input.max_quota;
+  if (input.min_purchase !== undefined) fields.min_purchase = input.min_purchase;
+  if (input.valid_from !== undefined) fields.valid_from = input.valid_from;
+  if (input.valid_until !== undefined) fields.valid_until = input.valid_until;
   if (input.is_active !== undefined) fields.is_active = input.is_active;
 
-  // Kuota baru yang lebih kecil dari pemakaian akan membuat kupon langsung mati
-  // tanpa penjelasan di layar mana pun. Tolak di sini selagi sebabnya jelas.
-  if (input.kuota_maksimal != null && input.kuota_maksimal < before.kuota_terpakai) {
+  // Kuota baru yang lebih kecil from pemakaian akan membuat kupon langsung mati
+  // tanpa penjelasan di layar mana pun. reject di sini selagi sebabnya jelas.
+  if (input.max_quota != null && input.max_quota < before.used_quota) {
     throw AppError.badRequest(
       'The quota cannot be lower than the number of times this coupon has already been redeemed',
       'coupon.quota_below_used',
@@ -73,7 +73,7 @@ export async function update(actor: AuthContext, id: string, input: UpdateCoupon
     action: 'update',
     entity: 'coupons',
     entityId: id,
-    before: { kode: before.kode, nilai_potongan: before.nilai_potongan, is_active: before.is_active },
+    before: { kode: before.kode, discount_value: before.discount_value, is_active: before.is_active },
     after: input,
   });
   return repo.detail(id);
@@ -82,7 +82,7 @@ export async function update(actor: AuthContext, id: string, input: UpdateCoupon
 export async function remove(actor: AuthContext, id: string) {
   await detail(id);
   // Order menyimpan `coupon_id`; menghapus kupon yang sudah dipakai akan
-  // mengosongkan jejak diskon pada order lama (FK-nya ON DELETE SET NULL).
+  // mengosongkan jejak discount pada order lama (FK-nya ON DELETE SET NULL).
   // Nonaktifkan saja — kupon nonaktif sudah ditolak saat checkout.
   const used = await repo.countOrdersUsing(id);
   if (used > 0) {

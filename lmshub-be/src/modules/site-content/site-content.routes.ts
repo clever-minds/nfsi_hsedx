@@ -9,35 +9,35 @@ import * as ctrl from './site-content.controller';
 export const siteContentRouter = Router();
 
 /**
- * Dibaca tanpa autentikasi: halaman depan menggambar dirinya dari sini,
+ * Dibaca tanpa autentikasi: halaman depan menggambar dirinya from sini,
  * termasuk untuk pengunjung yang belum login.
  */
 siteContentRouter.get('/', asyncHandler(ctrl.getAll));
 
-// Perubahan memakai izin yang sama dengan layar Pengaturan.
+// Perubahan memakai izin yang sama dengan layar settings.
 siteContentRouter.post(
   '/asset',
   requireAuth(),
-  requirePermission('pengaturan', 'update'),
+  requirePermission('settings', 'update'),
   validate(uploadSiteAssetSchema),
   asyncHandler(ctrl.uploadAsset),
 );
-// Gambar hero sebagai byte mentah (≤5MB), dialirkan ke disk — sama seperti Media Library.
+// Gambar hero sebagai byte mentah (≤5MB), dialirkan to disk — sama seperti Media Library.
 siteContentRouter.post(
   '/asset/hero/upload',
   requireAuth(),
-  requirePermission('pengaturan', 'update'),
+  requirePermission('settings', 'update'),
   asyncHandler(ctrl.uploadHero),
 );
 siteContentRouter.delete(
-  '/asset/:jenis',
+  '/asset/:type',
   requireAuth(),
-  requirePermission('pengaturan', 'update'),
+  requirePermission('settings', 'update'),
   asyncHandler(ctrl.removeAsset),
 );
 siteContentRouter.put(
   '/:key',
   requireAuth(),
-  requirePermission('pengaturan', 'update'),
+  requirePermission('settings', 'update'),
   asyncHandler(ctrl.updateBlock),
 );

@@ -19,7 +19,7 @@ export const enrollmentsRouter = Router();
 enrollmentsRouter.use(requireAuth());
 
 // ── Enrollments ─────────────────────────────────────────
-// GET otomatis ter-scope ke "course saya" untuk student (row-level di service).
+// GET otomatis ter-scope to "course saya" untuk student (row-level di service).
 enrollmentsRouter.get('/enrollments', requirePermission('enrollment', 'view'), asyncHandler(ctrl.list));
 enrollmentsRouter.post(
   '/enrollments',
@@ -50,7 +50,7 @@ enrollmentsRouter.post(
 );
 
 // ── Cohorts ─────────────────────────────────────────────
-// Daftar semua cohort lintas course (admin) — WAJIB sebelum '/cohorts/:id...' agar tidak tertangkap :id.
+// register semua cohort lintas course (admin) — WAJIB sebelum '/cohorts/:id...' agar no tertangkap :id.
 enrollmentsRouter.get('/cohorts', requirePermission('cohort', 'view'), asyncHandler(ctrl.listAllCohorts));
 enrollmentsRouter.get('/courses/:courseId/cohorts', requirePermission('cohort', 'view'), asyncHandler(ctrl.listCohorts));
 enrollmentsRouter.post(

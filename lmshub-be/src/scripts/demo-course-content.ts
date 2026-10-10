@@ -461,7 +461,7 @@ export const COURSE_CONTENT: Record<string, CourseContent> = {
       'Structuring a talk around a single clear message',
       'Openings that earn attention and closings people remember',
       'Managing nerves with breathing, pacing and preparation',
-      'Voice, pause and body language that support your point',
+      'Voice, pause and body language that support your pointst',
       'Slides that help the audience instead of competing with you',
       'Handling questions, including ones you cannot answer',
     ],
@@ -556,7 +556,7 @@ export const INSTRUCTORS: Record<string, InstructorContent> = {
     name: 'Kenji Tanaka',
     email: 'kenji@lmshub.test',
     headline: 'Data scientist and analytics lead',
-    bio: 'Kenji has spent most of his career persuading organisations that their data is messier than they think, then helping them fix it. He teaches analysis as a craft with an emphasis on honest evaluation, and is candid about the problems machine learning should not be pointed at. He also coaches presenting, on the grounds that an analysis nobody understands has not been finished.',
+    bio: 'Kenji has spent most of his career persuading organisations that their data is messier than they think, then helping them fix it. He teaches analysis as a craft with an emphasis on honest evaluation, and is candid about the problems machine learning should not be pointsted at. He also coaches presenting, on the grounds that an analysis nobody understands has not been finished.',
     expertise: ['Python', 'pandas', 'Machine Learning', 'Statistics', 'Excel', 'Data Visualisation'],
     social: {
       linkedin: 'https://linkedin.com/in/kenji-tanaka-demo',

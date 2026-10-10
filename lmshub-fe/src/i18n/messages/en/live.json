@@ -18,7 +18,7 @@
     "status": {
       "dijadwalkan": "Scheduled",
       "berlangsung": "In Progress",
-      "selesai": "Completed",
+      "finish": "Completed",
       "rekaman_tersedia": "Recording Available"
     },
     "joinFailed": "Could not join the session. It may be outside the session time, or you are not enrolled in this course."
@@ -52,7 +52,7 @@
     "legend": {
       "live": "Live Class",
       "tenggat": "Assignment Deadline",
-      "ujian": "Exam"
+      "exam": "Exam"
     }
   },
   "form": {

@@ -33,7 +33,7 @@ export async function me(req: Request, res: Response) {
 export async function listAffiliates(req: Request, res: Response) {
   const page = parsePage(req);
   const { rows, total } = await service.list(auth(req), page, {
-    status_verifikasi: req.query['filter[status_verifikasi]'] as string | undefined,
+    verification_status: req.query['filter[verification_status]'] as string | undefined,
   });
   return ok(res, rows, pageMeta(page.page, page.limit, total));
 }
@@ -75,7 +75,7 @@ export async function listReferralLinks(req: Request, res: Response) {
 export async function listLeads(req: Request, res: Response) {
   const page = parsePage(req);
   const { rows, total } = await service.listLeads(auth(req), page, {
-    tahap: req.query['filter[tahap]'] as string | undefined,
+    stage: req.query['filter[stage]'] as string | undefined,
   });
   return ok(res, rows, pageMeta(page.page, page.limit, total));
 }

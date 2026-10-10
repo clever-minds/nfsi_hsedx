@@ -11,7 +11,7 @@ export const liveRoutes: RouteRecordRaw[] = [
   {
     path: 'live-class/calendar',
     name: 'live-class-calendar',
-    component: () => import('@/modules/live/views/KalenderView.vue'),
+    component: () => import('@/modules/live/views/CalendarView.vue'),
     meta: { permission: 'live_class.view', title: 'Calendar' },
   },
   {

@@ -11,8 +11,8 @@ import StatusChip from '@/components/ui/StatusChip.vue';
 
 const auth = useAuthStore();
 const { t } = useI18n();
-// "Customer" = pengguna yang hanya berperan student/sub_user (bukan staf). Untuk mereka
-// halaman ini adalah riwayat pembelian pribadi, bukan area manajemen transaction.
+// "Customer" = user yang hanya berperan student/sub_user (bukan staf). Untuk mereka
+// halaman ini adalah riwayat purchase pribadi, bukan area manajemen transaction.
 const isCustomer = computed(
   () => auth.roles.length > 0 && auth.roles.every((r) => ['student', 'sub_user'].includes(r)),
 );
@@ -20,12 +20,12 @@ const isCustomer = computed(
 type OrderRow = Record<string, unknown> & {
   id: string;
   kode?: string;
-  pembeli_nama?: string;
-  kursus_nama?: string;
-  jalur: string; // online | manual
-  status: string; // menunggu_pembayaran | dp_cicilan_berjalan | lunas | akses_aktif | batal
+  pembeli_name?: string;
+  kursus_name?: string;
+  channel: string; // online | manual
+  status: string; // menunggu_pembayaran | dp_cicilan_berjalan | lunas | akses_aktif | cancel
   total: number;
-  marketing_nama?: string;
+  marketing_name?: string;
   created_at?: string;
 };
 
@@ -33,25 +33,25 @@ type OrderRow = Record<string, unknown> & {
 const columns = computed(() =>
   [
     { key: 'kode', label: t('orders.list.colOrder') },
-    ...(isCustomer.value ? [] : [{ key: 'pembeli_nama', label: t('orders.list.colBuyer') }]),
-    { key: 'kursus_nama', label: t('orders.list.colCourse') },
-    { key: 'jalur', label: t('orders.list.colChannel') },
+    ...(isCustomer.value ? [] : [{ key: 'pembeli_name', label: t('orders.list.colBuyer') }]),
+    { key: 'kursus_name', label: t('orders.list.colCourse') },
+    { key: 'channel', label: t('orders.list.colChannel') },
     { key: 'status', label: t('orders.list.colStatus') },
     { key: 'total', label: t('orders.list.colTotal') },
     { key: 'created_at', label: t('orders.list.colDate') },
   ],
 );
 
-// Harus persis sama dengan enum `order_status` di basis data. Nilai yang tidak
-// dikenal dulu diteruskan apa adanya ke query dan membuat server menjawab 500.
-const STATUS_OPTIONS = ['menunggu_pembayaran', 'dp_cicilan_berjalan', 'lunas', 'akses_aktif', 'batal'];
+// Harus persis sama dengan enum `order_status` di basis data. grade yang no
+// dikenal dulu diteruskan apa adanya to query dan membuat server menjawab 500.
+const STATUS_OPTIONS = ['awaiting_payment', 'installment_running', 'paid_in_full', 'access_active', 'cancelled'];
 
 const rows = ref<OrderRow[]>([]);
 const loading = ref(true);
 const error = ref('');
 const busyId = ref<string | null>(null);
 
-const filters = reactive({ jalur: '', status: '', q: '' });
+const filters = reactive({ channel: '', status: '', q: '' });
 const page = ref(1);
 const limit = 20;
 const total = ref(0);
@@ -61,7 +61,7 @@ async function load() {
   error.value = '';
   try {
     const res = await apiGetFull<OrderRow[]>('/orders', {
-      jalur: filters.jalur || undefined,
+      channel: filters.channel || undefined,
       status: filters.status || undefined,
       q: filters.q || undefined,
       page: page.value,
@@ -83,31 +83,31 @@ function search() {
 }
 
 function canVerify(row: OrderRow): boolean {
-  return ['menunggu_pembayaran', 'dp_cicilan_berjalan'].includes(row.status);
+  return ['awaiting_payment', 'installment_running'].includes(row.status);
 }
 function canRefund(row: OrderRow): boolean {
-  return ['lunas', 'akses_aktif'].includes(row.status);
+  return ['paid_in_full', 'access_active'].includes(row.status);
 }
 
 async function verify(row: OrderRow, decision: 'approve' | 'reject') {
   const kode = row.kode ?? row.id;
-  let alasan: string | undefined;
+  let reason: string | undefined;
   if (decision === 'reject') {
-    alasan = window.prompt(t('orders.list.promptReject', { code: kode })) || '';
-    if (!alasan) return;
+    reason = window.prompt(t('orders.list.promptReject', { code: kode })) || '';
+    if (!reason) return;
   } else if (!window.confirm(t('orders.list.confirmVerify', { code: kode, amount: fmtRp(row.total) }))) {
     return;
   }
   busyId.value = row.id;
   try {
-    // BE: POST /orders/:id/verify (bukan PATCH). Nama medannya `aksi` /
-    // `catatan_verifikasi` — mengirim `decision`/`alasan` ditolak validator
+    // BE: POST /orders/:id/verify (bukan PATCH). name medannya `action` /
+    // `notes_verifikasi` — mengirim `decision`/`reason` ditolak validator
     // sebagai 400 dan tak satu pun transfer manual bisa dikonfirmasi.
     // `payment_id` boleh dikosongkan selama order hanya punya satu klaim
     // payment yang menunggu, dan itu keadaan yang normal.
     await apiPost(`/orders/${row.id}/verify`, {
-      aksi: decision === 'approve' ? 'verify' : 'reject',
-      catatan_verifikasi: alasan,
+      action: decision === 'approve' ? 'verify' : 'reject',
+      notes_verifikasi: reason,
     });
     await load();
   } catch (e) {
@@ -118,13 +118,13 @@ async function verify(row: OrderRow, decision: 'approve' | 'reject') {
 }
 
 async function refund(row: OrderRow) {
-  const alasan = window.prompt(
+  const reason = window.prompt(
     t('orders.list.promptRefund', { code: row.kode ?? row.id, amount: fmtRp(row.total) }),
   );
-  if (!alasan) return;
+  if (!reason) return;
   busyId.value = row.id;
   try {
-    await apiPost(`/orders/${row.id}/refund`, { alasan });
+    await apiPost(`/orders/${row.id}/refund`, { reason });
     await load();
   } catch (e) {
     error.value = errorMessage(e, t('orders.list.refundFailed'));
@@ -158,7 +158,7 @@ onMounted(load);
       :empty="isCustomer ? t('orders.list.emptyCustomer') : t('orders.list.emptyStaff')"
     >
       <template #toolbar>
-        <select v-model="filters.jalur" class="input w-auto" @change="search">
+        <select v-model="filters.channel" class="input w-auto" @change="search">
           <option value="">{{ t('orders.list.allChannels') }}</option>
           <option value="online">{{ t('orders.list.channelOnline') }}</option>
           <option value="manual">{{ t('orders.list.channelManual') }}</option>
@@ -170,7 +170,7 @@ onMounted(load);
         <input v-model="filters.q" class="input max-w-xs" :placeholder="t('orders.list.searchPlaceholder')" @keyup.enter="search" />
         <button class="btn-outline" @click="search">{{ t('common.action.search') }}</button>
       </template>
-      <template #cell:jalur="{ value }">
+      <template #cell:channel="{ value }">
         {{ value === 'manual' ? t('orders.list.channelManual') : t('orders.list.channelOnline') }}
       </template>
       <template #cell:status="{ value }">

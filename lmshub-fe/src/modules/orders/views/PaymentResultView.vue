@@ -7,12 +7,12 @@ import { useAuthStore } from '@/stores/auth';
 import Icon from '@/components/ui/Icon.vue';
 
 /**
- * Halaman pendaratan setelah pembeli kembali dari gateway.
+ * Halaman pendaratan setelah pembeli back from gateway.
  *
- * Halaman ini TIDAK melunasi apa pun. Pelunasan hanya terjadi lewat webhook,
- * yang kadang tiba beberapa detik setelah pembeli sampai di sini — jadi status
+ * Halaman ini no melunasi apa pun. Pelunasan hanya terjadi lewat webhook,
+ * yang kadang tiba beberapa detik setelah pembeli until di sini — jadi status
  * order dijemput ulang beberapa kali sebelum menyerah dan menyuruh pembeli
- * menunggu. Menampilkan "gagal" karena webhook telat adalah cara tercepat
+ * menunggu. Menampilkan "failed" karena webhook telat adalah cara tercepat
  * membuat pembeli membayar dua kali.
  */
 
@@ -27,7 +27,7 @@ const state = ref<'checking' | 'paid' | 'waiting' | 'cancelled'>(
   props.outcome === 'cancel' ? 'cancelled' : 'checking',
 );
 
-const PAID = ['lunas', 'akses_aktif'];
+const PAID = ['paid_in_full', 'access_active'];
 /** Enam kali dengan jeda 2 detik ≈ 12 detik — cukup untuk webhook yang normal. */
 const MAX_ATTEMPTS = 6;
 const POLL_INTERVAL_MS = 2000;
@@ -47,8 +47,8 @@ onMounted(async () => {
         return;
       }
     } catch {
-      // Order belum terlihat oleh pembeli ini, atau jaringan sedang goyah —
-      // coba lagi; jangan menyimpulkan gagal.
+      // Order belum terlihat by pembeli ini, atau jaringan sedang goyah —
+      // coba lagi; jangan menyimpulkan failed.
     }
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
   }

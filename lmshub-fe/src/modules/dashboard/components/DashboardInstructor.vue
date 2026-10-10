@@ -15,7 +15,7 @@ interface MyCourse {
   rating_avg: string | null;
   price: string;
 }
-interface EnrollmentTerbaru { id: string; user_nama: string; course_judul: string; status: string; created_at: string }
+interface EnrollmentTerbaru { id: string; user_name: string; course_title: string; status: string; created_at: string }
 interface JadwalLive { id: string; title: string; start_time: string; status?: string }
 
 const props = defineProps<{ data: Record<string, unknown> }>();
@@ -24,7 +24,7 @@ const { t } = useI18n();
 
 const num = (k: string) => Number((props.data[k] as number | string | null) ?? 0);
 const kpis = computed(() => [
-  { label: t('dashboard.kpi.jumlah_kursus'), value: fmtAngka(num('jumlah_kursus')), icon: 'book-open' },
+  { label: t('dashboard.kpi.amount_kursus'), value: fmtAngka(num('amount_kursus')), icon: 'book-open' },
   { label: t('dashboard.kpi.student_count'), value: fmtAngka(num('student_count')), icon: 'users' },
   {
     label: t('dashboard.kpi.rating_rata_rata'),
@@ -32,7 +32,7 @@ const kpis = computed(() => [
     icon: 'award',
     accent: true,
   },
-  { label: t('dashboard.kpi.pendapatan_bulan_ini'), value: fmtRp(num('pendapatan_bulan_ini')), icon: 'credit-card' },
+  { label: t('dashboard.kpi.pendapatan_month_ini'), value: fmtRp(num('pendapatan_month_ini')), icon: 'credit-card' },
 ]);
 
 const kursusSaya = computed(() => (props.data.kursus_saya as MyCourse[] | undefined) ?? []);
@@ -43,7 +43,7 @@ const payoutPending = computed(() => num('payout_pending'));
 const statusChip: Record<string, string> = {
   draf: 'bg-slate-100 text-slate-500',
   dalam_review: 'bg-amber-50 text-amber-600',
-  terbit: 'bg-emerald-50 text-emerald-600',
+  publish: 'bg-emerald-50 text-emerald-600',
   diperbarui: 'bg-sky-50 text-sky-600',
   diarsip: 'bg-slate-100 text-slate-400',
 };
@@ -59,18 +59,18 @@ const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
 
 <template>
   <div class="grid gap-6 xl:grid-cols-[1fr,20rem]">
-    <!-- Kolom utama -->
+    <!-- Kolom primary -->
     <div class="min-w-0 space-y-8">
       <!-- Hero instructor -->
       <section class="relative overflow-hidden rounded-lg bg-gradient-to-r from-brand-50 to-orange-50 p-6 sm:p-8">
         <div class="relative z-10 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 class="text-2xl font-black text-slate-900">
-              {{ t('dashboard.greeting', { name: auth.user?.nama_lengkap?.split(' ')[0] }) }}
+              {{ t('dashboard.greeting', { name: auth.user?.name_lengkap?.split(' ')[0] }) }}
             </h1>
             <p class="mt-1 text-sm text-slate-500">
               <i18n-t keypath="dashboard.instructor.teachingSummary" tag="span" scope="global">
-                <template #courses><b class="text-slate-700">{{ fmtAngka(num('jumlah_kursus')) }}</b></template>
+                <template #courses><b class="text-slate-700">{{ fmtAngka(num('amount_kursus')) }}</b></template>
                 <template #students><b class="text-slate-700">{{ fmtAngka(num('student_count')) }}</b></template>
               </i18n-t>
             </p>
@@ -155,11 +155,11 @@ const thumbClass = (i: number) => thumbGradients[i % thumbGradients.length];
         <ul v-if="enrollmentTerbaru.length" class="space-y-3">
           <li v-for="e in enrollmentTerbaru" :key="e.id" class="flex items-start gap-3">
             <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-50 text-xs font-bold text-brand-500">
-              {{ initialsOf(e.user_nama) }}
+              {{ initialsOf(e.user_name) }}
             </span>
             <div class="min-w-0">
-              <div class="text-sm text-slate-700"><b>{{ e.user_nama }}</b> {{ t('dashboard.instructor.enrolledVerb') }}</div>
-              <div class="line-clamp-1 text-xs text-slate-400">{{ e.course_judul }} · {{ fmtRelatif(e.created_at) }}</div>
+              <div class="text-sm text-slate-700"><b>{{ e.user_name }}</b> {{ t('dashboard.instructor.enrolledVerb') }}</div>
+              <div class="line-clamp-1 text-xs text-slate-400">{{ e.course_title }} · {{ fmtRelatif(e.created_at) }}</div>
             </div>
           </li>
         </ul>

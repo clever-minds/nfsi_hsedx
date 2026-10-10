@@ -13,8 +13,8 @@ const STORAGE_KEY = 'locale';
 
 /**
  * Semua pesan dimuat eager lewat glob: setiap file JSON di
- * `messages/<locale>/<namespace>.json` jadi namespace tingkat atas.
- * Menambah namespace baru cukup dengan menaruh file — tanpa ubah file ini.
+ * `messages/<locale>/<namespace>.json` jadi namespace tingkat on.
+ * Menambah namespace baru cukup dengan menaruh file — tanpa edit file ini.
  */
 const files = import.meta.glob<{ default: Record<string, unknown> }>('./messages/*/*.json', { eager: true });
 
@@ -53,7 +53,7 @@ export const i18n = createI18n({
   globalInjection: true,
   locale: initialLocale(),
   fallbackLocale: DEFAULT_LOCALE,
-  // Fallback ke Inggris dilakukan diam-diam; hanya diberitahu saat dev.
+  // Fallback to Inggris dilakukan diam-diam; hanya diberitahu saat dev.
   missingWarn: import.meta.env.DEV,
   fallbackWarn: false,
   messages: messages as never,
@@ -62,9 +62,9 @@ export const i18n = createI18n({
 /**
  * Akses global vue-i18n lewat antarmuka sederhana.
  *
- * Tipe pesan vue-i18n di-infer dari catalog; untuk catalog sebesar ini
+ * Tipe pesan vue-i18n di-infer from catalog; untuk catalog sebesar ini
  * `vue-tsc` menyerah dengan TS2589 (instantiation too deep). Kita hanya
- * butuh t/te/locale, jadi cukup narrow ke bentuk minimal ini.
+ * need t/te/locale, jadi cukup narrow to bentuk minimal ini.
  */
 interface GlobalI18n {
   t: (key: string, ...args: unknown[]) => string;
@@ -74,7 +74,7 @@ interface GlobalI18n {
 
 const g = i18n.global as unknown as GlobalI18n;
 
-/** Locale aktif, aman dipanggil dari luar komponen (mis. helper format). */
+/** Locale active, aman dipanggil from luar komponen (mis. helper format). */
 export function currentLocale(): SupportedLocale {
   return g.locale.value as SupportedLocale;
 }
@@ -88,7 +88,7 @@ export const t: GlobalI18n['t'] = (key, ...args) => g.t(key, ...args);
 export const te: GlobalI18n['te'] = (key) => g.te(key);
 
 /**
- * Ganti language: set vue-i18n, simpan pilihan, sinkronkan atribut document.
+ * Ganti language: set vue-i18n, save pilihan, sinkronkan atribut document.
  * `<html dir>` yang bikin seluruh layout Tailwind logical-property membalik.
  */
 export function setLocale(locale: SupportedLocale) {
@@ -102,7 +102,7 @@ export function setLocale(locale: SupportedLocale) {
   applyDocumentLocale(locale);
 }
 
-/** Pasang lang/dir ke <html> + kelas bantu untuk styling khusus RTL. */
+/** Pasang lang/dir to <html> + class bantu untuk styling khusus RTL. */
 export function applyDocumentLocale(locale: SupportedLocale = currentLocale()) {
   if (typeof document === 'undefined') return;
   const def = LOCALES[locale];

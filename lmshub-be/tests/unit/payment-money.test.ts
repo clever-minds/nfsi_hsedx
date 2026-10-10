@@ -41,7 +41,7 @@ describe('minor unit conversion', () => {
     expect(toMinorUnits(12.5, 'KWD')).toBe(12500);
   });
 
-  it('rounds rather than truncating floating point drift', () => {
+  it('rounds rather than truncating floating pointst drift', () => {
     // 19.99 * 100 is 1998.9999999999998 in IEEE 754.
     expect(toMinorUnits(19.99, 'USD')).toBe(1999);
   });

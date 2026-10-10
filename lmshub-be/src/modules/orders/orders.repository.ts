@@ -7,15 +7,15 @@ import { PageParams } from '../../core/http/pagination';
 export interface OrderRow {
   id: string;
   buyer_user_id: string;
-  jalur: 'online' | 'manual';
+  channel: 'online' | 'manual';
   marketing_user_id: string | null;
-  status: 'menunggu_pembayaran' | 'dp_cicilan_berjalan' | 'lunas' | 'akses_aktif' | 'batal';
+  status: 'awaiting_payment' | 'installment_running' | 'paid_in_full' | 'access_active' | 'cancelled';
   coupon_id: string | null;
   subtotal: string;
-  diskon: string;
+  discount: string;
   total: string;
-  checkout_kedaluwarsa_at: string | null;
-  catatan: string | null;
+  checkout_expired_at: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -28,22 +28,22 @@ export interface OrderRow {
  */
 export interface OrderListRow extends OrderRow {
   kode: string;
-  pembeli_nama: string | null;
+  pembeli_name: string | null;
   pembeli_email: string | null;
-  kursus_nama: string | null;
-  marketing_nama: string | null;
-  jumlah_item: number;
+  kursus_name: string | null;
+  marketing_name: string | null;
+  amount_item: number;
 }
 
 export interface OrderItemRow {
   id: string;
   order_id: string;
-  item_tipe: 'course' | 'bundle' | 'path' | 'langganan';
+  item_type: 'course' | 'bundle' | 'path' | 'subscription';
   course_id: string | null;
   learning_path_id: string | null;
   bundle_group_id: string | null;
-  harga_satuan: string;
-  kuantitas: number;
+  price_unit: string;
+  quantity: number;
   subtotal: string;
   meta: unknown;
   created_at: string;
@@ -52,28 +52,28 @@ export interface OrderItemRow {
 export interface PaymentRow {
   id: string;
   order_id: string;
-  jenis: 'penuh' | 'dp' | 'cicilan';
-  nominal: string;
-  metode: string;
-  status: 'menunggu_verifikasi' | 'terverifikasi' | 'ditolak';
-  bukti_media_id: string | null;
-  referensi_gateway: string | null;
+  type: 'full' | 'down_payment' | 'installment';
+  amount: string;
+  method: string;
+  status: 'awaiting_verification' | 'verified' | 'rejected';
+  proof_media_id: string | null;
+  gateway_reference: string | null;
   verified_by: string | null;
   verified_at: string | null;
-  catatan_verifikasi: string | null;
+  notes_verifikasi: string | null;
   created_at: string;
 }
 
 export interface CouponRow {
   id: string;
   kode: string;
-  tipe_potongan: 'persen' | 'nominal';
-  nilai_potongan: string;
-  kuota_maksimal: number | null;
-  kuota_terpakai: number;
-  minimum_pembelian: string | null;
-  berlaku_mulai: string | null;
-  berlaku_sampai: string | null;
+  discount_type: 'persen' | 'amount';
+  discount_value: string;
+  max_quota: number | null;
+  used_quota: number;
+  min_purchase: string | null;
+  valid_from: string | null;
+  valid_until: string | null;
   is_active: boolean;
 }
 
@@ -85,7 +85,7 @@ export interface CourseRow {
 
 export interface LearningPathRow {
   id: string;
-  harga_bundle: string | null;
+  price_bundle: string | null;
 }
 
 export interface InstructorProfileRow {
@@ -95,7 +95,7 @@ export interface InstructorProfileRow {
 
 export interface Filters {
   status?: string;
-  jalur?: string;
+  channel?: string;
   /** Free text across buyer name, buyer email and course title. */
   q?: string;
   buyer_user_id?: string;
@@ -114,7 +114,7 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: OrderList
     where.push(clause.replace('$?', `$${params.length}`));
   };
   if (f.status) add('o.status = $?', f.status);
-  if (f.jalur) add('o.jalur = $?', f.jalur);
+  if (f.channel) add('o.channel = $?', f.channel);
   if (f.buyer_user_id) add('o.buyer_user_id = $?', f.buyer_user_id);
   if (f.marketing_user_id) add('o.marketing_user_id = $?', f.marketing_user_id);
   if (f.q?.trim()) {
@@ -122,7 +122,7 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: OrderList
     params.push(term);
     const i = params.length;
     where.push(
-      `(b.nama_lengkap ILIKE $${i} OR b.email ILIKE $${i}
+      `(b.name_lengkap ILIKE $${i} OR b.email ILIKE $${i}
         OR EXISTS (SELECT 1 FROM order_items oi JOIN courses c ON c.id = oi.course_id
                     WHERE oi.order_id = o.id AND c.title ILIKE $${i}))`,
     );
@@ -140,11 +140,11 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: OrderList
   const rows = await query<OrderListRow>(
     `SELECT o.*,
             'ORD-' || to_char(o.created_at, 'YYMMDD') || '-' || upper(left(o.id::text, 6)) AS kode,
-            b.nama_lengkap AS pembeli_nama,
+            b.name_lengkap AS pembeli_name,
             b.email        AS pembeli_email,
-            m.nama_lengkap AS marketing_nama,
-            first_item.title AS kursus_nama,
-            COALESCE(item_count.n, 0) AS jumlah_item
+            m.name_lengkap AS marketing_name,
+            first_item.title AS kursus_name,
+            COALESCE(item_count.n, 0) AS amount_item
        FROM orders o
        LEFT JOIN users b ON b.id = o.buyer_user_id
        LEFT JOIN users m ON m.id = o.marketing_user_id
@@ -182,30 +182,30 @@ export async function findById(id: string, tx?: PoolClient): Promise<OrderRow | 
 export async function insertOrder(
   data: {
     buyer_user_id: string;
-    jalur: 'online' | 'manual';
+    channel: 'online' | 'manual';
     marketing_user_id: string | null;
     coupon_id: string | null;
     subtotal: number;
-    diskon: number;
+    discount: number;
     total: number;
-    checkout_kedaluwarsa_at: Date | null;
-    catatan: string | null;
+    checkout_expired_at: Date | null;
+    notes: string | null;
   },
   tx: PoolClient,
 ): Promise<OrderRow> {
   const res = await tx.query<OrderRow>(
-    `INSERT INTO orders (buyer_user_id, jalur, marketing_user_id, coupon_id, subtotal, diskon, total, checkout_kedaluwarsa_at, catatan)
+    `INSERT INTO orders (buyer_user_id, channel, marketing_user_id, coupon_id, subtotal, discount, total, checkout_expired_at, notes)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
     [
       data.buyer_user_id,
-      data.jalur,
+      data.channel,
       data.marketing_user_id,
       data.coupon_id,
       data.subtotal,
-      data.diskon,
+      data.discount,
       data.total,
-      data.checkout_kedaluwarsa_at,
-      data.catatan,
+      data.checkout_expired_at,
+      data.notes,
     ],
   );
   return res.rows[0];
@@ -225,28 +225,28 @@ export async function lockOrderForUpdate(id: string, tx: PoolClient): Promise<Or
 export async function insertOrderItem(
   data: {
     order_id: string;
-    item_tipe: OrderItemRow['item_tipe'];
+    item_type: OrderItemRow['item_type'];
     course_id: string | null;
     learning_path_id: string | null;
     bundle_group_id: string | null;
-    harga_satuan: number;
-    kuantitas: number;
+    price_unit: number;
+    quantity: number;
     subtotal: number;
     meta: unknown;
   },
   tx: PoolClient,
 ): Promise<OrderItemRow> {
   const res = await tx.query<OrderItemRow>(
-    `INSERT INTO order_items (order_id, item_tipe, course_id, learning_path_id, bundle_group_id, harga_satuan, kuantitas, subtotal, meta)
+    `INSERT INTO order_items (order_id, item_type, course_id, learning_path_id, bundle_group_id, price_unit, quantity, subtotal, meta)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
     [
       data.order_id,
-      data.item_tipe,
+      data.item_type,
       data.course_id,
       data.learning_path_id,
       data.bundle_group_id,
-      data.harga_satuan,
-      data.kuantitas,
+      data.price_unit,
+      data.quantity,
       data.subtotal,
       data.meta ? JSON.stringify(data.meta) : null,
     ],
@@ -268,14 +268,14 @@ export async function couponByKode(kode: string): Promise<CouponRow | null> {
 }
 
 export async function incrementCouponUsage(id: string, tx: PoolClient): Promise<void> {
-  await tx.query(`UPDATE coupons SET kuota_terpakai = kuota_terpakai + 1 WHERE id = $1`, [id]);
+  await tx.query(`UPDATE coupons SET used_quota = used_quota + 1 WHERE id = $1`, [id]);
 }
 
 export async function releaseCouponUsage(id: string, tx: PoolClient): Promise<void> {
-  await tx.query(`UPDATE coupons SET kuota_terpakai = GREATEST(kuota_terpakai - 1, 0) WHERE id = $1`, [id]);
+  await tx.query(`UPDATE coupons SET used_quota = GREATEST(used_quota - 1, 0) WHERE id = $1`, [id]);
 }
 
-// ── Catalog lookups (read-only, dari domain 02) ────────────
+// ── Catalog lookups (read-only, from domain 02) ────────────
 
 export async function courseById(id: string, tx?: PoolClient): Promise<CourseRow | null> {
   const res = await runner(tx).query<CourseRow>(
@@ -287,7 +287,7 @@ export async function courseById(id: string, tx?: PoolClient): Promise<CourseRow
 
 export async function learningPathById(id: string, tx?: PoolClient): Promise<LearningPathRow | null> {
   const res = await runner(tx).query<LearningPathRow>(
-    `SELECT id, harga_bundle FROM learning_paths WHERE id = $1 AND deleted_at IS NULL`,
+    `SELECT id, price_bundle FROM learning_paths WHERE id = $1 AND deleted_at IS NULL`,
     [id],
   );
   return res.rows[0] ?? null;
@@ -313,32 +313,32 @@ export async function instructorProfileById(id: string, tx?: PoolClient): Promis
 export async function insertPayment(
   data: {
     order_id: string;
-    jenis: PaymentRow['jenis'];
-    nominal: number;
-    metode: string;
+    type: PaymentRow['type'];
+    amount: number;
+    method: string;
     status: PaymentRow['status'];
-    bukti_media_id: string | null;
-    referensi_gateway: string | null;
+    proof_media_id: string | null;
+    gateway_reference: string | null;
     verified_by: string | null;
     verified_at: Date | null;
-    catatan_verifikasi: string | null;
+    notes_verifikasi: string | null;
   },
   tx: PoolClient,
 ): Promise<PaymentRow> {
   const res = await tx.query<PaymentRow>(
-    `INSERT INTO payments (order_id, jenis, nominal, metode, status, bukti_media_id, referensi_gateway, verified_by, verified_at, catatan_verifikasi)
+    `INSERT INTO payments (order_id, type, amount, method, status, proof_media_id, gateway_reference, verified_by, verified_at, notes_verifikasi)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
     [
       data.order_id,
-      data.jenis,
-      data.nominal,
-      data.metode,
+      data.type,
+      data.amount,
+      data.method,
       data.status,
-      data.bukti_media_id,
-      data.referensi_gateway,
+      data.proof_media_id,
+      data.gateway_reference,
       data.verified_by,
       data.verified_at,
-      data.catatan_verifikasi,
+      data.notes_verifikasi,
     ],
   );
   return res.rows[0];
@@ -350,12 +350,12 @@ export async function paymentById(id: string, tx?: PoolClient): Promise<PaymentR
 }
 
 /**
- * Cari payment lewat referensi milik gateway. Dipakai webhook yang hanya
+ * search payment lewat referensi milik gateway. Dipakai webhook yang hanya
  * mengembalikan id miliknya sendiri (mis. PayPal order id) alih-alih `payments.id`.
  */
 export async function paymentByGatewayRef(ref: string, tx?: PoolClient): Promise<PaymentRow | null> {
   const res = await runner(tx).query<PaymentRow>(
-    `SELECT * FROM payments WHERE referensi_gateway = $1 AND deleted_at IS NULL`,
+    `SELECT * FROM payments WHERE gateway_reference = $1 AND deleted_at IS NULL`,
     [ref],
   );
   return res.rows[0] ?? null;
@@ -363,18 +363,18 @@ export async function paymentByGatewayRef(ref: string, tx?: PoolClient): Promise
 
 export async function updatePaymentVerification(
   id: string,
-  data: { status: PaymentRow['status']; verified_by: string | null; verified_at: Date; catatan_verifikasi: string | null },
+  data: { status: PaymentRow['status']; verified_by: string | null; verified_at: Date; notes_verifikasi: string | null },
   tx: PoolClient,
 ): Promise<void> {
   await tx.query(
-    `UPDATE payments SET status = $2, verified_by = $3, verified_at = $4, catatan_verifikasi = $5 WHERE id = $1`,
-    [id, data.status, data.verified_by, data.verified_at, data.catatan_verifikasi],
+    `UPDATE payments SET status = $2, verified_by = $3, verified_at = $4, notes_verifikasi = $5 WHERE id = $1`,
+    [id, data.status, data.verified_by, data.verified_at, data.notes_verifikasi],
   );
 }
 
 export async function sumVerifiedPayments(orderId: string, tx?: PoolClient): Promise<number> {
   const res = await runner(tx).query<{ sum: string }>(
-    `SELECT COALESCE(SUM(nominal),0)::numeric AS sum FROM payments WHERE order_id = $1 AND status = 'terverifikasi' AND deleted_at IS NULL`,
+    `SELECT COALESCE(SUM(amount),0)::numeric AS sum FROM payments WHERE order_id = $1 AND status = 'verified' AND deleted_at IS NULL`,
     [orderId],
   );
   return Number(res.rows[0]?.sum ?? 0);
@@ -390,8 +390,8 @@ export async function paymentsByOrder(orderId: string, tx?: PoolClient): Promise
 
 // ── Invoices ────────────────────────────────────────────────
 
-export async function invoiceByOrder(orderId: string): Promise<{ id: string; nomor_invoice: string; diterbitkan_at: string } | null> {
-  return queryOne(`SELECT id, nomor_invoice, diterbitkan_at FROM invoices WHERE order_id = $1 AND deleted_at IS NULL`, [
+export async function invoiceByOrder(orderId: string): Promise<{ id: string; number_invoice: string; issued_at: string } | null> {
+  return queryOne(`SELECT id, number_invoice, issued_at FROM invoices WHERE order_id = $1 AND deleted_at IS NULL`, [
     orderId,
   ]);
 }
@@ -399,19 +399,19 @@ export async function invoiceByOrder(orderId: string): Promise<{ id: string; nom
 export async function countInvoicesInPeriod(year: number, month: number): Promise<number> {
   const row = await queryOne<{ count: string }>(
     `SELECT COUNT(*)::int AS count FROM invoices
-      WHERE EXTRACT(YEAR FROM diterbitkan_at) = $1 AND EXTRACT(MONTH FROM diterbitkan_at) = $2`,
+      WHERE EXTRACT(YEAR FROM issued_at) = $1 AND EXTRACT(MONTH FROM issued_at) = $2`,
     [year, month],
   );
   return Number(row?.count ?? 0);
 }
 
 export async function insertInvoice(
-  data: { order_id: string; nomor_invoice: string },
+  data: { order_id: string; number_invoice: string },
   tx?: PoolClient,
-): Promise<{ id: string; nomor_invoice: string; diterbitkan_at: string }> {
-  const res = await runner(tx).query<{ id: string; nomor_invoice: string; diterbitkan_at: string }>(
-    `INSERT INTO invoices (order_id, nomor_invoice) VALUES ($1,$2) RETURNING id, nomor_invoice, diterbitkan_at`,
-    [data.order_id, data.nomor_invoice],
+): Promise<{ id: string; number_invoice: string; issued_at: string }> {
+  const res = await runner(tx).query<{ id: string; number_invoice: string; issued_at: string }>(
+    `INSERT INTO invoices (order_id, number_invoice) VALUES ($1,$2) RETURNING id, number_invoice, issued_at`,
+    [data.order_id, data.number_invoice],
   );
   return res.rows[0];
 }
@@ -423,24 +423,24 @@ export async function insertRevenueShare(
     course_id: string;
     instructor_id: string;
     order_item_id: string;
-    persen_share: number;
-    nominal_share: number;
-    nominal_platform: number;
-    periode: string;
+    share_percentage: number;
+    amount_share: number;
+    amount_platform: number;
+    period: string;
   },
   tx: PoolClient,
 ): Promise<void> {
   await tx.query(
-    `INSERT INTO revenue_shares (course_id, instructor_id, order_item_id, persen_share, nominal_share, nominal_platform, periode, status)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,'dihitung')`,
+    `INSERT INTO revenue_shares (course_id, instructor_id, order_item_id, share_percentage, amount_share, amount_platform, period, status)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,'calculated')`,
     [
       data.course_id,
       data.instructor_id,
       data.order_item_id,
-      data.persen_share,
-      data.nominal_share,
-      data.nominal_platform,
-      data.periode,
+      data.share_percentage,
+      data.amount_share,
+      data.amount_platform,
+      data.period,
     ],
   );
 }
@@ -453,23 +453,23 @@ export async function softDeleteRevenueSharesByOrder(orderId: string, tx: PoolCl
   );
 }
 
-// ── Enrollments ( dibuat saat order lunas) ───────────────
+// ── Enrollments ( created saat order lunas) ───────────────
 
 export async function insertEnrollment(
-  data: { user_id: string; course_id: string; sumber: string; order_item_id: string },
+  data: { user_id: string; course_id: string; source: string; order_item_id: string },
   tx: PoolClient,
 ): Promise<void> {
   await tx.query(
-    `INSERT INTO enrollments (user_id, course_id, sumber, status, order_item_id)
-     VALUES ($1,$2,$3,'aktif',$4)
+    `INSERT INTO enrollments (user_id, course_id, source, status, order_item_id)
+     VALUES ($1,$2,$3,'active',$4)
      ON CONFLICT DO NOTHING`,
-    [data.user_id, data.course_id, data.sumber, data.order_item_id],
+    [data.user_id, data.course_id, data.source, data.order_item_id],
   );
 }
 
 export async function cancelEnrollmentsByOrder(orderId: string, tx: PoolClient): Promise<void> {
   await tx.query(
-    `UPDATE enrollments SET status = 'batal'
+    `UPDATE enrollments SET status = 'cancelled'
       WHERE deleted_at IS NULL AND order_item_id IN (SELECT id FROM order_items WHERE order_id = $1)`,
     [orderId],
   );
@@ -480,32 +480,32 @@ export async function cancelEnrollmentsByOrder(orderId: string, tx: PoolClient):
 export async function insertRefund(
   data: {
     order_id: string;
-    nominal: number;
-    alasan: string;
-    status: 'diajukan' | 'disetujui' | 'ditolak' | 'diproses' | 'selesai';
-    diajukan_oleh: string;
-    disetujui_oleh: string | null;
-    disetujui_at: Date | null;
-    diproses_at: Date | null;
-    metode_pengembalian: string | null;
-    catatan: string | null;
+    amount: number;
+    reason: string;
+    status: 'submitted' | 'approved' | 'rejected' | 'processing' | 'completed';
+    submitted_by: string;
+    approved_by: string | null;
+    approved_at: Date | null;
+    processed_at: Date | null;
+    method_pengembalian: string | null;
+    notes: string | null;
   },
   tx: PoolClient,
 ) {
   const res = await tx.query(
-    `INSERT INTO refunds (order_id, nominal, alasan, status, diajukan_oleh, disetujui_oleh, disetujui_at, diproses_at, metode_pengembalian, catatan)
+    `INSERT INTO refunds (order_id, amount, reason, status, submitted_by, approved_by, approved_at, processed_at, method_pengembalian, notes)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
     [
       data.order_id,
-      data.nominal,
-      data.alasan,
+      data.amount,
+      data.reason,
       data.status,
-      data.diajukan_oleh,
-      data.disetujui_oleh,
-      data.disetujui_at,
-      data.diproses_at,
-      data.metode_pengembalian,
-      data.catatan,
+      data.submitted_by,
+      data.approved_by,
+      data.approved_at,
+      data.processed_at,
+      data.method_pengembalian,
+      data.notes,
     ],
   );
   return res.rows[0];

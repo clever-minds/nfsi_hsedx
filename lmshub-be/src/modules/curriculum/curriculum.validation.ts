@@ -4,14 +4,14 @@ export const lessonTipeEnum = z.enum(['video', 'text', 'pdf', 'quiz', 'assignmen
 export const kontenTipeEnum = z.enum(['video', 'text', 'pdf', 'embed', 'scorm']);
 
 /**
- * Alamat isi pelajaran: URL http(s) penuh, ATAU path relatif terhadap akar
+ * Alamat content pelajaran: URL http(s) penuh, ATAU path relatif terhadap akar
  * situs seperti `/uploads/pelajaran-1.mp4`.
  *
  * Bentuk relatif harus diterima karena memang sudah dipakai di dua tempat lain:
- * pemutar melewatkannya ke `assetUrl()` yang menempelkan origin API, dan seeder
- * demo menuliskannya langsung ke basis data. Hanya validasi inilah yang dulu
- * menolaknya, sehingga berkas yang diunggah admin ke `uploads/` servernya
- * sendiri tidak bisa dipasang lewat antarmuka — padahal berkas yang sama persis
+ * pemutar melewatkannya to `assetUrl()` yang menempelkan origin API, dan seeder
+ * demo menuliskannya langsung to basis data. Hanya validasi inilah yang dulu
+ * menolaknya, sehingga berkas yang diunggah admin to `uploads/` servernya
+ * sendiri no bisa dipasang lewat antarmuka — padahal berkas yang sama persis
  * berfungsi bila dimasukkan lewat SQL.
  */
 const contentUrl = z
@@ -41,7 +41,7 @@ export const reorderSectionsSchema = z.object({
 // ── Lessons ──────────────────────────────────────────
 export const createLessonSchema = z.object({
   title: z.string().min(2).max(200),
-  tipe: lessonTipeEnum.default('video'),
+  type: lessonTipeEnum.default('video'),
   sort_order: z.number().int().min(0).optional(),
   duration_minutes: z.number().int().min(0).optional(),
   gratis_preview: z.boolean().optional(),
@@ -51,7 +51,7 @@ export const createLessonSchema = z.object({
 
 export const updateLessonSchema = z.object({
   title: z.string().min(2).max(200).optional(),
-  tipe: lessonTipeEnum.optional(),
+  type: lessonTipeEnum.optional(),
   sort_order: z.number().int().min(0).optional(),
   duration_minutes: z.number().int().min(0).nullable().optional(),
   gratis_preview: z.boolean().optional(),
@@ -74,7 +74,7 @@ export const reorderLessonsSchema = z.object({
 
 // ── Lesson Contents ──────────────────────────────────
 export const createContentSchema = z.object({
-  tipe: kontenTipeEnum,
+  type: kontenTipeEnum,
   sort_order: z.number().int().min(0).optional(),
   body: z.string().optional(),
   media_asset_id: z.string().uuid().optional(),
@@ -84,7 +84,7 @@ export const createContentSchema = z.object({
 });
 
 export const updateContentSchema = z.object({
-  tipe: kontenTipeEnum.optional(),
+  type: kontenTipeEnum.optional(),
   sort_order: z.number().int().min(0).optional(),
   body: z.string().nullable().optional(),
   media_asset_id: z.string().uuid().nullable().optional(),

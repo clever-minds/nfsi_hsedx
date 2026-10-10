@@ -10,7 +10,7 @@ import Icon from '@/components/ui/Icon.vue';
 
 interface AuthUser {
   id: string;
-  nama_lengkap: string;
+  name_lengkap: string;
   email: string | null;
 }
 interface OAuthConfig {
@@ -64,7 +64,7 @@ async function onGoogleCredential(idToken: string) {
 
 onMounted(async () => {
   try {
-    // Butuh Google Client ID diisi di Pengaturan (super admin, grup auth/google) agar tombol tampil.
+    // Butuh Google Client ID diisi di settings (super admin, group auth/google) agar tombol tampil.
     const cfg = await apiGet<OAuthConfig>('/auth/oauth-config');
     if (cfg.google_enabled && cfg.google_client_id && googleBtn.value) {
       await renderGoogleSignInButton(googleBtn.value, cfg.google_client_id, onGoogleCredential);
@@ -79,7 +79,7 @@ onMounted(async () => {
 <template>
   <AuthShell :title="t('auth.login.title')" :subtitle="t('auth.login.subtitle')">
     <form class="space-y-4" @submit.prevent="submit">
-      <!-- Google Sign-In (tampil bila diaktifkan di Pengaturan) -->
+      <!-- Google Sign-In (tampil bila diaktifkan di settings) -->
       <div v-show="googleEnabled" class="space-y-4">
         <div v-if="googleError" class="alert-error">{{ googleError }}</div>
         <div ref="googleBtn" class="flex justify-center"></div>

@@ -68,7 +68,7 @@ export async function renderCert(req: Request, res: Response) {
 }
 
 export async function verify(req: Request, res: Response) {
-  return ok(res, await service.verify(req.params.nomor));
+  return ok(res, await service.verify(req.params.number));
 }
 
 export async function listTemplates(req: Request, res: Response) {
@@ -119,7 +119,7 @@ export async function awardPoints(req: Request, res: Response) {
 
 export async function leaderboards(req: Request, res: Response) {
   const filters = {
-    periode_jenis: req.query['filter[periode_jenis]'] as string | undefined,
+    period_type: req.query['filter[period_type]'] as string | undefined,
     course_id: req.query['filter[course_id]'] as string | undefined,
   };
   return ok(res, await service.leaderboards(filters));

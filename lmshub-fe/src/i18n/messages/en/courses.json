@@ -56,7 +56,7 @@
   "status": {
     "draf": "Draft",
     "dalam_review": "In Review",
-    "terbit": "Published",
+    "publish": "Published",
     "diperbarui": "Updated",
     "diarsip": "Archived"
   },

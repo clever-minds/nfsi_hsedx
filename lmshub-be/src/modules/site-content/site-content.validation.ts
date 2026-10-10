@@ -4,15 +4,15 @@ import { SECTION_KEYS } from './site-content.defaults';
 /**
  * Setiap blok content divalidasi utuh, bukan per field.
  *
- * `PUT /site-content/:key` selalu menerima objek lengkap dan menggantikan isi
- * baris. Menyimpan sebagian akan membuat daftar (sosmed, kolom footer, sort_order
- * seksi) mustahil dipangkas — tidak ada cara menyatakan "hapus elemen ini"
+ * `PUT /site-content/:key` selalu menerima objek lengkap dan menggantikan content
+ * baris. Menyimpan sebagian akan membuat register (sosmed, kolom footer, sort_order
+ * seksi) mustahil dipangkas — no ada cara menyatakan "delete elemen ini"
  * lewat penggabungan.
  */
 
 const BAHASA = ['en', 'id', 'ar', 'hi'] as const;
 
-/** Teks per language; language yang kosong berarti jatuh ke text bawaan aplikasi. */
+/** Teks per language; language yang kosong berarti due to text bawaan aplikasi. */
 const localized = z
   .object(Object.fromEntries(BAHASA.map((l) => [l, z.string().max(2000).optional()])) as Record<
     (typeof BAHASA)[number],
@@ -45,7 +45,7 @@ export const sosialSchema = z.array(
   z.object({
     platform: z.enum(['facebook', 'instagram', 'twitter', 'youtube', 'linkedin', 'tiktok', 'whatsapp', 'telegram']),
     url: url,
-    aktif: z.boolean().default(true),
+    active: z.boolean().default(true),
   }),
 ).max(12);
 
@@ -53,21 +53,21 @@ export const menuSchema = z.array(
   z.object({
     label: localized,
     url: url,
-    aktif: z.boolean().default(true),
+    active: z.boolean().default(true),
   }),
 ).max(10);
 
 export const heroSchema = z.object({
-  aktif: z.boolean().default(true),
+  active: z.boolean().default(true),
   badge: localized,
-  judul_pre: localized,
-  judul_highlight: localized,
-  judul_post: localized,
+  title_pre: localized,
+  title_highlight: localized,
+  title_post: localized,
   subjudul: localized,
   gambar_url: z.string().trim().max(500).default(''),
   tampilkan_pencarian: z.boolean().default(true),
   tampilkan_rating: z.boolean().default(true),
-  rating_skor: z.string().trim().max(20).default(''),
+  rating_score: z.string().trim().max(20).default(''),
   rating_teks: localized,
   tampilkan_kartu_siswa: z.boolean().default(true),
   tampilkan_kartu_kursus: z.boolean().default(true),
@@ -77,14 +77,14 @@ export const sectionsSchema = z
   .array(
     z.object({
       key: z.enum(SECTION_KEYS),
-      aktif: z.boolean().default(true),
+      active: z.boolean().default(true),
       badge: localized,
       title: localized,
       subjudul: localized,
     }),
   )
-  // Urutan array = sort_order tampil. Duplikat ditolak supaya satu seksi tidak
-  // digambar dua kali dengan pengaturan yang berbeda.
+  // Urutan array = sort_order tampil. Duplikat ditolak supaya satu seksi no
+  // digambar dua kali dengan settings yang berbeda.
   .refine((rows) => new Set(rows.map((r) => r.key)).size === rows.length, {
     message: 'A section may not appear more than once',
   });
@@ -100,7 +100,7 @@ export const footerSchema = z.object({
     )
     .max(4),
   newsletter: z.object({
-    aktif: z.boolean().default(true),
+    active: z.boolean().default(true),
     title: localized,
     text: localized,
   }),
@@ -120,7 +120,7 @@ export const SITE_CONTENT_SCHEMA = {
 
 export const uploadSiteAssetSchema = z.object({
   /** Saat ini hanya gambar hero; enum agar penambahan aset baru eksplisit. */
-  jenis: z.enum(['hero']),
+  type: z.enum(['hero']),
   data_base64: z.string().min(1),
   mime_type: z.enum(['image/jpeg', 'image/png', 'image/webp']),
 });

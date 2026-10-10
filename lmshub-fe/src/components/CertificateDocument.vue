@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { fmtTanggalPanjang } from '@/lib/format';
 import { useAppConfigStore } from '@/stores/appConfig';
@@ -10,13 +11,24 @@ export interface CertData {
   certificate_number?: string | null;
   verification_code?: string | null;
   qr_code_url?: string | null;
-  tanggal_terbit?: string | null;
+  publish_date?: string | null;
   verify_url?: string | null;
+  content?: string | null;
 }
-defineProps<{ cert: CertData }>();
+const props = defineProps<{ cert: CertData }>();
 
 const { t } = useI18n();
 const appConfig = useAppConfigStore();
+
+const parsedContent = computed(() => {
+  if (!props.cert.content) return '';
+  return props.cert.content
+    .replace(/\{\{?name\}\}?/g, props.cert.name || '')
+    .replace(/\{\{?title\}\}?/g, props.cert.course || '')
+    .replace(/\{\{?duration\}\}?/g, '12 hours')
+    .replace(/\{\{?date\}\}?/g, props.cert.publish_date ? fmtTanggalPanjang(props.cert.publish_date) : 'January 21, 2026')
+    .replace(/\{\{?number\}\}?/g, props.cert.certificate_number || '—');
+});
 </script>
 
 <template>
@@ -25,37 +37,62 @@ const appConfig = useAppConfigStore();
       <div class="cert-inner">
         <!-- Body Content -->
         <div class="cert-body">
-          <p class="lead">This is to inform that</p>
-          <div class="name">Mr. / Mrs. / Ms. {{ cert.name }}</div>
-          
-          <p class="lead mt-4">has successfully completed the certification course titled</p>
-          <div class="course">{{ cert.course }}</div>
-          
-          <p class="desc mt-4">
-            The participant has fulfilled all the requirements and standards of the course and is hereby
-            awarded this certificate as a mark of achievement.
-          </p>
-
-          <div class="details">
-            <div><strong>Course Duration:</strong> 12 hours</div>
-            <div><strong>Date of Completion:</strong> {{ cert.tanggal_terbit ? fmtTanggalPanjang(cert.tanggal_terbit) : 'January 21, 2026' }}</div>
-          </div>
-
-          <p class="desc">
-            This certificate is issued in recognition of the successful completion of the above-mentioned
-            course.
-          </p>
-        </div>
-
-        <!-- Certificate ID placed at the bottom center/left where the background says VALID CERTIFICATE ID -->
-        <div class="cert-id">
-          {{ cert.certificate_number || '—' }}
+          <template v-if="cert.content">
+            <div v-html="parsedContent" class="prose max-w-none text-[#333]"></div>
+          </template>
+          <template v-else>
+            <p class="lead">This is to inform that</p>
+            <div class="name">Mr. / Mrs. / Ms. {{ cert.name }}</div>
+            
+            <p class="lead mt-4">has successfully completed the certification course titled</p>
+            <div class="course">{{ cert.course }}</div>
+            
+            <p class="desc mt-4">
+              The participant has fulfilled all the requirements and standards of the course and is hereby
+              awarded this certificate as a mark of achievement.
+            </p>
+  
+            <div class="details">
+              <div><strong>Course Duration:</strong> 12 hours</div>
+              <div><strong>Date of Completion:</strong> {{ cert.publish_date ? fmtTanggalPanjang(cert.publish_date) : 'January 21, 2026' }}</div>
+            </div>
+  
+            <p class="desc">
+              This certificate is issued in recognition of the successful completion of the above-mentioned
+              course.
+            </p>
+          </template>
         </div>
 
         <!-- QR Code -->
         <div v-if="cert.qr_code_url || cert.verify_url" class="cert-qr">
           <img v-if="cert.qr_code_url" :src="cert.qr_code_url" alt="QR Code" />
           <vue-qrcode v-else-if="cert.verify_url" :value="cert.verify_url" :options="{ width: 70 }" />
+        </div>
+
+        <!-- Footer Overlay -->
+        <div class="cert-footer-overlay">
+          <!-- Left: Date -->
+          <div class="cert-footer-col col-left">
+            <div class="cert-footer-label">VERIFIED CERTIFICATE</div>
+            <div class="cert-footer-value">Issued {{ cert.publish_date ? fmtTanggalPanjang(cert.publish_date) : 'Jan 2, 2026' }}</div>
+          </div>
+
+          <!-- Center: ID -->
+          <div class="cert-footer-col col-center">
+            <div class="cert-footer-label">VALID CERTIFICATE ID</div>
+            <div class="cert-footer-value id-value">{{ cert.certificate_number || '—' }}</div>
+          </div>
+
+          <!-- Right: Signature -->
+          <div class="cert-footer-col col-right">
+            <div class="cert-signature-placeholder"></div>
+            <div class="cert-footer-value">{{ cert.instructor || 'Sir J.P Patel' }}</div>
+            <div class="cert-footer-desc">
+              Founder & Professor of<br />
+              Nationa Fire & Safety Institute, Vadodara
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -75,7 +112,7 @@ const appConfig = useAppConfigStore();
   width: 100%;
   max-width: 1000px;
   aspect-ratio: 1.414 / 1;
-  background: url('/img/certificate-bg.jpg') center/cover no-repeat;
+  background: url('/img/design-4.jpg') center/cover no-repeat;
   background-color: #fdfdfd;
   box-shadow: 0 10px 40px rgba(0,0,0,0.08);
   font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
@@ -130,24 +167,80 @@ const appConfig = useAppConfigStore();
 }
 
 /* ID at bottom */
-/* ID at bottom */
-.cert-id {
+/* Footer Overlay covers the bottom part of the certificate */
+.cert-footer-overlay {
   position: absolute;
-  bottom: 53px;
-  left: 415px; /* Aligned to the start of the dummy blue text */
-  width: 260px; /* Wide enough to cover ALL of the dummy text */
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 150px;
+}
+
+.cert-footer-col {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+}
+
+.col-left {
+  left: 220px; /* Shifted to the right of the logo */
+  bottom: 35px; /* Aligned vertically with the bottom of the logo */
+  align-items: flex-start;
+  text-align: left;
+}
+
+.col-center {
+  left: 450px; /* Shifted further right to balance */
+  bottom: 35px; /* Same horizontal baseline */
+  align-items: flex-start;
+  text-align: left;
+}
+
+.col-right {
+  right: 60px;
+  bottom: 35px; /* Same horizontal baseline */
+  align-items: center;
+  text-align: center; /* Center-aligned as per the reference image */
+}
+
+.cert-footer-label {
   font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.cert-footer-value {
+  font-size: 13px;
   font-weight: 700;
-  color: #3b82f6; /* matching the blue color */
-  background-color: #fdfdfd; /* covers the dummy text from background */
-  padding: 2px 0;
+  color: #111;
+}
+
+.id-value {
+  color: #3b82f6; /* Blue color for ID */
+}
+
+.cert-signature-img,
+.cert-signature-placeholder {
+  height: 60px;
+  object-fit: contain;
+  margin-bottom: 5px;
+}
+
+.cert-footer-desc {
+  font-size: 12px;
+  font-weight: 500;
+  color: #111;
+  line-height: 1.4;
+  margin-top: 2px;
 }
 
 /* QR Code */
 .cert-qr {
   position: absolute;
-  bottom: 110px; /* Above the signature */
-  right: 60px; /* Aligned to the right */
+  bottom: 160px; /* Above the new footer overlay */
+  right: 60px;
 }
 .cert-qr img,
 .cert-qr canvas {

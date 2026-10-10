@@ -12,13 +12,13 @@ export interface CurrencyRow {
   sort_order: number;
 }
 
-const COLUMNS = 'id, kode, name, symbol, rate, desimal, is_active, sort_order';
+const COLUMNS = 'id, code AS kode, name, symbol, rate, decimals AS desimal, is_active, sort_order';
 
 export async function list(activeOnly = false): Promise<CurrencyRow[]> {
   return query<CurrencyRow>(
     `SELECT ${COLUMNS} FROM currencies
       WHERE deleted_at IS NULL ${activeOnly ? 'AND is_active' : ''}
-      ORDER BY sort_order, kode`,
+      ORDER BY sort_order, code`,
   );
 }
 
@@ -28,14 +28,14 @@ export async function byId(id: string): Promise<CurrencyRow | null> {
 
 export async function byKode(kode: string): Promise<CurrencyRow | null> {
   return queryOne<CurrencyRow>(
-    `SELECT ${COLUMNS} FROM currencies WHERE upper(kode) = upper($1) AND deleted_at IS NULL`,
+    `SELECT ${COLUMNS} FROM currencies WHERE upper(code) = upper($1) AND deleted_at IS NULL`,
     [kode],
   );
 }
 
 export async function insert(input: CreateCurrencyInput): Promise<CurrencyRow> {
   return (await queryOne<CurrencyRow>(
-    `INSERT INTO currencies (kode, name, symbol, rate, desimal, is_active, sort_order)
+    `INSERT INTO currencies (code, name, symbol, rate, decimals, is_active, sort_order)
      VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING ${COLUMNS}`,
     [input.kode, input.name, input.symbol, input.rate, input.desimal, input.is_active, input.sort_order],
   ))!;
@@ -49,7 +49,7 @@ export async function update(id: string, input: UpdateCurrencyInput): Promise<Cu
        name = COALESCE($2, name),
        symbol = COALESCE($3, symbol),
        rate = COALESCE($4, rate),
-       desimal = COALESCE($5, desimal),
+       decimals = COALESCE($5, decimals),
        is_active = COALESCE($6, is_active),
        sort_order = COALESCE($7, sort_order)
      WHERE id = $1 AND deleted_at IS NULL

@@ -21,7 +21,7 @@ let cache: Map<string, string> | null = null;
 
 export async function loadPaymentSettings(): Promise<void> {
   const rows = await query<{ key: string; value: string | null }>(
-    `SELECT key, value FROM settings WHERE group LIKE 'payment%' AND deleted_at IS NULL`,
+    `SELECT key, value FROM settings WHERE "group" LIKE 'payment%' AND deleted_at IS NULL`,
   );
   cache = new Map(rows.map((r) => [r.key, (r.value ?? '').trim()]));
 }

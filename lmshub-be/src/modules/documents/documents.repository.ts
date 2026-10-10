@@ -134,7 +134,7 @@ export interface SettingRow {
 }
 
 export async function listSettings(): Promise<SettingRow[]> {
-  return query<SettingRow>(`SELECT * FROM settings WHERE deleted_at IS NULL ORDER BY group, key`);
+  return query<SettingRow>(`SELECT * FROM settings WHERE deleted_at IS NULL ORDER BY "group", key`);
 }
 
 /** Setting bertanda `is_public` — read area pra-login (mata uang, kontak, name lembaga). */

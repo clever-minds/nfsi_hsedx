@@ -38,7 +38,7 @@ interface Lesson {
  * dan Live Class, lalu ditautkan to pelajaran lewat type pelajarannya.
  */
 type ContentType = 'video' | 'text' | 'pdf' | 'scorm' | 'embed';
-const CONTENT_TYPES: ContentType[] = ['video', 'text', 'pdf', 'scorm', 'embed'];
+const CONTENT_TYPES: ContentType[] = ['video', 'text', 'pdf'];
 /** Tipe yang isinya berupa berkas/tautan, bukan text atau package SCORM. */
 const LINK_TYPES: ContentType[] = ['video', 'pdf'];
 
@@ -535,7 +535,6 @@ onMounted(async () => {
           <li v-for="(l, li) in lessonsBySection[s.id] || []" :key="l.id" class="rounded-lg bg-slate-50">
           <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
             <div class="flex items-center gap-2">
-              <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-medium text-brand-800">{{ lessonTypeLabel(l.type) }}</span>
               <span class="text-slate-700">{{ l.title }}</span>
               <span v-if="l.gratis_preview" class="text-[10px] font-medium text-emerald-600">
                 {{ t('content.builder.freePreview') }}

@@ -5,6 +5,8 @@ import { requirePermission } from '../../core/rbac/requirePermission';
 import { validate } from '../../core/validation/validate';
 import { checkoutSchema, manualOrderSchema, paySchema, refundSchema, verifyPaymentSchema } from './orders.validation';
 import * as ctrl from './orders.controller';
+import * as service from './orders.service';
+import { logger } from '../../core/logger/logger';
 
 export const ordersRouter = Router();
 
@@ -17,9 +19,21 @@ ordersRouter.post('/webhook/:provider', asyncHandler(ctrl.gatewayWebhook));
 // Proxy untuk gateway yang me-redirect pembeli dengan method HTTP POST
 // (seperti Easebuzz, PayU). Frontend SPA (Vite/Nginx) akan menolak POST to 
 // berkas statis (404/405). Rute ini mencegat POST tersebut dan mengubahnya 
-// menjadi GET biasa dengan 302 Redirect.
-ordersRouter.post('/redirect', (req, res) => {
+// menjadi GET biasa dengan 302 Redirect. Serta memproses status pembayaran 
+// agar langsung lunas tanpa menunggu webhook latar belakang.
+ordersRouter.post('/redirect', async (req, res) => {
   const target = req.query.url as string;
+  try {
+    if (req.body && (req.body.easepayid || req.body.txnid)) {
+      await service.handleGatewayWebhook('easebuzz', {
+        headers: req.headers,
+        rawBody: req.rawBody ?? null,
+        body: req.body,
+      });
+    }
+  } catch (err) {
+    logger.warn({ err }, 'Failed to auto-settle payment on redirect');
+  }
   if (!target || typeof target !== 'string') return res.redirect('/');
   res.redirect(302, target);
 });

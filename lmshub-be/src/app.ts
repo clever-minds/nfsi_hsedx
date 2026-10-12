@@ -50,7 +50,14 @@ export function createApp() {
       },
     }),
   );
-  app.use(express.urlencoded({ extended: true }));
+  app.use(
+    express.urlencoded({
+      extended: true,
+      verify: (req, _res, buf) => {
+        if (buf.length) (req as express.Request).rawBody = Buffer.from(buf);
+      },
+    }),
+  );
   app.use(cookieParser());
   app.use(pinoHttp({ logger }));
 

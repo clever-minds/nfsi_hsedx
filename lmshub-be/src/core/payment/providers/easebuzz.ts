@@ -89,7 +89,9 @@ export const easebuzzProvider: PaymentProvider = {
     // Express parses form data into req.body if urlencoded middleware is used
     // Otherwise we need to parse req.rawBody
     let data: Record<string, string> = {};
-    if (req.rawBody) {
+    if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+      data = req.body as Record<string, string>;
+    } else if (req.rawBody) {
       const parsed = new URLSearchParams(req.rawBody.toString('utf8'));
       for (const [k, v] of parsed.entries()) {
         data[k] = v;

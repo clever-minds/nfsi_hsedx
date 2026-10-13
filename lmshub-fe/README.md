@@ -1,4 +1,4 @@
-# lmshub-fe — LMS Hub Frontend
+# lmshub-fe — Hsedx Frontend
 
 One Vue 3 + TypeScript application serving both faces of the platform: the public
 area (landing, catalogue, course detail, registration, checkout) and the locked

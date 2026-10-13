@@ -1,4 +1,4 @@
-# LMS Hub
+# Hsedx
 
 A learning management and course-selling platform: a Node.js REST API with a
 PostgreSQL database, and a Vue 3 web application that serves both the public
@@ -59,7 +59,7 @@ any file or restarting the server.
 ## Mobile app
 
 A Flutter application for Android and iOS is available as a companion item on
-CodeCanyon, **LMS Hub Mobile | Flutter LMS App for Students & Instructors**. It
+CodeCanyon, **Hsedx Mobile | Flutter LMS App for Students & Instructors**. It
 is a client for this backend and is not required to run this platform.
 
 ## Licence and support

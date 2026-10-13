@@ -1,4 +1,4 @@
-Demo media bundled with LMS Hub
+Demo media bundled with Hsedx
 ================================
 
 flower.mp4, friday.mp4

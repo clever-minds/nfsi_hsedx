@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { apiGetFull, assetUrl } from '@/lib/api';
 import { fmtAngka } from '@/lib/format';
 import { useSiteContentStore } from '@/stores/siteContent';
+import { useAppConfigStore } from '@/stores/appConfig';
 import { pickText } from '@/lib/site-content';
 import Icon from '@/components/ui/Icon.vue';
 import CourseCard from '@/components/ui/CourseCard.vue';
@@ -39,6 +40,7 @@ interface Instructor {
 const router = useRouter();
 const { t } = useI18n();
 const site = useSiteContentStore();
+const appConfig = useAppConfigStore();
 
 /**
  * Teks & susunan halaman ini managed lewat menu Website di admin.
@@ -270,7 +272,7 @@ onMounted(async () => {
         <div class="relative overflow-hidden rounded-3xl bg-slate-900 px-6 py-12 text-white">
           <Icon name="zap" :size="28" class="absolute start-8 top-8 text-accent-400" />
           <div class="text-center">
-            <h2 class="text-2xl font-extrabold tracking-tight sm:text-3xl">{{ judulSeksi('stats', t('catalog.landing.stats.title')) }}</h2>
+            <h2 class="text-2xl font-extrabold tracking-tight sm:text-3xl">{{ judulSeksi('stats', t('catalog.landing.stats.title', { name: appConfig.appName })) }}</h2>
             <p class="mt-2 text-sm text-slate-400">{{ subjudulSeksi('stats', t('catalog.landing.stats.subtitle')) }}</p>
           </div>
           <div class="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-8 text-center md:grid-cols-3">

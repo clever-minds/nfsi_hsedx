@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
+import { useAppConfigStore } from '@/stores/appConfig';
 import { apiGetFull, apiPost, errorMessage } from '@/lib/api';
 import { fmtAngka, fmtTanggal } from '@/lib/format';
 import PageHeader from '@/components/ui/PageHeader.vue';
@@ -25,6 +26,7 @@ interface LiveSession {
 }
 
 const auth = useAuthStore();
+const appConfig = useAppConfigStore();
 const { t } = useI18n();
 const sessions = ref<LiveSession[]>([]);
 const loading = ref(true);
@@ -243,7 +245,7 @@ onMounted(load);
         <div class="sm:col-span-2">
           <label class="label">{{ t('live.form.link') }}</label>
           <input v-model="form.url_join" class="input" placeholder="https://zoom.us/j/…" />
-          <p class="mt-1 text-xs text-slate-400">{{ t('live.form.linkHint') }}</p>
+          <p class="mt-1 text-xs text-slate-400">{{ t('live.form.linkHint', { name: appConfig.appName }) }}</p>
         </div>
         <div>
           <label class="label">{{ t('live.form.date') }}</label>

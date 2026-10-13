@@ -31,7 +31,7 @@
     "email": "ईमेल",
     "emailPlaceholder": "name{'@'}email.com",
     "whatsapp": "व्हाट्सऐप नंबर",
-    "whatsappPlaceholder": "08xxxxxxxxxx",
+    "whatsappPlaceholder": "9876543210",
     "initialPassword": "प्रारंभिक पासवर्ड",
     "passwordPlaceholder": "कम से कम 8 अक्षर",
     "status": "स्थिति",

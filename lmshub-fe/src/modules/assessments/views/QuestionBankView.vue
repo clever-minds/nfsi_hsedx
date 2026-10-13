@@ -36,7 +36,14 @@ interface Bank {
   course_title?: string | null;
 }
 
-const TIPE: Tipe[] = ['single_choice', 'multiple_choice', 'true_false', 'short_answer', 'essay'];
+const TIPE: Tipe[] = ['single_choice', 'multiple_choice', 'true_false'];
+
+const availableTypes = computed(() => {
+  if (editingId.value && !TIPE.includes(form.type)) {
+    return [...TIPE, form.type];
+  }
+  return TIPE;
+});
 
 const route = useRoute();
 const { t } = useI18n();
@@ -207,7 +214,7 @@ onMounted(load);
           <label class="label" for="q-type">Question Type</label>
           <!-- Tipe soal no bisa diubah setelah created (backend no menerimanya). -->
           <select id="q-type" v-model="form.type" class="input" :disabled="!!editingId" @change="onTipe">
-            <option v-for="x in TIPE" :key="x" :value="x">{{ t(`assessments.bank.type.${x}`) }}</option>
+            <option v-for="x in availableTypes" :key="x" :value="x">{{ t(`assessments.bank.type.${x}`) }}</option>
           </select>
         </div>
         <div>

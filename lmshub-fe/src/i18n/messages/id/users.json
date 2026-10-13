@@ -31,7 +31,7 @@
     "email": "Email",
     "emailPlaceholder": "name{'@'}email.com",
     "whatsapp": "No. WA",
-    "whatsappPlaceholder": "08xxxxxxxxxx",
+    "whatsappPlaceholder": "9876543210",
     "initialPassword": "Kata Sandi Awal",
     "passwordPlaceholder": "Minimal 8 karakter",
     "status": "Status",

@@ -18,7 +18,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       ('brand.app_name', 'brand', 'name Aplikasi', 'string',
        COALESCE(
          NULLIF((SELECT value FROM settings WHERE key = 'institution.name' AND deleted_at IS NULL), ''),
-         'LMS Hub'
+         'Hsedx'
        ),
        NULL, true, 'name produk yang dilihat user'),
       ('brand.footer', 'brand', 'Baris Footer', 'string', '', NULL, true,
@@ -37,7 +37,7 @@ export async function down(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`
     INSERT INTO settings (key, "group", label, value_type, value, unit, is_public, description)
     SELECT 'institution.name', 'kontak', 'name Lembaga', 'string',
-           COALESCE((SELECT value FROM settings WHERE key = 'brand.app_name' AND deleted_at IS NULL), 'LMS Hub'),
+           COALESCE((SELECT value FROM settings WHERE key = 'brand.app_name' AND deleted_at IS NULL), 'Hsedx'),
            NULL, true, 'name brand'
     ON CONFLICT (key) WHERE deleted_at IS NULL DO NOTHING;
   `);

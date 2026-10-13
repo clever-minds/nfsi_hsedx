@@ -21,9 +21,31 @@ export async function roleIdByKode(kode: string): Promise<string | null> {
 }
 
 export async function findByIdentifier(identifier: string): Promise<UserRow | null> {
+  const trimmed = identifier.trim();
+  const digits = trimmed.replace(/\D/g, '');
+  const candidates = [trimmed, trimmed.toLowerCase()];
+
+  if (digits.length === 10) {
+    candidates.push(digits);
+    candidates.push(`+91${digits}`);
+    candidates.push(`91${digits}`);
+    candidates.push(`0${digits}`);
+  } else if (digits.length === 12 && digits.startsWith('91')) {
+    const d10 = digits.slice(2);
+    candidates.push(d10);
+    candidates.push(`+91${d10}`);
+    candidates.push(`91${d10}`);
+  } else if (digits.length === 11 && digits.startsWith('0')) {
+    const d10 = digits.slice(1);
+    candidates.push(d10);
+    candidates.push(`+91${d10}`);
+  }
+
+  const uniqueCandidates = Array.from(new Set(candidates));
+
   return queryOne<UserRow>(
-    `SELECT * FROM users WHERE deleted_at IS NULL AND (email = $1 OR number_wa = $1) LIMIT 1`,
-    [identifier],
+    `SELECT * FROM users WHERE deleted_at IS NULL AND (email = ANY($1) OR number_wa = ANY($1)) LIMIT 1`,
+    [uniqueCandidates],
   );
 }
 

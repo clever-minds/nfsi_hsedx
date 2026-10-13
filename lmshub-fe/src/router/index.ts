@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useAppConfigStore } from '@/stores/appConfig';
 import { translateLegacyPath } from './legacyPaths';
 
 // Rute pra-login (publik) + dashboard. Modul tambahan didaftarkan lewat moduleRoutes.
@@ -107,4 +108,11 @@ router.beforeEach(async (to) => {
     return { name: 'dashboard' };
   }
   return true;
+});
+
+router.afterEach((to) => {
+  if (to.name !== 'static-page') {
+    const appConfig = useAppConfigStore();
+    appConfig.applyToDocument();
+  }
 });

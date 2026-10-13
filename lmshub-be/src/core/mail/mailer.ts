@@ -26,7 +26,11 @@ async function resolveSmtp(): Promise<SmtpConfig> {
   const secure = await getSettingBool('smtp.secure', port === 465);
   const user = await getSetting('smtp.user', env.SMTP_USER ?? '');
   const pass = await getSetting('smtp.pass', env.SMTP_PASS ?? '');
-  const from = await getSetting('smtp.from', env.EMAIL_FROM);
+  const appName = (await getSetting('brand.app_name', '')).trim() || 'Hsedx';
+  let from = await getSetting('smtp.from', env.EMAIL_FROM);
+  if (from.includes('Hsedx')) {
+    from = from.replace(/Hsedx/g, appName);
+  }
   return { host, port, secure, user, pass, from };
 }
 
@@ -81,7 +85,7 @@ const escapeHtml = (s: string) =>
 /** Account verification email, linking to the frontend's verify page. Signed with the site's own name. */
 export async function sendVerificationEmail(to: string, name: string, token: string): Promise<{ sent: boolean }> {
   const link = `${env.PUBLIC_WEB_URL.replace(/\/$/, '')}/verify-email?token=${encodeURIComponent(token)}`;
-  const site = escapeHtml((await getSetting('brand.app_name', '')).trim() || 'LMS Hub');
+  const site = escapeHtml((await getSetting('brand.app_name', '')).trim() || 'Hsedx');
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto">
       <h2 style="color:#164031">Verify your email — ${site}</h2>

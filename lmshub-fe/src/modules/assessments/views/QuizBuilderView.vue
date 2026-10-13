@@ -119,6 +119,71 @@ function toggleQuestion(id: string) {
   else selectedQuestionIds.value.push(id);
 }
 
+const questionSearch = ref('');
+
+const filteredQuestions = computed(() => {
+  const q = questionSearch.value.trim().toLowerCase();
+  if (!q) return questions.value;
+  return questions.value.filter(
+    (item) => item.question_text.toLowerCase().includes(q) || item.type.toLowerCase().includes(q),
+  );
+});
+
+const isAllSelected = computed(() => {
+  if (!questions.value.length) return false;
+  return questions.value.every((q) => selectedQuestionIds.value.includes(q.id));
+});
+
+const isPartiallySelected = computed(() => {
+  if (!questions.value.length) return false;
+  const some = questions.value.some((q) => selectedQuestionIds.value.includes(q.id));
+  return some && !isAllSelected.value;
+});
+
+const selectedInBankCount = computed(() => {
+  const currentBankIds = new Set(questions.value.map((q) => q.id));
+  return selectedQuestionIds.value.filter((id) => currentBankIds.has(id)).length;
+});
+
+function toggleSelectAll() {
+  const target = filteredQuestions.value.length ? filteredQuestions.value : questions.value;
+  if (!target.length) return;
+
+  const allTargetSelected = target.every((q) => selectedQuestionIds.value.includes(q.id));
+
+  if (allTargetSelected) {
+    const targetIds = new Set(target.map((q) => q.id));
+    selectedQuestionIds.value = selectedQuestionIds.value.filter((id) => !targetIds.has(id));
+  } else {
+    const current = new Set(selectedQuestionIds.value);
+    for (const q of target) {
+      if (!current.has(q.id)) {
+        selectedQuestionIds.value.push(q.id);
+        current.add(q.id);
+      }
+    }
+  }
+}
+
+function selectAllQuestions() {
+  const current = new Set(selectedQuestionIds.value);
+  for (const q of questions.value) {
+    if (!current.has(q.id)) {
+      selectedQuestionIds.value.push(q.id);
+      current.add(q.id);
+    }
+  }
+}
+
+function clearAllQuestionsInBank() {
+  const bankIds = new Set(questions.value.map((q) => q.id));
+  selectedQuestionIds.value = selectedQuestionIds.value.filter((id) => !bankIds.has(id));
+}
+
+function clearAllSelected() {
+  selectedQuestionIds.value = [];
+}
+
 async function loadQuiz() {
   if (!isEdit.value) return;
   loading.value = true;
@@ -287,22 +352,97 @@ onMounted(() => {
           </RouterLink>
         </div>
         <div v-if="questionsLoading" class="mt-3 text-sm text-slate-400">{{ t('assessments.builder.loadingQuestions') }}</div>
-        <ul v-else-if="questions.length" class="mt-3 max-h-80 space-y-1 overflow-y-auto">
-          <li v-for="q in questions" :key="q.id" class="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-slate-50">
-            <input :id="`q-${q.id}`" type="checkbox" :checked="selectedQuestionIds.includes(q.id)" @change="toggleQuestion(q.id)" />
-            <label :for="`q-${q.id}`" class="flex-1 cursor-pointster text-sm text-slate-700">{{ q.question_text }}</label>
-            <span class="text-xs text-slate-400">{{ t(`assessments.bank.type.${q.type}`) }} · {{ fmtAngka(Number(q.points)) }}</span>
-          </li>
-        </ul>
+        <div v-else-if="questions.length" class="mt-3 space-y-2">
+          <!-- Toolbar Select All & Search -->
+          <div class="flex flex-wrap items-center justify-between gap-2.5 rounded-lg border border-slate-200 bg-slate-50/90 p-2.5">
+            <label class="flex cursor-pointer items-center gap-2 select-none">
+              <input
+                type="checkbox"
+                class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                :checked="isAllSelected"
+                :indeterminate.prop="isPartiallySelected"
+                @change="toggleSelectAll"
+              />
+              <span class="text-sm font-semibold text-slate-800">
+                {{ isAllSelected ? t('assessments.builder.deselectAll') : t('assessments.builder.selectAll', { n: fmtAngka(questions.length) }) }}
+              </span>
+              <span class="rounded bg-white px-2 py-0.5 text-xs font-medium text-slate-600 border border-slate-200">
+                {{ t('assessments.builder.selectedCount', { selected: fmtAngka(selectedInBankCount), total: fmtAngka(questions.length) }) }}
+              </span>
+            </label>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <input
+                v-model="questionSearch"
+                type="text"
+                class="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-800 outline-none placeholder:text-slate-400 focus:border-brand-400 focus:ring-1 focus:ring-brand-400"
+                :placeholder="t('assessments.builder.searchPlaceholder')"
+              />
+              <button
+                type="button"
+                class="btn-outline btn-xs cursor-pointer"
+                :disabled="selectedInBankCount === questions.length"
+                @click="selectAllQuestions"
+              >
+                {{ t('assessments.builder.btnSelectAll') }}
+              </button>
+              <button
+                type="button"
+                class="btn-outline btn-xs text-slate-500 hover:text-rose-600 cursor-pointer"
+                :disabled="selectedInBankCount === 0"
+                @click="clearAllQuestionsInBank"
+              >
+                {{ t('assessments.builder.btnClearAll') }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Questions List -->
+          <ul v-if="filteredQuestions.length" class="max-h-96 space-y-1 overflow-y-auto rounded-lg border border-slate-100 p-1">
+            <li
+              v-for="q in filteredQuestions"
+              :key="q.id"
+              class="flex items-center gap-2 rounded-lg px-2.5 py-2 transition hover:bg-slate-50"
+              :class="{ 'bg-brand-50/50': selectedQuestionIds.includes(q.id) }"
+            >
+              <input
+                :id="`q-${q.id}`"
+                type="checkbox"
+                class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                :checked="selectedQuestionIds.includes(q.id)"
+                @change="toggleQuestion(q.id)"
+              />
+              <label :for="`q-${q.id}`" class="flex-1 cursor-pointer text-sm text-slate-700 select-none">
+                {{ q.question_text }}
+              </label>
+              <span class="shrink-0 text-xs text-slate-400">
+                {{ t(`assessments.bank.type.${q.type}`) }} · {{ fmtAngka(Number(q.points)) }}
+              </span>
+            </li>
+          </ul>
+          <p v-else class="py-4 text-center text-xs text-slate-400">
+            {{ t('assessments.builder.noMatchingQuestions') }}
+          </p>
+        </div>
         <p v-else-if="selectedBankId" class="mt-3 text-sm text-slate-400">{{ t('assessments.builder.bankEmpty') }}</p>
         <p v-else class="mt-3 text-sm text-slate-400">{{ t('assessments.builder.pickBankFirst') }}</p>
       </div>
 
       <aside class="card h-fit p-4">
         <h3 class="card-title">{{ t('assessments.builder.summary') }}</h3>
-        <p class="mt-2 text-sm text-slate-500">
-          {{ t('assessments.builder.selectedQuestions', { n: fmtAngka(selectedQuestionIds.length) }) }}
-        </p>
+        <div class="mt-2 flex items-center justify-between">
+          <p class="text-sm text-slate-500">
+            {{ t('assessments.builder.selectedQuestions', { n: fmtAngka(selectedQuestionIds.length) }) }}
+          </p>
+          <button
+            v-if="selectedQuestionIds.length > 0"
+            type="button"
+            class="text-xs text-rose-500 hover:text-rose-700 hover:underline cursor-pointer"
+            @click="clearAllSelected"
+          >
+            {{ t('assessments.builder.clearAllSelected') }}
+          </button>
+        </div>
         <p class="mt-1 text-sm text-slate-500">
           {{
             form.passingScore === null || (form.passingScore as unknown) === ''

@@ -52,7 +52,7 @@
       "seeAll": "See All Courses"
     },
     "stats": {
-      "title": "Reach your goals with LMS Hub",
+      "title": "Reach your goals with {name}",
       "subtitle": "96% of our students report a skill improvement within the first six months.",
       "students": "Enrolled Students",
       "courses": "Courses on the Platform",
@@ -204,7 +204,7 @@
     "notFound": "✕ Certificate Not Found",
     "number": "Number: {value}",
     "print": "Print / Download",
-    "invalidBody": "This certificate number is not registered or is no longer valid in the LMS Hub system.",
+    "invalidBody": "This certificate number is not registered or is no longer valid in the {name} system.",
     "failed": "Verification failed"
   }
 }

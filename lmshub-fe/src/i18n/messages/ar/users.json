@@ -31,7 +31,7 @@
     "email": "البريد الإلكتروني",
     "emailPlaceholder": "name{'@'}email.com",
     "whatsapp": "رقم واتساب",
-    "whatsappPlaceholder": "08xxxxxxxxxx",
+    "whatsappPlaceholder": "9876543210",
     "initialPassword": "كلمة المرور الأولية",
     "passwordPlaceholder": "٨ أحرف على الأقل",
     "status": "الحالة",

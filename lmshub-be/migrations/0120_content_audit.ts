@@ -144,18 +144,18 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       -- no pernah menunjuk alamat sungguhan milik siapa pun.
       ('kontak.email_cs', 'kontak', 'Email Layanan', 'string', 'support@example.com', NULL, true, 'Email layanan'),
       ('notification.default_channel', 'notification', 'Kanal Default Notifikasi', 'json', '["in_app","whatsapp"]', NULL, false, 'Kanal default event (domain 10)'),
-      ('institution.name', 'kontak', 'name Lembaga', 'string', 'LMS Hub', NULL, true, 'name brand'),
+      ('institution.name', 'kontak', 'name Lembaga', 'string', 'Hsedx', NULL, true, 'name brand'),
       -- SMTP (diatur super admin; pass sensitif — jangan is_public)
       ('smtp.host', 'smtp', 'SMTP Host', 'string', '', NULL, false, 'Host server SMTP (mis. smtp.gmail.com)'),
       ('smtp.port', 'smtp', 'SMTP Port', 'integer', '587', NULL, false, 'Port SMTP (587 STARTTLS / 465 SSL)'),
       ('smtp.secure', 'smtp', 'SMTP Secure (SSL)', 'boolean', 'false', NULL, false, 'true untuk port 465 (SSL langsung)'),
       ('smtp.user', 'smtp', 'SMTP Username', 'string', '', NULL, false, 'Username/email akun SMTP'),
       ('smtp.pass', 'smtp', 'SMTP Password', 'string', '', NULL, false, 'Password/app-password SMTP (sensitif — FE menyamarkan input)'),
-      ('smtp.from', 'smtp', 'Email Pengirim', 'string', 'LMS Hub <no-reply@lmshub.test>', NULL, false, 'Alamat From email logout'),
+      ('smtp.from', 'smtp', 'Email Pengirim', 'string', 'Hsedx <no-reply@lmshub.test>', NULL, false, 'Alamat From email logout'),
       -- Rekening transfer bank manual (public agar tampil di checkout)
       ('bank.name', 'bank', 'name Bank', 'string', 'BCA', NULL, true, 'name bank tujuan transfer manual'),
       ('bank.account_number', 'bank', 'Nomor Rekening', 'string', '1234567890', NULL, true, 'Nomor account tujuan'),
-      ('bank.account_name', 'bank', 'Atas name', 'string', 'Yayasan LMS Hub', NULL, true, 'name pemilik account'),
+      ('bank.account_name', 'bank', 'Atas name', 'string', 'Yayasan Hsedx', NULL, true, 'name pemilik account'),
       -- Google OAuth (client id boleh public)
       ('google.client_id', 'auth', 'Google Client ID', 'string', '', NULL, true, 'OAuth Client ID untuk login Google')
     ON CONFLICT (key) WHERE deleted_at IS NULL DO NOTHING;

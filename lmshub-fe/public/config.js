@@ -1,5 +1,5 @@
 /**
- * Runtime configuration for LMS Hub.
+ * Runtime configuration for Hsedx.
  *
  * Edit this file on your server after deploying. It is read by the browser when
  * the page loads, so a change takes effect on the next refresh — no rebuild, no

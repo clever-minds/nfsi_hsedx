@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia';
 import { apiGet, assetUrl } from '@/lib/api';
 import { DEFAULT_CURRENCY, isSupportedCurrency } from '@/lib/currencies';
+import { i18n, SUPPORTED_LOCALES } from '@/i18n';
 
 /** name yang dipakai bila admin belum mengisi apa pun. */
-const DEFAULT_APP_NAME = 'LMS Hub';
+const DEFAULT_APP_NAME = 'Hsedx';
 
 /**
  * Konfigurasi yang boleh read siapa saja (`settings.is_public` di backend).
@@ -45,7 +46,22 @@ export const useAppConfigStore = defineStore('appConfig', {
         /* backend belum siap / offline — pakai bawaan */
       } finally {
         this.ready = true;
+        this.syncI18n();
         this.applyToDocument();
+      }
+    },
+
+    syncI18n() {
+      try {
+        for (const loc of SUPPORTED_LOCALES) {
+          const msgs = (i18n.global as any).getLocaleMessage?.(loc) as Record<string, any>;
+          if (msgs) {
+            if (!msgs.common) msgs.common = {};
+            msgs.common.appName = this.appName;
+          }
+        }
+      } catch {
+        /* abaikan */
       }
     },
 
@@ -61,6 +77,7 @@ export const useAppConfigStore = defineStore('appConfig', {
       // ketika FE dan API beda origin.
       this.logoUrl = assetUrl(cfg['brand.logo_url'] ?? '');
       this.iconUrl = assetUrl(cfg['brand.icon_url'] ?? '');
+      this.syncI18n();
     },
 
     /** Dipanggil layar settings setelah menyimpan, agar tampilan langsung ikut. */
@@ -73,6 +90,7 @@ export const useAppConfigStore = defineStore('appConfig', {
       if (patch.footerTemplate !== undefined) this.footerTemplate = patch.footerTemplate;
       if (patch.logoUrl !== undefined) this.logoUrl = assetUrl(patch.logoUrl);
       if (patch.iconUrl !== undefined) this.iconUrl = assetUrl(patch.iconUrl);
+      this.syncI18n();
       this.applyToDocument();
     },
 

@@ -2,6 +2,7 @@
 import { onMounted, ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { useAppConfigStore } from '@/stores/appConfig';
 import { apiGet, errorMessage } from '@/lib/api';
 import CertificateDocument, { type CertData } from '@/components/CertificateDocument.vue';
 
@@ -11,6 +12,7 @@ interface VerifyResult extends CertData {
 
 const route = useRoute();
 const { t } = useI18n();
+const appConfig = useAppConfigStore();
 const result = ref<VerifyResult | null>(null);
 const loading = ref(true);
 const error = ref('');
@@ -55,7 +57,7 @@ const cetak = () => window.print();
       </div>
 
       <CertificateDocument v-if="valid" :cert="result" />
-      <div v-else class="empty-state">{{ t('catalog.verify.invalidBody') }}</div>
+      <div v-else class="empty-state">{{ t('catalog.verify.invalidBody', { name: appConfig.appName }) }}</div>
     </template>
   </div>
 </template>

@@ -1,6 +1,6 @@
-# lmshub-be — LMS Hub Backend
+# lmshub-be — Hsedx Backend
 
-REST API and business engine for LMS Hub. Node.js · Express · TypeScript · PostgreSQL · Redis (optional).
+REST API and business engine for Hsedx. Node.js · Express · TypeScript · PostgreSQL · Redis (optional).
 
 ## Requirements
 

@@ -125,13 +125,22 @@ export async function detail(actor: AuthContext, id: string) {
   return u;
 }
 
+function normalizeWa(wa?: string | null): string | null {
+  if (!wa) return null;
+  const digits = wa.replace(/\D/g, '');
+  if (digits.length === 10) return `+91${digits}`;
+  if (digits.length === 12 && digits.startsWith('91')) return `+${digits}`;
+  if (digits.length === 11 && digits.startsWith('0')) return `+91${digits.slice(1)}`;
+  return wa.trim() || null;
+}
+
 export async function create(actor: AuthContext, input: CreateUserInput) {
   const roleId = await assertBolehMemberiPeran(actor, null, input.role_kode);
   const password_hash = await hashPassword(input.password);
   const { id } = await repo.insert({
     name_lengkap: input.name_lengkap,
     email: input.email ?? null,
-    number_wa: input.number_wa ?? null,
+    number_wa: normalizeWa(input.number_wa),
     password_hash,
     role_id: roleId,
     status: input.status,
@@ -154,7 +163,7 @@ export async function update(actor: AuthContext, id: string, input: UpdateUserIn
   const fields: Record<string, unknown> = {};
   if (input.name_lengkap !== undefined) fields.name_lengkap = input.name_lengkap;
   if (input.email !== undefined) fields.email = input.email;
-  if (input.number_wa !== undefined) fields.number_wa = input.number_wa;
+  if (input.number_wa !== undefined) fields.number_wa = normalizeWa(input.number_wa);
   if (input.status !== undefined) fields.status = input.status;
   if (input.role_kode !== undefined && input.role_kode !== before.role_kode) {
     fields.role_id = await assertBolehMemberiPeran(actor, id, input.role_kode);
@@ -231,7 +240,7 @@ export async function verify(actor: AuthContext, id: string, input: VerifyInput)
 export async function updateMe(actor: AuthContext, input: UpdateMeInput) {
   const fields: Record<string, unknown> = {};
   if (input.name_lengkap !== undefined) fields.name_lengkap = input.name_lengkap;
-  if (input.number_wa !== undefined) fields.number_wa = input.number_wa;
+  if (input.number_wa !== undefined) fields.number_wa = normalizeWa(input.number_wa);
   if (Object.keys(fields).length) {
     await repo.update(actor.userId, fields);
     await recordAudit({

@@ -94,7 +94,7 @@ const schema = z.object({
   MEDIA_MAX_UPLOAD_MB: z.coerce.number().int().positive().default(2048),
 
   // Email / SMTP (fallback env — konfigurasi primary via tabel settings, diatur super admin)
-  EMAIL_FROM: z.string().default('LMS Hub <no-reply@lmshub.test>'),
+  EMAIL_FROM: z.string().default('Hsedx <no-reply@lmshub.test>'),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().optional(),

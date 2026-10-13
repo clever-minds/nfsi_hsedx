@@ -64,7 +64,7 @@
     "provider": "Platform",
     "host": "Host",
     "link": "Meeting link",
-    "linkHint": "Create the meeting in Zoom, Google Meet or BigBlueButton first, then paste its join link here. LMS Hub does not host the call itself.",
+    "linkHint": "Create the meeting in Zoom, Google Meet or BigBlueButton first, then paste its join link here. {name} does not host the call itself.",
     "date": "Date",
     "start": "Starts",
     "end": "Ends",

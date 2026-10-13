@@ -31,7 +31,7 @@
     "email": "Email",
     "emailPlaceholder": "name{'@'}email.com",
     "whatsapp": "WhatsApp No.",
-    "whatsappPlaceholder": "08xxxxxxxxxx",
+    "whatsappPlaceholder": "9876543210",
     "initialPassword": "Initial Password",
     "passwordPlaceholder": "At least 8 characters",
     "status": "Status",

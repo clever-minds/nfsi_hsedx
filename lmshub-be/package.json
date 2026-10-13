@@ -2,7 +2,7 @@
   "name": "lmshub-be",
   "version": "0.1.0",
   "private": true,
-  "description": "LMS Hub \u2014 Backend REST API + engine bisnis",
+  "description": "Hsedx \u2014 Backend REST API + engine bisnis",
   "license": "UNLICENSED",
   "main": "dist/server.js",
   "scripts": {

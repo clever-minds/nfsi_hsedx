@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { apiPatch, apiPost, assetUrl, errorMessage } from '@/lib/api';
@@ -58,22 +58,65 @@ async function onPhotoPicked(e: Event) {
 }
 
 // ── Data diri ────────────────────────────────────────────
+function extractWaDigits(val?: string | null): string {
+  if (!val) return '';
+  const digits = val.replace(/\D/g, '');
+  if (digits.length === 12 && digits.startsWith('91')) {
+    return digits.slice(2);
+  }
+  if (digits.length === 11 && digits.startsWith('0')) {
+    return digits.slice(1);
+  }
+  return digits.slice(0, 10);
+}
+
 const form = ref({
   name_lengkap: auth.user?.name_lengkap ?? '',
-  number_wa: auth.user?.number_wa ?? '',
 });
+const waDigits = ref(extractWaDigits(auth.user?.number_wa));
 const savingProfile = ref(false);
 const profileMsg = ref('');
 const profileError = ref('');
+
+watch(
+  () => auth.user,
+  (u) => {
+    if (u) {
+      form.value.name_lengkap = u.name_lengkap ?? '';
+      waDigits.value = extractWaDigits(u.number_wa);
+    }
+  },
+  { immediate: true },
+);
+
+function onWaInput(event: Event) {
+  const target = event.target as HTMLInputElement;
+  let val = target.value.replace(/\D/g, '');
+  if (val.length === 12 && val.startsWith('91')) {
+    val = val.slice(2);
+  } else if (val.length > 10 && val.startsWith('0')) {
+    val = val.slice(1);
+  }
+  val = val.slice(0, 10);
+  waDigits.value = val;
+  target.value = val;
+}
+
+function onWaKeypress(event: KeyboardEvent) {
+  if (!/[0-9]/.test(event.key)) {
+    event.preventDefault();
+  }
+}
 
 async function saveProfile() {
   savingProfile.value = true;
   profileMsg.value = '';
   profileError.value = '';
   try {
+    const waVal = waDigits.value.trim() ? `+91${waDigits.value.trim()}` : null;
     await apiPatch('/users/me', {
       name_lengkap: form.value.name_lengkap,
-      number_wa: form.value.number_wa || null,
+      number_wa: waVal,
     });
     await auth.fetchMe();
     profileMsg.value = t('users.profile.saved');
@@ -200,7 +243,22 @@ async function changePassword() {
             </div>
             <div>
               <label class="label">{{ t('users.profile.whatsapp') }}</label>
-              <input v-model="form.number_wa" class="input" type="tel" :placeholder="t('users.form.whatsappPlaceholder')" />
+              <div class="flex overflow-hidden rounded border border-slate-300 bg-white transition focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400">
+                <span class="inline-flex items-center border-e border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-600 select-none">
+                  +91
+                </span>
+                <input
+                  v-model="waDigits"
+                  class="w-full bg-transparent px-3 py-2 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                  type="tel"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  maxlength="10"
+                  :placeholder="t('users.form.whatsappPlaceholder')"
+                  @input="onWaInput"
+                  @keypress="onWaKeypress"
+                />
+              </div>
             </div>
             <div>
               <label class="label">{{ t('users.profile.email') }}</label>

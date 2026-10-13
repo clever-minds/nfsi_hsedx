@@ -56,6 +56,39 @@ const form = reactive({
   status: 'active' as 'pending' | 'active' | 'inactive',
 });
 
+function extractWaDigits(val?: string | null): string {
+  if (!val) return '';
+  const digits = val.replace(/\D/g, '');
+  if (digits.length === 12 && digits.startsWith('91')) {
+    return digits.slice(2);
+  }
+  if (digits.length === 11 && digits.startsWith('0')) {
+    return digits.slice(1);
+  }
+  return digits.slice(0, 10);
+}
+
+const waDigits = ref('');
+
+function onWaInput(event: Event) {
+  const target = event.target as HTMLInputElement;
+  let val = target.value.replace(/\D/g, '');
+  if (val.length === 12 && val.startsWith('91')) {
+    val = val.slice(2);
+  } else if (val.length > 10 && val.startsWith('0')) {
+    val = val.slice(1);
+  }
+  val = val.slice(0, 10);
+  waDigits.value = val;
+  target.value = val;
+}
+
+function onWaKeypress(event: KeyboardEvent) {
+  if (!/[0-9]/.test(event.key)) {
+    event.preventDefault();
+  }
+}
+
 const roleOptions = ref<RoleOption[]>([]);
 const catalog = ref<PermissionCatalogItem[]>([]);
 const checklist = reactive<Record<string, Record<Action, boolean>>>({});
@@ -138,6 +171,7 @@ async function loadUser(id: string) {
   form.name_lengkap = detail.name_lengkap;
   form.email = detail.email ?? '';
   form.number_wa = detail.number_wa ?? '';
+  waDigits.value = extractWaDigits(detail.number_wa);
   form.role_kode = detail.role_kode;
   form.status = detail.status as typeof form.status;
   applyPermissionRows(perms);
@@ -175,12 +209,13 @@ async function submit() {
   }
   saving.value = true;
   try {
+    const waVal = waDigits.value.trim() ? `+91${waDigits.value.trim()}` : null;
     let id = userId.value;
     if (isEdit.value && id) {
       await apiPut(`/users/${id}`, {
         name_lengkap: form.name_lengkap,
         email: form.email || null,
-        number_wa: form.number_wa || null,
+        number_wa: waVal,
         status: form.status,
         role_kode: form.role_kode,
       });
@@ -188,7 +223,7 @@ async function submit() {
       const created = await apiPost<{ id: string }>('/users', {
         name_lengkap: form.name_lengkap,
         email: form.email || undefined,
-        number_wa: form.number_wa || undefined,
+        number_wa: waVal || undefined,
         password: form.password,
         role_kode: form.role_kode,
         status: form.status === 'inactive' ? 'pending' : form.status,
@@ -235,7 +270,22 @@ async function submit() {
         </div>
         <div>
           <label class="label">{{ t('users.form.whatsapp') }}</label>
-          <input v-model="form.number_wa" class="input" :placeholder="t('users.form.whatsappPlaceholder')" />
+          <div class="flex overflow-hidden rounded border border-slate-300 bg-white transition focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400">
+            <span class="inline-flex items-center border-e border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-600 select-none">
+              +91
+            </span>
+            <input
+              v-model="waDigits"
+              class="w-full bg-transparent px-3 py-2 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+              type="tel"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="10"
+              :placeholder="t('users.form.whatsappPlaceholder')"
+              @input="onWaInput"
+              @keypress="onWaKeypress"
+            />
+          </div>
         </div>
         <div v-if="!isEdit">
           <label class="label">{{ t('users.form.initialPassword') }}</label>

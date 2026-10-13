@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
+import { useAppConfigStore } from '@/stores/appConfig';
 import { apiGet, apiPost, errorMessage, setTokens } from '@/lib/api';
 import { renderGoogleSignInButton } from '@/lib/google-signin';
 import AuthShell from '../components/AuthShell.vue';
@@ -24,6 +25,7 @@ interface GoogleLoginResp {
 }
 
 const auth = useAuthStore();
+const appConfig = useAppConfigStore();
 const router = useRouter();
 const { t } = useI18n();
 
@@ -78,7 +80,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <AuthShell :title="t('auth.register.title')" :subtitle="t('auth.register.subtitle')">
+  <AuthShell :title="t('auth.register.title')" :subtitle="t('auth.register.subtitle', { name: appConfig.appName })">
     <form class="space-y-4" @submit.prevent="submit">
       <!-- Google Sign-In (tampil bila diaktifkan di settings) -->
       <div v-show="googleEnabled" class="space-y-4">

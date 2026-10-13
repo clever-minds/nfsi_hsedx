@@ -33,7 +33,7 @@ export async function list(p: PageParams, f: Filters): Promise<{ rows: UserListR
   if (f.role) add('r.kode = $?', f.role);
   if (f.status) add('u.status = $?', f.status);
   if (f.created_by) add('u.created_by = $?', f.created_by);
-  if (f.q) add('(u.name_lengkap ILIKE $? OR u.email ILIKE $?)', `%${f.q}%`);
+  if (f.q) add('(u.name_lengkap ILIKE $? OR u.email ILIKE $? OR u.number_wa ILIKE $?)', `%${f.q}%`);
   if (f.subtreeOf) add('u.created_by = $?', f.subtreeOf);
 
   const whereSql = where.join(' AND ');

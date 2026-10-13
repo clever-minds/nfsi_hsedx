@@ -143,8 +143,8 @@ for (const [kode, id, en] of [
 
 // ── Placeholder bank account holder ─────────────────────────────────────
 // A sample account the owner replaces; only its holder name was Indonesian.
-add('bank_accounts', 'account_number', '1234567890', { account_name: ['Yayasan LMS Hub', 'LMS Hub Foundation'] });
-add('settings', 'key', 'bank.account_name', { value: ['Yayasan LMS Hub', 'LMS Hub Foundation'] });
+add('bank_accounts', 'account_number', '1234567890', { account_name: ['Yayasan Hsedx', 'Hsedx Foundation'] });
+add('settings', 'key', 'bank.account_name', { value: ['Yayasan Hsedx', 'Hsedx Foundation'] });
 
 const lit = (s: string) => `'${s.replace(/'/g, "''")}'`;
 

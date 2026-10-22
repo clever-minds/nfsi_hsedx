@@ -54,7 +54,13 @@ const BASE_SELECT = `
   SELECT c.id, c.title, c.slug, c.summary, c.description, c.category_id, cat.name AS category_name,
          c.instructor_id, u.name_lengkap AS instructor_name, c.level, c.price, c.strike_price,
          c.publication_status, c.thumbnail_media_id, c.promo_video_media_id, c.language,
-         c.total_duration_minutes, c.rating_avg, c.rating_count, c.student_count, c.published_at,
+         c.total_duration_minutes, c.rating_avg, c.rating_count,
+         COALESCE(
+           NULLIF((SELECT COUNT(*)::int FROM enrollments e WHERE e.course_id = c.id AND e.deleted_at IS NULL AND e.status <> 'cancelled'), 0),
+           c.student_count,
+           0
+         ) AS student_count,
+         c.published_at,
          c.meta, c.final_exam_quiz_id, c.allow_restart, c.created_at, c.updated_at
     FROM courses c
     JOIN categories cat ON cat.id = c.category_id
@@ -240,7 +246,7 @@ export interface PublicCourseRow {
 export async function publicList(
   p: PageParams,
   f: PublicFilters,
-): Promise<{ rows: PublicCourseRow[]; total: number }> {
+): Promise<{ rows: PublicCourseRow[]; total: number; totalStudents?: number }> {
   const where: string[] = [`c.deleted_at IS NULL`, `c.publication_status IN ('publish','updated')`];
   const params: unknown[] = [];
   const add = (clause: string, val: unknown) => {
@@ -263,7 +269,13 @@ export async function publicList(
     `SELECT c.id, c.title, c.slug, c.summary, cat.name AS category_name, cat.slug AS category_slug,
             u.name_lengkap AS instructor_name, u.profile_picture AS instructor_foto,
             c.level, c.price, c.strike_price, c.thumbnail_media_id, c.language, c.total_duration_minutes,
-            c.rating_avg, c.rating_count, c.student_count, c.published_at, c.meta
+            c.rating_avg, c.rating_count,
+            COALESCE(
+              NULLIF((SELECT COUNT(*)::int FROM enrollments e WHERE e.course_id = c.id AND e.deleted_at IS NULL AND e.status <> 'cancelled'), 0),
+              c.student_count,
+              0
+            ) AS student_count,
+            c.published_at, c.meta
        FROM courses c
        JOIN categories cat ON cat.id = c.category_id
        JOIN instructor_profiles ip ON ip.id = c.instructor_id
@@ -273,11 +285,20 @@ export async function publicList(
       LIMIT ${p.limit} OFFSET ${p.offset}`,
     params,
   );
-  const totalRow = await queryOne<{ count: string }>(
-    `SELECT COUNT(*)::int AS count FROM courses c JOIN categories cat ON cat.id = c.category_id WHERE ${whereSql}`,
-    params,
-  );
-  return { rows, total: Number(totalRow?.count ?? 0) };
+  const [totalRow, totalStudentsRow] = await Promise.all([
+    queryOne<{ count: string }>(
+      `SELECT COUNT(*)::int AS count FROM courses c JOIN categories cat ON cat.id = c.category_id WHERE ${whereSql}`,
+      params,
+    ),
+    queryOne<{ count: string }>(
+      `SELECT COUNT(DISTINCT user_id)::int AS count FROM enrollments WHERE deleted_at IS NULL AND status <> 'cancelled'`,
+    ),
+  ]);
+  return {
+    rows,
+    total: Number(totalRow?.count ?? 0),
+    totalStudents: Number(totalStudentsRow?.count ?? 0),
+  };
 }
 
 export interface PublicCourseDetail extends PublicCourseRow {
@@ -299,12 +320,22 @@ export async function publicBySlug(slug: string): Promise<PublicCourseDetail | n
             c.instructor_id, u.name_lengkap AS instructor_name, u.profile_picture AS instructor_foto,
             ip.bio AS instructor_bio, ip.keahlian AS instructor_keahlian,
             ip.rating_avg AS instructor_rating, ip.rating_count AS instructor_rating_count,
-            ip.total_siswa AS instructor_total_siswa,
+            COALESCE(
+              NULLIF((SELECT COUNT(DISTINCT e.user_id)::int FROM enrollments e JOIN courses cx ON cx.id = e.course_id WHERE cx.instructor_id = ip.id AND e.deleted_at IS NULL AND cx.deleted_at IS NULL AND e.status <> 'cancelled'), 0),
+              ip.total_siswa,
+              0
+            ) AS instructor_total_siswa,
             (SELECT COUNT(*)::int FROM courses cx
               WHERE cx.instructor_id = ip.id AND cx.deleted_at IS NULL
                 AND cx.publication_status IN ('publish','updated')) AS instructor_amount_kursus,
             c.level, c.price, c.strike_price, c.thumbnail_media_id, c.promo_video_media_id, c.language,
-            c.total_duration_minutes, c.rating_avg, c.rating_count, c.student_count, c.published_at, c.meta
+            c.total_duration_minutes, c.rating_avg, c.rating_count,
+            COALESCE(
+              NULLIF((SELECT COUNT(*)::int FROM enrollments e WHERE e.course_id = c.id AND e.deleted_at IS NULL AND e.status <> 'cancelled'), 0),
+              c.student_count,
+              0
+            ) AS student_count,
+            c.published_at, c.meta
        FROM courses c
        JOIN categories cat ON cat.id = c.category_id
        JOIN instructor_profiles ip ON ip.id = c.instructor_id

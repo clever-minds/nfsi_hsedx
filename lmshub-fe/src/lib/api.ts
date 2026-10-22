@@ -177,10 +177,38 @@ export function errorMessage(err: unknown, fallback?: string): string {
   const ax = err as AxiosError<Envelope<unknown>>;
   const serverError = ax.response?.data?.error;
 
+  // 1. If there are field-level validation errors, format them clearly
+  if (serverError?.details && typeof serverError.details === 'object') {
+    const details = serverError.details as Record<string, unknown>;
+    if (details.fields && typeof details.fields === 'object') {
+      const fieldEntries = Object.entries(details.fields as Record<string, string[] | string>);
+      if (fieldEntries.length > 0) {
+        const fieldMsgs = fieldEntries
+          .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+          .join(' | ');
+        const prefix = (serverError.key && serverError.key !== 'validation.failed' && te(`errors.${serverError.key}`))
+          ? t(`errors.${serverError.key}`)
+          : (te('errors.validation.failed') ? t('errors.validation.failed') : 'Validation failed');
+        return `${prefix} (${fieldMsgs})`;
+      }
+    }
+    if (typeof details.detail === 'string' && details.detail) {
+      const prefix = (serverError.key && te(`errors.${serverError.key}`))
+        ? t(`errors.${serverError.key}`)
+        : (serverError.message || 'Error');
+      return `${prefix} (${details.detail})`;
+    }
+  }
+
+  // 2. If server message contains detailed validation or specific info, prefer it over generic 'validation.failed'
+  const fromServer = serverError?.message;
+  if (fromServer && fromServer !== 'Validation failed' && fromServer !== 'Data could not be processed') {
+    return fromServer;
+  }
+
   const key = serverError?.key;
   if (key && te(`errors.${key}`)) return t(`errors.${key}`);
 
-  const fromServer = serverError?.message;
   if (fromServer) return fromServer;
   // 413 hampir selalu datang from reverse proxy (Nginx `client_max_body_size`),
   // bukan from aplikasi — tanpa body JSON. Pesan umum "upload failed" membuat

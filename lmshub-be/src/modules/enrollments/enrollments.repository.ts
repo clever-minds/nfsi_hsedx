@@ -133,6 +133,30 @@ export async function findActiveByUserCourse(userId: string, courseId: string): 
   );
 }
 
+export async function syncCountsForCourse(courseId: string, tx?: PoolClient): Promise<void> {
+  const runner = tx ?? pool;
+  await runner.query(
+    `UPDATE courses
+        SET student_count = (
+          SELECT COUNT(*)::int FROM enrollments e
+           WHERE e.course_id = $1 AND e.deleted_at IS NULL AND e.status <> 'cancelled'
+        )
+      WHERE id = $1`,
+    [courseId],
+  );
+  await runner.query(
+    `UPDATE instructor_profiles
+        SET total_siswa = (
+          SELECT COUNT(DISTINCT e.user_id)::int FROM enrollments e
+            JOIN courses c ON c.id = e.course_id
+           WHERE c.instructor_id = instructor_profiles.id
+             AND e.deleted_at IS NULL AND c.deleted_at IS NULL AND e.status <> 'cancelled'
+        )
+      WHERE id = (SELECT instructor_id FROM courses WHERE id = $1)`,
+    [courseId],
+  );
+}
+
 export async function insert(
   data: {
     user_id: string;
@@ -152,6 +176,7 @@ export async function insert(
      VALUES ($1,$2,$3,$4,'registered',$5,$6,$7,$8) RETURNING id`,
     [data.user_id, data.course_id, data.cohort_id, data.source, data.order_item_id, data.assigned_by, data.akses_kedaluwarsa_at, data.notes],
   );
+  await syncCountsForCourse(data.course_id, tx);
   return row.rows[0];
 }
 
@@ -159,7 +184,10 @@ export async function updateStatus(id: string, status: EnrollmentStatus, extra: 
   const fields: Record<string, unknown> = { status, ...extra };
   const keys = Object.keys(fields);
   const set = keys.map((k, i) => `${k} = $${i + 2}`).join(', ');
-  await query(`UPDATE enrollments SET ${set} WHERE id = $1`, [id, ...keys.map((k) => fields[k])]);
+  const res = await query<{ course_id: string }>(`UPDATE enrollments SET ${set} WHERE id = $1 RETURNING course_id`, [id, ...keys.map((k) => fields[k])]);
+  if (res[0]?.course_id) {
+    await syncCountsForCourse(res[0].course_id);
+  }
 }
 
 export async function setCohort(id: string, cohortId: string | null): Promise<void> {

@@ -25,7 +25,7 @@ const contentUrl = z
 export const createSectionSchema = z.object({
   title: z.string().min(2).max(200),
   sort_order: z.number().int().min(0).optional(),
-  description: z.string().max(2000).optional(),
+  description: z.string().max(2000).nullable().optional(),
 });
 
 export const updateSectionSchema = z.object({
@@ -43,7 +43,7 @@ export const createLessonSchema = z.object({
   title: z.string().min(2).max(200),
   type: lessonTipeEnum.default('video'),
   sort_order: z.number().int().min(0).optional(),
-  duration_minutes: z.number().int().min(0).optional(),
+  duration_minutes: z.number().int().min(0).nullable().optional(),
   gratis_preview: z.boolean().optional(),
   drip_release_at: z.string().datetime().nullable().optional(),
   must_complete: z.boolean().optional(),
@@ -57,7 +57,7 @@ export const updateLessonSchema = z.object({
   gratis_preview: z.boolean().optional(),
   drip_release_at: z.string().datetime().nullable().optional(),
   must_complete: z.boolean().optional(),
-  section_id: z.string().uuid().optional(),
+  section_id: z.string().uuid().nullable().optional(),
 });
 
 export const reorderLessonsSchema = z.object({
@@ -76,11 +76,11 @@ export const reorderLessonsSchema = z.object({
 export const createContentSchema = z.object({
   type: kontenTipeEnum,
   sort_order: z.number().int().min(0).optional(),
-  body: z.string().optional(),
-  media_asset_id: z.string().uuid().optional(),
-  url: contentUrl.optional(),
-  scorm_manifest_url: contentUrl.optional(),
-  duration_seconds: z.number().int().min(0).optional(),
+  body: z.string().nullable().optional(),
+  media_asset_id: z.string().uuid().nullable().optional(),
+  url: contentUrl.nullable().optional(),
+  scorm_manifest_url: contentUrl.nullable().optional(),
+  duration_seconds: z.number().int().min(0).nullable().optional(),
 });
 
 export const updateContentSchema = z.object({

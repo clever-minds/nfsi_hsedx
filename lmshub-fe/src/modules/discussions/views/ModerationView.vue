@@ -57,7 +57,7 @@ async function load() {
 }
 
 const TINDAKAN_MAP: Record<'hide' | 'delete' | 'blokir', 'hide' | 'delete' | 'block_user'> = {
-  sembunyikan: 'hide',
+  hide: 'hide',
   delete: 'delete',
   blokir: 'block_user',
 };

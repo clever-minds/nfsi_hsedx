@@ -17,7 +17,18 @@ export interface PublicInstructorRow {
 
 const BASE_SELECT = `
   SELECT ip.id, ip.user_id, u.name_lengkap, u.profile_picture, ip.bio, ip.keahlian, ip.sosial_media,
-         ip.rating_avg, ip.rating_count, ip.total_siswa,
+         ip.rating_avg, ip.rating_count,
+         COALESCE(
+           NULLIF((SELECT COUNT(DISTINCT e.user_id)::int
+                     FROM enrollments e
+                     JOIN courses c ON c.id = e.course_id
+                    WHERE c.instructor_id = ip.id
+                      AND e.deleted_at IS NULL
+                      AND c.deleted_at IS NULL
+                      AND e.status <> 'cancelled'), 0),
+           ip.total_siswa,
+           0
+         ) AS total_siswa,
          (SELECT COUNT(*)::int FROM courses c
            WHERE c.instructor_id = ip.id AND c.deleted_at IS NULL
              AND c.publication_status IN ('publish','updated')) AS amount_kursus
@@ -59,12 +70,17 @@ export interface InstructorCourseRow {
 export async function publicCourses(instructorProfileId: string): Promise<InstructorCourseRow[]> {
   return query<InstructorCourseRow>(
     `SELECT c.id, c.title, c.slug, c.summary, c.level, c.price, c.rating_avg, c.rating_count,
-            c.student_count, c.total_duration_minutes, cat.name AS category_name, c.meta
+            COALESCE(
+              NULLIF((SELECT COUNT(*)::int FROM enrollments e WHERE e.course_id = c.id AND e.deleted_at IS NULL AND e.status <> 'cancelled'), 0),
+              c.student_count,
+              0
+            ) AS student_count,
+            c.total_duration_minutes, cat.name AS category_name, c.meta
        FROM courses c
        JOIN categories cat ON cat.id = c.category_id
       WHERE c.instructor_id = $1 AND c.deleted_at IS NULL
         AND c.publication_status IN ('publish','updated')
-      ORDER BY c.student_count DESC`,
+      ORDER BY student_count DESC`,
     [instructorProfileId],
   );
 }

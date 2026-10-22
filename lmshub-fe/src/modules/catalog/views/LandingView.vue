@@ -65,7 +65,16 @@ const totalKursus = ref(0);
 const q = ref('');
 const categoryDipilih = ref('');
 
-const totalSiswa = computed(() => instructors.value.reduce((a, i) => a + (i.total_siswa || 0), 0));
+const serverTotalSiswa = ref<number | null>(null);
+
+const totalSiswa = computed(() => {
+  if (serverTotalSiswa.value !== null && serverTotalSiswa.value !== undefined) {
+    return serverTotalSiswa.value;
+  }
+  const fromInstructors = instructors.value.reduce((a, i) => a + (Number(i.total_siswa) || 0), 0);
+  const fromCourses = courses.value.reduce((a, cr) => a + (Number(cr.student_count) || 0), 0);
+  return Math.max(fromInstructors, fromCourses);
+});
 
 function search() {
   router.push({
@@ -91,6 +100,11 @@ onMounted(async () => {
   totalKursus.value = Number((c?.meta as Record<string, unknown> | null)?.total ?? courses.value.length);
   categories.value = (cat?.data ?? []).filter((k) => k.amount_kursus > 0);
   instructors.value = ins?.data ?? [];
+
+  const metaStudents = (c?.meta as Record<string, unknown> | null)?.total_students;
+  if (metaStudents !== undefined && metaStudents !== null) {
+    serverTotalSiswa.value = Number(metaStudents);
+  }
 });
 </script>
 
@@ -268,8 +282,8 @@ onMounted(async () => {
       </section>
 
       <!-- ── STATISTIK (kartu gelap) ────────────────────────────────── -->
-      <section v-else-if="s.key === 'stats'" class="mx-auto max-w-7xl px-4">
-        <div class="relative overflow-hidden rounded-3xl bg-slate-900 px-6 py-12 text-white">
+      <section v-else-if="s.key === 'stats'" class="mx-auto max-w-7xl px-4 py-8 sm:py-12">
+        <div class="relative overflow-hidden rounded-3xl bg-slate-900 px-6 py-12 text-white shadow-xl ring-1 ring-white/10">
           <Icon name="zap" :size="28" class="absolute start-8 top-8 text-accent-400" />
           <div class="text-center">
             <h2 class="text-2xl font-extrabold tracking-tight sm:text-3xl">{{ judulSeksi('stats', t('catalog.landing.stats.title', { name: appConfig.appName })) }}</h2>
@@ -340,8 +354,8 @@ onMounted(async () => {
       </section>
 
       <!-- ── CTA register ─────────────────────────────────────────────── -->
-      <section v-else-if="s.key === 'cta'" class="mx-auto max-w-7xl px-4 pb-4">
-        <div class="relative overflow-hidden rounded-3xl bg-slate-900 px-8 py-14 text-white">
+      <section v-else-if="s.key === 'cta'" class="mx-auto max-w-7xl px-4 py-8 sm:py-12">
+        <div class="relative overflow-hidden rounded-3xl bg-slate-900 px-8 py-14 text-white shadow-xl ring-1 ring-white/10">
           <div class="pointster-events-none absolute -end-16 -top-16 h-64 w-64 rounded-full bg-brand-500/30 blur-3xl"></div>
           <div class="relative max-w-xl">
             <h2 class="text-3xl font-extrabold tracking-tight">{{ judulSeksi('cta', t('catalog.landing.cta.title')) }}</h2>

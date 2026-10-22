@@ -2,16 +2,16 @@ import { z } from 'zod';
 
 export const createLiveSessionSchema = z
   .object({
-    course_id: z.string().uuid().optional(),
-    cohort_id: z.string().uuid().optional(),
+    course_id: z.string().uuid().nullable().optional(),
+    cohort_id: z.string().uuid().nullable().optional(),
     title: z.string().min(2).max(200),
-    description: z.string().max(2000).optional(),
+    description: z.string().max(2000).nullable().optional(),
     provider: z.enum(['zoom', 'bbb', 'meet']).default('zoom'),
     url_join: z.string().min(3),
     host_user_id: z.string().uuid(),
     start_time: z.string().datetime(),
     end_time: z.string().datetime(),
-    kapasitas_maks: z.number().int().positive().optional(),
+    kapasitas_maks: z.number().int().positive().nullable().optional(),
     toleransi_terlambat_menit: z.number().int().min(0).default(15),
   })
   .refine((d) => !!d.course_id || !!d.cohort_id, {

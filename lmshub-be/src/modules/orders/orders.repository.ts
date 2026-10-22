@@ -465,14 +465,57 @@ export async function insertEnrollment(
      ON CONFLICT DO NOTHING`,
     [data.user_id, data.course_id, data.source, data.order_item_id],
   );
+  await tx.query(
+    `UPDATE courses
+        SET student_count = (
+          SELECT COUNT(*)::int FROM enrollments e
+           WHERE e.course_id = $1 AND e.deleted_at IS NULL AND e.status <> 'cancelled'
+        )
+      WHERE id = $1`,
+    [data.course_id],
+  );
+  await tx.query(
+    `UPDATE instructor_profiles
+        SET total_siswa = (
+          SELECT COUNT(DISTINCT e.user_id)::int FROM enrollments e
+            JOIN courses c ON c.id = e.course_id
+           WHERE c.instructor_id = instructor_profiles.id
+             AND e.deleted_at IS NULL AND c.deleted_at IS NULL AND e.status <> 'cancelled'
+        )
+      WHERE id = (SELECT instructor_id FROM courses WHERE id = $1)`,
+    [data.course_id],
+  );
 }
 
 export async function cancelEnrollmentsByOrder(orderId: string, tx: PoolClient): Promise<void> {
-  await tx.query(
+  const affected = await tx.query<{ course_id: string }>(
     `UPDATE enrollments SET status = 'cancelled'
-      WHERE deleted_at IS NULL AND order_item_id IN (SELECT id FROM order_items WHERE order_id = $1)`,
+      WHERE deleted_at IS NULL AND order_item_id IN (SELECT id FROM order_items WHERE order_id = $1)
+      RETURNING course_id`,
     [orderId],
   );
+  for (const row of affected.rows) {
+    await tx.query(
+      `UPDATE courses
+          SET student_count = (
+            SELECT COUNT(*)::int FROM enrollments e
+             WHERE e.course_id = $1 AND e.deleted_at IS NULL AND e.status <> 'cancelled'
+          )
+        WHERE id = $1`,
+      [row.course_id],
+    );
+    await tx.query(
+      `UPDATE instructor_profiles
+          SET total_siswa = (
+            SELECT COUNT(DISTINCT e.user_id)::int FROM enrollments e
+              JOIN courses c ON c.id = e.course_id
+             WHERE c.instructor_id = instructor_profiles.id
+               AND e.deleted_at IS NULL AND c.deleted_at IS NULL AND e.status <> 'cancelled'
+          )
+        WHERE id = (SELECT instructor_id FROM courses WHERE id = $1)`,
+      [row.course_id],
+    );
+  }
 }
 
 // ── Refunds (finansial — approval Direktur) ──────────────

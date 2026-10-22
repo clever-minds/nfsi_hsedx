@@ -101,7 +101,7 @@ export async function update(actor: AuthContext, id: string, input: UpdateCourse
 
   const fields: Record<string, unknown> = {};
   if (input.title !== undefined) fields.title = input.title;
-  if (input.slug !== undefined) {
+  if (input.slug !== undefined && input.slug !== null) {
     const slug = slugify(input.slug);
     const existing = await repo.bySlug(slug);
     if (existing && existing.id !== id) throw AppError.conflict('That course slug is already in use', 'course.slug_taken');

@@ -21,16 +21,16 @@ export const orderItemSchema = z
 
 export const checkoutSchema = z.object({
   items: z.array(orderItemSchema).min(1),
-  coupon_kode: z.string().min(2).max(50).optional(),
-  notes: z.string().max(1000).optional(),
+  coupon_kode: z.string().min(2).max(50).nullable().optional(),
+  notes: z.string().max(1000).nullable().optional(),
 });
 
 export const manualOrderSchema = z.object({
   buyer_user_id: z.string().uuid(),
   items: z.array(orderItemSchema).min(1),
-  coupon_kode: z.string().min(2).max(50).optional(),
-  marketing_user_id: z.string().uuid().optional(), // default: pelaku (marketing) bila peran marketing
-  notes: z.string().max(1000).optional(),
+  coupon_kode: z.string().min(2).max(50).nullable().optional(),
+  marketing_user_id: z.string().uuid().nullable().optional(), // default: pelaku (marketing) bila peran marketing
+  notes: z.string().max(1000).nullable().optional(),
 });
 
 /**
@@ -43,23 +43,23 @@ export const paySchema = z.object({
   type: z.enum(['full', 'down_payment', 'installment']),
   amount: z.number().positive(),
   method: z.enum(['transfer_bank', 'tunai', 'other']),
-  proof_media_id: z.string().uuid().optional(),
-  gateway_reference: z.string().max(150).optional(),
+  proof_media_id: z.string().uuid().nullable().optional(),
+  gateway_reference: z.string().max(150).nullable().optional(),
 });
 
 export const verifyPaymentSchema = z.object({
   /** Kosongkan bila order hanya punya satu payment yang menunggu verifikasi. */
-  payment_id: z.string().uuid().optional(),
+  payment_id: z.string().uuid().nullable().optional(),
   action: z.enum(['verify', 'reject']),
-  notes_verifikasi: z.string().max(500).optional(),
+  notes_verifikasi: z.string().max(500).nullable().optional(),
 });
 
 /** FINANSIAL — approval Direktur wajib (requirePermission('refund','update')). */
 export const refundSchema = z.object({
   amount: z.number().positive(),
   reason: z.string().min(3).max(1000),
-  method_pengembalian: z.string().max(30).optional(),
-  notes: z.string().max(1000).optional(),
+  method_pengembalian: z.string().max(30).nullable().optional(),
+  notes: z.string().max(1000).nullable().optional(),
 });
 
 export type OrderItemInput = z.infer<typeof orderItemSchema>;

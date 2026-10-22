@@ -37,66 +37,66 @@
       },
       "certificate": {
         "title": "Earn an Official Certificate",
-        "text": "Finish the course, pass the assessment, and get a verifiable certificate for your CV and LinkedIn profile."
+          "text": "Finish the course, pass the assessment, and get a verifiable certificate for your CV and LinkedIn profile."
+        },
+        "pace": {
+          "title": "Learn at Your Own Pace",
+          "text": "Lifetime access, structured videos, quizzes, and live classes — learn whenever and wherever you are ready."
+        }
       },
-      "pace": {
-        "title": "Learn at Your Own Pace",
-        "text": "Lifetime access, structured videos, quizzes, and live classes — learn whenever and wherever you are ready."
+      "featured": {
+        "badge": "Newest & Most Popular",
+        "title": "Featured Courses",
+        "subtitle": "Hand-picked courses curated to help you master the most in-demand skills",
+        "empty": "The course catalog will appear once courses are published.",
+        "seeAll": "See All Courses"
+      },
+      "stats": {
+        "title": "Reach your goals with {name}",
+        "subtitle": "96% of our students report a skill improvement within the first six months.",
+        "students": "Enrolled Students",
+        "courses": "Courses on the Platform",
+        "categories": "Skill Categories",
+        "instructors": "Expert Instructors"
+      },
+      "instructors": {
+        "badge": "Featured Instructors",
+        "title": "Top-Class & Professional Instructors",
+        "subtitle": "Learn straight from practitioners who have proven their expertise in the industry",
+        "seeAll": "See all instructors →"
+      },
+      "cta": {
+        "title": "Unlock Access to Quality Education",
+        "subtitle": "Create a free account and get course recommendations, promos, and the latest live class news.",
+        "register": "Sign Up Now — Free",
+        "browse": "Browse the Catalog"
       }
     },
-    "featured": {
-      "badge": "Newest & Most Popular",
-      "title": "Featured Courses",
-      "subtitle": "Hand-picked courses curated to help you master the most in-demand skills",
-      "empty": "The course catalog will appear once courses are published.",
-      "seeAll": "See All Courses"
+    "list": {
+      "title": "Course Catalog",
+      "filter": "Filter",
+      "clear": "Clear",
+      "category": "Category",
+      "allCategories": "All Categories",
+      "level": "Level",
+      "allLevels": "All Levels",
+      "price": "Price",
+      "priceAll": "All",
+      "priceFree": "Free",
+      "pricePaid": "Paid",
+      "sortNewest": "Newest",
+      "sortPriceAsc": "Lowest Price",
+      "sortPriceDesc": "Highest Price",
+      "sortTitle": "Title A–Z",
+      "range": "Showing {from}–{to} of {total} results",
+      "noResults": "No results",
+      "emptyFilter": "No courses match your filters.",
+      "clearFilter": "Clear filters",
+      "prev": "‹ Previous",
+      "next": "Next ›"
     },
-    "stats": {
-      "title": "Reach your goals with {name}",
-      "subtitle": "96% of our students report a skill improvement within the first six months.",
-      "students": "Enrolled Students",
-      "courses": "Courses on the Platform",
-      "categories": "Skill Categories",
-      "instructors": "Expert Instructors"
-    },
-    "instructors": {
-      "badge": "Featured Instructors",
-      "title": "Top-Class & Professional Instructors",
-      "subtitle": "Learn straight from practitioners who have proven their expertise in the industry",
-      "seeAll": "See all instructors →"
-    },
-    "cta": {
-      "title": "Unlock Access to Quality Education",
-      "subtitle": "Create a free account and get course recommendations, promos, and the latest live class news.",
-      "register": "Sign Up Now — Free",
-      "browse": "Browse the Catalog"
-    }
-  },
-  "list": {
-    "title": "Course Catalog",
-    "filter": "Filter",
-    "clear": "Clear",
-    "category": "Category",
-    "allCategories": "All Categories",
-    "level": "Level",
-    "allLevels": "All Levels",
-    "price": "Price",
-    "priceAll": "All",
-    "priceFree": "Free",
-    "pricePaid": "Paid",
-    "sortNewest": "Newest",
-    "sortPriceAsc": "Lowest Price",
-    "sortPriceDesc": "Highest Price",
-    "sortTitle": "Title A–Z",
-    "range": "Showing {from}–{to} of {total} results",
-    "noResults": "No results",
-    "emptyFilter": "No courses match your filters.",
-    "clearFilter": "Clear filters",
-    "prev": "‹ Previous",
-    "next": "Next ›"
-  },
-  "detail": {
-    "title": "Course Details",
+    "detail": {
+      "title": "Course Details",
     "lessonsPlus": "{n}+ Lessons",
     "studentsEnrolled": "{n} students enrolled",
     "levelPrefix": "Level {level}",

@@ -149,7 +149,7 @@ export async function updateLesson(actor: AuthContext, id: string, input: Update
   if (!courseId) throw AppError.notFound('Course not found', 'course.not_found');
   await assertOwnsCourse(actor, courseId);
 
-  if (input.section_id !== undefined && input.section_id !== lesson.section_id) {
+  if (input.section_id !== undefined && input.section_id !== null && input.section_id !== lesson.section_id) {
     const targetSection = await repo.sectionDetail(input.section_id);
     if (!targetSection || targetSection.course_id !== courseId) {
       throw AppError.badRequest('That section does not belong to this course', 'section.invalid_target');

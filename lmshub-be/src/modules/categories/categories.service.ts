@@ -63,7 +63,7 @@ export async function update(actor: AuthContext, id: string, input: UpdateCatego
   const before = await detail(id);
   const fields: Record<string, unknown> = {};
   if (input.name !== undefined) fields.name = input.name;
-  if (input.slug !== undefined) {
+  if (input.slug !== undefined && input.slug !== null) {
     const slug = slugify(input.slug);
     const existing = await repo.bySlug(slug);
     if (existing && existing.id !== id) throw AppError.conflict('That category slug is already in use', 'category.slug_taken');

@@ -216,8 +216,8 @@ export async function checkout(actor: AuthContext, input: CheckoutInput) {
       channel: 'online',
       marketing_user_id: null,
       items: input.items,
-      coupon_kode: input.coupon_kode,
-      notes: input.notes,
+      coupon_kode: input.coupon_kode || undefined,
+      notes: input.notes || undefined,
     });
 
     if (bolehLangsungAktif(o, input.items)) {
@@ -268,7 +268,7 @@ export async function createManual(actor: AuthContext, input: ManualOrderInput) 
       channel: 'manual',
       marketing_user_id,
       items: input.items,
-      coupon_kode: input.coupon_kode,
+      coupon_kode: input.coupon_kode || undefined,
       notes: input.notes ?? 'Tanda jadi/invoice manual',
     }),
   );

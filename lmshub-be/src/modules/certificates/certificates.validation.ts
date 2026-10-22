@@ -2,10 +2,10 @@ import { z } from 'zod';
 
 export const createTemplateSchema = z.object({
   name: z.string().min(2).max(150),
-  description: z.string().max(2000).optional(),
+  description: z.string().max(2000).nullable().optional(),
   layout: z.record(z.unknown()),
-  category_id: z.string().uuid().optional(),
-  course_id: z.string().uuid().optional(),
+  category_id: z.string().uuid().nullable().optional(),
+  course_id: z.string().uuid().nullable().optional(),
   is_default: z.boolean().default(false),
   is_active: z.boolean().default(true),
 });
@@ -21,12 +21,12 @@ export const updateTemplateSchema = z.object({
 });
 
 export const issueSchema = z.object({
-  reason: z.string().max(1000).optional(),
+  reason: z.string().max(1000).nullable().optional(),
 });
 
 export const exceptionIssueSchema = z.object({
   enrollment_id: z.string().uuid(),
-  template_id: z.string().uuid().optional(),
+  template_id: z.string().uuid().nullable().optional(),
   reason: z.string().min(5).max(1000),
 });
 
@@ -41,9 +41,9 @@ export const reissueSchema = z.object({
 export const createBadgeSchema = z.object({
   kode: z.string().min(2).max(60),
   name: z.string().min(2).max(150),
-  description: z.string().max(2000).optional(),
+  description: z.string().max(2000).nullable().optional(),
   criteria: z.record(z.unknown()),
-  icon_url: z.string().max(500).optional(),
+  icon_url: z.string().max(500).nullable().optional(),
   is_active: z.boolean().default(true),
 });
 

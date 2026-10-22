@@ -3,8 +3,8 @@ import { z } from 'zod';
 export const createUserSchema = z
   .object({
     name_lengkap: z.string().min(2).max(150),
-    email: z.string().email().optional(),
-    number_wa: z.string().min(6).max(20).optional(),
+    email: z.string().email().nullable().optional(),
+    number_wa: z.string().min(6).max(20).nullable().optional(),
     password: z.string().min(8).max(100),
     role_kode: z.string().min(2),
     status: z.enum(['pending', 'active']).default('active'),
@@ -31,12 +31,12 @@ export const setPermissionsSchema = z.object({
 
 export const verifySchema = z.object({
   action: z.enum(['approve', 'reject']),
-  reason: z.string().max(500).optional(),
+  reason: z.string().max(500).nullable().optional(),
 });
 
 export const addRoleSchema = z.object({
   role_kode: z.string().min(2),
-  reason: z.string().max(500).optional(),
+  reason: z.string().max(500).nullable().optional(),
 });
 
 // ── Self-service (profile & password sendiri) ──────────────────

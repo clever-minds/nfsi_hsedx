@@ -69,8 +69,9 @@ export async function publicList(req: Request, res: Response) {
       req.query['filter[price_max]'] !== undefined ? Number(req.query['filter[price_max]']) : undefined,
     q: req.query.q as string | undefined,
   };
-  const { rows, total } = await service.publicList(page, filters);
-  return ok(res, rows, pageMeta(page.page, page.limit, total));
+  const { rows, total, totalStudents } = await service.publicList(page, filters);
+  const meta = { ...pageMeta(page.page, page.limit, total), total_students: totalStudents ?? 0 };
+  return ok(res, rows, meta);
 }
 
 // PUBLIC

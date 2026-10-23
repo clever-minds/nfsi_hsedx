@@ -20,6 +20,7 @@
     "seed:student-quiz": "tsx src/scripts/seed-student-quiz.ts",
     "seed:categories": "tsx src/scripts/seed-categories.ts",
     "seed:chemical-safety": "tsx src/scripts/seed-chemical-safety.ts",
+    "fix:hindi": "tsx src/scripts/fix-hindi-content.ts",
     "test:features": "node scripts/feature-test.cjs",
     "db:reset": "tsx src/scripts/reset-db.ts && npm run migrate:up && npm run seed && npm run seed:demo",
     "test": "vitest run",

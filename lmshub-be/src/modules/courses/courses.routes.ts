@@ -56,3 +56,9 @@ coursesRouter.post(
   validate(archiveCourseSchema),
   asyncHandler(ctrl.archive),
 );
+coursesRouter.post(
+  '/:id/unarchive',
+  requireAuth(),
+  requirePermission('course', 'update'),
+  asyncHandler(ctrl.unarchive),
+);

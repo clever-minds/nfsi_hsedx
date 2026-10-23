@@ -239,6 +239,25 @@ export async function archive(actor: AuthContext, id: string, input: ArchiveCour
   return repo.detail(id);
 }
 
+/** → Batal Arsip / Pulihkan dari arsip kembali ke status publish/draft. */
+export async function unarchive(actor: AuthContext, id: string) {
+  const c = await detail(actor, id); // enforces scope
+  if (c.publication_status !== 'archived') throw AppError.conflict('This course is not archived', 'course.not_archived');
+  const targetStatus = c.published_at ? 'publish' : 'draft';
+  await repo.setStatus(id, targetStatus);
+  await recordAudit({
+    userId: actor.userId,
+    module: 'course',
+    action: 'unarchive',
+    entity: 'courses',
+    entityId: id,
+    before: { publication_status: c.publication_status },
+    after: { publication_status: targetStatus },
+  });
+  return repo.detail(id);
+}
+
+
 // ── Publik ───────────────────────────────────────────
 export async function publicList(p: PageParams, filters: repo.PublicFilters) {
   return repo.publicList(p, filters);

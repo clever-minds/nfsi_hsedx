@@ -16,10 +16,12 @@
     "submitReview": "إرسال للمراجعة",
     "publish": "نشر",
     "archive": "أرشفة",
+    "unarchive": "إلغاء الأرشفة",
     "edit": "تعديل",
     "submitFailed": "تعذّر الإرسال للمراجعة",
     "publishFailed": "تعذّر نشر الدورة",
     "archiveFailed": "تعذّرت أرشفة الدورة",
+    "unarchiveFailed": "تعذّر إلغاء أرشفة الدورة",
     "scopeAll": "كل الدورات",
     "scopeMine": "دوراتي"
   },

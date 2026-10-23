@@ -57,6 +57,10 @@ export async function archive(req: Request, res: Response) {
   return ok(res, await service.archive(auth(req), req.params.id, validated<ArchiveCourseInput>(req)));
 }
 
+export async function unarchive(req: Request, res: Response) {
+  return ok(res, await service.unarchive(auth(req), req.params.id));
+}
+
 // PUBLIC
 export async function publicList(req: Request, res: Response) {
   const page = parsePage(req);

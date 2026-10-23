@@ -16,10 +16,12 @@
     "submitReview": "समीक्षा के लिए भेजें",
     "publish": "प्रकाशित करें",
     "archive": "संग्रहित करें",
+    "unarchive": "संग्रह से हटाएं (Unarchive)",
     "edit": "संपादित करें",
     "submitFailed": "समीक्षा के लिए भेजा नहीं जा सका",
     "publishFailed": "कोर्स प्रकाशित नहीं हो सका",
     "archiveFailed": "कोर्स संग्रहित नहीं हो सका",
+    "unarchiveFailed": "कोर्स को संग्रह से नहीं हटाया जा सका",
     "scopeAll": "सभी कोर्स",
     "scopeMine": "मेरे कोर्स"
   },

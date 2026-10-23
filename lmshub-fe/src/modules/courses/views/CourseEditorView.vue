@@ -193,7 +193,7 @@ async function submit() {
   }
 }
 
-async function transition(action: 'submit' | 'publish' | 'archive') {
+async function transition(action: 'submit' | 'publish' | 'archive' | 'unarchive') {
   if (!courseId.value) return;
   busy.value = true;
   error.value = '';
@@ -371,6 +371,15 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
             @click="transition('archive')"
           >
             {{ t('courses.list.archive') }}
+          </button>
+          <button
+            v-if="currentStatus === 'archived'"
+            v-can="'course.update'"
+            class="btn-outline"
+            :disabled="busy"
+            @click="transition('unarchive')"
+          >
+            {{ t('courses.list.unarchive') }}
           </button>
         </div>
       </div>

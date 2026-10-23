@@ -16,10 +16,12 @@
     "submitReview": "Ajukan Review",
     "publish": "Terbitkan",
     "archive": "Arsipkan",
+    "unarchive": "Batal Arsip",
     "edit": "edit",
     "submitFailed": "failed mengajukan review",
     "publishFailed": "failed menerbitkan course",
     "archiveFailed": "failed mengarsipkan course",
+    "unarchiveFailed": "failed membatalkan arsip course",
     "scopeAll": "Semua course",
     "scopeMine": "Course saya"
   },

@@ -16,10 +16,12 @@
     "submitReview": "Submit for Review",
     "publish": "Publish",
     "archive": "Archive",
+    "unarchive": "Unarchive",
     "edit": "Edit",
     "submitFailed": "Failed to submit for review",
     "publishFailed": "Failed to publish the course",
     "archiveFailed": "Failed to archive the course",
+    "unarchiveFailed": "Failed to unarchive the course",
     "scopeAll": "All courses",
     "scopeMine": "My courses"
   },

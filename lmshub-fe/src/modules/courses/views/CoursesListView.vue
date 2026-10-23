@@ -128,6 +128,17 @@ async function archive(id: string) {
     busyId.value = null;
   }
 }
+async function unarchive(id: string) {
+  busyId.value = id;
+  try {
+    await apiPost(`/courses/${id}/unarchive`, {});
+    await load();
+  } catch (e) {
+    error.value = errorMessage(e, t('courses.list.unarchiveFailed'));
+  } finally {
+    busyId.value = null;
+  }
+}
 
 watch(page, load);
 watch(onlyMine, search);
@@ -201,6 +212,15 @@ onMounted(() => {
             @click="archive((row as unknown as CourseRow).id)"
           >
             {{ t('courses.list.archive') }}
+          </button>
+          <button
+            v-if="['archived'].includes((row as unknown as CourseRow).publication_status)"
+            v-can="'course.update'"
+            class="row-link row-link-positive"
+            :disabled="busyId === (row as unknown as CourseRow).id"
+            @click="unarchive((row as unknown as CourseRow).id)"
+          >
+            {{ t('courses.list.unarchive') }}
           </button>
           <RouterLink :to="`/d/courses/${(row as unknown as CourseRow).id}`" class="row-link">
             {{ t('courses.list.edit') }}

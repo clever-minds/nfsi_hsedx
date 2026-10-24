@@ -2,13 +2,19 @@
   "title": "HIRA Safety Awareness Course | हीरा सुरक्षा जागरूकता कोर्स (Hazard Identification & Risk Assessment)",
   "slug": "hira-safety-awareness",
   "summary": "Hazard Identification & Risk Assessment (HIRA) safety course. Learn hazard identification, risk matrix evaluation, hierarchy of controls, and JSA. | खतरा पहचान एवं जोखिम मूल्यांकन (HIRA) सुरक्षा कोर्स। कार्यस्थल पर खतरों की पहचान, रिस्क मैट्रिक्स, पदानुक्रम नियंत्रण और JSA सीखें।",
-  "description": "<h3>HIRA Safety Awareness Course / हीरा सुरक्षा जागरूकता कोर्स</h3><p>Comprehensive bilingual training course developed for HSEdx covering Hazard Identification and Risk Assessment across all 10 modules. Features full English and pure Hindi video scripts, PPT presentations, in-depth reading notes, and knowledge checks with assessment questions.</p>",
+  "description": "[EN]\n<h3>HIRA Safety Awareness Course</h3><p>Comprehensive training course developed for HSEdx covering Hazard Identification and Risk Assessment across all 10 modules. Features full English video scripts, PPT presentations, in-depth reading notes, and knowledge checks with assessment questions.</p>\n[/EN]\n\n[HI]\n<h3>हीरा (HIRA) सुरक्षा जागरूकता कोर्स</h3><p>HSEdx द्वारा विकसित व्यापक खतरा पहचान एवं जोखिम मूल्यांकन (HIRA) सुरक्षा प्रशिक्षण कोर्स। इसमें कार्यस्थल के खतरों की पहचान, जोखिम मूल्यांकन, पदानुक्रम नियंत्रण (Hierarchy of Controls) और JSA से संबंधित सभी 10 मॉड्यूल्स के संपूर्ण व्याख्यान, अध्ययन नोट्स और प्रश्नोत्तरी शामिल हैं।</p>\n[/HI]",
   "category_name": "Industrial Safety",
   "category_slug": "industrial-safety",
   "category_icon": "⚠️",
   "level": "beginner",
   "price": 0,
   "language": "en",
+  "meta": {
+    "description_en": "<h3>HIRA Safety Awareness Course</h3><p>Comprehensive training course developed for HSEdx covering Hazard Identification and Risk Assessment across all 10 modules. Features full English video scripts, PPT presentations, in-depth reading notes, and knowledge checks with assessment questions.</p>",
+    "description_hi": "<h3>हीरा (HIRA) सुरक्षा जागरूकता कोर्स</h3><p>HSEdx द्वारा विकसित व्यापक खतरा पहचान एवं जोखिम मूल्यांकन (HIRA) सुरक्षा प्रशिक्षण कोर्स। इसमें कार्यस्थल के खतरों की पहचान, जोखिम मूल्यांकन, पदानुक्रम नियंत्रण (Hierarchy of Controls) और JSA से संबंधित सभी 10 मॉड्यूल्स के संपूर्ण व्याख्यान, अध्ययन नोट्स और प्रश्नोत्तरी शामिल हैं।</p>",
+    "summary_en": "Hazard Identification & Risk Assessment (HIRA) safety course. Learn hazard identification, risk matrix evaluation, hierarchy of controls, and JSA.",
+    "summary_hi": "खतरा पहचान एवं जोखिम मूल्यांकन (HIRA) सुरक्षा कोर्स। कार्यस्थल पर खतरों की पहचान, रिस्क मैट्रिक्स, पदानुक्रम नियंत्रण और JSA सीखें।"
+  },
   "sections": [
     {
       "title": "Module 1: Safety Awareness and Introduction to HIRA / सुरक्षा जागरूकता और HIRA का परिचय",

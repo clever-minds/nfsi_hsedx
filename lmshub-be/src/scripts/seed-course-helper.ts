@@ -104,11 +104,12 @@ export async function seedCourseFromJson(jsonPath: string) {
       }
       await client.query('DELETE FROM sections WHERE course_id = $1', [courseId]);
 
+      const courseMeta = courseData.meta || {};
       await client.query(
         `UPDATE courses SET
           title = $1, summary = $2, description = $3, category_id = $4,
           instructor_id = $5, level = $6::course_level, price = $7, publication_status = 'publish',
-          published_at = NOW(), language = $8, allow_restart = true, updated_at = NOW()
+          published_at = NOW(), language = $8, allow_restart = true, updated_at = NOW(), meta = $10
         WHERE id = $9`,
         [
           safeTitle,
@@ -120,16 +121,18 @@ export async function seedCourseFromJson(jsonPath: string) {
           courseData.price,
           courseData.language,
           courseId,
+          JSON.stringify(courseMeta),
         ],
       );
     } else {
+      const courseMeta = courseData.meta || {};
       const newCourse = await client.query(
         `INSERT INTO courses (
           title, slug, summary, description, category_id, instructor_id,
-          level, price, publication_status, published_at, language, allow_restart
+          level, price, publication_status, published_at, language, allow_restart, meta
         ) VALUES (
           $1, $2, $3, $4, $5, $6,
-          $7::course_level, $8, 'publish', NOW(), $9, true
+          $7::course_level, $8, 'publish', NOW(), $9, true, $10
         ) RETURNING id`,
         [
           safeTitle,
@@ -141,6 +144,7 @@ export async function seedCourseFromJson(jsonPath: string) {
           courseData.level,
           courseData.price,
           courseData.language,
+          JSON.stringify(courseMeta),
         ],
       );
       courseId = newCourse.rows[0].id;

@@ -9,7 +9,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useCheckout } from '@/composables/useCheckout';
 import { getPaymentConfig, type GatewayOption } from '@/lib/payments';
 import { currentLocale } from '@/i18n';
-import { getLocalizedText } from '@/lib/course-localization';
+import { getLocalizedText, filterLessonHtml, splitLessonContent } from '@/lib/course-localization';
 import Icon from '@/components/ui/Icon.vue';
 
 interface Lesson { id: string; title: string; type: string; duration_minutes?: number | null; gratis_preview?: boolean }
@@ -39,6 +39,10 @@ interface CourseDetail {
   instructor_amount_kursus?: number | null;
   meta?: {
     thumbnail_url?: string;
+    description_en?: string;
+    description_hi?: string;
+    summary_en?: string;
+    summary_hi?: string;
     yang_dipelajari?: string[];
     persyaratan?: string[];
     cocok_untuk?: string[];
@@ -63,17 +67,34 @@ const course = ref<CourseDetail | null>(null);
 const localizedTitle = computed(() => getLocalizedText(course.value?.title));
 const localizedSummary = computed(() => {
   if (!course.value) return '';
-  if (currentLocale() === 'hi' && course.value.meta?.summary_hi) {
+  const isHi = currentLocale() === 'hi';
+  if (isHi && course.value.meta?.summary_hi) {
     return course.value.meta.summary_hi;
+  }
+  if (!isHi && course.value.meta?.summary_en) {
+    return course.value.meta.summary_en;
   }
   return getLocalizedText(course.value.summary);
 });
 const localizedDescription = computed(() => {
   if (!course.value) return '';
-  if (currentLocale() === 'hi' && course.value.meta?.description_hi) {
-    return course.value.meta.description_hi;
+  const isHi = currentLocale() === 'hi';
+  const meta = course.value.meta as Record<string, any> | undefined;
+
+  if (isHi && meta?.description_hi) {
+    return meta.description_hi;
   }
-  return course.value.description || '';
+  if (!isHi && meta?.description_en) {
+    return meta.description_en;
+  }
+
+  const raw = course.value.description || '';
+  if (raw.includes('[EN]') || raw.includes('[HI]')) {
+    const { en, hi } = splitLessonContent(raw);
+    return isHi ? (hi || en) : (en || hi);
+  }
+
+  return filterLessonHtml(raw, isHi ? 'hi' : 'en');
 });
 const error = ref('');
 const { loading: buying, error: buyError, status, buy } = useCheckout();

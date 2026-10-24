@@ -2,13 +2,21 @@
   "title": "Electrical Safety Awareness Course | इलेक्ट्रिकल सुरक्षा जागरूकता कोर्स",
   "slug": "electrical-safety-awareness",
   "summary": "Comprehensive Electrical Safety Awareness Course. Learn electrical hazards, shock, burns, arc flash, grounding, LOTO, and emergency response. | इलेक्ट्रिकल सुरक्षा जागरूकता कोर्स। विद्युत खतरे, इलेक्ट्रिक शॉक, बर्न्स, आर्क फ्लैश, अर्थिंग, LOTO और आपातकालीन प्रतिक्रिया सीखें।",
-  "description": "<h3>Electrical Safety Awareness Course / इलेक्ट्रिकल सुरक्षा जागरूकता कोर्स</h3><p>Comprehensive bilingual training course developed for HSEdx covering Electrical Safety across all 10 modules. Features full English and pure Hindi video scripts, PPT presentations, in-depth reading notes, and knowledge checks with assessment questions.</p>",
+  "description": "[EN]\n<h3>Electrical Safety Awareness Course</h3><p>Comprehensive bilingual training course developed for HSEdx covering Electrical Safety across all 10 modules. Features full English video scripts, PPT presentations, in-depth reading notes, and knowledge checks with assessment questions.</p>\n[/EN]\n\n[HI]\n<h3>इलेक्ट्रिकल सुरक्षा जागरूकता कोर्स</h3><p>HSEdx द्वारा विकसित व्यापक विद्युत सुरक्षा जागरूकता एवं प्रशिक्षण कोर्स। इसमें विद्युत खतरों की पहचान, इलेक्ट्रिक शॉक और बर्न्स की रोकथाम, अर्थिंग, RCD/ELCB सुरक्षा, LOTO और आपातकालीन प्रतिक्रिया से संबंधित सभी 10 मॉड्यूल्स के व्याख्यान, अध्ययन नोट्स और प्रश्नोत्तरी शामिल हैं।</p>\n[/HI]",
   "category_name": "Electrical Safety",
   "category_slug": "electrical-safety",
   "category_icon": "⚡",
   "level": "beginner",
   "price": 0,
   "language": "en",
+  "meta": {
+    "title_en": "Electrical Safety Awareness Course",
+    "title_hi": "इलेक्ट्रिकल सुरक्षा जागरूकता कोर्स",
+    "summary_en": "Comprehensive Electrical Safety Awareness Course. Learn electrical hazards, shock, burns, arc flash, grounding, LOTO, and emergency response.",
+    "summary_hi": "इलेक्ट्रिकल सुरक्षा जागरूकता कोर्स। विद्युत खतरे, इलेक्ट्रिक शॉक, बर्न्स, आर्क फ्लैश, अर्थिंग, LOTO और आपातकालीन प्रतिक्रिया सीखें।",
+    "description_en": "<h3>Electrical Safety Awareness Course</h3><p>Comprehensive bilingual training course developed for HSEdx covering Electrical Safety across all 10 modules. Features full English video scripts, PPT presentations, in-depth reading notes, and knowledge checks with assessment questions.</p>",
+    "description_hi": "<h3>इलेक्ट्रिकल सुरक्षा जागरूकता कोर्स</h3><p>HSEdx द्वारा विकसित व्यापक विद्युत सुरक्षा जागरूकता एवं प्रशिक्षण कोर्स। इसमें विद्युत खतरों की पहचान, इलेक्ट्रिक शॉक और बर्न्स की रोकथाम, अर्थिंग, RCD/ELCB सुरक्षा, LOTO और आपातकालीन प्रतिक्रिया से संबंधित सभी 10 मॉड्यूल्स के व्याख्यान, अध्ययन नोट्स और प्रश्नोत्तरी शामिल हैं।</p>"
+  },
   "sections": [
     {
       "title": "Module 1: Safety Awareness and Introduction to Electrical Safety / सुरक्षा जागरूकता और इलेक्ट्रिकल सुरक्षा का परिचय",

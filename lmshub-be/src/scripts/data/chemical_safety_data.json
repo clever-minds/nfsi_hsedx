@@ -2,13 +2,21 @@
   "title": "Chemical Safety Awareness Course (English + Hindi) | केमिकल सेफ्टी अवेयरनेस",
   "slug": "chemical-safety-awareness",
   "summary": "Comprehensive Bilingual (English + Hindi) Chemical Safety Awareness Course for HSEdx. Covers chemical hazard identification, routes of exposure, GHS & SDS, safe handling & storage, spill response, waste management, and safety audits.",
-  "description": "<h3>Chemical Safety Awareness Course / केमिकल सेफ्टी अवेयरनेस कोर्स</h3><p>Comprehensive bilingual training course developed for HSEdx. Covers all 10 modules with complete English and Hindi video scripts, PPT key points, reading material, and knowledge checks.</p>",
+  "description": "[EN]\n<h3>Chemical Safety Awareness Course</h3><p>Comprehensive bilingual training course developed for HSEdx covering Chemical Safety across all 10 modules. Features full English and pure Hindi video scripts, PPT presentations, in-depth reading notes, and knowledge checks with assessment questions.</p>\n[/EN]\n\n[HI]\n<h3>केमिकल सेफ्टी अवेयरनेस कोर्स</h3><p>HSEdx द्वारा विकसित व्यापक रासायनिक सुरक्षा (Chemical Safety) जागरूकता एवं प्रशिक्षण कोर्स। इसमें रासायनिक खतरों की पहचान, GHS और SDS, सुरक्षित संचालन और भंडारण, स्पिल रिस्पॉन्स, अपशिष्ट प्रबंधन और सुरक्षा ऑडिट से संबंधित सभी 10 मॉड्यूल्स के व्याख्यान, अध्ययन नोट्स और प्रश्नोत्तरी शामिल हैं।</p>\n[/HI]",
   "category_name": "Chemical Safety",
   "category_slug": "chemical-safety",
   "category_icon": "🧪",
   "level": "beginner",
   "price": 0,
   "language": "en",
+  "meta": {
+    "title_en": "Chemical Safety Awareness Course",
+    "title_hi": "केमिकल सेफ्टी अवेयरनेस कोर्स",
+    "summary_en": "Comprehensive Bilingual Chemical Safety Awareness Course for HSEdx. Covers chemical hazard identification, routes of exposure, GHS & SDS, safe handling & storage, spill response, and waste management.",
+    "summary_hi": "HSEdx के लिए व्यापक द्विभाषी केमिकल सेफ्टी अवेयरनेस कोर्स। रासायनिक खतरों की पहचान, GHS व SDS, सुरक्षित भंडारण, रिसाव नियंत्रण और अपशिष्ट प्रबंधन सीखें।",
+    "description_en": "<h3>Chemical Safety Awareness Course</h3><p>Comprehensive bilingual training course developed for HSEdx covering Chemical Safety across all 10 modules. Features full English and pure Hindi video scripts, PPT presentations, in-depth reading notes, and knowledge checks with assessment questions.</p>",
+    "description_hi": "<h3>केमिकल सेफ्टी अवेयरनेस कोर्स</h3><p>HSEdx द्वारा विकसित व्यापक रासायनिक सुरक्षा (Chemical Safety) जागरूकता एवं प्रशिक्षण कोर्स। इसमें रासायनिक खतरों की पहचान, GHS और SDS, सुरक्षित संचालन और भंडारण, स्पिल रिस्पॉन्स, अपशिष्ट प्रबंधन और सुरक्षा ऑडिट से संबंधित सभी 10 मॉड्यूल्स के व्याख्यान, अध्ययन नोट्स और प्रश्नोत्तरी शामिल हैं।</p>"
+  },
   "sections": [
     {
       "title": "Module 1: Safety Awareness and Introduction to Chemical Safety / सुरक्षा जागरूकता और केमिकल सेफ्टी का परिचय",

@@ -2,13 +2,21 @@
   "title": "LOTO Safety Awareness Course | लोटो (Lockout Tagout) सुरक्षा जागरूकता कोर्स",
   "slug": "loto-safety-awareness",
   "summary": "Comprehensive Lockout Tagout (LOTO) Safety Training Course. Learn hazardous energy isolation, lockout devices, step-by-step procedures, and zero energy verification. | लॉकआउट टैगआउट (LOTO) सुरक्षा प्रशिक्षण। खतरनाक ऊर्जा अलगाव, लॉकआउट उपकरण, चरणबद्ध प्रक्रिया और शून्य ऊर्जा सत्यापन सीखें।",
-  "description": "<h3>LOTO Safety Awareness Course / लोटो (Lockout Tagout) सुरक्षा जागरूकता कोर्स</h3><p>Comprehensive bilingual training course developed for HSEdx covering Lockout Tagout across all 10 modules. Features full English and pure Hindi video scripts, PPT presentations, in-depth reading notes, and knowledge checks with assessment questions.</p>",
+  "description": "[EN]\n<h3>LOTO Safety Awareness Course</h3><p>Comprehensive bilingual training course developed for HSEdx covering Lockout Tagout across all 10 modules. Features full English video scripts, PPT presentations, in-depth reading notes, and knowledge checks with assessment questions.</p>\n[/EN]\n\n[HI]\n<h3>लोटो (Lockout Tagout) सुरक्षा जागरूकता कोर्स</h3><p>HSEdx द्वारा विकसित व्यापक लॉकआउट टैगआउट (LOTO) सुरक्षा प्रशिक्षण कोर्स। इसमें खतरनाक ऊर्जा के स्रोतों की पहचान, ऊर्जा अलगाव (Isolation), LOTO पैडलॉक और डेंजर टैग लगाना, शून्य ऊर्जा सत्यापन और ग्रुप LOTO से संबंधित सभी 10 मॉड्यूल्स के व्याख्यान, अध्ययन नोट्स और प्रश्नोत्तरी शामिल हैं।</p>\n[/HI]",
   "category_name": "Industrial Safety",
   "category_slug": "industrial-safety",
   "category_icon": "🔒",
   "level": "beginner",
   "price": 0,
   "language": "en",
+  "meta": {
+    "title_en": "LOTO Safety Awareness Course",
+    "title_hi": "लोटो (Lockout Tagout) सुरक्षा जागरूकता कोर्स",
+    "summary_en": "Comprehensive Lockout Tagout (LOTO) Safety Training Course. Learn hazardous energy isolation, lockout devices, step-by-step procedures, and zero energy verification.",
+    "summary_hi": "लॉकआउट टैगआउट (LOTO) सुरक्षा प्रशिक्षण। खतरनाक ऊर्जा अलगाव, लॉकआउट उपकरण, चरणबद्ध प्रक्रिया और शून्य ऊर्जा सत्यापन सीखें।",
+    "description_en": "<h3>LOTO Safety Awareness Course</h3><p>Comprehensive bilingual training course developed for HSEdx covering Lockout Tagout across all 10 modules. Features full English video scripts, PPT presentations, in-depth reading notes, and knowledge checks with assessment questions.</p>",
+    "description_hi": "<h3>लोटो (Lockout Tagout) सुरक्षा जागरूकता कोर्स</h3><p>HSEdx द्वारा विकसित व्यापक लॉकआउट टैगआउट (LOTO) सुरक्षा प्रशिक्षण कोर्स। इसमें खतरनाक ऊर्जा के स्रोतों की पहचान, ऊर्जा अलगाव (Isolation), LOTO पैडलॉक और डेंजर टैग लगाना, शून्य ऊर्जा सत्यापन और ग्रुप LOTO से संबंधित सभी 10 मॉड्यूल्स के व्याख्यान, अध्ययन नोट्स और प्रश्नोत्तरी शामिल हैं।</p>"
+  },
   "sections": [
     {
       "title": "Module 1: Safety Awareness and Introduction to LOTO / सुरक्षा जागरूकता और LOTO का परिचय",

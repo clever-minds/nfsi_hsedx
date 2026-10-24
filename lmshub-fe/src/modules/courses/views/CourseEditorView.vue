@@ -9,7 +9,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import StatusChip from '@/components/ui/StatusChip.vue';
 import RichTextEditor from '@/components/ui/RichTextEditor.vue';
 import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
-import { splitLocalizedText, combineLocalizedText } from '@/lib/course-localization';
+import { splitLocalizedText, combineLocalizedText, splitLessonContent } from '@/lib/course-localization';
 
 interface CourseDetail {
   id: string;
@@ -120,8 +120,9 @@ async function loadCourse(id: string) {
   form.summary_hi = c.meta?.summary_hi || sHi;
 
   form.description = c.description ?? '';
-  form.description_en = c.meta?.description_en || c.description || '';
-  form.description_hi = c.meta?.description_hi || '';
+  const { en: dEn, hi: dHi } = splitLessonContent(c.description);
+  form.description_en = c.meta?.description_en || dEn;
+  form.description_hi = c.meta?.description_hi || dHi;
 
   form.language = c.language;
   currentStatus.value = c.publication_status;
@@ -187,6 +188,17 @@ async function submit() {
   try {
     const fullTitle = combineLocalizedText(form.title_en, form.title_hi, ' | ') || form.title;
     const fullSummary = combineLocalizedText(form.summary_en, form.summary_hi, ' | ') || form.summary;
+    const enDesc = (form.description_en || '').trim();
+    const hiDesc = (form.description_hi || '').trim();
+    let fullDescription = form.description;
+    if (enDesc && hiDesc) {
+      fullDescription = `[EN]\n${enDesc}\n[/EN]\n\n[HI]\n${hiDesc}\n[/HI]`;
+    } else if (enDesc) {
+      fullDescription = enDesc;
+    } else if (hiDesc) {
+      fullDescription = hiDesc;
+    }
+
     const updatedMeta = {
       ...(courseMeta.value || {}),
       title_en: form.title_en,
@@ -204,7 +216,7 @@ async function submit() {
       price: Number(form.price),
       strike_price: form.strike_price ? Number(form.strike_price) : undefined,
       summary: fullSummary || undefined,
-      description: form.description_en || form.description || undefined,
+      description: fullDescription || undefined,
       language: form.language,
       thumbnail_media_id: form.thumbnail_media_id || undefined,
       meta: updatedMeta,

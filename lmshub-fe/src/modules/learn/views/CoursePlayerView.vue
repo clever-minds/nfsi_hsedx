@@ -241,8 +241,8 @@ function handleTimeUpdate() {
   if (now - lastProgressSentAt < 12000) return; // throttle ~12s
   lastProgressSentAt = now;
   apiPut(`/lessons/${currentLesson.value.id}/progress`, {
-    status: 'sedang_dipelajari',
-    positionSeconds: Math.floor(el.currentTime),
+    status: 'in_progress',
+    position_seconds: Math.floor(el.currentTime),
   }).catch(() => {});
 }
 
@@ -251,7 +251,7 @@ async function handleEnded() {
   if (nextLesson.value && !nextLesson.value.terkunci) selectLesson(nextLesson.value);
 }
 
-// ── Catatan ──────────────────────────────────────────────
+// ── Notes ────────────────────────────────────────────────
 async function addNote() {
   if (!newNoteText.value.trim() || !currentLesson.value) return;
   try {
@@ -282,7 +282,7 @@ function seekTo(seconds?: number | null) {
   }
 }
 
-// ── Tanya-Jawab ──────────────────────────────────────────
+// ── Q&A ──────────────────────────────────────────────────
 async function askQuestion() {
   if (!newQuestionText.value.trim() || !currentLesson.value) return;
   try {
@@ -368,7 +368,7 @@ onMounted(load);
 
       </aside>
 
-      <!-- Konten primary -->
+      <!-- Main Content -->
       <div>
         <div v-if="certificateEligible" class="card mb-4 flex flex-wrap items-center justify-between gap-3 border-accent-500/40 bg-accent-500/5 p-4">
           <div>

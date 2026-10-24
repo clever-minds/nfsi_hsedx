@@ -4,7 +4,7 @@ import * as repo from './progress.repository';
 import * as enrollmentsRepo from '../enrollments/enrollments.repository';
 import { CreateBookmarkInput, CreateNoteInput, UpdateLessonProgressInput, UpdateNoteInput } from './progress.validation';
 
-const PERSEN_SELESAI_PENUH = 100;
+const FULL_COMPLETION_PERCENT = 100;
 
 const isSuper = (actor: AuthContext) => actor.permissions.has('*');
 
@@ -21,25 +21,21 @@ async function requireOwnEnrollment(actor: AuthContext, courseId: string) {
 }
 
 export async function recalcCourseProgress(enrollmentId: string, courseId: string) {
-  const { wajib, total } = await repo.countCourseLessons(courseId);
-  const finish = await repo.countCompletedWajibLessons(enrollmentId, courseId);
-  const target = wajib > 0 ? wajib : total;
-  const persen = target > 0 ? Math.min(100, Math.round((finish / target) * 10000) / 100) : 0;
+  const { mandatory, total } = await repo.countCourseLessons(courseId);
+  const finish = await repo.countCompletedMandatoryLessons(enrollmentId, courseId);
+  const target = mandatory > 0 ? mandatory : total;
+  const percent = target > 0 ? Math.min(100, Math.round((finish / target) * 10000) / 100) : 0;
   const completed = target > 0 && finish >= target;
 
   const cp = await repo.upsertCourseProgress({
     enrollment_id: enrollmentId,
-    progress_percent: persen,
+    progress_percent: percent,
     completed_lessons_count: finish,
     total_lesson: target,
     completed,
   });
 
-  if (completed && persen >= PERSEN_SELESAI_PENUH) {
-    // Certificate no diterbitkan di sini. Kelayakan dievaluasi saat student
-    // mengklaim (POST /enrollments/:id/certificate/claim), karena syaratnya
-    // menggabungkan progres, value, dan kehadiran — dua di antaranya bisa
-    // berubah setelah pelajaran terakhir ditandai finish.
+  if (completed && percent >= FULL_COMPLETION_PERCENT) {
     await enrollmentsRepo.markSelesai(enrollmentId);
   }
   return cp;
@@ -79,10 +75,10 @@ export async function learnView(actor: AuthContext, courseId: string) {
 
   const actualCourseId = course.id;
   let enrollment = await enrollmentsRepo.findActiveByUserCourse(actor.userId, actualCourseId);
-  let terdaftar = !!enrollment && ['registered', 'active', 'completed'].includes(enrollment.status);
+  let isEnrolled = !!enrollment && ['registered', 'active', 'completed'].includes(enrollment.status);
 
   // Auto-enroll free courses if student visits learn view
-  if (!terdaftar && Number(course.price || 0) === 0) {
+  if (!isEnrolled && Number(course.price || 0) === 0) {
     try {
       const inserted = await enrollmentsRepo.insert({
         user_id: actor.userId,
@@ -96,24 +92,21 @@ export async function learnView(actor: AuthContext, courseId: string) {
       });
       await enrollmentsRepo.activateIfTerdaftar(inserted.id);
       enrollment = await enrollmentsRepo.findActiveByUserCourse(actor.userId, actualCourseId);
-      terdaftar = !!enrollment && ['registered', 'active', 'completed'].includes(enrollment.status);
+      isEnrolled = !!enrollment && ['registered', 'active', 'completed'].includes(enrollment.status);
     } catch {
       enrollment = await enrollmentsRepo.findActiveByUserCourse(actor.userId, actualCourseId);
-      terdaftar = !!enrollment && ['registered', 'active', 'completed'].includes(enrollment.status);
+      isEnrolled = !!enrollment && ['registered', 'active', 'completed'].includes(enrollment.status);
     }
   }
 
-  // Super admin dan instructor pengampu boleh membuka content course tanpa menjadi
-  // student. Tanpa jalan ini, tab Tanya-Jawab mati total bagi mereka: register
-  // material no pernah termuat, sehingga no ada yang bisa dimoderasi.
-  // Mereka melihat struktur course dengan progres nol — bukan progres siapa pun.
-  const staf = terdaftar ? false : isSuper(actor) || (await repo.isCourseInstructor(actualCourseId, actor.userId));
+  // Super admins and course instructors can access course content without enrollment
+  const isStaff = isEnrolled ? false : isSuper(actor) || (await repo.isCourseInstructor(actualCourseId, actor.userId));
 
-  if (!terdaftar && !staf) {
+  if (!isEnrolled && !isStaff) {
     throw AppError.forbidden('You are not enrolled in this course', 'enrollment.not_enrolled_course');
   }
   if (
-    terdaftar &&
+    isEnrolled &&
     enrollment!.status !== 'completed' &&
     enrollment!.akses_kedaluwarsa_at &&
     new Date(enrollment!.akses_kedaluwarsa_at) < new Date()

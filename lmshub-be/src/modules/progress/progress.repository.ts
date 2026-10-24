@@ -196,19 +196,19 @@ export async function upsertLessonProgress(data: {
   return row!;
 }
 
-export async function countCourseLessons(courseId: string): Promise<{ total: number; wajib: number }> {
-  const row = await queryOne<{ total: string; wajib: string }>(
-    `SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE l.must_complete)::int AS wajib
+export async function countCourseLessons(courseId: string): Promise<{ total: number; mandatory: number }> {
+  const row = await queryOne<{ total: string; mandatory: string }>(
+    `SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE l.must_complete)::int AS mandatory
        FROM lessons l JOIN sections s ON s.id = l.section_id
       WHERE s.course_id = $1 AND l.deleted_at IS NULL AND s.deleted_at IS NULL`,
     [courseId],
   );
   const total = Number(row?.total ?? 0);
-  const wajib = Number(row?.wajib ?? 0);
-  return { total, wajib: wajib > 0 ? wajib : total };
+  const mandatory = Number(row?.mandatory ?? 0);
+  return { total, mandatory: mandatory > 0 ? mandatory : total };
 }
 
-export async function countCompletedWajibLessons(enrollmentId: string, courseId: string): Promise<number> {
+export async function countCompletedMandatoryLessons(enrollmentId: string, courseId: string): Promise<number> {
   const row = await queryOne<{ count: string }>(
     `SELECT COUNT(*)::int AS count
        FROM lesson_progress lp

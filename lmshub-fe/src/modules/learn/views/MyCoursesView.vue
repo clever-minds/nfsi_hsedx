@@ -55,11 +55,7 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    // WAJIB memfilter to user yang login. BE hanya membatasi /enrollments
-    // to milik sendiri untuk peran student; peran dengan `enrollment.view` luas
-    // (admin, direktur, instructor, …) menerima enrollment SELURUH user —
-    // halaman ini lalu menampilkannya seolah miliknya, dan tombol start
-    // Belajar berujung "Anda belum terdaftar di course ini".
+    // Must filter by logged-in user.
     const res = await apiGetFull<EnrollmentRow[]>('/enrollments', {
       limit: 100,
       'filter[user_id]': auth.user?.id,
@@ -137,7 +133,7 @@ onMounted(load);
 
           <div class="mt-4 flex-1"></div>
 
-          <!-- 100%: tetap bisa buka course (review material) + view certificate berdampingan -->
+          <!-- 100%: review material and view certificate side-by-side -->
           <div v-if="(c.progress_percent ?? 0) >= 100 || c.status === 'completed'" class="mt-2 flex gap-2">
             <RouterLink :to="`/d/learn/${c.course_id}`" class="btn-outline flex-1 justify-center">
               {{ t('learn.my.viewCourse') }}

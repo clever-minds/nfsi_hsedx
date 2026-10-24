@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { apiDelete, apiGet, apiGetFull, apiPost, apiPut, assetUrl, errorMessage } from '@/lib/api';

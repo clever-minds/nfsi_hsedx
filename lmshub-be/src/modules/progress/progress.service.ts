@@ -76,14 +76,37 @@ export async function learnView(actor: AuthContext, courseId: string) {
   const course = await repo.learnCourse(courseId);
   if (!course) throw AppError.notFound('Course not found', 'course.not_found');
 
-  const enrollment = await enrollmentsRepo.findActiveByUserCourse(actor.userId, courseId);
-  const terdaftar = !!enrollment && ['registered', 'active', 'completed'].includes(enrollment.status);
+  const actualCourseId = course.id;
+  let enrollment = await enrollmentsRepo.findActiveByUserCourse(actor.userId, actualCourseId);
+  let terdaftar = !!enrollment && ['registered', 'active', 'completed'].includes(enrollment.status);
+
+  // Auto-enroll free courses if student visits learn view
+  if (!terdaftar && Number(course.price || 0) === 0) {
+    try {
+      const inserted = await enrollmentsRepo.insert({
+        user_id: actor.userId,
+        course_id: actualCourseId,
+        cohort_id: null,
+        source: 'buy',
+        order_item_id: null,
+        assigned_by: null,
+        akses_kedaluwarsa_at: null,
+        notes: 'Auto-enrolled free course',
+      });
+      await enrollmentsRepo.activateIfTerdaftar(inserted.id);
+      enrollment = await enrollmentsRepo.findActiveByUserCourse(actor.userId, actualCourseId);
+      terdaftar = !!enrollment && ['registered', 'active', 'completed'].includes(enrollment.status);
+    } catch {
+      enrollment = await enrollmentsRepo.findActiveByUserCourse(actor.userId, actualCourseId);
+      terdaftar = !!enrollment && ['registered', 'active', 'completed'].includes(enrollment.status);
+    }
+  }
 
   // Super admin dan instructor pengampu boleh membuka content course tanpa menjadi
   // student. Tanpa jalan ini, tab Tanya-Jawab mati total bagi mereka: register
   // material no pernah termuat, sehingga no ada yang bisa dimoderasi.
   // Mereka melihat struktur course dengan progres nol — bukan progres siapa pun.
-  const staf = terdaftar ? false : isSuper(actor) || (await repo.isCourseInstructor(courseId, actor.userId));
+  const staf = terdaftar ? false : isSuper(actor) || (await repo.isCourseInstructor(actualCourseId, actor.userId));
 
   if (!terdaftar && !staf) {
     throw AppError.forbidden('You are not enrolled in this course', 'enrollment.not_enrolled_course');
@@ -98,9 +121,9 @@ export async function learnView(actor: AuthContext, courseId: string) {
   }
 
   const [sections, lessons, allContents, lessonProgress, courseProgress] = await Promise.all([
-    repo.learnSections(courseId),
-    repo.learnLessons(courseId),
-    repo.learnLessonContents(courseId),
+    repo.learnSections(actualCourseId),
+    repo.learnLessons(actualCourseId),
+    repo.learnLessonContents(actualCourseId),
     enrollment ? repo.lessonProgressOfEnrollment(enrollment.id) : Promise.resolve([]),
     enrollment ? repo.getCourseProgress(enrollment.id) : Promise.resolve(null),
   ]);

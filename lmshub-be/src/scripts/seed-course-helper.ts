@@ -28,6 +28,7 @@ export interface CoursePayload {
   level: string;
   price: number;
   language: string;
+  meta?: any;
   sections: SectionData[];
 }
 

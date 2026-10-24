@@ -49,6 +49,7 @@ export interface BookmarkRow {
 export interface LearnCourseRow {
   id: string;
   title: string;
+  price?: number | string | null;
   allow_restart: boolean;
   final_exam_quiz_id: string | null;
   final_exam_title: string | null;
@@ -74,18 +75,12 @@ export interface LearnLessonRow {
   content_url: string | null;
 }
 
-/**
- * Apakah `userId` adalah instructor pengampu course ini?
- *
- * Dipakai agar staf pengelola bisa membuka content course tanpa harus mendaftar
- * sebagai student — mereka perlu melihat material untuk memoderasi Tanya-Jawab.
- */
 export async function isCourseInstructor(courseId: string, userId: string): Promise<boolean> {
   const row = await queryOne<{ ada: number }>(
     `SELECT 1 AS ada
        FROM courses c
        JOIN instructor_profiles ip ON ip.id = c.instructor_id
-      WHERE c.id = $1 AND ip.user_id = $2 AND c.deleted_at IS NULL`,
+      WHERE (c.id::text = $1 OR c.slug = $1) AND ip.user_id = $2 AND c.deleted_at IS NULL`,
     [courseId, userId],
   );
   return !!row;
@@ -94,10 +89,10 @@ export async function isCourseInstructor(courseId: string, userId: string): Prom
 export async function learnCourse(courseId: string): Promise<LearnCourseRow | null> {
   // exam akhir hanya dilaporkan bila masih bisa dikerjakan (active, belum dihapus).
   return queryOne<LearnCourseRow>(
-    `SELECT c.id, c.title, c.allow_restart, q.id AS final_exam_quiz_id, q.title AS final_exam_title
+    `SELECT c.id, c.title, c.price, c.allow_restart, q.id AS final_exam_quiz_id, q.title AS final_exam_title
        FROM courses c
        LEFT JOIN quizzes q ON q.id = c.final_exam_quiz_id AND q.deleted_at IS NULL AND q.is_active = true
-      WHERE c.id = $1 AND c.deleted_at IS NULL`,
+      WHERE (c.id::text = $1 OR c.slug = $1) AND c.deleted_at IS NULL`,
     [courseId],
   );
 }

@@ -147,17 +147,20 @@ export async function learnView(actor: AuthContext, courseId: string) {
       .filter((l) => l.section_id === s.id)
       .map((l) => {
         const lp = progressByLesson.get(l.id);
-        const terkunci = !!l.drip_release_at && new Date(l.drip_release_at) > now;
+        const isLocked = !!l.drip_release_at && new Date(l.drip_release_at) > now;
         return {
           id: l.id,
           title: l.title,
           type: l.type,
+          duration_minutes: l.duration_minutes,
           durasi: l.duration_minutes,
           must_complete: l.must_complete,
+          is_completed: lp?.status === 'completed',
           finish: lp?.status === 'completed',
           position_seconds: lp?.position_seconds ?? 0,
-          terkunci,
-          drip_info: terkunci
+          is_locked: isLocked,
+          terkunci: isLocked,
+          drip_info: isLocked
             ? `Available on ${new Date(l.drip_release_at!).toLocaleDateString('en-US', { dateStyle: 'medium' })}`
             : undefined,
           video_url: l.content_url ?? undefined,

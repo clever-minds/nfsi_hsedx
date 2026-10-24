@@ -24,7 +24,7 @@ function appWithSimpleParser() {
 describe('query filter parsing', () => {
   it('keeps bracket filters as literal keys', async () => {
     const res = await request(appWithSimpleParser()).get(
-      '/probe?filter[from]=2026-08-01&filter[until]=2026-08-31&filter[status]=lunas',
+      '/probe?filter[from]=2026-08-01&filter[until]=2026-08-31&filter[status]=paid_in_full',
     );
 
     expect(res.body['filter[from]']).toBe('2026-08-01');
@@ -35,11 +35,11 @@ describe('query filter parsing', () => {
   });
 
   it('still reads plain pagination and search params', async () => {
-    const res = await request(appWithSimpleParser()).get('/probe?page=2&limit=50&q=budi&sort=-created_at');
+    const res = await request(appWithSimpleParser()).get('/probe?page=2&limit=50&q=john&sort=-created_at');
 
     expect(res.body.page).toBe('2');
     expect(res.body.limit).toBe('50');
-    expect(res.body.q).toBe('budi');
+    expect(res.body.q).toBe('john');
     expect(res.body.sort).toBe('-created_at');
   });
 
@@ -49,7 +49,7 @@ describe('query filter parsing', () => {
     const app = express(); // no query parser override — Express defaults to 'extended'
     app.get('/probe', (req, res) => res.json(req.query));
 
-    const res = await request(app).get('/probe?filter[status]=lunas');
+    const res = await request(app).get('/probe?filter[status]=paid_in_full');
 
     expect(res.body['filter[status]']).toBeUndefined();
     expect(res.body.filter).toEqual({ status: 'paid_in_full' });

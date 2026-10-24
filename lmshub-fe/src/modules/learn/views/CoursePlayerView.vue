@@ -15,8 +15,11 @@ interface Lesson {
   id: string;
   title: string;
   type?: string;
+  duration_minutes?: number;
   durasi?: number;
+  is_completed?: boolean;
   finish?: boolean;
+  is_locked?: boolean;
   terkunci?: boolean;
   drip_info?: string;
   video_url?: string;

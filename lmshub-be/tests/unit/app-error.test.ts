@@ -81,7 +81,7 @@ describe('error call sites', () => {
   // Common Indonesian function words. Any of these in a message that reaches a
   // reader means it would be shown to an English-speaking user untranslated.
   const INDONESIAN =
-    /\b(no|sudah|belum|harus|hanya|dapat|yang|untuk|from|dengan|anda|ditemukan|failed|wajib|dipakai|milik|pada|adalah|jangan|bisa|diisi|berisi|boleh|minimal)\b/i;
+    /\b(sudah|belum|harus|hanya|dapat|yang|untuk|dengan|anda|ditemukan|wajib|dipakai|milik|pada|adalah|jangan|bisa|diisi|berisi|boleh|minimal)\b/i;
 
   it('finds the error call sites to check', () => {
     expect(calls.length).toBeGreaterThan(300);

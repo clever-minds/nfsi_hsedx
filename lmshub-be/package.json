@@ -26,6 +26,7 @@
     "seed:all-safety": "tsx src/scripts/seed-all-safety.ts",
     "fix:hindi": "tsx src/scripts/fix-hindi-content.ts",
     "fix:progress": "tsx src/scripts/fix-progress-certificates.ts",
+    "fix:rina": "tsx src/scripts/remove-rina.ts",
     "course:unarchive": "tsx src/scripts/unarchive-course.ts",
     "test:features": "node scripts/feature-test.cjs",
     "db:reset": "tsx src/scripts/reset-db.ts && npm run migrate:up && npm run seed && npm run seed:demo",

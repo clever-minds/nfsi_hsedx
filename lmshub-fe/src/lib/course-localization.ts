@@ -17,9 +17,15 @@ export function getLocalizedText(rawText: string | null | undefined, forceLocale
     if (loc === 'hi') {
       const match = text.match(/\[HI\]([\s\S]*?)\[\/HI\]/i);
       if (match && match[1].trim()) return match[1].trim();
+      // Fallback to English if Hindi is missing
+      const enMatch = text.match(/\[EN\]([\s\S]*?)\[\/EN\]/i);
+      if (enMatch && enMatch[1].trim()) return enMatch[1].trim();
     } else {
       const match = text.match(/\[EN\]([\s\S]*?)\[\/EN\]/i);
       if (match && match[1].trim()) return match[1].trim();
+      // Fallback to Hindi if English is missing
+      const hiMatch = text.match(/\[HI\]([\s\S]*?)\[\/HI\]/i);
+      if (hiMatch && hiMatch[1].trim()) return hiMatch[1].trim();
     }
   }
 
@@ -28,10 +34,15 @@ export function getLocalizedText(rawText: string | null | undefined, forceLocale
     const parts = text.split(' | ');
     if (parts.length >= 2) {
       if (loc === 'hi') {
-        return parts.slice(1).join(' | ').trim();
-      } else {
-        // Strip "(English + Hindi)" or similar bilingual tags if present in EN part
+        const hiPart = parts.slice(1).join(' | ').trim();
+        if (hiPart) return hiPart;
+        // Fallback to English part
         return parts[0].replace(/\s*\((?:English\s*\+\s*Hindi|Bilingual)\)/i, '').trim();
+      } else {
+        const enPart = parts[0].replace(/\s*\((?:English\s*\+\s*Hindi|Bilingual)\)/i, '').trim();
+        if (enPart) return enPart;
+        // Fallback to Hindi part
+        return parts.slice(1).join(' | ').trim();
       }
     }
   }
@@ -41,9 +52,15 @@ export function getLocalizedText(rawText: string | null | undefined, forceLocale
     const parts = text.split(' / ');
     if (parts.length >= 2) {
       if (loc === 'hi') {
-        return parts.slice(1).join(' / ').trim();
-      } else {
+        const hiPart = parts.slice(1).join(' / ').trim();
+        if (hiPart) return hiPart;
+        // Fallback to English part
         return parts[0].trim();
+      } else {
+        const enPart = parts[0].trim();
+        if (enPart) return enPart;
+        // Fallback to Hindi part
+        return parts.slice(1).join(' / ').trim();
       }
     }
   }
@@ -92,6 +109,7 @@ export function combineLocalizedText(enText: string | null | undefined, hiText: 
 
 /**
  * Filters bilingual HTML content to display either English, Hindi, or Both.
+ * If Hindi is requested but not available, it always falls back to English.
  */
 export function filterLessonHtml(html: string | null | undefined, lang: 'en' | 'hi' | 'both'): string {
   if (!html) return '';
@@ -102,9 +120,15 @@ export function filterLessonHtml(html: string | null | undefined, lang: 'en' | '
     if (lang === 'hi') {
       const match = html.match(/\[HI\]([\s\S]*?)\[\/HI\]/i);
       if (match && match[1].trim()) return match[1].trim();
+      // FALLBACK TO EN if HI is missing or empty
+      const enMatch = html.match(/\[EN\]([\s\S]*?)\[\/EN\]/i);
+      if (enMatch && enMatch[1].trim()) return enMatch[1].trim();
     } else {
       const match = html.match(/\[EN\]([\s\S]*?)\[\/EN\]/i);
       if (match && match[1].trim()) return match[1].trim();
+      // FALLBACK TO HI if EN is missing or empty
+      const hiMatch = html.match(/\[HI\]([\s\S]*?)\[\/HI\]/i);
+      if (hiMatch && hiMatch[1].trim()) return hiMatch[1].trim();
     }
   }
 
@@ -118,19 +142,40 @@ export function filterLessonHtml(html: string | null | undefined, lang: 'en' | '
       const enElements = doc.querySelectorAll('[data-lang="en"], .card-lang-en');
       const hiElements = doc.querySelectorAll('[data-lang="hi"], .card-lang-hi');
 
-      if (enElements.length > 0 || hiElements.length > 0) {
-        // Change parent grid from 2 columns to 1 column
-        const grid = (enElements[0] || hiElements[0])?.parentElement;
-        if (grid) {
-          grid.className = grid.className.replace(/md:grid-cols-2/g, 'grid-cols-1');
-        }
-
-        if (lang === 'en') {
-          hiElements.forEach((el) => el.remove());
-        } else if (lang === 'hi') {
+      if (lang === 'hi') {
+        if (hiElements.length > 0) {
           enElements.forEach((el) => el.remove());
+          const grid = hiElements[0]?.parentElement;
+          if (grid) {
+            grid.className = grid.className.replace(/md:grid-cols-2/g, 'grid-cols-1');
+          }
+          return doc.body.innerHTML;
         }
-        return doc.body.innerHTML;
+        // Fallback: If no Hindi elements exist, show English elements
+        if (enElements.length > 0) {
+          const grid = enElements[0]?.parentElement;
+          if (grid) {
+            grid.className = grid.className.replace(/md:grid-cols-2/g, 'grid-cols-1');
+          }
+          return doc.body.innerHTML;
+        }
+      } else if (lang === 'en') {
+        if (enElements.length > 0) {
+          hiElements.forEach((el) => el.remove());
+          const grid = enElements[0]?.parentElement;
+          if (grid) {
+            grid.className = grid.className.replace(/md:grid-cols-2/g, 'grid-cols-1');
+          }
+          return doc.body.innerHTML;
+        }
+        // Fallback: If no English elements exist, show Hindi elements
+        if (hiElements.length > 0) {
+          const grid = hiElements[0]?.parentElement;
+          if (grid) {
+            grid.className = grid.className.replace(/md:grid-cols-2/g, 'grid-cols-1');
+          }
+          return doc.body.innerHTML;
+        }
       }
 
       // Look for bilingual cards containing EN or हिन्दी badges
@@ -148,17 +193,32 @@ export function filterLessonHtml(html: string | null | undefined, lang: 'en' | '
         }
       });
 
-      if (foundEnCard && foundHiCard) {
-        const grid = (foundEnCard as HTMLElement).parentElement;
-        if (grid) {
-          grid.className = grid.className.replace(/md:grid-cols-2/g, 'grid-cols-1');
+      if (lang === 'hi') {
+        if (foundHiCard) {
+          if (foundEnCard) (foundEnCard as HTMLElement).remove();
+          const grid = (foundHiCard as HTMLElement).parentElement;
+          if (grid) grid.className = grid.className.replace(/md:grid-cols-2/g, 'grid-cols-1');
+          return doc.body.innerHTML;
         }
-        if (lang === 'en') {
-          (foundHiCard as HTMLElement).remove();
-        } else if (lang === 'hi') {
-          (foundEnCard as HTMLElement).remove();
+        // If foundHiCard does not exist, keep English card as fallback!
+        if (foundEnCard) {
+          const grid = (foundEnCard as HTMLElement).parentElement;
+          if (grid) grid.className = grid.className.replace(/md:grid-cols-2/g, 'grid-cols-1');
+          return doc.body.innerHTML;
         }
-        return doc.body.innerHTML;
+      } else if (lang === 'en') {
+        if (foundEnCard) {
+          if (foundHiCard) (foundHiCard as HTMLElement).remove();
+          const grid = (foundEnCard as HTMLElement).parentElement;
+          if (grid) grid.className = grid.className.replace(/md:grid-cols-2/g, 'grid-cols-1');
+          return doc.body.innerHTML;
+        }
+        // If foundEnCard does not exist, keep Hindi card as fallback!
+        if (foundHiCard) {
+          const grid = (foundHiCard as HTMLElement).parentElement;
+          if (grid) grid.className = grid.className.replace(/md:grid-cols-2/g, 'grid-cols-1');
+          return doc.body.innerHTML;
+        }
       }
     } catch {
       // Fallback to raw html if parsing fails

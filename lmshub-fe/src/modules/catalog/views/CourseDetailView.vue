@@ -64,37 +64,70 @@ const router = useRouter();
 const auth = useAuthStore();
 const { t } = useI18n();
 const course = ref<CourseDetail | null>(null);
-const localizedTitle = computed(() => getLocalizedText(course.value?.title));
+const localizedTitle = computed(() => {
+  if (!course.value) return '';
+  const isHi = currentLocale() === 'hi';
+  const meta = course.value.meta as Record<string, any> | undefined;
+  if (isHi && meta?.title_hi && meta.title_hi.trim()) {
+    return meta.title_hi;
+  }
+  if (!isHi && meta?.title_en && meta.title_en.trim()) {
+    return meta.title_en;
+  }
+  const text = getLocalizedText(course.value.title);
+  if (isHi && (!text || !text.trim())) {
+    return meta?.title_en || course.value.title || '';
+  }
+  return text || meta?.title_en || course.value.title || '';
+});
+
 const localizedSummary = computed(() => {
   if (!course.value) return '';
   const isHi = currentLocale() === 'hi';
-  if (isHi && course.value.meta?.summary_hi) {
-    return course.value.meta.summary_hi;
+  const meta = course.value.meta as Record<string, any> | undefined;
+  if (isHi && meta?.summary_hi && meta.summary_hi.trim()) {
+    return meta.summary_hi;
   }
-  if (!isHi && course.value.meta?.summary_en) {
-    return course.value.meta.summary_en;
+  if (!isHi && meta?.summary_en && meta.summary_en.trim()) {
+    return meta.summary_en;
   }
-  return getLocalizedText(course.value.summary);
+  const text = getLocalizedText(course.value.summary);
+  if (isHi && (!text || !text.trim())) {
+    return meta?.summary_en || course.value.summary || '';
+  }
+  return text || meta?.summary_en || course.value.summary || '';
 });
+
 const localizedDescription = computed(() => {
   if (!course.value) return '';
   const isHi = currentLocale() === 'hi';
   const meta = course.value.meta as Record<string, any> | undefined;
 
-  if (isHi && meta?.description_hi) {
+  if (isHi && meta?.description_hi && meta.description_hi.trim()) {
     return meta.description_hi;
   }
-  if (!isHi && meta?.description_en) {
+  if (!isHi && meta?.description_en && meta.description_en.trim()) {
+    return meta.description_en;
+  }
+  // Fallback to English if Hindi is not present in meta
+  if (isHi && meta?.description_en && meta.description_en.trim()) {
     return meta.description_en;
   }
 
   const raw = course.value.description || '';
   if (raw.includes('[EN]') || raw.includes('[HI]')) {
     const { en, hi } = splitLessonContent(raw);
-    return isHi ? (hi || en) : (en || hi);
+    if (isHi) {
+      return (hi && hi.trim()) ? hi : (en || '');
+    }
+    return (en && en.trim()) ? en : (hi || '');
   }
 
-  return filterLessonHtml(raw, isHi ? 'hi' : 'en');
+  const filtered = filterLessonHtml(raw, isHi ? 'hi' : 'en');
+  if (filtered && filtered.trim()) {
+    return filtered;
+  }
+  return raw;
 });
 const error = ref('');
 const { loading: buying, error: buyError, status, buy } = useCheckout();

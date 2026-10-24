@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { fmtAngka, fmtHarga } from '@/lib/format';
 import { assetUrl } from '@/lib/api';
 import { levelLabel } from '@/lib/labels';
+import { currentLocale } from '@/i18n';
 import { getLocalizedText } from '@/lib/course-localization';
 import Icon from '@/components/ui/Icon.vue';
 
@@ -24,7 +25,7 @@ const props = defineProps<{
     rating_count?: number | null;
     student_count?: number | null;
     total_duration_minutes?: number | null;
-    meta?: { thumbnail_url?: string } | null;
+    meta?: Record<string, any> | null;
   };
   /** Basis tautan detail ('/courses' publik, '/d/catalog' dashboard). */
   base?: string;
@@ -40,8 +41,21 @@ const discount = computed(() => {
   return c > h && h > 0 ? Math.round(((c - h) / c) * 100) : 0;
 });
 
-// DEBUG LOG: See what the thumbnail URL is
-console.log(`Course [${props.course.title}] thumbnail URL:`, props.course.meta?.thumbnail_url);
+const cardTitle = computed(() => {
+  const isHi = currentLocale() === 'hi';
+  const meta = props.course?.meta as Record<string, any> | undefined;
+  if (isHi && meta?.title_hi && meta.title_hi.trim()) {
+    return meta.title_hi;
+  }
+  if (!isHi && meta?.title_en && meta.title_en.trim()) {
+    return meta.title_en;
+  }
+  const text = getLocalizedText(props.course?.title);
+  if (isHi && (!text || !text.trim())) {
+    return meta?.title_en || props.course?.title || '';
+  }
+  return text || meta?.title_en || props.course?.title || '';
+});
 </script>
 
 <template>
@@ -75,7 +89,7 @@ console.log(`Course [${props.course.title}] thumbnail URL:`, props.course.meta?.
       </div>
 
       <h3 class="mt-2.5 line-clamp-2 font-semibold leading-snug text-slate-900 group-hover:text-brand-500">
-        {{ getLocalizedText(course.title) }}
+        {{ cardTitle }}
       </h3>
 
       <div class="mt-2 flex items-center gap-1 text-xs">

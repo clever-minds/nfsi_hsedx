@@ -174,7 +174,7 @@ export async function seedCourseFromJson(jsonPath: string) {
 
         const lesRes = await client.query(
           `INSERT INTO lessons (section_id, title, type, sort_order, duration_minutes, gratis_preview, must_complete)
-           VALUES ($1, $2, 'text', $3, $4, true, false)
+           VALUES ($1, $2, 'text', $3, $4, true, true)
            RETURNING id`,
           [sectionId, les.title, lIdx + 1, duration],
         );

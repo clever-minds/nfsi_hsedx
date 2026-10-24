@@ -20,17 +20,18 @@ async function requireOwnEnrollment(actor: AuthContext, courseId: string) {
   return e;
 }
 
-async function recalcCourseProgress(enrollmentId: string, courseId: string) {
-  const { wajib } = await repo.countCourseLessons(courseId);
+export async function recalcCourseProgress(enrollmentId: string, courseId: string) {
+  const { wajib, total } = await repo.countCourseLessons(courseId);
   const finish = await repo.countCompletedWajibLessons(enrollmentId, courseId);
-  const persen = wajib > 0 ? Math.min(100, Math.round((finish / wajib) * 10000) / 100) : 0;
-  const completed = wajib > 0 && finish >= wajib;
+  const target = wajib > 0 ? wajib : total;
+  const persen = target > 0 ? Math.min(100, Math.round((finish / target) * 10000) / 100) : 0;
+  const completed = target > 0 && finish >= target;
 
   const cp = await repo.upsertCourseProgress({
     enrollment_id: enrollmentId,
     progress_percent: persen,
     completed_lessons_count: finish,
-    total_lesson: wajib,
+    total_lesson: target,
     completed,
   });
 
@@ -120,13 +121,17 @@ export async function learnView(actor: AuthContext, courseId: string) {
     throw AppError.forbidden('Your access to this course has expired', 'course.access_expired');
   }
 
-  const [sections, lessons, allContents, lessonProgress, courseProgress] = await Promise.all([
+  let [sections, lessons, allContents, lessonProgress, courseProgress] = await Promise.all([
     repo.learnSections(actualCourseId),
     repo.learnLessons(actualCourseId),
     repo.learnLessonContents(actualCourseId),
     enrollment ? repo.lessonProgressOfEnrollment(enrollment.id) : Promise.resolve([]),
     enrollment ? repo.getCourseProgress(enrollment.id) : Promise.resolve(null),
   ]);
+
+  if (enrollment && (!courseProgress || Number(courseProgress.progress_percent) === 0)) {
+    courseProgress = await recalcCourseProgress(enrollment.id, actualCourseId);
+  }
 
   const progressByLesson = new Map(lessonProgress.map((lp) => [lp.lesson_id, lp]));
   const contentsByLesson = new Map<string, Array<{ id: string; type: string; body: string | undefined; url: string | undefined }>>();
@@ -184,9 +189,14 @@ export async function learnView(actor: AuthContext, courseId: string) {
 }
 
 export async function getCourseProgress(actor: AuthContext, courseId: string) {
-  const enrollment = await enrollmentsRepo.findActiveByUserCourse(actor.userId, courseId);
+  const course = await repo.learnCourse(courseId);
+  const actualCourseId = course?.id ?? courseId;
+  const enrollment = await enrollmentsRepo.findActiveByUserCourse(actor.userId, actualCourseId);
   if (!enrollment) throw AppError.notFound('No enrolment found for this course', 'enrollment.not_found_for_course');
-  const cp = await repo.getCourseProgress(enrollment.id);
+  let cp = await repo.getCourseProgress(enrollment.id);
+  if (!cp || Number(cp.progress_percent) === 0) {
+    cp = await recalcCourseProgress(enrollment.id, actualCourseId);
+  }
   return (
     cp ?? {
       enrollment_id: enrollment.id,

@@ -8,6 +8,7 @@ import { PageParams } from '../../core/http/pagination';
 import { env } from '../../core/config/env';
 import { getSetting, getSettingInt } from '../../core/settings/settings';
 import * as repo from './certificates.repository';
+import { recalcCourseProgress } from '../progress/progress.service';
 import { DEFAULT_PASSING_SCORE, evaluasiUjianAkhir } from './completion-rules';
 import {
   CreateTemplateInput,
@@ -97,12 +98,15 @@ export async function evaluate(actor: AuthContext, enrollmentId: string) {
   const isStaff = isSuper(actor) || actor.permissions.has('certificate.update');
   if (!isStaff && enrollment.user_id !== actor.userId) throw AppError.forbidden('This is outside your scope', 'scope.out_of_scope');
 
-  const [progress, minPersen, quiz, settingPassing] = await Promise.all([
+  let [progress, minPersen, quiz, settingPassing] = await Promise.all([
     repo.getCourseProgress(enrollmentId),
     minPersenSelesai(),
     repo.getFinalExam(enrollment.course_id),
     getSetting('certificate.syarat_passing_score_min', ''),
   ]);
+  if (!progress || Number(progress.progress_percent) === 0) {
+    progress = await recalcCourseProgress(enrollmentId, enrollment.course_id);
+  }
   const persenSelesai = Number(progress?.progress_percent ?? 0);
   const exam = evaluasiUjianAkhir({
     quiz,

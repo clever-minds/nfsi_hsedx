@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { apiDelete, apiGet, apiGetFull, apiPost, apiPut, assetUrl, errorMessage } from '@/lib/api';
 import { fmtAngka, fmtPersen, fmtRelatif, initialsOf } from '@/lib/format';
@@ -71,6 +71,7 @@ interface QaQuestion {
 }
 
 const route = useRoute();
+const router = useRouter();
 const { t } = useI18n();
 const courseId = route.params.courseId as string;
 
@@ -113,11 +114,12 @@ const currentIndex = computed(() => allLessons.value.findIndex((l) => l.id === c
 const nextLesson = computed<Lesson | null>(() => allLessons.value[currentIndex.value + 1] ?? null);
 
 const progressPercent = computed(() => {
-  if (typeof course.value?.progress_percent === 'number') return Math.round(course.value.progress_percent);
   const total = allLessons.value.length;
   if (!total) return 0;
   const done = allLessons.value.filter((l) => l.finish).length;
-  return Math.round((done / total) * 100);
+  const calculated = Math.round((done / total) * 100);
+  const backendVal = typeof course.value?.progress_percent === 'number' ? Math.round(course.value.progress_percent) : 0;
+  return Math.max(calculated, backendVal);
 });
 
 const currentQuizId = computed(() => {
@@ -195,12 +197,36 @@ function selectLesson(lesson: Lesson) {
   loadSidePanels(lesson.id);
 }
 
+const claimingCert = ref(false);
+async function claimAndOpenCertificate() {
+  if (!course.value?.enrollment_id) {
+    router.push('/d/certificates');
+    return;
+  }
+  claimingCert.value = true;
+  try {
+    const cert = await apiPost<{ id: string }>(`/enrollments/${course.value.enrollment_id}/certificate/claim`, {});
+    if (cert?.id) {
+      router.push(`/d/certificates/view/${cert.id}`);
+    } else {
+      router.push('/d/certificates');
+    }
+  } catch {
+    router.push('/d/certificates');
+  } finally {
+    claimingCert.value = false;
+  }
+}
+
 async function markComplete() {
   if (!currentLesson.value || currentLesson.value.finish) return;
   markingComplete.value = true;
   try {
-    await apiPut(`/lessons/${currentLesson.value.id}/progress`, { status: 'completed' });
+    const res = await apiPut<{ lesson_progress: any; course_progress: any }>(`/lessons/${currentLesson.value.id}/progress`, { status: 'completed' });
     currentLesson.value.finish = true;
+    if (res?.course_progress?.progress_percent !== undefined && course.value) {
+      course.value.progress_percent = Number(res.course_progress.progress_percent);
+    }
   } catch (e) {
     error.value = errorMessage(e, t('learn.player.markFailed'));
   } finally {
@@ -363,7 +389,16 @@ onMounted(load);
             >
               {{ t('learn.player.takeFinalExam') }}
             </RouterLink>
-            <RouterLink to="/d/certificates" class="btn-primary bg-accent-500 hover:bg-accent-600">
+            <button
+              v-if="!finalExam"
+              type="button"
+              class="btn-primary bg-accent-500 hover:bg-accent-600 text-white font-medium"
+              :disabled="claimingCert"
+              @click="claimAndOpenCertificate"
+            >
+              {{ claimingCert ? t('certificates.my.processing') : t('learn.player.viewCertificate') }}
+            </button>
+            <RouterLink v-else to="/d/certificates" class="btn-primary bg-accent-500 hover:bg-accent-600">
               {{ t('learn.player.viewCertificate') }}
             </RouterLink>
           </div>

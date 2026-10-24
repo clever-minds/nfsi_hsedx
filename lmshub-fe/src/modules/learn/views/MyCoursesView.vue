@@ -138,7 +138,7 @@ onMounted(load);
           <div class="mt-4 flex-1"></div>
 
           <!-- 100%: tetap bisa buka course (review material) + view certificate berdampingan -->
-          <div v-if="(c.progress_percent ?? 0) >= 100" class="mt-2 flex gap-2">
+          <div v-if="(c.progress_percent ?? 0) >= 100 || c.status === 'completed'" class="mt-2 flex gap-2">
             <RouterLink :to="`/d/learn/${c.course_id}`" class="btn-outline flex-1 justify-center">
               {{ t('learn.my.viewCourse') }}
             </RouterLink>

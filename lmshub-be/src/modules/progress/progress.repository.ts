@@ -200,10 +200,12 @@ export async function countCourseLessons(courseId: string): Promise<{ total: num
   const row = await queryOne<{ total: string; wajib: string }>(
     `SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE l.must_complete)::int AS wajib
        FROM lessons l JOIN sections s ON s.id = l.section_id
-      WHERE s.course_id = $1 AND l.deleted_at IS NULL`,
+      WHERE s.course_id = $1 AND l.deleted_at IS NULL AND s.deleted_at IS NULL`,
     [courseId],
   );
-  return { total: Number(row?.total ?? 0), wajib: Number(row?.wajib ?? 0) };
+  const total = Number(row?.total ?? 0);
+  const wajib = Number(row?.wajib ?? 0);
+  return { total, wajib: wajib > 0 ? wajib : total };
 }
 
 export async function countCompletedWajibLessons(enrollmentId: string, courseId: string): Promise<number> {
@@ -212,7 +214,7 @@ export async function countCompletedWajibLessons(enrollmentId: string, courseId:
        FROM lesson_progress lp
        JOIN lessons l ON l.id = lp.lesson_id
        JOIN sections s ON s.id = l.section_id
-      WHERE lp.enrollment_id = $1 AND s.course_id = $2 AND lp.status = 'completed' AND l.must_complete AND lp.deleted_at IS NULL`,
+      WHERE lp.enrollment_id = $1 AND s.course_id = $2 AND lp.status = 'completed' AND lp.deleted_at IS NULL AND l.deleted_at IS NULL AND s.deleted_at IS NULL`,
     [enrollmentId, courseId],
   );
   return Number(row?.count ?? 0);

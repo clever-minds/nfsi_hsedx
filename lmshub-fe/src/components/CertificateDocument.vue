@@ -30,7 +30,7 @@ const localizedCourseTitle = computed(() => {
 const companyAddress = computed(() => {
   return (
     props.cert.company_address ||
-    'Himaya Prevention Private Limited · CIN: U74999GJ2017PTC096981 · GSTIN: 24AAECH1623D1Z8 · Vadodara, Gujarat, India · info@himpre.com'
+    'National Fire Safety Institute (NFSI) · Shree C.K. Bhagat Patidar Chatralaya, Opp. Old Krishna Cinema, Siddhnath Road, Vadodara - 390001, Gujarat, India · (+91) 90333 88440 · info@nfsi.in · www.nfsi.in'
   );
 });
 
@@ -61,7 +61,7 @@ function fmtIssueDate(dateStr?: string | null): string {
           </div>
           <div class="cert-meta-no">
             <span class="meta-label">CERTIFICATE NO.</span>
-            <span class="meta-val">{{ cert.certificate_number || 'HP-QMS-261016200521' }}</span>
+            <span class="meta-val">{{ cert.certificate_number || 'NFSI-2026-CERTIFICATE' }}</span>
           </div>
         </div>
 
@@ -77,7 +77,7 @@ function fmtIssueDate(dateStr?: string | null): string {
           <h2 class="recipient-name">{{ cert.name || 'Recipient Name' }}</h2>
 
           <!-- Sub-affiliation -->
-          <p class="affiliation-text">{{ cert.instructor || 'Himaya Prevention Private Limited' }}</p>
+          <p class="affiliation-text">{{ cert.instructor || 'National Fire Safety Institute (NFSI)' }}</p>
 
           <!-- Award Description Citation -->
           <p class="award-description">
@@ -108,7 +108,7 @@ function fmtIssueDate(dateStr?: string | null): string {
               <!-- Circular text -->
               <text font-size="8.8" font-family="'Arial', sans-serif" font-weight="bold" fill="#12345b" letter-spacing="1">
                 <textPath href="#sealCircle" startOffset="50%" text-anchor="middle">
-                  HIMAYA PREVENTION PRIVATE LIMITED ★
+                  NATIONAL FIRE SAFETY INSTITUTE · NFSI ★
                 </textPath>
               </text>
 

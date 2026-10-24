@@ -53,7 +53,7 @@ After `npm run seed` and `npm run seed:demo` on the backend:
 | Role | Email | Password |
 |------|-------|----------|
 | Super Admin | `admin@lmshub.test` | `Admin12345!` |
-| Instructor | `rina@lmshub.test` | `Demo12345!` |
+| Instructor | `faculty@nfsi.in` | `Demo12345!` |
 | Student | `siti@lmshub.test` | `Demo12345!` |
 
 Screen-by-screen documentation: see the PDF manuals shipped with this product.

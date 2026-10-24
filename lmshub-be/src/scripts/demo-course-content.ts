@@ -519,15 +519,13 @@ export interface InstructorContent {
  */
 export const INSTRUCTORS: Record<string, InstructorContent> = {
   rina: {
-    name: 'Rina Wijaya',
-    email: 'rina@lmshub.test',
-    headline: 'Frontend engineer and interface designer',
-    bio: 'Rina has spent eight years building web products for startups and larger companies, moving between engineering and design often enough to be fluent in both. She teaches on the principle that a concept you can explain out loud is one you actually understand, so her courses ask you to build and describe rather than follow along. Over 15,000 students have completed her courses.',
-    expertise: ['JavaScript', 'React', 'Vue', 'TypeScript', 'UI/UX', 'Figma'],
+    name: 'National Fire Safety Institute (NFSI)',
+    email: 'faculty@nfsi.in',
+    headline: 'Senior Safety & Health Specialist',
+    bio: 'National Fire Safety Institute (NFSI) specialized faculty and industrial safety experts with deep industry experience.',
+    expertise: ['Fire Safety', 'Industrial Safety', 'HIRA', 'Chemical Safety', 'LOTO'],
     social: {
-      linkedin: 'https://linkedin.com/in/rina-wijaya-demo',
-      youtube: 'https://youtube.com/@rinawijaya-demo',
-      website: 'https://rinawijaya-demo.dev',
+      website: 'https://nfsi.in',
     },
   },
   daniel: {

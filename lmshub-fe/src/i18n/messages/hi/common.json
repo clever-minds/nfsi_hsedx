@@ -222,7 +222,11 @@
     "pemula": "शुरुआती",
     "menengah": "मध्यम",
     "mahir": "उन्नत",
-    "semua": "सभी स्तर"
+    "semua": "सभी स्तर",
+    "beginner": "शुरुआती",
+    "intermediate": "मध्यम",
+    "advanced": "उन्नत",
+    "all": "सभी स्तर"
   },
   "nav": {
     "dashboard": "डैशबोर्ड",

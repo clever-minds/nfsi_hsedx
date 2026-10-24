@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n';
 import { apiDelete, apiGet, apiGetFull, apiPost, apiPut, assetUrl, errorMessage } from '@/lib/api';
 import { fmtAngka, fmtPersen, fmtRelatif, initialsOf } from '@/lib/format';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { currentLocale } from '@/i18n';
+import { getLocalizedText, filterLessonHtml } from '@/lib/course-localization';
 import Icon from '@/components/ui/Icon.vue';
 import CourseReviews from '@/modules/catalog/components/CourseReviews.vue';
 import CourseAssessmentsTab from '@/modules/learn/components/CourseAssessmentsTab.vue';
@@ -77,6 +79,7 @@ const loading = ref(true);
 const error = ref('');
 const sidebarOpen = ref(false);
 const activeTab = ref<'notes' | 'qa' | 'review'>('notes');
+const playerLang = ref<'en' | 'hi' | 'both'>(currentLocale() === 'hi' ? 'hi' : 'both');
 
 const currentLessonId = ref<string | null>(null);
 const markingComplete = ref(false);
@@ -313,9 +316,9 @@ onMounted(load);
         {{ sidebarOpen ? t('learn.player.closeCurriculum') : t('learn.player.openCurriculum') }}
       </button>
       <aside class="card max-h-[32rem] overflow-y-auto p-3" :class="sidebarOpen ? 'block' : 'hidden lg:block'">
-        <h2 class="mb-2 px-1 text-lg font-medium text-slate-900">{{ course.title }}</h2>
+        <h2 class="mb-2 px-1 text-lg font-medium text-slate-900">{{ getLocalizedText(course.title) }}</h2>
         <div v-for="(s, si) in regularSections" :key="si" class="mb-2">
-          <div class="px-1 py-1 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ s.title }}</div>
+          <div class="px-1 py-1 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ getLocalizedText(s.title) }}</div>
           <button
             v-for="l in s.lessons"
             :key="l.id"
@@ -329,7 +332,7 @@ onMounted(load);
             @click="selectLesson(l)"
           >
             <span>{{ l.terkunci ? '🔒' : l.finish ? '✅' : l.id === currentLessonId ? '▶' : '○' }}</span>
-            <span class="flex-1 truncate">{{ l.title }}</span>
+            <span class="flex-1 truncate">{{ getLocalizedText(l.title) }}</span>
             <span v-if="l.durasi" class="text-xs text-slate-400">{{ fmtAngka(l.durasi) }}{{ t('learn.player.minShort') }}</span>
           </button>
         </div>
@@ -364,7 +367,35 @@ onMounted(load);
         </div>
 
         <div v-if="currentLesson" class="card p-4">
-          <h1 class="text-xl font-medium text-slate-900">{{ currentLesson.title }}</h1>
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <h1 class="text-xl font-medium text-slate-900">{{ getLocalizedText(currentLesson.title) }}</h1>
+            <div class="flex items-center gap-1 rounded-lg bg-slate-100 p-1 text-xs font-semibold">
+              <button
+                type="button"
+                class="rounded px-2.5 py-1 transition"
+                :class="playerLang === 'both' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-900'"
+                @click="playerLang = 'both'"
+              >
+                🌐 Both
+              </button>
+              <button
+                type="button"
+                class="rounded px-2.5 py-1 transition"
+                :class="playerLang === 'en' ? 'bg-white shadow text-blue-700' : 'text-slate-500 hover:text-slate-900'"
+                @click="playerLang = 'en'"
+              >
+                🇬🇧 English
+              </button>
+              <button
+                type="button"
+                class="rounded px-2.5 py-1 transition"
+                :class="playerLang === 'hi' ? 'bg-white shadow text-emerald-700' : 'text-slate-500 hover:text-slate-900'"
+                @click="playerLang = 'hi'"
+              >
+                🇮🇳 हिन्दी
+              </button>
+            </div>
+          </div>
 
           <div v-if="currentLesson.contents && currentLesson.contents.length > 0" class="mt-3 space-y-6">
             <div v-for="c in currentLesson.contents" :key="c.id">
@@ -396,7 +427,7 @@ onMounted(load);
                 ></iframe>
               </div>
               <div v-else-if="c.type === 'text'" class="prose-page max-w-none text-sm text-slate-700">
-                <div v-if="c.body" v-html="sanitizeHtml(c.body)"></div>
+                <div v-if="c.body" v-html="sanitizeHtml(filterLessonHtml(c.body, playerLang))"></div>
               </div>
               <div v-else-if="c.type === 'pdf'" class="mt-3 flex flex-col items-center">
                 <iframe v-if="c.url" :src="assetUrl(c.url)" class="w-full h-[600px] rounded border border-slate-200 mb-2" frameborder="0"></iframe>
@@ -434,7 +465,7 @@ onMounted(load);
             </div>
             <!-- eslint-disable-next-line vue/no-v-html -- content dilewatkan sanitizeHtml() lebih dulu; view src/lib/sanitize.ts -->
             <div v-else-if="currentLesson.type === 'text'" class="prose-page mt-3 max-w-none text-sm text-slate-700">
-              <div v-if="currentLesson.content" v-html="sanitizeHtml(currentLesson.content)"></div>
+              <div v-if="currentLesson.content" v-html="sanitizeHtml(filterLessonHtml(currentLesson.content, playerLang))"></div>
               <iframe v-else-if="currentLesson.video_url" :src="assetUrl(currentLesson.video_url)" class="w-full h-[600px] rounded border border-slate-200" frameborder="0"></iframe>
             </div>
             <div v-else-if="currentLesson.type === 'pdf' && currentLesson.video_url" class="mt-3 flex flex-col items-center">

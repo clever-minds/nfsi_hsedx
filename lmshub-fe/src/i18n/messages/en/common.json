@@ -222,7 +222,11 @@
     "pemula": "Beginner",
     "menengah": "Intermediate",
     "mahir": "Advanced",
-    "semua": "All levels"
+    "semua": "All levels",
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced",
+    "all": "All levels"
   },
   "nav": {
     "dashboard": "Dashboard",

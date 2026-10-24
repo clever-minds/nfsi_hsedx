@@ -9,6 +9,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import StatusChip from '@/components/ui/StatusChip.vue';
 import RichTextEditor from '@/components/ui/RichTextEditor.vue';
 import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
+import { splitLocalizedText, combineLocalizedText } from '@/lib/course-localization';
 
 interface CourseDetail {
   id: string;
@@ -52,16 +53,23 @@ const tab = ref<'info' | 'curriculum' | 'kelulusan'>(route.query.tab === 'comple
 
 const form = reactive({
   title: '',
+  title_en: '',
+  title_hi: '',
   slug: '',
   category_id: '',
   level: 'beginner' as 'beginner' | 'intermediate' | 'advanced',
   price: 0,
   strike_price: undefined as number | undefined,
   summary: '',
+  summary_en: '',
+  summary_hi: '',
   description: '',
+  description_en: '',
+  description_hi: '',
   language: 'en',
   thumbnail_media_id: undefined as string | undefined,
 });
+const descLang = ref<'en' | 'hi'>('en');
 
 const currentStatus = ref('draft');
 const instructorNama = ref('');
@@ -96,13 +104,25 @@ async function loadCategories() {
 async function loadCourse(id: string) {
   const c = await apiGet<CourseDetail>(`/courses/${id}`);
   form.title = c.title;
+  const { en: tEn, hi: tHi } = splitLocalizedText(c.title);
+  form.title_en = c.meta?.title_en || tEn;
+  form.title_hi = c.meta?.title_hi || tHi;
+
   form.slug = c.slug;
   form.category_id = c.category_id;
   form.level = c.level as typeof form.level;
   form.price = Number(c.price);
   form.strike_price = c.strike_price ? Number(c.strike_price) : undefined;
+  
   form.summary = c.summary ?? '';
+  const { en: sEn, hi: sHi } = splitLocalizedText(c.summary);
+  form.summary_en = c.meta?.summary_en || sEn;
+  form.summary_hi = c.meta?.summary_hi || sHi;
+
   form.description = c.description ?? '';
+  form.description_en = c.meta?.description_en || c.description || '';
+  form.description_hi = c.meta?.description_hi || '';
+
   form.language = c.language;
   currentStatus.value = c.publication_status;
   instructorNama.value = c.instructor_name ?? '';
@@ -165,18 +185,29 @@ async function submit() {
   error.value = '';
   saving.value = true;
   try {
+    const fullTitle = combineLocalizedText(form.title_en, form.title_hi, ' | ') || form.title;
+    const fullSummary = combineLocalizedText(form.summary_en, form.summary_hi, ' | ') || form.summary;
+    const updatedMeta = {
+      ...(courseMeta.value || {}),
+      title_en: form.title_en,
+      title_hi: form.title_hi,
+      summary_en: form.summary_en,
+      summary_hi: form.summary_hi,
+      description_en: form.description_en,
+      description_hi: form.description_hi,
+    };
     const payload = {
-      title: form.title,
+      title: fullTitle,
       slug: form.slug || undefined,
       category_id: form.category_id,
       level: form.level,
       price: Number(form.price),
       strike_price: form.strike_price ? Number(form.strike_price) : undefined,
-      summary: form.summary || undefined,
-      description: form.description || undefined,
+      summary: fullSummary || undefined,
+      description: form.description_en || form.description || undefined,
       language: form.language,
       thumbnail_media_id: form.thumbnail_media_id || undefined,
-      meta: courseMeta.value,
+      meta: updatedMeta,
     };
     if (isEdit.value && courseId.value) {
       await apiPut(`/courses/${courseId.value}`, payload);
@@ -265,10 +296,24 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
 
       <div v-if="tab === 'info'" class="space-y-6">
         <form class="card grid gap-4 p-5 sm:grid-cols-2" @submit.prevent="submit">
-          <div class="sm:col-span-2">
-            <label class="label">{{ t('courses.editor.fieldTitle') }}</label>
-            <input v-model="form.title" class="input" required :placeholder="t('courses.editor.fieldTitlePlaceholder')" />
+          <!-- Course Title (Bilingual) -->
+          <div class="sm:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+            <div>
+              <label class="label flex items-center gap-1.5 font-semibold text-slate-800">
+                <span class="rounded bg-blue-100 px-1.5 py-0.5 text-xs font-bold text-blue-700">EN</span>
+                Course Title (English)
+              </label>
+              <input v-model="form.title_en" class="input bg-white" placeholder="e.g. Chemical Safety Awareness Course" />
+            </div>
+            <div>
+              <label class="label flex items-center gap-1.5 font-semibold text-slate-800">
+                <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-bold text-emerald-700">HI</span>
+                कोर्स शीर्षक (हिन्दी)
+              </label>
+              <input v-model="form.title_hi" class="input bg-white" placeholder="उदा. केमिकल सेफ्टी अवेयरनेस कोर्स" />
+            </div>
           </div>
+
           <div>
             <label class="label">{{ t('courses.editor.fieldSlug') }}</label>
             <input v-model="form.slug" class="input" :placeholder="t('courses.editor.fieldSlugPlaceholder')" />
@@ -308,13 +353,56 @@ function onThumbnailUploaded(asset: { id: string; path_object_storage?: string }
               <input v-model.number="form.strike_price" class="input" type="number" min="0" />
             </div>
           </div>
-          <div class="sm:col-span-2">
-            <label class="label">{{ t('courses.editor.fieldSummary') }}</label>
-            <textarea v-model="form.summary" class="input" rows="2" maxlength="500"></textarea>
+
+          <!-- Summary (Bilingual) -->
+          <div class="sm:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+            <div>
+              <label class="label flex items-center gap-1.5 font-semibold text-slate-800">
+                <span class="rounded bg-blue-100 px-1.5 py-0.5 text-xs font-bold text-blue-700">EN</span>
+                Summary (English)
+              </label>
+              <textarea v-model="form.summary_en" class="input bg-white" rows="2" maxlength="500" placeholder="Brief summary in English..."></textarea>
+            </div>
+            <div>
+              <label class="label flex items-center gap-1.5 font-semibold text-slate-800">
+                <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-bold text-emerald-700">HI</span>
+                संक्षिप्त विवरण / समरी (हिन्दी)
+              </label>
+              <textarea v-model="form.summary_hi" class="input bg-white" rows="2" maxlength="500" placeholder="कोर्स की संक्षिप्त समरी हिन्दी में लिखें..."></textarea>
+            </div>
           </div>
-          <div class="sm:col-span-2">
-            <label class="label">{{ t('courses.editor.fieldDescription') }}</label>
-            <RichTextEditor v-model="form.description" class="mt-1" />
+
+          <!-- Description (Bilingual Tabs) -->
+          <div class="sm:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+            <div class="mb-3 flex items-center justify-between">
+              <label class="label font-semibold text-slate-800">{{ t('courses.editor.fieldDescription') }}</label>
+              <div class="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 text-xs">
+                <button
+                  type="button"
+                  class="rounded px-2.5 py-1 transition"
+                  :class="descLang === 'en' ? 'bg-blue-100 font-bold text-blue-700' : 'text-slate-600 hover:text-slate-900'"
+                  @click="descLang = 'en'"
+                >
+                  🇬🇧 English
+                </button>
+                <button
+                  type="button"
+                  class="rounded px-2.5 py-1 transition"
+                  :class="descLang === 'hi' ? 'bg-emerald-100 font-bold text-emerald-700' : 'text-slate-600 hover:text-slate-900'"
+                  @click="descLang = 'hi'"
+                >
+                  🇮🇳 हिन्दी
+                </button>
+              </div>
+            </div>
+            <div v-show="descLang === 'en'">
+              <p class="mb-1 text-xs text-slate-500">Course Detailed Description in English:</p>
+              <RichTextEditor v-model="form.description_en" />
+            </div>
+            <div v-show="descLang === 'hi'">
+              <p class="mb-1 text-xs text-slate-500">कोर्स का विस्तृत विवरण (हिन्दी में):</p>
+              <RichTextEditor v-model="form.description_hi" />
+            </div>
           </div>
           <div v-if="isEdit" class="text-xs text-slate-400 sm:col-span-2">
             {{ t('courses.editor.instructor', { name: instructorNama || '—' }) }}

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { fmtAngka, fmtHarga } from '@/lib/format';
 import { assetUrl } from '@/lib/api';
 import { levelLabel } from '@/lib/labels';
+import { getLocalizedText } from '@/lib/course-localization';
 import Icon from '@/components/ui/Icon.vue';
 
 const { t } = useI18n();
@@ -74,7 +75,7 @@ console.log(`Course [${props.course.title}] thumbnail URL:`, props.course.meta?.
       </div>
 
       <h3 class="mt-2.5 line-clamp-2 font-semibold leading-snug text-slate-900 group-hover:text-brand-500">
-        {{ course.title }}
+        {{ getLocalizedText(course.title) }}
       </h3>
 
       <div class="mt-2 flex items-center gap-1 text-xs">

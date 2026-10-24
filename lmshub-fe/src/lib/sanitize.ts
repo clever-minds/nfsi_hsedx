@@ -20,7 +20,7 @@ const ALLOWED_TAGS = [
   'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
   'span', 'div',
 ];
-const ALLOWED_ATTR = ['href', 'title', 'alt', 'src', 'width', 'height', 'colspan', 'rowspan', 'dir', 'lang'];
+const ALLOWED_ATTR = ['href', 'title', 'alt', 'src', 'width', 'height', 'colspan', 'rowspan', 'dir', 'lang', 'class', 'style', 'id', 'data-lang'];
 
 export function sanitizeHtml(dirty?: string | null): string {
   if (!dirty) return '';

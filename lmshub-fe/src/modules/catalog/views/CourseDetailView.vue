@@ -8,6 +8,8 @@ import { levelLabel } from '@/lib/labels';
 import { useAuthStore } from '@/stores/auth';
 import { useCheckout } from '@/composables/useCheckout';
 import { getPaymentConfig, type GatewayOption } from '@/lib/payments';
+import { currentLocale } from '@/i18n';
+import { getLocalizedText } from '@/lib/course-localization';
 import Icon from '@/components/ui/Icon.vue';
 
 interface Lesson { id: string; title: string; type: string; duration_minutes?: number | null; gratis_preview?: boolean }
@@ -58,6 +60,21 @@ const router = useRouter();
 const auth = useAuthStore();
 const { t } = useI18n();
 const course = ref<CourseDetail | null>(null);
+const localizedTitle = computed(() => getLocalizedText(course.value?.title));
+const localizedSummary = computed(() => {
+  if (!course.value) return '';
+  if (currentLocale() === 'hi' && course.value.meta?.summary_hi) {
+    return course.value.meta.summary_hi;
+  }
+  return getLocalizedText(course.value.summary);
+});
+const localizedDescription = computed(() => {
+  if (!course.value) return '';
+  if (currentLocale() === 'hi' && course.value.meta?.description_hi) {
+    return course.value.meta.description_hi;
+  }
+  return course.value.description || '';
+});
 const error = ref('');
 const { loading: buying, error: buyError, status, buy } = useCheckout();
 
@@ -271,7 +288,7 @@ const TERMASUK = computed(() => [
           <span class="h-1 w-4 rounded bg-brand-400"></span>
           <RouterLink to="/courses" class="transition hover:text-brand-500">{{ t('nav.public.courses') }}</RouterLink>
           <span class="h-1 w-4 rounded bg-brand-400"></span>
-          <span class="max-w-[14rem] truncate text-slate-700">{{ course?.title || '…' }}</span>
+          <span class="max-w-[14rem] truncate text-slate-700">{{ localizedTitle || '…' }}</span>
         </nav>
       </div>
     </section>
@@ -286,7 +303,7 @@ const TERMASUK = computed(() => [
             <img
               v-if="course.meta?.thumbnail_url"
               :src="assetUrl(course.meta.thumbnail_url)"
-              :alt="course.title"
+              :alt="localizedTitle"
               class="h-52 w-full object-cover md:h-full"
             />
             <div v-else class="grid h-52 place-items-center bg-gradient-to-br from-brand-400 to-brand-600 md:h-full">
@@ -301,12 +318,12 @@ const TERMASUK = computed(() => [
 
           <div class="flex flex-col">
             <div class="flex flex-wrap items-start justify-between gap-3">
-              <h2 class="max-w-2xl text-2xl font-extrabold leading-snug text-slate-900">{{ course.title }}</h2>
+              <h2 class="max-w-2xl text-2xl font-extrabold leading-snug text-slate-900">{{ localizedTitle }}</h2>
               <span v-if="course.category_name" class="rounded-full bg-accent-400 px-3 py-1 text-xs font-bold text-white">
                 {{ course.category_name }}
               </span>
             </div>
-            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">{{ course.summary }}</p>
+            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">{{ localizedSummary }}</p>
 
             <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-600">
               <span class="flex items-center gap-1.5">
@@ -353,16 +370,16 @@ const TERMASUK = computed(() => [
             <div class="card rounded-2xl p-6">
               <h3 class="text-lg font-bold text-slate-900">{{ t('catalog.detail.overview') }}</h3>
               <h4 class="mt-4 text-sm font-semibold text-slate-800">{{ t('catalog.detail.description') }}</h4>
-              <div v-if="course.description" class="mt-2 text-sm leading-relaxed text-slate-600 prose prose-slate max-w-none" v-html="course.description"></div>
+              <div v-if="localizedDescription" class="mt-2 text-sm leading-relaxed text-slate-600 prose prose-slate max-w-none" v-html="localizedDescription"></div>
               <div v-else class="mt-2 space-y-3 text-sm leading-relaxed text-slate-600">
-                <p v-for="(par, i) in (course.summary || '').split('\n\n')" :key="i">{{ par }}</p>
+                <p v-for="(par, i) in (localizedSummary || '').split('\n\n')" :key="i">{{ par }}</p>
               </div>
 
               <template v-if="course.meta?.yang_dipelajari?.length">
                 <h4 class="mt-6 text-sm font-semibold text-slate-800">{{ t('catalog.detail.whatYouLearn') }}</h4>
                 <ul class="mt-2 grid gap-2 sm:grid-cols-2">
                   <li v-for="(y, i) in course.meta.yang_dipelajari" :key="i" class="flex items-start gap-2 text-sm text-slate-600">
-                    <Icon name="check" :size="15" class="mt-0.5 shrink-0 text-emerald-500" /> {{ y }}
+                    <Icon name="check" :size="15" class="mt-0.5 shrink-0 text-emerald-500" /> {{ getLocalizedText(y) }}
                   </li>
                 </ul>
               </template>
@@ -371,7 +388,7 @@ const TERMASUK = computed(() => [
                 <h4 class="mt-6 text-sm font-semibold text-slate-800">{{ t('catalog.detail.requirements') }}</h4>
                 <ul class="mt-2 space-y-1.5">
                   <li v-for="(p, i) in course.meta.persyaratan" :key="i" class="flex items-start gap-2 text-sm text-slate-600">
-                    <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400"></span> {{ p }}
+                    <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400"></span> {{ getLocalizedText(p) }}
                   </li>
                 </ul>
               </template>
@@ -380,7 +397,7 @@ const TERMASUK = computed(() => [
                 <h4 class="mt-6 text-sm font-semibold text-slate-800">{{ t('catalog.detail.suitableFor') }}</h4>
                 <ul class="mt-2 space-y-1.5">
                   <li v-for="(c2, i) in course.meta.cocok_untuk" :key="i" class="flex items-start gap-2 text-sm text-slate-600">
-                    <Icon name="target" :size="15" class="mt-0.5 shrink-0 text-sky-500" /> {{ c2 }}
+                    <Icon name="target" :size="15" class="mt-0.5 shrink-0 text-sky-500" /> {{ getLocalizedText(c2) }}
                   </li>
                 </ul>
               </template>
@@ -401,7 +418,7 @@ const TERMASUK = computed(() => [
                     class="flex w-full items-center justify-between gap-2 bg-slate-50 px-4 py-3.5 text-start text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
                     @click="toggleSection(s.id)"
                   >
-                    {{ s.title }}
+                    {{ getLocalizedText(s.title) }}
                     <Icon name="chevron-down" :size="16" class="shrink-0 text-slate-400 transition-transform" :class="openSections.has(s.id) ? 'rotate-180' : ''" />
                   </button>
                   <div v-if="openSections.has(s.id)" class="divide-y divide-slate-100">
@@ -414,7 +431,7 @@ const TERMASUK = computed(() => [
                       @click="l.gratis_preview ? openPreview(l) : null"
                     >
                       <Icon name="play-circle" :size="16" class="shrink-0 text-brand-400" />
-                      <span class="min-w-0 flex-1 truncate text-slate-700">{{ l.title }}</span>
+                      <span class="min-w-0 flex-1 truncate text-slate-700">{{ getLocalizedText(l.title) }}</span>
                       <span v-if="l.gratis_preview" class="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-600">
                         {{ t('catalog.detail.preview') }}
                       </span>

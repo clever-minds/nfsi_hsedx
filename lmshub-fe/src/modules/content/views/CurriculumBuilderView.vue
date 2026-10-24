@@ -7,6 +7,7 @@ import { fmtAngka } from '@/lib/format';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
 import RichTextEditor from '@/components/ui/RichTextEditor.vue';
+import { getLocalizedText, splitLocalizedText, combineLocalizedText } from '@/lib/course-localization';
 
 type LessonType = 'video' | 'text' | 'pdf' | 'quiz' | 'assignment' | 'live_class' | 'scorm' | 'embed';
 const LESSON_TYPES: LessonType[] = ['video', 'text', 'pdf', 'quiz', 'assignment', 'live_class', 'scorm', 'embed'];
@@ -85,8 +86,17 @@ function showNotice(msg: string) {
 }
 
 const newSectionTitle = ref('');
+const newSectionTitleEn = ref('');
+const newSectionTitleHi = ref('');
+
 const newLessonTitle = ref<Record<string, string>>({});
+const newLessonTitleEn = ref<Record<string, string>>({});
+const newLessonTitleHi = ref<Record<string, string>>({});
 const newLessonType = ref<Record<string, LessonType>>({});
+
+const contentBodyEn = ref('');
+const contentBodyHi = ref('');
+const contentBodyLang = ref<'en' | 'hi'>('en');
 
 const hasCourse = computed(() => !!selectedCourseId.value);
 
@@ -140,6 +150,9 @@ function onAssetUploaded(asset: { id: string }) {
 function resetContentForm() {
   editingContentId.value = null;
   contentSource.value = 'media';
+  contentBodyEn.value = '';
+  contentBodyHi.value = '';
+  contentBodyLang.value = 'en';
   contentForm.value = { type: 'video', url: '', body: '', media_asset_id: '', scorm_manifest_url: '', duration_minutes: 0 };
 }
 
@@ -203,11 +216,20 @@ async function submitContent(lessonId: string) {
   const payload: Record<string, unknown> = { type: f.type };
 
   if (f.type === 'text') {
-    if (!f.body.trim()) {
+    const en = contentBodyEn.value.trim();
+    const hi = contentBodyHi.value.trim();
+    if (en && hi) {
+      payload.body = `[EN]\n${en}\n[/EN]\n\n[HI]\n${hi}\n[/HI]`;
+    } else if (hi) {
+      payload.body = `[HI]\n${hi}\n[/HI]`;
+    } else if (en) {
+      payload.body = en;
+    } else if (f.body.trim()) {
+      payload.body = f.body.trim();
+    } else {
       contentError.value = t('content.contents.bodyRequired');
       return;
     }
-    payload.body = f.body;
   } else if (f.type === 'scorm') {
     if (!f.scorm_manifest_url.trim()) {
       contentError.value = t('content.contents.manifestRequired');
@@ -260,6 +282,24 @@ async function submitContent(lessonId: string) {
 function editContent(c: LessonContent) {
   editingContentId.value = c.id;
   contentSource.value = c.media_asset_id ? 'media' : 'link';
+
+  if (c.type === 'text') {
+    const raw = c.body ?? '';
+    const enMatch = raw.match(/\[EN\]([\s\S]*?)\[\/EN\]/i);
+    const hiMatch = raw.match(/\[HI\]([\s\S]*?)\[\/HI\]/i);
+    if (enMatch || hiMatch) {
+      contentBodyEn.value = enMatch ? enMatch[1].trim() : '';
+      contentBodyHi.value = hiMatch ? hiMatch[1].trim() : '';
+    } else {
+      contentBodyEn.value = raw;
+      contentBodyHi.value = '';
+    }
+    contentBodyLang.value = contentBodyEn.value ? 'en' : 'hi';
+  } else {
+    contentBodyEn.value = '';
+    contentBodyHi.value = '';
+  }
+
   contentForm.value = {
     type: c.type,
     url: c.url ?? '',
@@ -355,14 +395,21 @@ function selectCourse(id: string) {
 }
 
 async function addSection() {
-  if (!newSectionTitle.value.trim() || !selectedCourseId.value) return;
+  const en = newSectionTitleEn.value.trim();
+  const hi = newSectionTitleHi.value.trim();
+  const legacy = newSectionTitle.value.trim();
+  const title = (en || hi) ? combineLocalizedText(en, hi, ' / ') : legacy;
+  if (!title || !selectedCourseId.value) return;
+
   busy.value = true;
   try {
     await apiPost(`/courses/${selectedCourseId.value}/sections`, {
-      title: newSectionTitle.value.trim(),
+      title,
       sort_order: sections.value.length,
     });
     newSectionTitle.value = '';
+    newSectionTitleEn.value = '';
+    newSectionTitleHi.value = '';
     await loadCurriculum();
     showNotice(t('common.state.saved', 'success ditambahkan!'));
   } catch (e) {
@@ -404,8 +451,12 @@ async function moveSection(id: string, dir: -1 | 1) {
 }
 
 async function addLesson(sectionId: string) {
-  const title = (newLessonTitle.value[sectionId] || '').trim();
+  const en = (newLessonTitleEn.value[sectionId] || '').trim();
+  const hi = (newLessonTitleHi.value[sectionId] || '').trim();
+  const legacy = (newLessonTitle.value[sectionId] || '').trim();
+  const title = (en || hi) ? combineLocalizedText(en, hi, ' / ') : legacy;
   if (!title) return;
+
   busy.value = true;
   try {
     await apiPost(`/sections/${sectionId}/lessons`, {
@@ -414,6 +465,8 @@ async function addLesson(sectionId: string) {
       sort_order: (lessonsBySection.value[sectionId] || []).length,
     });
     newLessonTitle.value[sectionId] = '';
+    newLessonTitleEn.value[sectionId] = '';
+    newLessonTitleHi.value[sectionId] = '';
     await loadCurriculum();
     showNotice(t('common.state.saved', 'success ditambahkan!'));
   } catch (e) {
@@ -514,7 +567,10 @@ onMounted(async () => {
         <div class="mb-3 flex items-start justify-between gap-2">
           <div>
             <span class="text-xs text-slate-400">{{ t('content.builder.sectionN', { n: fmtAngka(si + 1) }) }}</span>
-            <h3 class="card-title">{{ s.title }}</h3>
+            <div class="flex items-center gap-2">
+              <h3 class="card-title">{{ getLocalizedText(s.title) }}</h3>
+              <span v-if="s.title.includes('/')" class="text-xs text-slate-400">({{ s.title }})</span>
+            </div>
           </div>
           <div class="flex shrink-0 items-center gap-1">
             <button class="btn-outline btn-sm" :disabled="busy || si === 0" @click="moveSection(s.id, -1)">↑</button>
@@ -535,7 +591,8 @@ onMounted(async () => {
           <li v-for="(l, li) in lessonsBySection[s.id] || []" :key="l.id" class="rounded-lg bg-slate-50">
           <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
             <div class="flex items-center gap-2">
-              <span class="text-slate-700">{{ l.title }}</span>
+              <span class="text-slate-800 font-medium">{{ getLocalizedText(l.title) }}</span>
+              <span v-if="l.title.includes('/')" class="text-xs text-slate-400">({{ l.title }})</span>
               <span v-if="l.gratis_preview" class="text-[10px] font-medium text-emerald-600">
                 {{ t('content.builder.freePreview') }}
               </span>
@@ -660,9 +717,36 @@ onMounted(async () => {
                 </div>
 
                 <div v-if="contentForm.type === 'text'" class="sm:col-span-2">
-                  <label class="label">{{ t('content.contents.body') }}</label>
-                  <RichTextEditor v-model="contentForm.body" />
-                  <p class="mt-1 text-xs text-slate-400">{{ t('content.contents.bodyHint') }}</p>
+                  <div class="mb-2 flex items-center justify-between">
+                    <label class="label mb-0">{{ t('content.contents.body') }}</label>
+                    <div class="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-0.5 text-xs font-semibold">
+                      <button
+                        type="button"
+                        class="rounded-md px-2.5 py-1 transition-all"
+                        :class="contentBodyLang === 'en' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        @click="contentBodyLang = 'en'"
+                      >
+                        🇬🇧 English Content
+                      </button>
+                      <button
+                        type="button"
+                        class="rounded-md px-2.5 py-1 transition-all"
+                        :class="contentBodyLang === 'hi' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        @click="contentBodyLang = 'hi'"
+                      >
+                        🇮🇳 हिन्दी Content (Hindi)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div v-show="contentBodyLang === 'en'">
+                    <RichTextEditor v-model="contentBodyEn" />
+                    <p class="mt-1 text-xs text-slate-400">English lesson text / explanation / notes.</p>
+                  </div>
+                  <div v-show="contentBodyLang === 'hi'">
+                    <RichTextEditor v-model="contentBodyHi" />
+                    <p class="mt-1 text-xs text-slate-400">हिन्दी पाठ सामग्री / व्याख्या (Hindi lesson content).</p>
+                  </div>
                 </div>
 
                 <div v-if="contentForm.type === 'scorm'" class="sm:col-span-2">
@@ -692,28 +776,42 @@ onMounted(async () => {
           </li>
         </ul>
 
-        <div v-can="'kurikulum.create'" class="mt-3 flex flex-wrap gap-2">
-          <input
-            v-model="newLessonTitle[s.id]"
-            class="input max-w-xs"
-            :placeholder="t('content.builder.newLessonPlaceholder')"
-            @keyup.enter="addLesson(s.id)"
-          />
-          <select v-model="newLessonType[s.id]" class="input w-auto hidden">
-            <option v-for="lt in LESSON_TYPES" :key="lt" :value="lt">{{ lessonTypeLabel(lt) }}</option>
-          </select>
-          <button class="btn-outline" :disabled="busy" @click="addLesson(s.id)">{{ t('content.builder.addLesson') }}</button>
+        <div v-can="'kurikulum.create'" class="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+          <div class="flex flex-1 min-w-[280px] gap-2">
+            <input
+              v-model="newLessonTitleEn[s.id]"
+              class="input text-xs flex-1"
+              placeholder="Lesson title (English)"
+              @keyup.enter="addLesson(s.id)"
+            />
+            <input
+              v-model="newLessonTitleHi[s.id]"
+              class="input text-xs flex-1"
+              placeholder="पाठ का शीर्षक (हिन्दी)"
+              @keyup.enter="addLesson(s.id)"
+            />
+          </div>
+          <button class="btn-outline btn-sm shrink-0" :disabled="busy" @click="addLesson(s.id)">+ {{ t('content.builder.addLesson') }}</button>
         </div>
       </div>
 
-      <div v-can="'kurikulum.create'" class="card flex flex-wrap gap-2 p-4">
-        <input
-          v-model="newSectionTitle"
-          class="input max-w-xs"
-          :placeholder="t('content.builder.newSectionPlaceholder')"
-          @keyup.enter="addSection"
-        />
-        <button class="btn-primary" :disabled="busy" @click="addSection">{{ t('content.builder.addSection') }}</button>
+      <div v-can="'kurikulum.create'" class="card p-4">
+        <h4 class="text-sm font-semibold text-slate-800 mb-2">+ {{ t('content.builder.addSection') }}</h4>
+        <div class="flex flex-wrap items-center gap-2">
+          <input
+            v-model="newSectionTitleEn"
+            class="input flex-1 min-w-[200px]"
+            placeholder="Section Title (English)"
+            @keyup.enter="addSection"
+          />
+          <input
+            v-model="newSectionTitleHi"
+            class="input flex-1 min-w-[200px]"
+            placeholder="सेक्शन शीर्षक (हिन्दी)"
+            @keyup.enter="addSection"
+          />
+          <button class="btn-primary" :disabled="busy" @click="addSection">{{ t('content.builder.addSection') }}</button>
+        </div>
       </div>
     </div>
   </div>

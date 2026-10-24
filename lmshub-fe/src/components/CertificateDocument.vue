@@ -34,14 +34,6 @@ const companyAddress = computed(() => {
   );
 });
 
-const displayAffiliation = computed(() => {
-  const ins = props.cert.instructor;
-  if (!ins || /rina|wijaya/i.test(ins)) {
-    return 'National Fire Safety Institute (NFSI)';
-  }
-  return ins;
-});
-
 function fmtIssueDate(dateStr?: string | null): string {
   if (!dateStr) return '16-Oct-2026';
   const d = new Date(dateStr);
@@ -83,9 +75,6 @@ function fmtIssueDate(dateStr?: string | null): string {
 
           <!-- Recipient Name -->
           <h2 class="recipient-name">{{ cert.name || 'Recipient Name' }}</h2>
-
-          <!-- Sub-affiliation -->
-          <p class="affiliation-text">{{ displayAffiliation }}</p>
 
           <!-- Award Description Citation -->
           <p class="award-description">

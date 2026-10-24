@@ -2,6 +2,8 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getLocalizedText } from '@/lib/course-localization';
+import { useAppConfigStore } from '@/stores/appConfig';
+import BrandMark from '@/components/ui/BrandMark.vue';
 
 export interface CertData {
   name: string;
@@ -14,13 +16,22 @@ export interface CertData {
   verify_url?: string | null;
   content?: string | null;
   score?: string | number | null;
+  company_address?: string | null;
 }
 
 const props = defineProps<{ cert: CertData }>();
 const { t } = useI18n();
+const appConfig = useAppConfigStore();
 
 const localizedCourseTitle = computed(() => {
   return getLocalizedText(props.cert.course);
+});
+
+const companyAddress = computed(() => {
+  return (
+    props.cert.company_address ||
+    'Himaya Prevention Private Limited · CIN: U74999GJ2017PTC096981 · GSTIN: 24AAECH1623D1Z8 · Vadodara, Gujarat, India · info@himpre.com'
+  );
 });
 
 function fmtIssueDate(dateStr?: string | null): string {
@@ -37,11 +48,16 @@ function fmtIssueDate(dateStr?: string | null): string {
   <div class="cert-wrap">
     <div class="cert">
       <div class="cert-inner">
-        <!-- TOP HEADER: Organization & Certificate No -->
+        <!-- TOP HEADER: Organization Logo & Certificate No -->
         <div class="cert-header">
-          <div class="cert-org">
-            <h2 class="org-name">Himaya Prevention</h2>
-            <p class="org-tagline">W E &nbsp; M A K E &nbsp; W O R K P L A C E &nbsp; S A F E R</p>
+          <div class="cert-logo-wrap">
+            <img
+              v-if="appConfig.logoUrl"
+              :src="appConfig.logoUrl"
+              :alt="appConfig.appName || 'Logo'"
+              class="cert-logo-img"
+            />
+            <BrandMark v-else size="lg" />
           </div>
           <div class="cert-meta-no">
             <span class="meta-label">CERTIFICATE NO.</span>
@@ -148,7 +164,7 @@ function fmtIssueDate(dateStr?: string | null): string {
 
           <!-- Company Details -->
           <p class="company-text">
-            Himaya Prevention Private Limited · CIN: U74999GJ2017PTC096981 · GSTIN: 24AAECH1623D1Z8 · Vadodara, Gujarat, India · info@himpre.com
+            {{ companyAddress }}
           </p>
 
           <!-- System Credit -->
@@ -199,30 +215,21 @@ function fmtIssueDate(dateStr?: string | null): string {
 .cert-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
 }
 
-.cert-org {
+.cert-logo-wrap {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  max-width: 250px;
+  min-height: 48px;
 }
 
-.org-name {
-  font-family: 'Georgia', serif;
-  font-size: 26px;
-  font-weight: 700;
-  color: #0e1729;
-  letter-spacing: -0.01em;
-  margin: 0;
-  line-height: 1.1;
-}
-
-.org-tagline {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #64738b;
-  letter-spacing: 0.18em;
-  margin: 4px 0 0 0;
+.cert-logo-img {
+  max-height: 52px;
+  max-width: 220px;
+  width: auto;
+  object-fit: contain;
 }
 
 .cert-meta-no {

@@ -7,7 +7,7 @@ import { fmtAngka } from '@/lib/format';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
 import RichTextEditor from '@/components/ui/RichTextEditor.vue';
-import { getLocalizedText, splitLocalizedText, combineLocalizedText } from '@/lib/course-localization';
+import { getLocalizedText, splitLocalizedText, combineLocalizedText, splitLessonContent, createBilingualLessonHtml } from '@/lib/course-localization';
 
 type LessonType = 'video' | 'text' | 'pdf' | 'quiz' | 'assignment' | 'live_class' | 'scorm' | 'embed';
 const LESSON_TYPES: LessonType[] = ['video', 'text', 'pdf', 'quiz', 'assignment', 'live_class', 'scorm', 'embed'];
@@ -219,9 +219,9 @@ async function submitContent(lessonId: string) {
     const en = contentBodyEn.value.trim();
     const hi = contentBodyHi.value.trim();
     if (en && hi) {
-      payload.body = `[EN]\n${en}\n[/EN]\n\n[HI]\n${hi}\n[/HI]`;
+      payload.body = createBilingualLessonHtml(en, hi);
     } else if (hi) {
-      payload.body = `[HI]\n${hi}\n[/HI]`;
+      payload.body = hi;
     } else if (en) {
       payload.body = en;
     } else if (f.body.trim()) {
@@ -284,16 +284,9 @@ function editContent(c: LessonContent) {
   contentSource.value = c.media_asset_id ? 'media' : 'link';
 
   if (c.type === 'text') {
-    const raw = c.body ?? '';
-    const enMatch = raw.match(/\[EN\]([\s\S]*?)\[\/EN\]/i);
-    const hiMatch = raw.match(/\[HI\]([\s\S]*?)\[\/HI\]/i);
-    if (enMatch || hiMatch) {
-      contentBodyEn.value = enMatch ? enMatch[1].trim() : '';
-      contentBodyHi.value = hiMatch ? hiMatch[1].trim() : '';
-    } else {
-      contentBodyEn.value = raw;
-      contentBodyHi.value = '';
-    }
+    const { en, hi } = splitLessonContent(c.body);
+    contentBodyEn.value = en;
+    contentBodyHi.value = hi;
     contentBodyLang.value = contentBodyEn.value ? 'en' : 'hi';
   } else {
     contentBodyEn.value = '';

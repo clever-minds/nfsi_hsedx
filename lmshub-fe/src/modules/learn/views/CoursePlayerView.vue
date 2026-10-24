@@ -79,7 +79,10 @@ const loading = ref(true);
 const error = ref('');
 const sidebarOpen = ref(false);
 const activeTab = ref<'notes' | 'qa' | 'review'>('notes');
-const playerLang = ref<'en' | 'hi' | 'both'>(currentLocale() === 'hi' ? 'hi' : 'both');
+const playerLang = ref<'en' | 'hi' | 'both'>(currentLocale() === 'hi' ? 'hi' : 'en');
+watch(() => currentLocale(), (newLoc) => {
+  playerLang.value = newLoc === 'hi' ? 'hi' : 'en';
+});
 
 const currentLessonId = ref<string | null>(null);
 const markingComplete = ref(false);

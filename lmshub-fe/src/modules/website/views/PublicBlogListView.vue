@@ -246,7 +246,7 @@ onMounted(() => {
             </h2>
 
             <p class="mt-2.5 flex-1 text-xs leading-relaxed text-slate-600 line-clamp-3">
-              {{ post.summary || (post.content.replace(/<[^>]*>/g, '').slice(0, 140) + '…') }}
+              {{ (post.summary ? post.summary.replace(/<[^>]*>/g, '') : post.content.replace(/<[^>]*>/g, '').slice(0, 140) + '…') }}
             </p>
 
             <!-- Card Footer -->

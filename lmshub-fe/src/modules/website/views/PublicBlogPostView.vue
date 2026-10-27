@@ -128,9 +128,11 @@ onMounted(() => {
           {{ post.title }}
         </h1>
 
-        <p v-if="post.summary" class="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-          {{ post.summary }}
-        </p>
+        <div
+          v-if="post.summary"
+          class="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base prose-sm"
+          v-html="sanitizeHtml(post.summary)"
+        ></div>
 
         <!-- Author & Date pill -->
         <div class="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-slate-500 border-y border-slate-200/80 py-3.5">

@@ -49,6 +49,7 @@ const formSaving = ref(false);
 const formError = ref('');
 const slugAuto = ref(true);
 const customCategoryMode = ref(false);
+const summaryRichMode = ref(false);
 const dbCategories = ref<string[]>([]);
 
 const form = reactive({
@@ -129,6 +130,7 @@ function openCreateModal() {
   formError.value = '';
   slugAuto.value = true;
   customCategoryMode.value = false;
+  summaryRichMode.value = false;
   form.title = '';
   form.slug = '';
   form.summary = '';
@@ -148,6 +150,7 @@ function openEditModal(post: BlogPost) {
   form.title = post.title;
   form.slug = post.slug;
   form.summary = post.summary || '';
+  summaryRichMode.value = Boolean(form.summary && /<[a-z][\s\S]*>/i.test(form.summary));
   form.content = post.content || '';
   form.cover_image_url = post.cover_image_url || '';
   form.author_name = post.author_name || '';
@@ -611,13 +614,27 @@ onMounted(() => {
 
           <!-- Summary / Excerpt -->
           <div>
-            <label class="label font-medium">Short Summary / Excerpt (Optional)</label>
-            <textarea
-              v-model="form.summary"
-              rows="2"
-              class="input text-xs"
-              placeholder="A brief 1-2 sentence overview to show on the blog listing cards and search engines..."
-            ></textarea>
+            <div class="flex items-center justify-between">
+              <label class="label font-medium mb-0">Short Summary / Excerpt (Optional)</label>
+              <button
+                type="button"
+                class="text-[11px] font-semibold text-brand-600 hover:underline flex items-center gap-1"
+                @click="summaryRichMode = !summaryRichMode"
+              >
+                <span>{{ summaryRichMode ? '← Simple Text Box' : '🛠️ Open Tool Editor' }}</span>
+              </button>
+            </div>
+            <div v-if="summaryRichMode" class="mt-1">
+              <RichTextEditor v-model="form.summary" />
+            </div>
+            <div v-else class="mt-1">
+              <textarea
+                v-model="form.summary"
+                rows="2"
+                class="input text-xs"
+                placeholder="A brief 1-2 sentence overview to show on the blog listing cards and search engines..."
+              ></textarea>
+            </div>
           </div>
 
           <!-- Full Content Editor -->

@@ -24,6 +24,7 @@
     "seed:electrical": "tsx src/scripts/seed-electrical.ts",
     "seed:loto": "tsx src/scripts/seed-loto.ts",
     "seed:all-safety": "tsx src/scripts/seed-all-safety.ts",
+    "seed:blogs": "tsx src/scripts/seed-blogs.ts",
     "fix:hindi": "tsx src/scripts/fix-hindi-content.ts",
     "fix:progress": "tsx src/scripts/fix-progress-certificates.ts",
     "fix:rina": "tsx src/scripts/remove-rina.ts",

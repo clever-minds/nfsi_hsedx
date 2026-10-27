@@ -91,6 +91,40 @@ async function seed() {
 </ul>`,
       published_at: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
     },
+    {
+      title: 'Chemical Spill Response & HAZMAT Safety: Emergency Management Protocols',
+      slug: 'chemical-spill-response-hazmat-safety-procedures',
+      summary: 'Critical steps, PPE selection, and containment techniques to manage hazardous material releases and comply with global OSHA/GHS regulations.',
+      category: 'Chemical Safety',
+      tags: ['Chemical Safety', 'HAZMAT', 'Spill Kit', 'GHS SDS'],
+      author_name: 'NFSI HAZMAT Specialist',
+      status: 'published',
+      cover_image_url: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1200&q=80',
+      content: `<h2>Understanding Chemical Hazards in Industrial Workspaces</h2>
+<p>Hazardous chemicals, toxic vapors, corrosive reagents, and volatile organic solvents are common in modern production and testing environments. When accidental leaks occur, rapid and methodical containment prevents severe occupational injuries and environmental damage.</p>
+
+<h3>1. Immediate Action Protocol (The 5 C's)</h3>
+<ol>
+  <li><strong>Caution & Evacuation:</strong> Clear the affected perimeter immediately and isolate ignition sources.</li>
+  <li><strong>Communicate:</strong> Sound the internal alarm and notify the designated emergency response coordinator.</li>
+  <li><strong>Consult SDS:</strong> Identify the chemical name, UN hazard number, and consult the 16-section Safety Data Sheet (SDS) for toxicity and neutralization steps.</li>
+  <li><strong>Containment:</strong> Deploy absorbent booms, chemical-resistant socks, and sand dikes around drains to stop runoff.</li>
+  <li><strong>Clean-up & Disposal:</strong> Absorb remaining liquid using appropriate neutralizers, seal waste in labelled yellow HAZMAT containers, and document the incident.</li>
+</ol>
+
+<h3>2. Personal Protective Equipment (PPE) for Chemical Handlers</h3>
+<p>Never approach an unidentified liquid without rated barrier protection. Standard protection includes:</p>
+<ul>
+  <li>Heavy-duty nitrile, butyl, or neoprene chemical gloves.</li>
+  <li>Anti-splash safety goggles with secondary full-face shield.</li>
+  <li>Respirators fitted with certified organic vapor and acid-gas cartridges (or SCBA for confined spaces).</li>
+  <li>Chemical-impervious apron or full Tychem encapsulation suit.</li>
+</ul>
+
+<h3>3. Decontamination and Eyewash Stations</h3>
+<p>Eyewash fountains and emergency body deluge showers must be tested weekly. In case of bodily contact, flush the affected area with clean water continuously for at least 15 minutes while seeking medical assistance.</p>`,
+      published_at: new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString(),
+    },
   ];
 
   for (const post of posts) {

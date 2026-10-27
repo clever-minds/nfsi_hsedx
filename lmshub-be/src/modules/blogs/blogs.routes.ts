@@ -12,6 +12,8 @@ export const blogsRouter = Router();
 blogsRouter.get('/public', asyncHandler(ctrl.listPublic));
 blogsRouter.get('/public/categories', asyncHandler(ctrl.listCategories));
 blogsRouter.get('/public/:slug', asyncHandler(ctrl.getPublicDetail));
+blogsRouter.get('/share/:slug', asyncHandler(ctrl.renderBlogSocialPreview));
+blogsRouter.get('/preview/:slug', asyncHandler(ctrl.renderBlogSocialPreview));
 
 // ADMIN / DASHBOARD routes
 blogsRouter.get('/', requireAuth(), requirePermission('content', 'view'), asyncHandler(ctrl.listAdmin));

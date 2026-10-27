@@ -122,7 +122,9 @@ async function loadSidebar() {
 
 function shareOn(platform: 'facebook' | 'x' | 'linkedin' | 'whatsapp') {
   if (typeof window === 'undefined') return;
-  const url = encodeURIComponent(window.location.href);
+  // Use SSR social preview URL so WhatsApp, LinkedIn, Twitter/X, and Facebook bots get instant rich preview cards
+  const shareTargetUrl = `${window.location.origin}/api/v1/blogs/share/${slug.value}`;
+  const url = encodeURIComponent(shareTargetUrl);
   const title = encodeURIComponent(post.value?.title || 'NFSI Safety Article');
 
   let shareUrl = '';

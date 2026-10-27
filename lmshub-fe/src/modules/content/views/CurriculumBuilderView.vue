@@ -99,6 +99,18 @@ const contentBodyEn = ref('');
 const contentBodyHi = ref('');
 const contentBodyLang = ref<'en' | 'hi'>('en');
 
+const contentMediaLang = ref<'en' | 'hi'>('en');
+const mediaEn = ref({
+  source: 'media' as 'media' | 'link',
+  url: '',
+  media_asset_id: '',
+});
+const mediaHi = ref({
+  source: 'media' as 'media' | 'link',
+  url: '',
+  media_asset_id: '',
+});
+
 const hasCourse = computed(() => !!selectedCourseId.value);
 
 // ── Isi pelajaran ─────────────────────────────────────────────────────────
@@ -146,6 +158,15 @@ const uploadAccept = computed(() => '*/*');
 /** A file uploaded from inside the lesson form is selected straight away. */
 function onAssetUploaded(asset: { id: string }) {
   mediaAssets.value = [asset as MediaAsset, ...mediaAssets.value.filter((m) => m.id !== asset.id)];
+  if (contentForm.value.type === 'video' || contentForm.value.type === 'pdf') {
+    if (contentMediaLang.value === 'hi') {
+      mediaHi.value.media_asset_id = asset.id;
+      mediaHi.value.source = 'media';
+    } else {
+      mediaEn.value.media_asset_id = asset.id;
+      mediaEn.value.source = 'media';
+    }
+  }
   contentForm.value.media_asset_id = asset.id;
 }
 
@@ -155,6 +176,9 @@ function resetContentForm() {
   contentBodyEn.value = '';
   contentBodyHi.value = '';
   contentBodyLang.value = 'en';
+  contentMediaLang.value = 'en';
+  mediaEn.value = { source: 'media', url: '', media_asset_id: '' };
+  mediaHi.value = { source: 'media', url: '', media_asset_id: '' };
   contentForm.value = { type: 'video', url: '', body: '', media_asset_id: '', scorm_manifest_url: '', duration_minutes: 0, language: 'all' };
 }
 
@@ -232,6 +256,117 @@ async function submitContent(lessonId: string) {
       contentError.value = t('content.contents.bodyRequired');
       return;
     }
+  } else if (f.type === 'video' || f.type === 'pdf') {
+    const hasEn = mediaEn.value.source === 'media' ? !!mediaEn.value.media_asset_id : !!mediaEn.value.url.trim();
+    const hasHi = mediaHi.value.source === 'media' ? !!mediaHi.value.media_asset_id : !!mediaHi.value.url.trim();
+
+    if (!hasEn && !hasHi) {
+      if (contentSource.value === 'media' && f.media_asset_id) {
+        payload.media_asset_id = f.media_asset_id;
+        if (editingContentId.value) payload.url = null;
+      } else if (contentSource.value === 'link' && f.url.trim()) {
+        payload.url = f.url.trim();
+        if (editingContentId.value) payload.media_asset_id = null;
+      } else {
+        contentError.value = f.type === 'video'
+          ? 'Please provide a video (Library asset or Link) for English or Hindi'
+          : 'Please provide a PDF (Library asset or Link) for English or Hindi';
+        return;
+      }
+      if (f.type === 'video' && f.duration_minutes > 0) payload.duration_seconds = Math.round(f.duration_minutes * 60);
+      payload.language = f.language || 'all';
+
+      busy.value = true;
+      contentError.value = '';
+      try {
+        if (editingContentId.value) {
+          await apiPut(`/contents/${editingContentId.value}`, payload);
+        } else {
+          payload.sort_order = (contents.value[lessonId] || []).length;
+          await apiPost(`/lessons/${lessonId}/contents`, payload);
+        }
+        resetContentForm();
+        await loadContents(lessonId);
+      } catch (e) {
+        contentError.value = errorMessage(e, t('content.contents.saveFailed'));
+      } finally {
+        busy.value = false;
+      }
+      return;
+    }
+
+    const buildPayload = (cfg: { source: 'media' | 'link'; url: string; media_asset_id: string }, lang: 'en' | 'hi' | 'all') => {
+      const p: Record<string, unknown> = { type: f.type, language: lang };
+      if (cfg.source === 'media') {
+        p.media_asset_id = cfg.media_asset_id;
+        p.url = null;
+      } else {
+        p.url = cfg.url.trim();
+        p.media_asset_id = null;
+      }
+      if (f.type === 'video' && f.duration_minutes > 0) {
+        p.duration_seconds = Math.round(f.duration_minutes * 60);
+      }
+      return p;
+    };
+
+    busy.value = true;
+    contentError.value = '';
+    try {
+      if (editingContentId.value) {
+        const currentLang = f.language || 'all';
+        if (hasEn && hasHi) {
+          const primaryCfg = currentLang === 'hi' ? mediaHi.value : mediaEn.value;
+          const secondaryCfg = currentLang === 'hi' ? mediaEn.value : mediaHi.value;
+          const primaryLang = currentLang === 'hi' ? 'hi' : 'en';
+          const secondaryLang = currentLang === 'hi' ? 'en' : 'hi';
+
+          await apiPut(`/contents/${editingContentId.value}`, buildPayload(primaryCfg, primaryLang));
+
+          const siblings = contents.value[lessonId] || [];
+          const existingSibling = siblings.find((item) => item.type === f.type && item.language === secondaryLang && item.id !== editingContentId.value);
+          if (existingSibling) {
+            await apiPut(`/contents/${existingSibling.id}`, buildPayload(secondaryCfg, secondaryLang));
+          } else {
+            const secondaryPayload = buildPayload(secondaryCfg, secondaryLang);
+            secondaryPayload.sort_order = siblings.length + 1;
+            await apiPost(`/lessons/${lessonId}/contents`, secondaryPayload);
+          }
+        } else if (hasHi && !hasEn) {
+          await apiPut(`/contents/${editingContentId.value}`, buildPayload(mediaHi.value, 'hi'));
+        } else if (hasEn && !hasHi) {
+          await apiPut(`/contents/${editingContentId.value}`, buildPayload(mediaEn.value, 'en'));
+        }
+      } else {
+        const existingCount = (contents.value[lessonId] || []).length;
+        if (hasEn && hasHi) {
+          const enPayload = buildPayload(mediaEn.value, 'en');
+          enPayload.sort_order = existingCount;
+          await apiPost(`/lessons/${lessonId}/contents`, enPayload);
+
+          const hiPayload = buildPayload(mediaHi.value, 'hi');
+          hiPayload.sort_order = existingCount + 1;
+          await apiPost(`/lessons/${lessonId}/contents`, hiPayload);
+        } else if (hasHi && !hasEn) {
+          const hiPayload = buildPayload(mediaHi.value, 'hi');
+          hiPayload.sort_order = existingCount;
+          await apiPost(`/lessons/${lessonId}/contents`, hiPayload);
+        } else if (hasEn && !hasHi) {
+          const enPayload = buildPayload(mediaEn.value, 'en');
+          enPayload.sort_order = existingCount;
+          await apiPost(`/lessons/${lessonId}/contents`, enPayload);
+        }
+      }
+
+      resetContentForm();
+      await loadContents(lessonId);
+      return;
+    } catch (e) {
+      contentError.value = errorMessage(e, t('content.contents.saveFailed'));
+      return;
+    } finally {
+      busy.value = false;
+    }
   } else if (f.type === 'scorm') {
     if (!f.scorm_manifest_url.trim()) {
       contentError.value = t('content.contents.manifestRequired');
@@ -244,14 +379,8 @@ async function submitContent(lessonId: string) {
       return;
     }
     payload.media_asset_id = f.media_asset_id;
-    // Switching an existing lesson from a web address to a library file must
-    // clear the address: the player prefers `url` when both are set, so the
-    // old link would keep playing. (Create rejects null, so edit only.)
     if (editingContentId.value) payload.url = null;
   } else {
-    // Dicegat di sini dengan pesan yang menjelaskan bentuk yang diterima, alih-alih
-    // 'Validation failed' from backend yang no menolong. Path berawalan '/'
-    // ikut diterima: itu berkas di server ini sendiri, di bawah `uploads/`.
     const url = f.url.trim();
     if (!/^https?:\/\//i.test(url) && !url.startsWith('/')) {
       contentError.value = t('content.contents.urlAbsolute');
@@ -294,6 +423,46 @@ function editContent(c: LessonContent) {
   } else {
     contentBodyEn.value = '';
     contentBodyHi.value = '';
+  }
+
+  if (c.type === 'video' || c.type === 'pdf') {
+    mediaEn.value = { source: 'media', url: '', media_asset_id: '' };
+    mediaHi.value = { source: 'media', url: '', media_asset_id: '' };
+
+    if (c.language === 'hi') {
+      mediaHi.value = {
+        source: c.media_asset_id ? 'media' : 'link',
+        url: c.url ?? '',
+        media_asset_id: c.media_asset_id ?? '',
+      };
+      contentMediaLang.value = 'hi';
+    } else {
+      mediaEn.value = {
+        source: c.media_asset_id ? 'media' : 'link',
+        url: c.url ?? '',
+        media_asset_id: c.media_asset_id ?? '',
+      };
+      contentMediaLang.value = 'en';
+    }
+
+    const siblings = contents.value[openLessonId.value || ''] || [];
+    const otherLang = c.language === 'hi' ? 'en' : 'hi';
+    const sibling = siblings.find((item) => item.type === c.type && item.language === otherLang && item.id !== c.id);
+    if (sibling) {
+      if (otherLang === 'en') {
+        mediaEn.value = {
+          source: sibling.media_asset_id ? 'media' : 'link',
+          url: sibling.url ?? '',
+          media_asset_id: sibling.media_asset_id ?? '',
+        };
+      } else {
+        mediaHi.value = {
+          source: sibling.media_asset_id ? 'media' : 'link',
+          url: sibling.url ?? '',
+          media_asset_id: sibling.media_asset_id ?? '',
+        };
+      }
+    }
   }
 
   contentForm.value = {
@@ -687,7 +856,7 @@ onMounted(async () => {
               </p>
 
               <div class="grid gap-2 sm:grid-cols-2">
-                <div class="sm:col-span-2">
+                <div v-if="contentForm.type !== 'text' && contentForm.type !== 'video' && contentForm.type !== 'pdf'" class="sm:col-span-2">
                   <label class="label font-medium flex items-center justify-between">
                     <span>Language / भाषा</span>
                     <span class="text-xs font-normal text-slate-500">
@@ -722,41 +891,111 @@ onMounted(async () => {
                   </div>
                 </div>
 
-                <div>
+                <div class="sm:col-span-2">
                   <label class="label">{{ t('content.contents.type') }}</label>
                   <select v-model="contentForm.type" class="input">
                     <option v-for="ct in CONTENT_TYPES" :key="ct" :value="ct">{{ contentTypeLabel(ct) }}</option>
                   </select>
                 </div>
 
-                <div v-if="isLinkType">
-                  <label class="label">{{ t('content.contents.source') }}</label>
-                  <select v-model="contentSource" class="input">
-                    <option value="media">{{ t('content.contents.sourceMedia') }}</option>
-                    <option value="link">{{ t('content.contents.sourceLink') }}</option>
-                  </select>
-                </div>
+                <!-- Video / PDF Bilingual Tabs (English & Hindi) -->
+                <div v-if="isLinkType" class="sm:col-span-2">
+                  <div class="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                    <label class="label mb-0 font-bold text-slate-800">
+                      {{ contentForm.type === 'video' ? 'Video Source (भाषा अनुसार वीडियो)' : 'PDF Document (भाषा अनुसार पीडीएफ)' }}
+                    </label>
+                    <div class="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-0.5 text-xs font-semibold">
+                      <button
+                        type="button"
+                        class="flex items-center gap-1.5 rounded-md px-3 py-1.5 transition-all"
+                        :class="contentMediaLang === 'en' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        @click="contentMediaLang = 'en'"
+                      >
+                        <span>🇬🇧</span> English {{ contentForm.type === 'video' ? 'Video' : 'PDF' }}
+                        <span v-if="(mediaEn.source === 'media' && mediaEn.media_asset_id) || (mediaEn.source === 'link' && mediaEn.url)" class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                      </button>
+                      <button
+                        type="button"
+                        class="flex items-center gap-1.5 rounded-md px-3 py-1.5 transition-all"
+                        :class="contentMediaLang === 'hi' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        @click="contentMediaLang = 'hi'"
+                      >
+                        <span>🇮🇳</span> हिन्दी {{ contentForm.type === 'video' ? 'Video' : 'PDF' }} (Hindi)
+                        <span v-if="(mediaHi.source === 'media' && mediaHi.media_asset_id) || (mediaHi.source === 'link' && mediaHi.url)" class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                      </button>
+                    </div>
+                  </div>
 
-                <div v-if="isLinkType && contentSource === 'link'" class="sm:col-span-2">
-                  <label class="label">{{ t('content.contents.url') }}</label>
-                  <input v-model="contentForm.url" class="input" placeholder="https://…" />
-                  <p class="mt-1 text-xs text-slate-400">{{ t('content.contents.urlHint') }}</p>
-                </div>
+                  <!-- English Tab Content -->
+                  <div v-show="contentMediaLang === 'en'" class="space-y-3 rounded-xl border border-blue-100 bg-blue-50/20 p-3.5">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-bold text-blue-800 flex items-center gap-1">
+                        <span>🇬🇧</span> English {{ contentForm.type === 'video' ? 'Video' : 'PDF' }} Settings
+                      </span>
+                      <div class="flex items-center gap-2">
+                        <label class="text-xs text-slate-600 font-medium">Source:</label>
+                        <select v-model="mediaEn.source" class="input py-1 text-xs w-auto">
+                          <option value="media">{{ t('content.contents.sourceMedia') }} (Library)</option>
+                          <option value="link">{{ t('content.contents.sourceLink') }} (URL / YouTube)</option>
+                        </select>
+                      </div>
+                    </div>
 
-                <div v-if="isLinkType && contentSource === 'media'" class="sm:col-span-2">
-                  <label class="label">{{ t('content.contents.asset') }}</label>
-                  <select v-model="contentForm.media_asset_id" class="input">
-                    <option value="">{{ t('common.action.choose') }}</option>
-                    <option v-for="m in mediaChoices" :key="m.id" :value="m.id">
-                      {{ m.file_name }}<template v-if="m.file_type === 'video' && m.status_transcode !== 'completed'">
-                        — {{ t('content.contents.notReady') }}
-</template>
-                    </option>
-                  </select>
-                  <p class="mt-1 text-xs text-slate-400">{{ t('content.contents.assetHint') }}</p>
-                  <div v-can="'content.create'" class="mt-2 flex flex-wrap items-center gap-2">
-                    <span class="text-xs text-slate-500">{{ t('content.contents.orUpload') }}</span>
-                    <MediaUploadButton :accept="uploadAccept" :label="t('content.contents.uploadNew')" @uploaded="onAssetUploaded" />
+                    <div v-if="mediaEn.source === 'link'">
+                      <label class="label text-xs font-medium">English {{ contentForm.type === 'video' ? 'Video' : 'PDF' }} URL</label>
+                      <input v-model="mediaEn.url" class="input" :placeholder="contentForm.type === 'video' ? 'https://youtube.com/watch?v=... or https://...' : 'https://... or /uploads/...'" />
+                      <p class="mt-1 text-xs text-slate-400">Direct MP4/PDF link or YouTube embed link for English learners.</p>
+                    </div>
+
+                    <div v-else>
+                      <label class="label text-xs font-medium">Choose English Asset from Library</label>
+                      <select v-model="mediaEn.media_asset_id" class="input">
+                        <option value="">{{ t('common.action.choose') }}</option>
+                        <option v-for="m in mediaChoices" :key="m.id" :value="m.id">
+                          {{ m.file_name }}
+                        </option>
+                      </select>
+                      <div v-can="'content.create'" class="mt-2 flex flex-wrap items-center gap-2">
+                        <span class="text-xs text-slate-500">{{ t('content.contents.orUpload') }}</span>
+                        <MediaUploadButton :accept="uploadAccept" label="Upload English File" @uploaded="onAssetUploaded" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Hindi Tab Content -->
+                  <div v-show="contentMediaLang === 'hi'" class="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50/20 p-3.5">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-bold text-emerald-800 flex items-center gap-1">
+                        <span>🇮🇳</span> हिन्दी {{ contentForm.type === 'video' ? 'Video' : 'PDF' }} Settings (Hindi)
+                      </span>
+                      <div class="flex items-center gap-2">
+                        <label class="text-xs text-slate-600 font-medium">Source:</label>
+                        <select v-model="mediaHi.source" class="input py-1 text-xs w-auto">
+                          <option value="media">{{ t('content.contents.sourceMedia') }} (Library)</option>
+                          <option value="link">{{ t('content.contents.sourceLink') }} (URL / YouTube)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div v-if="mediaHi.source === 'link'">
+                      <label class="label text-xs font-medium">हिन्दी {{ contentForm.type === 'video' ? 'Video' : 'PDF' }} URL (Hindi)</label>
+                      <input v-model="mediaHi.url" class="input" :placeholder="contentForm.type === 'video' ? 'https://youtube.com/watch?v=... or https://...' : 'https://... or /uploads/...'" />
+                      <p class="mt-1 text-xs text-slate-400">हिन्दी भाषा वाले छात्रों के लिए वीडियो या पीडीएफ का लिंक डालें।</p>
+                    </div>
+
+                    <div v-else>
+                      <label class="label text-xs font-medium">Choose Hindi Asset from Library</label>
+                      <select v-model="mediaHi.media_asset_id" class="input">
+                        <option value="">{{ t('common.action.choose') }}</option>
+                        <option v-for="m in mediaChoices" :key="m.id" :value="m.id">
+                          {{ m.file_name }}
+                        </option>
+                      </select>
+                      <div v-can="'content.create'" class="mt-2 flex flex-wrap items-center gap-2">
+                        <span class="text-xs text-slate-500">{{ t('content.contents.orUpload') }}</span>
+                        <MediaUploadButton :accept="uploadAccept" label="Upload Hindi File" @uploaded="onAssetUploaded" />
+                      </div>
+                    </div>
                   </div>
                 </div>
 

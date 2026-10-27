@@ -512,8 +512,8 @@ onMounted(load);
                 <div v-if="c.body" v-html="sanitizeHtml(filterLessonHtml(c.body, playerLang))"></div>
               </div>
               <div v-else-if="c.type === 'pdf'" class="mt-3 flex flex-col items-center">
-                <iframe v-if="c.url" :src="assetUrl(c.url)" class="w-full h-[600px] rounded border border-slate-200 mb-2" frameborder="0"></iframe>
-                <a v-if="c.url" :href="assetUrl(c.url)" target="_blank" class="text-sm text-brand-600 hover:underline font-medium">Open PDF in new tab</a>
+                <iframe v-if="c.url" :src="assetUrl(getLocalizedVideoUrl(c.url) || c.url)" class="w-full h-[600px] rounded border border-slate-200 mb-2" frameborder="0"></iframe>
+                <a v-if="c.url" :href="assetUrl(getLocalizedVideoUrl(c.url) || c.url)" target="_blank" class="text-sm text-brand-600 hover:underline font-medium">Open PDF in new tab</a>
               </div>
               <div v-else class="rounded-lg bg-slate-50 p-6 text-center text-sm text-slate-500">
                 {{ t('learn.player.otherType', { type: c.type }) }}

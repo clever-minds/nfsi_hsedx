@@ -33,7 +33,8 @@
     "website": "वेबसाइट",
     "certificateTemplate": "प्रमाणपत्र टेम्पलेट",
     "mediaLibrary": "मीडिया लाइब्रेरी",
-    "pages": "पेज"
+    "pages": "पेज",
+    "blogs": "ब्लॉग पोस्ट"
   },
   "public": {
     "home": "होम",

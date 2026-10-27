@@ -30,6 +30,7 @@ interface Lesson {
     type: string;
     body?: string;
     url?: string;
+    language?: 'all' | 'en' | 'hi' | string;
   }>;
 }
 interface Section {
@@ -111,10 +112,41 @@ function youtubeEmbed(url?: string): string | null {
 }
 const courseQuizzes = ref<any[]>([]);
 
+function getLocalizedVideoUrl(url?: string): string | null {
+  if (!url) return null;
+  const text = url.trim();
+  if (text.includes('[EN]') || text.includes('[HI]')) {
+    if (playerLang.value === 'hi') {
+      const m = text.match(/\[HI\]([\s\S]*?)\[\/HI\]/i);
+      if (m && m[1].trim()) return m[1].trim();
+    }
+    const m = text.match(/\[EN\]([\s\S]*?)\[\/EN\]/i);
+    if (m && m[1].trim()) return m[1].trim();
+  }
+  return text;
+}
+
 const allLessons = computed<Lesson[]>(() => (course.value?.sections ?? []).flatMap((s) => s.lessons ?? []));
 const currentLesson = computed<Lesson | null>(() => allLessons.value.find((l) => l.id === currentLessonId.value) ?? null);
 const currentIndex = computed(() => allLessons.value.findIndex((l) => l.id === currentLessonId.value));
 const nextLesson = computed<Lesson | null>(() => allLessons.value[currentIndex.value + 1] ?? null);
+
+const displayedContents = computed(() => {
+  const list = currentLesson.value?.contents ?? [];
+  if (!list.length) return [];
+  if (playerLang.value === 'both') {
+    return list;
+  }
+  const target = playerLang.value; // 'en' | 'hi'
+  const matching = list.filter((c) => c.language === target);
+  const common = list.filter((c) => !c.language || c.language === 'all');
+  if (matching.length > 0) {
+    const matchedTypes = new Set(matching.map((m) => m.type));
+    const nonConflicting = common.filter((c) => !matchedTypes.has(c.type));
+    return [...matching, ...nonConflicting];
+  }
+  return list;
+});
 
 const progressPercent = computed(() => {
   const total = allLessons.value.length;
@@ -438,8 +470,17 @@ onMounted(load);
             </div>
           </div>
 
-          <div v-if="currentLesson.contents && currentLesson.contents.length > 0" class="mt-3 space-y-6">
-            <div v-for="c in currentLesson.contents" :key="c.id">
+          <div v-if="displayedContents && displayedContents.length > 0" class="mt-3 space-y-6">
+            <div v-for="c in displayedContents" :key="c.id">
+              <div v-if="c.language && c.language !== 'all'" class="mb-2 flex items-center gap-2">
+                <span
+                  class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-sm"
+                  :class="c.language === 'hi' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-blue-100 text-blue-800 border border-blue-200'"
+                >
+                  <span>{{ c.language === 'hi' ? '🇮🇳' : '🇬🇧' }}</span>
+                  {{ c.language === 'hi' ? 'हिन्दी संस्करण (Hindi Version)' : 'English Version' }}
+                </span>
+              </div>
               <div v-if="c.type === 'video' || c.type === 'embed' || (!c.type && currentLesson.type === 'video')" class="overflow-hidden rounded-lg bg-black">
                 <iframe
                   v-if="youtubeEmbed(c.url)"
@@ -483,9 +524,9 @@ onMounted(load);
           <template v-else>
             <div v-if="!currentLesson.type || currentLesson.type === 'video'" class="mt-3 overflow-hidden rounded-lg bg-black">
               <iframe
-                v-if="youtubeEmbed(currentLesson.video_url)"
+                v-if="youtubeEmbed(getLocalizedVideoUrl(currentLesson.video_url) || currentLesson.video_url)"
                 :key="currentLesson.id"
-                :src="youtubeEmbed(currentLesson.video_url)!"
+                :src="youtubeEmbed(getLocalizedVideoUrl(currentLesson.video_url) || currentLesson.video_url)!"
                 class="aspect-video w-full"
                 :title="t('learn.player.videoTitle')"
                 frameborder="0"
@@ -497,7 +538,7 @@ onMounted(load);
                 ref="videoEl"
                 class="aspect-video w-full"
                 controls
-                :src="assetUrl(currentLesson.video_url)"
+                :src="assetUrl(getLocalizedVideoUrl(currentLesson.video_url) || currentLesson.video_url)"
                 @timeupdate="handleTimeUpdate"
                 @ended="handleEnded"
               >

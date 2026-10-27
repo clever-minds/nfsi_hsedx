@@ -30,6 +30,7 @@ import { installRouter } from './modules/install/install.routes';
 import { bankAccountsRouter } from './modules/bank-accounts/bank-accounts.routes';
 import { currenciesRouter } from './modules/currencies/currencies.routes';
 import { siteContentRouter } from './modules/site-content/site-content.routes';
+import { blogsRouter } from './modules/blogs/blogs.routes';
 
 export const apiRouter = Router();
 
@@ -71,6 +72,7 @@ apiRouter.use('/dashboard', dashboardRouter);
 apiRouter.use('/bank-accounts', bankAccountsRouter);
 apiRouter.use('/currencies', currenciesRouter);
 apiRouter.use('/site-content', siteContentRouter);
+apiRouter.use('/blogs', blogsRouter);
 
 // Modules yang mendefinisikan path absolut (mount di root /api/v1).
 // certificatesRouter didahulukan karena punya rute PUBLIK (`/public/certificates/verify/:number`);

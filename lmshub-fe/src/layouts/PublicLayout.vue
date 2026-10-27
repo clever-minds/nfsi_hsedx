@@ -29,6 +29,7 @@ const NAV_BAWAAN = computed(() => [
   { label: t('nav.public.home'), to: '/' },
   { label: t('nav.public.courses'), to: '/courses' },
   { label: t('nav.public.instructors'), to: '/instructors' },
+  { label: 'Blog', to: '/blog' },
 ]);
 
 const NAV = computed(() =>
@@ -58,6 +59,7 @@ const KOLOM_BAWAAN = computed(() => [
     tautan: [
       { label: t('nav.item.catalog'), url: '/courses' },
       { label: t('nav.public.instructors'), url: '/instructors' },
+      { label: 'Blog', url: '/blog' },
       { label: t('nav.footer.registerFree'), url: '/register' },
       { label: t('common.action.login'), url: '/login' },
     ],

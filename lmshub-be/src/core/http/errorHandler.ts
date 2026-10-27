@@ -17,12 +17,14 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
   // Postgres unique violation
   const pgErr = err as { code?: string; detail?: string };
   if (pgErr?.code === '23505') {
-    const msg = pgErr.detail ? `That record already exists (${pgErr.detail})` : 'That record already exists';
-    return fail(res, 409, 'CONFLICT', msg, { detail: pgErr.detail }, 'db.unique_violation');
+    const detail = isProd ? undefined : pgErr.detail;
+    const msg = detail ? `That record already exists (${detail})` : 'That record already exists';
+    return fail(res, 409, 'CONFLICT', msg, detail ? { detail } : undefined, 'db.unique_violation');
   }
   if (pgErr?.code === '23503') {
-    const msg = pgErr.detail ? `Related record is missing or still in use (${pgErr.detail})` : 'Related record is missing or still in use';
-    return fail(res, 409, 'FK_VIOLATION', msg, { detail: pgErr.detail }, 'db.foreign_key_violation');
+    const detail = isProd ? undefined : pgErr.detail;
+    const msg = detail ? `Related record is missing or still in use (${detail})` : 'Related record is missing or still in use';
+    return fail(res, 409, 'FK_VIOLATION', msg, detail ? { detail } : undefined, 'db.foreign_key_violation');
   }
 
   logger.error({ err }, 'Unhandled error');

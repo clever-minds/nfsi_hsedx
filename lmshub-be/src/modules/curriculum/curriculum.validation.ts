@@ -81,6 +81,7 @@ export const createContentSchema = z.object({
   url: contentUrl.nullable().optional(),
   scorm_manifest_url: contentUrl.nullable().optional(),
   duration_seconds: z.number().int().min(0).nullable().optional(),
+  language: z.enum(['all', 'en', 'hi']).default('all').optional(),
 });
 
 export const updateContentSchema = z.object({
@@ -91,6 +92,7 @@ export const updateContentSchema = z.object({
   url: contentUrl.nullable().optional(),
   scorm_manifest_url: contentUrl.nullable().optional(),
   duration_seconds: z.number().int().min(0).nullable().optional(),
+  language: z.enum(['all', 'en', 'hi']).optional(),
 });
 
 export type CreateSectionInput = z.infer<typeof createSectionSchema>;

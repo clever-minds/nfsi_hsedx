@@ -230,6 +230,7 @@ export async function createContent(actor: AuthContext, lessonId: string, input:
     url: input.url ?? null,
     scorm_manifest_url: input.scorm_manifest_url ?? null,
     duration_seconds: input.duration_seconds ?? null,
+    language: input.language ?? 'all',
   });
   await recordAudit({
     userId: actor.userId,
@@ -257,6 +258,7 @@ export async function updateContent(actor: AuthContext, id: string, input: Updat
   if (input.url !== undefined) fields.url = input.url;
   if (input.scorm_manifest_url !== undefined) fields.scorm_manifest_url = input.scorm_manifest_url;
   if (input.duration_seconds !== undefined) fields.duration_seconds = input.duration_seconds;
+  if (input.language !== undefined) fields.language = input.language;
 
   await repo.updateContent(id, fields);
   await recordAudit({

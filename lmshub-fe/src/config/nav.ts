@@ -121,6 +121,8 @@ export const navSections: NavSection[] = [
       { labelKey: 'nav.item.website', to: '/d/website', permission: 'settings.view', icon: 'layout' },
       // Halaman statis yang ditautkan footer (About, Terms, Privacy, …).
       { labelKey: 'nav.item.pages', to: '/d/website/pages', permission: 'settings.view', icon: 'file-text' },
+      // Blog Posts management
+      { labelKey: 'nav.item.blogs', to: '/d/blogs', permission: 'content.view', icon: 'book-open' },
       // Master data mata uang tampilan + kurs terhadap mata uang basis.
       {
         labelKey: 'nav.item.currencies',

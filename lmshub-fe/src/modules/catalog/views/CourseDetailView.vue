@@ -10,6 +10,7 @@ import { useCheckout } from '@/composables/useCheckout';
 import { getPaymentConfig, type GatewayOption } from '@/lib/payments';
 import { currentLocale } from '@/i18n';
 import { getLocalizedText, filterLessonHtml, splitLessonContent } from '@/lib/course-localization';
+import { sanitizeHtml } from '@/lib/sanitize';
 import Icon from '@/components/ui/Icon.vue';
 
 interface Lesson { id: string; title: string; type: string; duration_minutes?: number | null; gratis_preview?: boolean }
@@ -424,7 +425,7 @@ const TERMASUK = computed(() => [
             <div class="card rounded-2xl p-6">
               <h3 class="text-lg font-bold text-slate-900">{{ t('catalog.detail.overview') }}</h3>
               <h4 class="mt-4 text-sm font-semibold text-slate-800">{{ t('catalog.detail.description') }}</h4>
-              <div v-if="localizedDescription" class="mt-2 text-sm leading-relaxed text-slate-600 prose prose-slate max-w-none" v-html="localizedDescription"></div>
+              <div v-if="localizedDescription" class="mt-2 text-sm leading-relaxed text-slate-600 prose prose-slate max-w-none" v-html="sanitizeHtml(localizedDescription)"></div>
               <div v-else class="mt-2 space-y-3 text-sm leading-relaxed text-slate-600">
                 <p v-for="(par, i) in (localizedSummary || '').split('\n\n')" :key="i">{{ par }}</p>
               </div>
@@ -757,7 +758,7 @@ const TERMASUK = computed(() => [
             ></iframe>
             <video v-else :src="assetUrl(previewContents[0].url)" controls autoplay class="h-full w-full object-contain"></video>
           </template>
-          <div v-else-if="previewContents[0].type === 'text'" class="prose max-w-none text-slate-800" v-html="previewContents[0].body"></div>
+          <div v-else-if="previewContents[0].type === 'text'" class="prose max-w-none text-slate-800" v-html="sanitizeHtml(previewContents[0].body)"></div>
           <iframe v-else-if="previewContents[0].type === 'pdf' && previewContents[0].url" :src="assetUrl(previewContents[0].url)" class="h-full w-full bg-slate-100"></iframe>
           <div v-else class="text-slate-400">{{ t('catalog.detail.noPreviewContent', 'Content not available for preview') }}</div>
         </template>

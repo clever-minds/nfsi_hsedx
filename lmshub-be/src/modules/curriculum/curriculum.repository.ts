@@ -34,6 +34,7 @@ export interface LessonContentRow {
   url: string | null;
   scorm_manifest_url: string | null;
   duration_seconds: number | null;
+  language: string;
   created_at: string;
   updated_at: string;
 }
@@ -206,7 +207,7 @@ export async function courseIdOfLesson(lessonId: string): Promise<string | null>
 // ── Lesson Contents ──────────────────────────────────
 export async function listContents(lessonId: string): Promise<LessonContentRow[]> {
   return query<LessonContentRow>(
-    `SELECT id, lesson_id, type, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds, created_at, updated_at
+    `SELECT id, lesson_id, type, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds, language, created_at, updated_at
        FROM lesson_contents WHERE lesson_id = $1 AND deleted_at IS NULL ORDER BY sort_order ASC`,
     [lessonId],
   );
@@ -214,7 +215,7 @@ export async function listContents(lessonId: string): Promise<LessonContentRow[]
 
 export async function contentDetail(id: string): Promise<LessonContentRow | null> {
   return queryOne<LessonContentRow>(
-    `SELECT id, lesson_id, type, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds, created_at, updated_at
+    `SELECT id, lesson_id, type, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds, language, created_at, updated_at
        FROM lesson_contents WHERE id = $1 AND deleted_at IS NULL`,
     [id],
   );
@@ -229,10 +230,11 @@ export async function insertContent(data: {
   url: string | null;
   scorm_manifest_url: string | null;
   duration_seconds: number | null;
+  language?: string;
 }): Promise<{ id: string }> {
   const row = await queryOne<{ id: string }>(
-    `INSERT INTO lesson_contents (lesson_id, type, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
+    `INSERT INTO lesson_contents (lesson_id, type, sort_order, body, media_asset_id, url, scorm_manifest_url, duration_seconds, language)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
     [
       data.lesson_id,
       data.type,
@@ -242,6 +244,7 @@ export async function insertContent(data: {
       data.url,
       data.scorm_manifest_url,
       data.duration_seconds,
+      data.language || 'all',
     ],
   );
   return row!;

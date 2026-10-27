@@ -127,7 +127,7 @@ export async function learnView(actor: AuthContext, courseId: string) {
   }
 
   const progressByLesson = new Map(lessonProgress.map((lp) => [lp.lesson_id, lp]));
-  const contentsByLesson = new Map<string, Array<{ id: string; type: string; body: string | undefined; url: string | undefined }>>();
+  const contentsByLesson = new Map<string, Array<{ id: string; type: string; body: string | undefined; url: string | undefined; language?: string }>>();
   for (const c of allContents) {
     if (!contentsByLesson.has(c.lesson_id)) contentsByLesson.set(c.lesson_id, []);
     contentsByLesson.get(c.lesson_id)!.push({
@@ -135,6 +135,7 @@ export async function learnView(actor: AuthContext, courseId: string) {
       type: c.type,
       body: c.content_body ?? undefined,
       url: c.content_url ?? undefined,
+      language: c.language ?? 'all',
     });
   }
 

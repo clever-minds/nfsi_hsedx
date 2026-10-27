@@ -53,6 +53,7 @@ interface LessonContent {
   url: string | null;
   scorm_manifest_url: string | null;
   duration_seconds: number | null;
+  language?: 'all' | 'en' | 'hi';
 }
 
 interface MediaAsset {
@@ -127,6 +128,7 @@ const contentForm = ref({
   media_asset_id: '',
   scorm_manifest_url: '',
   duration_minutes: 0,
+  language: 'all' as 'all' | 'en' | 'hi',
 });
 
 const contentTypeLabel = (type: ContentType) => t(`content.lessonType.${type}`);
@@ -153,7 +155,7 @@ function resetContentForm() {
   contentBodyEn.value = '';
   contentBodyHi.value = '';
   contentBodyLang.value = 'en';
-  contentForm.value = { type: 'video', url: '', body: '', media_asset_id: '', scorm_manifest_url: '', duration_minutes: 0 };
+  contentForm.value = { type: 'video', url: '', body: '', media_asset_id: '', scorm_manifest_url: '', duration_minutes: 0, language: 'all' };
 }
 
 async function loadMediaAssets() {
@@ -260,6 +262,7 @@ async function submitContent(lessonId: string) {
   }
 
   if (f.type === 'video' && f.duration_minutes > 0) payload.duration_seconds = Math.round(f.duration_minutes * 60);
+  payload.language = f.language || 'all';
 
   busy.value = true;
   contentError.value = '';
@@ -300,6 +303,7 @@ function editContent(c: LessonContent) {
     media_asset_id: c.media_asset_id ?? '',
     scorm_manifest_url: c.scorm_manifest_url ?? '',
     duration_minutes: c.duration_seconds ? Math.round(c.duration_seconds / 60) : 0,
+    language: c.language || 'all',
   };
   contentError.value = '';
 }
@@ -637,6 +641,18 @@ onMounted(async () => {
                   <span class="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
                     {{ contentTypeLabel(c.type) }}
                   </span>
+                  <span
+                    class="rounded px-1.5 py-0.5 text-[10px] font-semibold"
+                    :class="
+                      c.language === 'hi'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : c.language === 'en'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-slate-100 text-slate-600'
+                    "
+                  >
+                    {{ c.language === 'hi' ? '🇮🇳 हिन्दी' : c.language === 'en' ? '🇬🇧 English' : '🌐 All' }}
+                  </span>
                   <span class="truncate text-slate-600">{{ contentSummary(c) }}</span>
                 </div>
                 <div class="flex shrink-0 items-center gap-1">
@@ -671,6 +687,41 @@ onMounted(async () => {
               </p>
 
               <div class="grid gap-2 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                  <label class="label font-medium flex items-center justify-between">
+                    <span>Language / भाषा</span>
+                    <span class="text-xs font-normal text-slate-500">
+                      {{ contentForm.language === 'en' ? 'Only shown to English learners' : contentForm.language === 'hi' ? 'Only shown to Hindi learners' : 'Shown to all learners / fallback' }}
+                    </span>
+                  </label>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      class="flex items-center justify-center gap-1.5 rounded-lg border py-2 px-3 text-xs font-semibold transition"
+                      :class="contentForm.language === 'all' ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+                      @click="contentForm.language = 'all'"
+                    >
+                      <span>🌐</span> Both / All (Default)
+                    </button>
+                    <button
+                      type="button"
+                      class="flex items-center justify-center gap-1.5 rounded-lg border py-2 px-3 text-xs font-semibold transition"
+                      :class="contentForm.language === 'en' ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+                      @click="contentForm.language = 'en'"
+                    >
+                      <span>🇬🇧</span> English Only
+                    </button>
+                    <button
+                      type="button"
+                      class="flex items-center justify-center gap-1.5 rounded-lg border py-2 px-3 text-xs font-semibold transition"
+                      :class="contentForm.language === 'hi' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+                      @click="contentForm.language = 'hi'"
+                    >
+                      <span>🇮🇳</span> हिन्दी Only (Hindi)
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label class="label">{{ t('content.contents.type') }}</label>
                   <select v-model="contentForm.type" class="input">

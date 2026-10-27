@@ -155,6 +155,46 @@ const ACCEPTED: Record<string, { type: 'video' | 'image' | 'document' | 'audio';
 
 export const acceptedMimeTypes = Object.keys(ACCEPTED);
 
+function verifyMagicBytes(header: Buffer, mime: string): boolean {
+  if (header.length < 4) return false;
+  switch (mime) {
+    case 'image/jpeg':
+      return header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff;
+    case 'image/png':
+      return header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4e && header[3] === 0x47;
+    case 'image/webp':
+      return (
+        header.toString('ascii', 0, 4) === 'RIFF' &&
+        header.length >= 12 &&
+        header.toString('ascii', 8, 12) === 'WEBP'
+      );
+    case 'application/pdf':
+      return header.toString('ascii', 0, 4) === '%PDF';
+    case 'video/mp4':
+    case 'audio/mp4':
+    case 'audio/x-m4a':
+      return header.length >= 8 && header.toString('ascii', 4, 8) === 'ftyp';
+    case 'video/ogg':
+    case 'audio/ogg':
+      return header.toString('ascii', 0, 4) === 'OggS';
+    case 'video/webm':
+      return header[0] === 0x1a && header[1] === 0x45 && header[2] === 0xdf && header[3] === 0xa3;
+    case 'audio/wav':
+      return (
+        header.toString('ascii', 0, 4) === 'RIFF' &&
+        header.length >= 12 &&
+        header.toString('ascii', 8, 12) === 'WAVE'
+      );
+    case 'audio/mpeg':
+      return (
+        header.toString('ascii', 0, 3) === 'ID3' ||
+        (header[0] === 0xff && (header[1] & 0xe0) === 0xe0)
+      );
+    default:
+      return false;
+  }
+}
+
 /**
  * Stream the request body straight to disk and register it in the library.
  *
@@ -164,11 +204,13 @@ export const acceptedMimeTypes = Object.keys(ACCEPTED);
  * Streaming also needs no extra dependency on the buyer's server.
  */
 export async function upload(actor: AuthContext, req: Request) {
-  const mime = (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase() || 'application/octet-stream';
-  let kind = ACCEPTED[mime];
+  const mime = (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+  const kind = ACCEPTED[mime];
   if (!kind) {
-    const fallbackExt = mime.includes('/') ? mime.split('/')[1].replace(/[^a-zA-Z0-9]/g, '') : 'bin';
-    kind = { type: 'document', ext: fallbackExt || 'bin' };
+    throw AppError.badRequest(
+      `File type '${mime || 'unknown'}' is not allowed. Supported formats: MP4, WebM, OGG, MP3, M4A, WAV, JPEG, PNG, WebP, PDF`,
+      'media.unsupported_type',
+    );
   }
 
   const maxBytes = env.MEDIA_MAX_UPLOAD_MB * 1024 * 1024;
@@ -193,6 +235,9 @@ export async function upload(actor: AuthContext, req: Request) {
   const target = path.join(UPLOAD_DIR, filename);
 
   let size = 0;
+  let headerBuffer = Buffer.alloc(0);
+  let verified = false;
+
   const limiter = new Transform({
     transform(chunk: Buffer, _enc, cb) {
       size += chunk.length;
@@ -202,7 +247,28 @@ export async function upload(actor: AuthContext, req: Request) {
         }));
         return;
       }
+
+      if (!verified) {
+        headerBuffer = Buffer.concat([headerBuffer, chunk]);
+        if (headerBuffer.length >= 16) {
+          if (!verifyMagicBytes(headerBuffer, mime)) {
+            cb(AppError.badRequest('File signature does not match the declared MIME type', 'media.corrupt_or_disguised'));
+            return;
+          }
+          verified = true;
+        }
+      }
+
       cb(null, chunk);
+    },
+    flush(cb) {
+      if (!verified && headerBuffer.length > 0) {
+        if (!verifyMagicBytes(headerBuffer, mime)) {
+          cb(AppError.badRequest('File signature does not match the declared MIME type', 'media.corrupt_or_disguised'));
+          return;
+        }
+      }
+      cb();
     },
   });
 

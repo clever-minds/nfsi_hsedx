@@ -81,7 +81,11 @@ export function createApp() {
     '/uploads',
     express.static(path.resolve(process.cwd(), 'uploads'), {
       maxAge: '7d',
-      setHeaders: (res) => res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'),
+      setHeaders: (res) => {
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+      },
     }),
   );
 

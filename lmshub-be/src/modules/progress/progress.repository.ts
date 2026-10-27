@@ -135,11 +135,12 @@ export interface LearnLessonContentRow {
   sort_order: number;
   content_body: string | null;
   content_url: string | null;
+  language?: string;
 }
 
 export async function learnLessonContents(courseId: string): Promise<LearnLessonContentRow[]> {
   return query<LearnLessonContentRow>(
-    `SELECT lc.id, lc.lesson_id, lc.type, lc.sort_order, lc.body AS content_body, COALESCE(lc.url, ma.path_object_storage) AS content_url
+    `SELECT lc.id, lc.lesson_id, lc.type, lc.sort_order, lc.body AS content_body, COALESCE(lc.url, ma.path_object_storage) AS content_url, lc.language
        FROM lesson_contents lc
        JOIN lessons l ON l.id = lc.lesson_id
        JOIN sections s ON s.id = l.section_id

@@ -17,4 +17,16 @@ export const websiteRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/website/views/PagesView.vue'),
     meta: { permission: 'settings.view', title: 'Pages' },
   },
+  {
+    path: 'website/blogs',
+    name: 'website-blogs',
+    component: () => import('@/modules/website/views/BlogManagementView.vue'),
+    meta: { permission: 'content.view', title: 'Blog Posts' },
+  },
+  {
+    path: 'blogs',
+    name: 'admin-blogs',
+    component: () => import('@/modules/website/views/BlogManagementView.vue'),
+    meta: { permission: 'content.view', title: 'Blog Posts' },
+  },
 ];

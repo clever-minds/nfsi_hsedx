@@ -29,11 +29,21 @@ const routes: RouteRecordRaw[] = [
         name: 'instructor-detail',
         component: () => import('@/modules/catalog/views/InstructorDetailView.vue'),
       },
-      // Halaman statis (About, Terms, …) yang managed di Website → Pages.
       {
         path: 'pages/:slug',
         name: 'static-page',
         component: () => import('@/modules/catalog/views/StaticPageView.vue'),
+      },
+      // Public Blog
+      {
+        path: 'blog',
+        name: 'public-blog-list',
+        component: () => import('@/modules/website/views/PublicBlogListView.vue'),
+      },
+      {
+        path: 'blog/:slug',
+        name: 'public-blog-post',
+        component: () => import('@/modules/website/views/PublicBlogPostView.vue'),
       },
       {
         path: 'certificates/:number',

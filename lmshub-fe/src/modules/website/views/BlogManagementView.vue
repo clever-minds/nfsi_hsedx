@@ -39,6 +39,7 @@ const notice = ref('');
 const busy = ref(false);
 
 const filterStatus = ref<string>('');
+const filterCategory = ref<string>('');
 const filterSearch = ref<string>('');
 
 // Form state
@@ -47,6 +48,8 @@ const editingId = ref<string | null>(null);
 const formSaving = ref(false);
 const formError = ref('');
 const slugAuto = ref(true);
+const customCategoryMode = ref(false);
+const dbCategories = ref<string[]>([]);
 
 const form = reactive({
   title: '',
@@ -55,20 +58,48 @@ const form = reactive({
   content: '',
   cover_image_url: '',
   author_name: '',
-  category: 'Fire Safety',
+  category: 'Industrial Safety',
   tagsString: '',
   status: 'published' as BlogPost['status'],
 });
 
-const CATEGORY_OPTIONS = [
-  'Fire Safety',
+const DEFAULT_CATEGORIES = [
   'Industrial Safety',
+  'Fire Safety',
   'Electrical Safety',
+  'Chemical Safety',
+  'Occupational Safety',
   'Emergency Response',
-  'Workplace Health',
+  'Workplace Health & Safety',
+  'Construction Safety',
+  'Environmental Safety',
   'Regulations & Standards',
   'General',
 ];
+
+const allCategories = computed(() => {
+  const merged = new Set([...DEFAULT_CATEGORIES, ...dbCategories.value]);
+  return Array.from(merged);
+});
+
+async function loadCategories() {
+  try {
+    const res = await apiGetFull<string[]>('/blogs/categories');
+    if (res?.data && Array.isArray(res.data)) {
+      dbCategories.value = res.data;
+    }
+  } catch {}
+}
+
+function onCategorySelectChange(e: Event) {
+  const val = (e.target as HTMLSelectElement).value;
+  if (val === '__custom__') {
+    customCategoryMode.value = true;
+    form.category = '';
+  } else {
+    form.category = val;
+  }
+}
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / limit)));
 
@@ -97,13 +128,14 @@ function openCreateModal() {
   editingId.value = null;
   formError.value = '';
   slugAuto.value = true;
+  customCategoryMode.value = false;
   form.title = '';
   form.slug = '';
   form.summary = '';
   form.content = '';
   form.cover_image_url = '';
   form.author_name = auth.user?.name_lengkap || 'NFSI Faculty';
-  form.category = 'Fire Safety';
+  form.category = 'Industrial Safety';
   form.tagsString = 'Safety, NFSI';
   form.status = 'published';
   showModal.value = true;
@@ -119,7 +151,8 @@ function openEditModal(post: BlogPost) {
   form.content = post.content || '';
   form.cover_image_url = post.cover_image_url || '';
   form.author_name = post.author_name || '';
-  form.category = post.category || 'General';
+  form.category = post.category || 'Industrial Safety';
+  customCategoryMode.value = !allCategories.value.includes(form.category);
   form.tagsString = Array.isArray(post.tags) ? post.tags.join(', ') : '';
   form.status = (post.status as any) || 'draft';
   showModal.value = true;
@@ -140,6 +173,7 @@ async function loadPosts() {
       limit,
     };
     if (filterStatus.value) params.status = filterStatus.value;
+    if (filterCategory.value) params.category = filterCategory.value;
     if (filterSearch.value.trim()) params.search = filterSearch.value.trim();
 
     const res = await apiGetFull<BlogPost[]>('/blogs', params);
@@ -219,6 +253,7 @@ async function deletePost(post: BlogPost) {
 
 onMounted(() => {
   loadPosts();
+  loadCategories();
 });
 </script>
 
@@ -265,6 +300,11 @@ onMounted(() => {
             <option value="published">Published</option>
             <option value="draft">Draft</option>
             <option value="archived">Archived</option>
+          </select>
+
+          <select v-model="filterCategory" class="input w-44" @change="page = 1; loadPosts()">
+            <option value="">All Categories</option>
+            <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
           </select>
 
           <button type="button" class="btn-outline btn-sm" @click="page = 1; loadPosts()">
@@ -487,17 +527,31 @@ onMounted(() => {
           <!-- Category & Status -->
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
-              <label class="label font-medium">Category</label>
-              <input
-                v-model="form.category"
-                list="category-suggestions"
-                type="text"
-                class="input"
-                placeholder="e.g. Fire Safety"
-              />
-              <datalist id="category-suggestions">
-                <option v-for="cat in CATEGORY_OPTIONS" :key="cat" :value="cat" />
-              </datalist>
+              <div class="flex items-center justify-between">
+                <label class="label font-medium mb-0">Category</label>
+                <button
+                  type="button"
+                  class="text-[11px] font-semibold text-brand-600 hover:underline"
+                  @click="customCategoryMode = !customCategoryMode; if (!customCategoryMode && !form.category) form.category = 'Industrial Safety'"
+                >
+                  {{ customCategoryMode ? '← Choose from list' : '+ Type custom category' }}
+                </button>
+              </div>
+              <div v-if="!customCategoryMode" class="mt-1">
+                <select class="input font-medium" :value="form.category" @change="onCategorySelectChange">
+                  <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
+                  <option value="__custom__">+ Enter New Custom Category...</option>
+                </select>
+              </div>
+              <div v-else class="mt-1">
+                <input
+                  v-model="form.category"
+                  type="text"
+                  class="input font-medium"
+                  placeholder="e.g. Industrial Safety, Construction Safety"
+                  autofocus
+                />
+              </div>
             </div>
 
             <div>

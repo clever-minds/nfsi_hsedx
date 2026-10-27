@@ -32,11 +32,14 @@ const NAV_BAWAAN = computed(() => [
   { label: 'Blog', to: '/blog' },
 ]);
 
-const NAV = computed(() =>
-  site.menuAktif.length
-    ? site.menuAktif.map((m) => ({ label: pickText(m.label, m.url), to: safeHref(m.url) }))
-    : NAV_BAWAAN.value,
-);
+const NAV = computed(() => {
+  if (!site.menuAktif.length) return NAV_BAWAAN.value;
+  const items = site.menuAktif.map((m) => ({ label: pickText(m.label, m.url), to: safeHref(m.url) }));
+  if (!items.some((item) => item.to === '/blog' || item.to.includes('/blog'))) {
+    items.push({ label: 'Blog', to: '/blog' });
+  }
+  return items;
+});
 
 /**
  * RouterLink hanya untuk path internal. Menu kustom boleh berisi alamat luar,
@@ -80,14 +83,19 @@ const KOLOM_BAWAAN = computed(() => [
   },
 ]);
 
-const KOLOM = computed(() =>
-  site.footer.kolom.length
-    ? site.footer.kolom.map((k) => ({
-        title: pickText(k.title),
-        tautan: k.tautan.map((l) => ({ label: pickText(l.label, l.url), url: safeHref(l.url) })),
-      }))
-    : KOLOM_BAWAAN.value,
-);
+const KOLOM = computed(() => {
+  if (!site.footer.kolom.length) return KOLOM_BAWAAN.value;
+  return site.footer.kolom.map((k, idx) => {
+    const tautan = k.tautan.map((l) => ({ label: pickText(l.label, l.url), url: safeHref(l.url) }));
+    if (idx === 0 && !tautan.some((l) => l.url === '/blog' || l.url.includes('/blog'))) {
+      tautan.push({ label: 'Blog', url: '/blog' });
+    }
+    return {
+      title: pickText(k.title),
+      tautan,
+    };
+  });
+});
 
 const year = new Date().getFullYear();
 

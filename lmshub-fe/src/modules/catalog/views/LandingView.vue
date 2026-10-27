@@ -57,9 +57,23 @@ const sort_orderanSeksi = computed(() => site.sectionsAktif);
 const badgeSeksi = (key: string, bawaan: string) => pickText(site.section(key)?.badge, bawaan);
 const judulSeksi = (key: string, bawaan: string) => pickText(site.section(key)?.title, bawaan);
 const subjudulSeksi = (key: string, bawaan: string) => pickText(site.section(key)?.subjudul, bawaan);
+interface BlogPostCard {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string | null;
+  content: string;
+  cover_image_url: string | null;
+  category: string;
+  published_at: string | null;
+  created_at: string;
+  author_name: string | null;
+}
+
 const courses = ref<Course[]>([]);
 const categories = ref<Kategori[]>([]);
 const instructors = ref<Instructor[]>([]);
+const latestBlogs = ref<BlogPostCard[]>([]);
 const totalKursus = ref(0);
 
 const q = ref('');
@@ -91,15 +105,17 @@ const BENEFIT = [
 ];
 
 onMounted(async () => {
-  const [c, cat, ins] = await Promise.all([
+  const [c, cat, ins, blg] = await Promise.all([
     apiGetFull<Course[]>('/courses/public', { limit: 8 }).catch(() => null),
     apiGetFull<Kategori[]>('/categories/public').catch(() => null),
     apiGetFull<Instructor[]>('/instructors/public', { limit: 4 }).catch(() => null),
+    apiGetFull<BlogPostCard[]>('/blogs/public', { limit: 3 }).catch(() => null),
   ]);
   courses.value = c?.data ?? [];
   totalKursus.value = Number((c?.meta as Record<string, unknown> | null)?.total ?? courses.value.length);
   categories.value = (cat?.data ?? []).filter((k) => k.amount_kursus > 0);
   instructors.value = ins?.data ?? [];
+  latestBlogs.value = blg?.data ?? [];
 
   const metaStudents = (c?.meta as Record<string, unknown> | null)?.total_students;
   if (metaStudents !== undefined && metaStudents !== null) {
@@ -350,6 +366,70 @@ onMounted(async () => {
           <RouterLink to="/instructors" class="text-sm font-medium text-brand-500 hover:underline">
             {{ t('catalog.landing.instructors.seeAll') }}
           </RouterLink>
+        </div>
+      </section>
+
+      <!-- ── LATEST SAFETY BLOGS & ARTICLES ─────────────────────────── -->
+      <section v-if="s.key === 'cta' && latestBlogs.length" class="mx-auto max-w-7xl px-4 py-16">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+          <div>
+            <span class="inline-block rounded-full bg-brand-50 px-4 py-1.5 text-xs font-semibold text-brand-600">
+              Articles &amp; Knowledge Base
+            </span>
+            <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">
+              Latest Safety Insights &amp; Articles
+            </h2>
+            <p class="mt-2 text-sm text-slate-500 max-w-xl">
+              Stay up to date with critical workplace guidelines, OSHA/NFPA safety protocols, and technical advisories.
+            </p>
+          </div>
+          <RouterLink to="/blog" class="btn-outline btn-sm self-start sm:self-auto flex items-center gap-1.5 font-semibold">
+            <span>Explore All Articles</span>
+            <span aria-hidden="true">&rarr;</span>
+          </RouterLink>
+        </div>
+
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <article
+            v-for="b in latestBlogs"
+            :key="b.id"
+            class="card group flex flex-col overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-lg border-slate-200/80"
+          >
+            <RouterLink :to="`/blog/${b.slug}`" class="relative block aspect-[16/9] w-full overflow-hidden bg-slate-100">
+              <img
+                v-if="b.cover_image_url"
+                :src="b.cover_image_url"
+                :alt="b.title"
+                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                loading="lazy"
+              />
+              <div v-else class="grid h-full w-full place-items-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400">
+                <Icon name="book-open" :size="36" />
+              </div>
+              <span class="absolute top-3 left-3 rounded-md bg-white/95 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-700 shadow-sm backdrop-blur">
+                {{ b.category || 'Safety' }}
+              </span>
+            </RouterLink>
+
+            <div class="flex flex-1 flex-col p-5">
+              <h3 class="text-base font-bold leading-snug text-slate-900 group-hover:text-brand-600 transition-colors">
+                <RouterLink :to="`/blog/${b.slug}`">
+                  {{ b.title }}
+                </RouterLink>
+              </h3>
+
+              <p class="mt-2 flex-1 text-xs leading-relaxed text-slate-600 line-clamp-2">
+                {{ (b.summary ? b.summary.replace(/<[^>]*>/g, '') : b.content.replace(/<[^>]*>/g, '').slice(0, 120) + '…') }}
+              </p>
+
+              <div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
+                <span class="text-slate-500 font-medium">{{ b.author_name || 'NFSI Faculty' }}</span>
+                <RouterLink :to="`/blog/${b.slug}`" class="font-semibold text-brand-600 flex items-center gap-1 hover:underline">
+                  Read &rarr;
+                </RouterLink>
+              </div>
+            </div>
+          </article>
         </div>
       </section>
 

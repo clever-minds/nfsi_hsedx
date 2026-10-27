@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { apiGetFull } from '@/lib/api';
 import { fmtTanggal } from '@/lib/format';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { setMetaTags, resetMetaTags } from '@/lib/seo';
 import Icon from '@/components/ui/Icon.vue';
 
 interface BlogPost {
@@ -75,6 +76,29 @@ async function loadPost() {
     post.value = res.data ?? null;
     if (!post.value) {
       error.value = 'Article not found';
+    } else {
+      // Dynamic SEO Meta & Social Tags
+      let ogImage = post.value.cover_image_url || '';
+      if (ogImage && !ogImage.startsWith('http') && typeof window !== 'undefined') {
+        ogImage = window.location.origin + (ogImage.startsWith('/') ? '' : '/') + ogImage;
+      }
+
+      const excerpt = post.value.summary || post.value.content || '';
+      const articleUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+      setMetaTags({
+        title: post.value.title,
+        description: excerpt,
+        keywords: post.value.tags,
+        image: ogImage,
+        url: articleUrl,
+        type: 'article',
+        author: post.value.author_name || 'NFSI Safety Faculty',
+        publishedTime: post.value.published_at || post.value.created_at,
+        category: post.value.category,
+        tags: post.value.tags,
+        siteName: 'HSEdx · National Fire & Safety',
+      });
     }
   } catch (e: any) {
     error.value = e?.message || 'Article could not be loaded';
@@ -151,6 +175,7 @@ onBeforeUnmount(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener('scroll', handleScroll);
   }
+  resetMetaTags();
 });
 </script>
 

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { apiGetFull } from '@/lib/api';
 import { fmtTanggal } from '@/lib/format';
+import { setMetaTags, resetMetaTags } from '@/lib/seo';
 import Icon from '@/components/ui/Icon.vue';
 
 interface BlogPost {
@@ -116,6 +117,20 @@ function getReadingTime(content: string): string {
 onMounted(() => {
   loadCategories();
   loadPosts();
+
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+  setMetaTags({
+    title: 'Safety Insights & Technical Articles · NFSI HSEdx Blog',
+    description: 'Explore NFSI HSEdx expert safety articles, OSHA compliance guides, chemical handling protocols, LOTO standards, and workplace hazards prevention.',
+    keywords: ['Safety Blog', 'OSHA Compliance', 'Fire Safety', 'LOTO', 'HAZMAT', 'Workplace Safety', 'HSEdx', 'Safety Articles'],
+    url: currentUrl,
+    type: 'website',
+    siteName: 'HSEdx · National Fire & Safety',
+  });
+});
+
+onBeforeUnmount(() => {
+  resetMetaTags();
 });
 </script>
 

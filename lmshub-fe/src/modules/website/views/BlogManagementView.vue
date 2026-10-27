@@ -632,7 +632,8 @@ onMounted(() => {
                 v-model="form.summary"
                 rows="2"
                 class="input text-xs"
-                placeholder="A brief 1-2 sentence overview to show on the blog listing cards and search engines..."
+                placeholder="A brief 1-2 sentence overview to show on the blog listing cards... (Right-click to open tool editor)"
+                @contextmenu.prevent="summaryRichMode = true"
               ></textarea>
             </div>
           </div>

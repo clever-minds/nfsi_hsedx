@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { sanitizeHtml } from '@/lib/sanitize';
 
@@ -20,11 +20,40 @@ const editor = ref<HTMLDivElement | null>(null);
 const mode = ref<'visual' | 'html'>('visual');
 const source = ref('');
 
+const showContextMenu = ref(false);
+const contextMenuX = ref(0);
+const contextMenuY = ref(0);
+
+function onContextMenu(e: MouseEvent) {
+  if (props.disabled) return;
+  e.preventDefault();
+
+  const menuWidth = 360;
+  const menuHeight = 55;
+  const x = Math.min(e.clientX, window.innerWidth - menuWidth - 12);
+  const y = Math.min(e.clientY, window.innerHeight - menuHeight - 12);
+
+  contextMenuX.value = Math.max(12, x);
+  contextMenuY.value = Math.max(12, y);
+  showContextMenu.value = true;
+}
+
+function closeContextMenu() {
+  showContextMenu.value = false;
+}
+
 function render(html: string) {
   if (editor.value) editor.value.innerHTML = sanitizeHtml(html);
 }
 
-onMounted(() => render(props.modelValue));
+onMounted(() => {
+  render(props.modelValue);
+  document.addEventListener('click', closeContextMenu);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', closeContextMenu);
+});
 
 // grade from luar (mis. membuka halaman lain di form yang sama) — jangan
 // menimpa saat perubahan itu berasal from ketikan di editor ini sendiri.
@@ -105,6 +134,7 @@ function onSource() {
       class="prose-page min-h-[260px] px-4 py-3 outline-none"
       :contenteditable="!disabled"
       @input="onInput"
+      @contextmenu="onContextMenu"
     ></div>
     <textarea
       v-if="mode === 'html'"
@@ -114,11 +144,39 @@ function onSource() {
       spellcheck="false"
       @input="onSource"
     ></textarea>
+
+    <!-- ── Floating Right-Click Formatting Toolbar ── -->
+    <Teleport to="body">
+      <div
+        v-if="showContextMenu"
+        class="fixed z-[9999] flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-900/95 p-1.5 text-xs text-white shadow-2xl backdrop-blur-md ring-1 ring-white/10"
+        :style="{ left: `${contextMenuX}px`, top: `${contextMenuY}px` }"
+        @click.stop
+      >
+        <button type="button" class="floating-btn font-bold" title="Bold (Ctrl+B)" @click="exec('bold'); closeContextMenu()">B</button>
+        <button type="button" class="floating-btn italic font-serif" title="Italic (Ctrl+I)" @click="exec('italic'); closeContextMenu()">I</button>
+        <button type="button" class="floating-btn underline" title="Underline (Ctrl+U)" @click="exec('underline'); closeContextMenu()">U</button>
+        <span class="h-4 w-px bg-slate-700"></span>
+        <button type="button" class="floating-btn font-bold" title="Heading 2" @click="block('h2'); closeContextMenu()">H2</button>
+        <button type="button" class="floating-btn font-bold" title="Heading 3" @click="block('h3'); closeContextMenu()">H3</button>
+        <button type="button" class="floating-btn" title="Paragraph" @click="block('p'); closeContextMenu()">¶</button>
+        <span class="h-4 w-px bg-slate-700"></span>
+        <button type="button" class="floating-btn" title="Bullet List" @click="exec('insertUnorderedList'); closeContextMenu()">• —</button>
+        <button type="button" class="floating-btn" title="Number List" @click="exec('insertOrderedList'); closeContextMenu()">1.</button>
+        <button type="button" class="floating-btn font-serif" title="Quote" @click="block('blockquote'); closeContextMenu()">❝</button>
+        <button type="button" class="floating-btn" title="Insert Link" @click="link(); closeContextMenu()">🔗</button>
+        <button type="button" class="floating-btn text-rose-400" title="Clear Formatting" @click="exec('removeFormat'); closeContextMenu()">⌫</button>
+        <button type="button" class="ml-1 rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-800 hover:text-white" title="Close" @click="closeContextMenu">✕</button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <style scoped>
 .rte-btn {
   @apply min-w-[2rem] rounded px-2 py-1 text-slate-600 transition hover:bg-white hover:text-slate-900 disabled:opacity-40;
+}
+.floating-btn {
+  @apply min-w-[1.75rem] rounded px-2 py-1 text-slate-200 transition hover:bg-white/20 hover:text-white active:scale-95;
 }
 </style>

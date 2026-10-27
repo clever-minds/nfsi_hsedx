@@ -82,6 +82,9 @@ async function loadPost() {
       if (ogImage && !ogImage.startsWith('http') && typeof window !== 'undefined') {
         ogImage = window.location.origin + (ogImage.startsWith('/') ? '' : '/') + ogImage;
       }
+      if (!ogImage) {
+        ogImage = 'https://hsedx.nfsi.in/uploads/branding/logo-1792142496827.png';
+      }
 
       const excerpt = post.value.summary || post.value.content || '';
       const articleUrl = typeof window !== 'undefined' ? window.location.href : '';

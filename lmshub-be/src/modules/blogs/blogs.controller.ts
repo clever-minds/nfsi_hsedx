@@ -85,7 +85,7 @@ export async function renderBlogSocialPreview(req: Request, res: Response) {
     const appOrigin = `${proto}://${host}`;
     const articleUrl = `${appOrigin}/blog/${encodeURIComponent(post.slug)}`;
 
-    let imageUrl = post.cover_image_url || `${appOrigin}/img/logo.png`;
+    let imageUrl = post.cover_image_url || `${appOrigin}/uploads/branding/logo-1792142496827.png`;
     if (imageUrl && !imageUrl.startsWith('http')) {
       imageUrl = `${appOrigin}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
     }

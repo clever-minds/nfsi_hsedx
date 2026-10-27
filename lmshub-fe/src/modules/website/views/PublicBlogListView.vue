@@ -123,6 +123,7 @@ onMounted(() => {
     title: 'Safety Insights & Technical Articles · NFSI HSEdx Blog',
     description: 'Explore NFSI HSEdx expert safety articles, OSHA compliance guides, chemical handling protocols, LOTO standards, and workplace hazards prevention.',
     keywords: ['Safety Blog', 'OSHA Compliance', 'Fire Safety', 'LOTO', 'HAZMAT', 'Workplace Safety', 'HSEdx', 'Safety Articles'],
+    image: 'https://hsedx.nfsi.in/uploads/branding/logo-1792142496827.png',
     url: currentUrl,
     type: 'website',
     siteName: 'HSEdx · National Fire & Safety',

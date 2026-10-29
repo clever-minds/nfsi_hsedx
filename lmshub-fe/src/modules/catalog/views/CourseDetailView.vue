@@ -222,6 +222,19 @@ function buyFromPreview() {
   }
 }
 
+const previewActiveItem = computed(() => {
+  if (!previewContents.value || previewContents.value.length === 0) return null;
+  // If user locale is Hindi, check if there is a Hindi video
+  if (currentLocale.value === 'hi') {
+    const hiVideo = previewContents.value.find((c) => c.type === 'video' && c.url && c.language === 'hi');
+    if (hiVideo) return hiVideo;
+  }
+  // Otherwise any video with a valid url
+  const anyVideo = previewContents.value.find((c) => c.type === 'video' && c.url);
+  if (anyVideo) return anyVideo;
+  return previewContents.value[0];
+});
+
 async function openPreview(lesson: Lesson) {
   if (!lesson.gratis_preview) return;
   previewLoading.value = true;
@@ -231,7 +244,7 @@ async function openPreview(lesson: Lesson) {
     const res = await apiGet<any[]>(`/courses/public/${route.params.slug}/preview/${lesson.id}`);
     if (res && res.length > 0) {
       previewContents.value = res;
-      if (res[0]?.type === 'video') {
+      if (res.some((c) => c.type === 'video' && c.url)) {
         startPreviewTimer();
       }
     } else {
@@ -252,7 +265,7 @@ function closePreview() {
 }
 
 function openHeroPreview() {
-  const promoUrl = (course.value?.meta as any)?.promo_video_url;
+  const promoUrl = (course.value as any)?.promo_video_url || (course.value?.meta as any)?.promo_video_url;
   if (promoUrl) {
     previewContents.value = [{
       type: 'video',
@@ -833,7 +846,7 @@ const TERMASUK = computed(() => [
 
       <!-- Floating countdown timer indicator -->
       <div
-        v-if="!previewLoading && !previewError && previewContents[0]?.type === 'video' && !previewExpired"
+        v-if="!previewLoading && !previewError && previewActiveItem?.type === 'video' && !previewExpired"
         class="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full bg-slate-900/85 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md border border-white/20"
       >
         <span class="inline-block h-2 w-2 rounded-full bg-amber-400 animate-ping"></span>
@@ -845,7 +858,7 @@ const TERMASUK = computed(() => [
         </span>
       </div>
 
-      <div class="flex aspect-video w-full flex-col items-center justify-center bg-slate-900 p-8 text-slate-400 relative" :class="previewContents[0]?.type === 'text' ? 'bg-white text-slate-800 items-start justify-start overflow-auto' : ''">
+      <div class="flex aspect-video w-full flex-col items-center justify-center bg-slate-900 p-8 text-slate-400 relative" :class="previewActiveItem?.type === 'text' ? 'bg-white text-slate-800 items-start justify-start overflow-auto' : ''">
         <div v-if="previewLoading" class="text-white flex flex-col items-center">
            <Icon name="loader" class="animate-spin mb-2" :size="32" />
            {{ t('common.state.loading') }}...
@@ -903,11 +916,11 @@ const TERMASUK = computed(() => [
           </div>
         </div>
 
-        <template v-else-if="previewContents.length > 0">
-          <template v-if="previewContents[0].type === 'video' && previewContents[0].url">
+        <template v-else-if="previewActiveItem">
+          <template v-if="previewActiveItem.type === 'video' && previewActiveItem.url">
             <iframe
-              v-if="youtubeEmbed(previewContents[0].url)"
-              :src="youtubeEmbed(previewContents[0].url)!"
+              v-if="youtubeEmbed(previewActiveItem.url)"
+              :src="youtubeEmbed(previewActiveItem.url)!"
               class="h-full w-full object-contain aspect-video"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -915,16 +928,17 @@ const TERMASUK = computed(() => [
             ></iframe>
             <video
               v-else
-              :src="assetUrl(previewContents[0].url)"
+              :src="assetUrl(previewActiveItem.url)"
               controls
               autoplay
-              class="h-full w-full object-contain"
+              playsinline
+              class="h-full w-full object-contain bg-black"
               @timeupdate="onVideoTimeUpdate"
               @ended="onVideoEnded"
             ></video>
           </template>
-          <div v-else-if="previewContents[0].type === 'text'" class="prose max-w-none text-slate-800" v-html="sanitizeHtml(previewContents[0].body)"></div>
-          <iframe v-else-if="previewContents[0].type === 'pdf' && previewContents[0].url" :src="assetUrl(previewContents[0].url)" class="h-full w-full bg-slate-100"></iframe>
+          <div v-else-if="previewActiveItem.type === 'text'" class="prose max-w-none text-slate-800" v-html="sanitizeHtml(previewActiveItem.body)"></div>
+          <iframe v-else-if="previewActiveItem.type === 'pdf' && previewActiveItem.url" :src="assetUrl(previewActiveItem.url)" class="h-full w-full bg-slate-100"></iframe>
           <div v-else class="text-slate-400">{{ t('catalog.detail.noPreviewContent', 'Content not available for preview') }}</div>
         </template>
       </div>

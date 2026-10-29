@@ -304,6 +304,8 @@ export async function publicList(
 export interface PublicCourseDetail extends PublicCourseRow {
   description: string | null;
   promo_video_media_id: string | null;
+  promo_video_url?: string | null;
+  thumbnail_url?: string | null;
   instructor_id: string;
   // profile instructor (untuk kartu "Tentang Instructor" & tautan to halaman detailnya).
   instructor_bio: string | null;
@@ -329,6 +331,15 @@ export async function publicBySlug(slug: string): Promise<PublicCourseDetail | n
               WHERE cx.instructor_id = ip.id AND cx.deleted_at IS NULL
                 AND cx.publication_status IN ('publish','updated')) AS instructor_amount_kursus,
             c.level, c.price, c.strike_price, c.thumbnail_media_id, c.promo_video_media_id, c.language,
+            COALESCE(
+              NULLIF(c.meta->>'promo_video_url', ''),
+              ma_promo.hls_manifest_url,
+              ma_promo.path_object_storage
+            ) AS promo_video_url,
+            COALESCE(
+              NULLIF(c.meta->>'thumbnail_url', ''),
+              ma_thumb.path_object_storage
+            ) AS thumbnail_url,
             c.total_duration_minutes, c.rating_avg, c.rating_count,
             COALESCE(
               NULLIF((SELECT COUNT(*)::int FROM enrollments e WHERE e.course_id = c.id AND e.deleted_at IS NULL AND e.status <> 'cancelled'), 0),
@@ -339,7 +350,9 @@ export async function publicBySlug(slug: string): Promise<PublicCourseDetail | n
        FROM courses c
        JOIN categories cat ON cat.id = c.category_id
        JOIN instructor_profiles ip ON ip.id = c.instructor_id
-    JOIN users u ON u.id = ip.user_id
+       JOIN users u ON u.id = ip.user_id
+       LEFT JOIN media_assets ma_promo ON ma_promo.id = c.promo_video_media_id AND ma_promo.deleted_at IS NULL
+       LEFT JOIN media_assets ma_thumb ON ma_thumb.id = c.thumbnail_media_id AND ma_thumb.deleted_at IS NULL
       WHERE c.slug = $1 AND c.deleted_at IS NULL AND c.publication_status IN ('publish','updated')`,
     [slug],
   );
@@ -385,14 +398,19 @@ export async function publicCurriculum(courseId: string): Promise<PublicCurricul
 
 export async function publicLessonPreview(courseId: string, lessonId: string): Promise<any[]> {
   return query(
-    `SELECT c.id, c.type, c.sort_order, c.body, c.url
+    `SELECT c.id, c.type, c.sort_order, c.body,
+            COALESCE(NULLIF(c.url, ''), ma.hls_manifest_url, ma.path_object_storage) AS url,
+            c.media_asset_id,
+            c.language
        FROM lesson_contents c
        JOIN lessons l ON l.id = c.lesson_id
        JOIN sections s ON s.id = l.section_id
+       LEFT JOIN media_assets ma ON ma.id = c.media_asset_id AND ma.deleted_at IS NULL
       WHERE s.course_id = $1 
         AND l.id = $2 
         AND l.gratis_preview = true 
         AND l.deleted_at IS NULL
+        AND c.deleted_at IS NULL
       ORDER BY c.sort_order ASC`,
     [courseId, lessonId]
   );

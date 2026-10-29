@@ -81,10 +81,13 @@ export function createApp() {
     '/uploads',
     express.static(path.resolve(process.cwd(), 'uploads'), {
       maxAge: '7d',
-      setHeaders: (res) => {
+      setHeaders: (res, filePath) => {
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         res.setHeader('X-Content-Type-Options', 'nosniff');
-        res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+        const isMedia = /\.(mp4|webm|ogv|mp3|m4a|wav|pdf|jpe?g|png|webp|gif|svg)$/i.test(filePath);
+        if (!isMedia) {
+          res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+        }
       },
     }),
   );

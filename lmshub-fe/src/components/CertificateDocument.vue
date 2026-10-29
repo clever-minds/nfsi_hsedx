@@ -35,22 +35,66 @@ const companyAddress = computed(() => {
 });
 
 function fmtIssueDate(dateStr?: string | null): string {
-  if (!dateStr) return '16-Oct-2026';
+  if (!dateStr) {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${day}-${months[today.getMonth()]}-${today.getFullYear()}`;
+  }
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
   const day = String(d.getDate()).padStart(2, '0');
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return `${day}-${months[d.getMonth()]}-${d.getFullYear()}`;
 }
+
+const verificationPageUrl = computed(() => {
+  if (props.cert.verify_url) return props.cert.verify_url;
+  if (props.cert.certificate_number && typeof window !== 'undefined') {
+    return `${window.location.origin}/certificates/verify/${encodeURIComponent(props.cert.certificate_number)}`;
+  }
+  return '';
+});
+
+const qrUrl = computed(() => {
+  if (props.cert.qr_code_url) return props.cert.qr_code_url;
+  if (verificationPageUrl.value) {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verificationPageUrl.value)}`;
+  }
+  return '';
+});
+
+const dynamicContent = computed(() => {
+  const courseTitle = localizedCourseTitle.value || props.cert.course || 'Safety Training Course';
+  const studentName = props.cert.name || 'Recipient Name';
+  const certNumber = props.cert.certificate_number || '';
+  const dateStr = fmtIssueDate(props.cert.publish_date);
+  const scoreStr = props.cert.score ? `${props.cert.score}%` : '';
+  const instructorStr = props.cert.instructor || '';
+
+  if (props.cert.content && props.cert.content.trim()) {
+    let text = props.cert.content;
+    text = text.replace(/\{\{\s*name\s*\}\}/gi, studentName);
+    text = text.replace(/\{\{\s*course\s*\}\}/gi, courseTitle);
+    text = text.replace(/\{\{\s*number\s*\}\}/gi, certNumber);
+    text = text.replace(/\{\{\s*date\s*\}\}/gi, dateStr);
+    text = text.replace(/\{\{\s*score\s*\}\}/gi, scoreStr);
+    text = text.replace(/\{\{\s*instructor\s*\}\}/gi, instructorStr);
+    return text;
+  }
+
+  return `for successfully participating in and completing the <strong class="course-highlight">${courseTitle}</strong>, demonstrating professional knowledge and commitment to workplace health, safety, risk-based planning and continual improvement standards.`;
+});
 </script>
 
 <template>
   <div class="cert-wrap">
     <div class="cert">
       <div class="cert-inner">
-        <!-- TOP HEADER: Organization Logo & Certificate No -->
+        <!-- TOP HEADER: Centered Organization Logo & Pinned Certificate No -->
         <div class="cert-header">
-          <div class="cert-logo-wrap">
+          <!-- Centered Organization Logo -->
+          <div class="cert-logo-center">
             <img
               v-if="appConfig.logoUrl"
               :src="appConfig.logoUrl"
@@ -59,31 +103,37 @@ function fmtIssueDate(dateStr?: string | null): string {
             />
             <BrandMark v-else size="lg" />
           </div>
+
+          <!-- Top-Right Certificate Number -->
           <div class="cert-meta-no">
             <span class="meta-label">CERTIFICATE NO.</span>
-            <span class="meta-val">{{ cert.certificate_number || 'NFSI-2026-CERTIFICATE' }}</span>
+            <span class="meta-val">{{ cert.certificate_number || 'NFSI-CERTIFICATE' }}</span>
           </div>
         </div>
 
-        <!-- MAIN BODY CONTENT -->
+        <!-- MAIN BODY CONTENT: Beautiful Centered Alignment -->
         <div class="cert-main">
           <!-- Course / Subject Title -->
-          <h1 class="course-title">{{ localizedCourseTitle || 'ISO 9001:2026 TRANSITION QUIZ' }}</h1>
+          <h1 class="course-title">{{ localizedCourseTitle || 'CERTIFICATE OF ACHIEVEMENT' }}</h1>
 
-          <!-- Presentation Subtitle -->
-          <p class="presented-to">This certificate is proudly presented to</p>
+          <!-- Presentation Subtitle with decorative accent lines -->
+          <div class="presentation-divider">
+            <span class="divider-line"></span>
+            <span class="presented-to">THIS CERTIFICATE IS PROUDLY PRESENTED TO</span>
+            <span class="divider-line"></span>
+          </div>
 
-          <!-- Recipient Name -->
-          <h2 class="recipient-name">{{ cert.name || 'Recipient Name' }}</h2>
+          <!-- Recipient Name with dynamic underline -->
+          <div class="recipient-wrap">
+            <h2 class="recipient-name">{{ cert.name || 'Recipient Name' }}</h2>
+            <div class="recipient-underline"></div>
+          </div>
 
-          <!-- Award Description Citation -->
-          <p class="award-description">
-            for participating in the <strong class="text-slate-900">{{ localizedCourseTitle || 'Certification Course' }}</strong>,<br />
-            and showing commitment to quality culture, risk-based planning and continual improvement.
-          </p>
+          <!-- Dynamic Award Description Citation -->
+          <div class="award-description" v-html="dynamicContent"></div>
         </div>
 
-        <!-- BOTTOM METADATA: Date | Circular Seal | QR/Score -->
+        <!-- BOTTOM METADATA: Date | Circular Seal | QR Code & Score -->
         <div class="cert-meta-row">
           <!-- Date of Issue -->
           <div class="meta-block text-left">
@@ -120,26 +170,31 @@ function fmtIssueDate(dateStr?: string | null): string {
             </svg>
           </div>
 
-          <!-- QR Code or Quiz Score -->
+          <!-- Verification QR Code and Score -->
           <div class="meta-block text-right">
-            <div v-if="cert.qr_code_url" class="qr-box">
-              <img :src="cert.qr_code_url" alt="QR Verification" class="qr-img" />
+            <div v-if="qrUrl" class="qr-box">
+              <img :src="qrUrl" alt="QR Verification" class="qr-img" />
               <div class="qr-info">
                 <span class="meta-sublabel">VERIFIED ONLINE</span>
-                <span class="qr-code-id">{{ cert.certificate_number ? cert.certificate_number.slice(-8) : 'VERIFIED' }}</span>
+                <span class="qr-code-id">{{ cert.certificate_number ? cert.certificate_number.slice(-10) : (cert.verification_code || 'VERIFIED') }}</span>
+                <span v-if="cert.score" class="score-chip">Score: {{ cert.score }}%</span>
               </div>
             </div>
-            <div v-else class="score-box">
+            <div v-else-if="cert.score" class="score-box">
               <div class="score-numbers">
-                <span class="score-num">{{ cert.score || '18' }}</span>
-                <span class="score-max">/ 20</span>
+                <span class="score-num">{{ cert.score }}</span>
+                <span class="score-max">%</span>
               </div>
-              <span class="meta-sublabel">QUIZ SCORE</span>
+              <span class="meta-sublabel">FINAL SCORE</span>
+            </div>
+            <div v-else class="qr-info">
+              <span class="meta-sublabel">VERIFIED ONLINE</span>
+              <span class="qr-code-id">{{ cert.certificate_number || 'VERIFIED' }}</span>
             </div>
           </div>
         </div>
 
-        <!-- FOOTER: Multi-Color HSE Banner + Legal Disclaimer -->
+        <!-- FOOTER: Multi-Color HSE Banner + Legal Disclaimer + Accreditation -->
         <div class="cert-footer">
           <!-- Categories Bar -->
           <div class="hse-bar">
@@ -204,32 +259,40 @@ function fmtIssueDate(dateStr?: string | null): string {
   flex-direction: column;
   justify-content: space-between;
   /* Left ribbon is ~18.2% of the width, so padding-left is 21.5% to clear it cleanly */
-  padding: 30px 40px 18px 21.5%;
+  padding: 24px 36px 16px 21.5%;
   box-sizing: border-box;
 }
 
-/* ── HEADER ─────────────────────────────────────────────────── */
+/* ── HEADER (Logo in Center, Certificate No in Top-Right) ─── */
 .cert-header {
+  position: relative;
+  width: 100%;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  min-height: 52px;
 }
 
-.cert-logo-wrap {
+.cert-logo-center {
   display: flex;
+  justify-content: center;
   align-items: center;
-  max-width: 250px;
-  min-height: 48px;
+  max-width: 260px;
+  margin: 0 auto;
 }
 
 .cert-logo-img {
   max-height: 52px;
-  max-width: 220px;
+  max-width: 230px;
   width: auto;
   object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.08));
 }
 
 .cert-meta-no {
+  position: absolute;
+  right: 0;
+  top: 2px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -244,84 +307,119 @@ function fmtIssueDate(dateStr?: string | null): string {
 }
 
 .meta-val {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
   color: #0e1729;
   letter-spacing: 0.03em;
 }
 
-/* ── MAIN BODY ──────────────────────────────────────────────── */
+/* ── MAIN BODY (Centered, Prestigious Typography) ────────── */
 .cert-main {
   text-align: center;
   margin: auto 0;
-  padding: 6px 0;
+  padding: 2px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 .course-title {
-  font-size: 27px;
+  font-size: 23px;
   font-weight: 800;
   color: #1b62ae;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   line-height: 1.25;
-  margin: 0 0 10px 0;
+  margin: 0 0 8px 0;
+  max-width: 640px;
+}
+
+.presentation-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 6px;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
 }
 
 .presented-to {
-  font-size: 13px;
-  color: #475569;
-  margin: 0 0 6px 0;
-  font-weight: 500;
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.recipient-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto 8px auto;
 }
 
 .recipient-name {
-  font-family: 'Georgia', serif;
-  font-size: 38px;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-size: 35px;
   font-weight: 700;
   color: #0e1729;
-  letter-spacing: 0.01em;
-  margin: 0 0 4px 0;
+  letter-spacing: 0.02em;
   line-height: 1.15;
+  margin: 0;
 }
 
-.affiliation-text {
-  font-size: 13px;
-  font-weight: 600;
-  color: #64738b;
-  margin: 0 0 12px 0;
+.recipient-underline {
+  width: 85%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #1b62ae, transparent);
+  margin-top: 4px;
+  border-radius: 2px;
 }
 
 .award-description {
-  font-size: 12.5px;
+  font-size: 12px;
   color: #334155;
   line-height: 1.55;
-  max-width: 640px;
+  max-width: 630px;
   margin: 0 auto;
 }
 
-/* ── METADATA ROW (Date | Seal | QR/Score) ───────────────────── */
+:deep(.course-highlight) {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* ── METADATA ROW (Date | Seal | QR/Score) ───────────────── */
 .cert-meta-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 10px;
+  padding: 0 8px;
   margin-bottom: 6px;
 }
 
 .meta-block {
   display: flex;
   flex-direction: column;
-  min-width: 130px;
+  min-width: 140px;
 }
 
 .meta-date {
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 700;
   color: #0e1729;
 }
 
 .meta-sublabel {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 700;
   color: #64738b;
   letter-spacing: 0.12em;
@@ -335,14 +433,15 @@ function fmtIssueDate(dateStr?: string | null): string {
 }
 
 .seal-svg {
-  width: 78px;
-  height: 78px;
+  width: 76px;
+  height: 76px;
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.08));
 }
 
 .qr-box {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
 }
 
@@ -351,6 +450,7 @@ function fmtIssueDate(dateStr?: string | null): string {
   height: 48px;
   border-radius: 4px;
   border: 1px solid #e2e8f0;
+  background: #ffffff;
 }
 
 .qr-info {
@@ -360,9 +460,21 @@ function fmtIssueDate(dateStr?: string | null): string {
 }
 
 .qr-code-id {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   color: #1b62ae;
+}
+
+.score-chip {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #047857;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  margin-top: 2px;
 }
 
 .score-box {
@@ -374,7 +486,7 @@ function fmtIssueDate(dateStr?: string | null): string {
 .score-numbers {
   display: flex;
   align-items: baseline;
-  gap: 3px;
+  gap: 2px;
 }
 
 .score-num {
@@ -384,23 +496,23 @@ function fmtIssueDate(dateStr?: string | null): string {
 }
 
 .score-max {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: #64738b;
 }
 
-/* ── FOOTER ─────────────────────────────────────────────────── */
+/* ── FOOTER ─────────────────────────────────────────────── */
 .cert-footer {
   text-align: center;
   border-top: 1px solid #f1f5f9;
-  padding-top: 8px;
+  padding-top: 6px;
 }
 
 .hse-bar {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.15em;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .hse-health { color: #1b62ae; }
@@ -411,26 +523,26 @@ function fmtIssueDate(dateStr?: string | null): string {
 .hse-sep { color: #cbd5e1; margin: 0 4px; font-weight: normal; }
 
 .disclaimer-text {
-  font-size: 8px;
+  font-size: 7.8px;
   color: #64738b;
   margin: 0 0 2px 0;
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
 .company-text {
-  font-size: 8px;
+  font-size: 7.8px;
   color: #64738b;
   margin: 0 0 2px 0;
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
 .system-credit {
-  font-size: 7.8px;
+  font-size: 7.5px;
   color: #94a2b8;
   margin: 0;
 }
 
-/* ── PRINT STYLES ───────────────────────────────────────────── */
+/* ── PRINT STYLES ───────────────────────────────────────── */
 @media print {
   :global(body *) {
     visibility: hidden;

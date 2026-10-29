@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { apiGet, assetUrl, errorMessage } from '@/lib/api';
@@ -222,12 +222,24 @@ function buyFromPreview() {
   }
 }
 
+const previewLang = ref<'en' | 'hi' | 'both'>(currentLocale() === 'hi' ? 'hi' : 'en');
+watch(() => currentLocale(), (newLoc) => {
+  previewLang.value = newLoc === 'hi' ? 'hi' : 'en';
+});
+
 const previewActiveItem = computed(() => {
   if (!previewContents.value || previewContents.value.length === 0) return null;
-  // If user locale is Hindi, check if there is a Hindi video
-  if (currentLocale.value === 'hi') {
+  // If user selected Hindi, check if there is a Hindi item (video or text)
+  if (previewLang.value === 'hi') {
     const hiVideo = previewContents.value.find((c) => c.type === 'video' && c.url && c.language === 'hi');
     if (hiVideo) return hiVideo;
+    const hiContent = previewContents.value.find((c) => c.language === 'hi');
+    if (hiContent) return hiContent;
+  } else if (previewLang.value === 'en') {
+    const enVideo = previewContents.value.find((c) => c.type === 'video' && c.url && c.language === 'en');
+    if (enVideo) return enVideo;
+    const enContent = previewContents.value.find((c) => c.language === 'en');
+    if (enContent) return enContent;
   }
   // Otherwise any video with a valid url
   const anyVideo = previewContents.value.find((c) => c.type === 'video' && c.url);
@@ -240,6 +252,7 @@ async function openPreview(lesson: Lesson) {
   previewLoading.value = true;
   previewError.value = '';
   previewExpired.value = false;
+  previewLang.value = currentLocale() === 'hi' ? 'hi' : 'en';
   try {
     const res = await apiGet<any[]>(`/courses/public/${route.params.slug}/preview/${lesson.id}`);
     if (res && res.length > 0) {
@@ -844,21 +857,56 @@ const TERMASUK = computed(() => [
         <Icon name="x" :size="24" />
       </button>
 
-      <!-- Floating countdown timer indicator -->
-      <div
-        v-if="!previewLoading && !previewError && previewActiveItem?.type === 'video' && !previewExpired"
-        class="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full bg-slate-900/85 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md border border-white/20"
-      >
-        <span class="inline-block h-2 w-2 rounded-full bg-amber-400 animate-ping"></span>
-        <span v-if="currentLocale === 'hi'">
-          मुफ्त प्रीव्यू: {{ formatPreviewTime(previewSecondsLeft) }} शेष
-        </span>
-        <span v-else>
-          Free Preview: {{ formatPreviewTime(previewSecondsLeft) }} left
-        </span>
+      <!-- Floating countdown timer & language toggle header -->
+      <div class="absolute left-4 top-4 z-20 flex flex-wrap items-center gap-2">
+        <div
+          v-if="!previewLoading && !previewError && previewActiveItem?.type === 'video' && !previewExpired"
+          class="flex items-center gap-2 rounded-full bg-slate-900/85 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md border border-white/20"
+        >
+          <span class="inline-block h-2 w-2 rounded-full bg-amber-400 animate-ping"></span>
+          <span>
+            {{ previewLang === 'hi' ? `मुफ्त प्रीव्यू: ${formatPreviewTime(previewSecondsLeft)} शेष` : `Free Preview: ${formatPreviewTime(previewSecondsLeft)} left` }}
+          </span>
+        </div>
+
+        <!-- Language toggle pills -->
+        <div
+          v-if="!previewLoading && !previewError && !previewExpired"
+          class="inline-flex items-center gap-1 rounded-full bg-slate-900/85 p-1 text-xs font-semibold backdrop-blur-md border border-white/20 shadow-md"
+        >
+          <button
+            type="button"
+            class="rounded-full px-2.5 py-1 transition text-xs font-bold"
+            :class="previewLang === 'en' ? 'bg-blue-600 text-white shadow' : 'text-slate-300 hover:text-white'"
+            @click="previewLang = 'en'"
+          >
+            🇬🇧 English
+          </button>
+          <button
+            type="button"
+            class="rounded-full px-2.5 py-1 transition text-xs font-bold"
+            :class="previewLang === 'hi' ? 'bg-emerald-600 text-white shadow' : 'text-slate-300 hover:text-white'"
+            @click="previewLang = 'hi'"
+          >
+            🇮🇳 हिन्दी
+          </button>
+          <button
+            type="button"
+            class="rounded-full px-2.5 py-1 transition text-xs font-bold"
+            :class="previewLang === 'both' ? 'bg-white/25 text-white shadow' : 'text-slate-300 hover:text-white'"
+            @click="previewLang = 'both'"
+          >
+            🌐 Both
+          </button>
+        </div>
       </div>
 
-      <div class="flex aspect-video w-full flex-col items-center justify-center bg-slate-900 p-8 text-slate-400 relative" :class="previewActiveItem?.type === 'text' ? 'bg-white text-slate-800 items-start justify-start overflow-auto' : ''">
+      <div
+        class="flex w-full flex-col relative"
+        :class="previewActiveItem?.type === 'text'
+          ? 'bg-white text-slate-800 items-start justify-start overflow-y-auto max-h-[85vh] min-h-[350px] p-6 pt-16'
+          : 'aspect-video bg-slate-900 items-center justify-center p-8 text-slate-400'"
+      >
         <div v-if="previewLoading" class="text-white flex flex-col items-center">
            <Icon name="loader" class="animate-spin mb-2" :size="32" />
            {{ t('common.state.loading') }}...
@@ -875,7 +923,7 @@ const TERMASUK = computed(() => [
           </div>
 
           <h3 class="text-xl md:text-2xl font-black text-white tracking-tight mb-2">
-            <template v-if="currentLocale === 'hi'">
+            <template v-if="previewLang === 'hi' || currentLocale() === 'hi'">
               मुफ्त प्रीव्यू समाप्त (1.5 मिनट)
             </template>
             <template v-else>
@@ -884,7 +932,7 @@ const TERMASUK = computed(() => [
           </h3>
 
           <p class="text-sm text-slate-300 leading-relaxed mb-6">
-            <template v-if="currentLocale === 'hi'">
+            <template v-if="previewLang === 'hi' || currentLocale() === 'hi'">
               आगे का पूरा वीडियो और संपूर्ण कोर्स (सभी 12 मॉड्यूल, 54 पाठ, क्विज़ व मान्यता प्राप्त सर्टिफिकेट) अनलॉक करने के लिए अभी कोर्स खरीदें।
             </template>
             <template v-else>
@@ -899,7 +947,7 @@ const TERMASUK = computed(() => [
               class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 px-7 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 transition transform hover:scale-[1.02]"
             >
               <Icon name="shopping-cart" :size="18" />
-              <template v-if="currentLocale === 'hi'">
+              <template v-if="previewLang === 'hi' || currentLocale() === 'hi'">
                 कोर्स अभी खरीदें <span v-if="course">({{ fmtHarga(course.price) }})</span>
               </template>
               <template v-else>
@@ -911,7 +959,7 @@ const TERMASUK = computed(() => [
               @click="closePreview"
               class="w-full sm:w-auto rounded-full bg-white/10 hover:bg-white/20 px-5 py-3 text-sm font-semibold text-slate-300 hover:text-white transition"
             >
-              {{ currentLocale === 'hi' ? 'बाद में देखें' : 'Close' }}
+              {{ (previewLang === 'hi' || currentLocale() === 'hi') ? 'बाद में देखें' : 'Close' }}
             </button>
           </div>
         </div>
@@ -937,7 +985,11 @@ const TERMASUK = computed(() => [
               @ended="onVideoEnded"
             ></video>
           </template>
-          <div v-else-if="previewActiveItem.type === 'text'" class="prose max-w-none text-slate-800" v-html="sanitizeHtml(previewActiveItem.body)"></div>
+          <div
+            v-else-if="previewActiveItem.type === 'text'"
+            class="prose max-w-none text-slate-800 w-full"
+            v-html="sanitizeHtml(filterLessonHtml(previewActiveItem.body, previewLang))"
+          ></div>
           <iframe v-else-if="previewActiveItem.type === 'pdf' && previewActiveItem.url" :src="assetUrl(previewActiveItem.url)" class="h-full w-full bg-slate-100"></iframe>
           <div v-else class="text-slate-400">{{ t('catalog.detail.noPreviewContent', 'Content not available for preview') }}</div>
         </template>

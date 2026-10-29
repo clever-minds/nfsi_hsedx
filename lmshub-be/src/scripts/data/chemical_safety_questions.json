@@ -1,0 +1,662 @@
+[
+  {
+    "q_num": 1,
+    "question_text": "What is the primary objective of chemical safety? | रासायनिक सुरक्षा का मुख्य उद्देश्य क्या है?",
+    "options": [
+      {
+        "text": "Prevent harm to people, property and the environment / लोगों, संपत्ति और पर्यावरण को नुकसान से बचाना",
+        "is_correct": true
+      },
+      {
+        "text": "Increase chemical production speed only / केवल उत्पादन की गति बढ़ाना",
+        "is_correct": false
+      },
+      {
+        "text": "Ignore minor chemical hazards / छोटे रासायनिक खतरों को नजरअंदाज करना",
+        "is_correct": false
+      },
+      {
+        "text": "Reduce safety training hours / सुरक्षा प्रशिक्षण का समय कम करना",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 2,
+    "question_text": "What does SDS stand for? | SDS का पूरा नाम क्या है?",
+    "options": [
+      {
+        "text": "Safety Data Sheet / सेफ्टी डेटा शीट",
+        "is_correct": true
+      },
+      {
+        "text": "Safe Daily System / सेफ डेली सिस्टम",
+        "is_correct": false
+      },
+      {
+        "text": "Storage Detail Sheet / स्टोरेज डिटेल शीट",
+        "is_correct": false
+      },
+      {
+        "text": "Site Duty Sheet / साइट ड्यूटी शीट",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 3,
+    "question_text": "How many standard sections are contained in a Safety Data Sheet (SDS)? | एक सेफ्टी डेटा शीट (SDS) में कुल कितने मानक खंड होते हैं?",
+    "options": [
+      {
+        "text": "16 Sections / 16 मानक खंड",
+        "is_correct": true
+      },
+      {
+        "text": "8 Sections / 8 खंड",
+        "is_correct": false
+      },
+      {
+        "text": "4 Sections / 4 खंड",
+        "is_correct": false
+      },
+      {
+        "text": "30 Sections / 30 खंड",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 4,
+    "question_text": "What should be done before using any chemical? | किसी भी रसायन का उपयोग करने से पहले क्या करना अनिवार्य है?",
+    "options": [
+      {
+        "text": "Read the container label and SDS / कंटेनर का लेबल और SDS ध्यानपूर्वक पढ़ना",
+        "is_correct": true
+      },
+      {
+        "text": "Smell the chemical to test its strength / तीखेपन की जांच के लिए रसायन को सूंघना",
+        "is_correct": false
+      },
+      {
+        "text": "Mix it with water immediately / बिना जांचे तुरंत पानी मिला देना",
+        "is_correct": false
+      },
+      {
+        "text": "Ignore personal protective equipment (PPE) / सुरक्षा उपकरणों को नजरअंदाज करना",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 5,
+    "question_text": "What is the primary safety rule for unlabelled chemicals? | बिना लेबल वाले रसायनों के लिए प्राथमिक सुरक्षा नियम क्या है?",
+    "options": [
+      {
+        "text": "No label, no use — report immediately / बिना लेबल, कोई उपयोग नहीं — तुरंत रिपोर्ट करें",
+        "is_correct": true
+      },
+      {
+        "text": "Use carefully in small quantities / थोड़ी मात्रा में सावधानी से उपयोग करें",
+        "is_correct": false
+      },
+      {
+        "text": "Store it in an empty drinking water bottle / खाली पानी की बोतल में रख दें",
+        "is_correct": false
+      },
+      {
+        "text": "Pour it down the nearest floor drain / पास की नाली में बहा दें",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 6,
+    "question_text": "Which of the following is considered a physical chemical hazard? | निम्नलिखित में से कौन सा एक भौतिक रासायनिक खतरा है?",
+    "options": [
+      {
+        "text": "Fire or explosion / आग लगना या रासायनिक विस्फोट",
+        "is_correct": true
+      },
+      {
+        "text": "Worker attendance record / कर्मचारी उपस्थिति",
+        "is_correct": false
+      },
+      {
+        "text": "Workplace background noise / कार्यस्थल का सामान्य शोर",
+        "is_correct": false
+      },
+      {
+        "text": "Documentation paperwork / कागजी दस्तावेजी कार्य",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 7,
+    "question_text": "Which of the following is considered a chemical health hazard? | निम्नलिखित में से कौन सा रासायनिक स्वास्थ्य खतरा है?",
+    "options": [
+      {
+        "text": "Skin burn or acute poisoning / त्वचा का जलना या गंभीर विषाक्तता",
+        "is_correct": true
+      },
+      {
+        "text": "Clean and dry storage floor / साफ और सूखा फर्श",
+        "is_correct": false
+      },
+      {
+        "text": "Properly legible container label / सही और स्पष्ट लेबल",
+        "is_correct": false
+      },
+      {
+        "text": "Annual training log / वार्षिक प्रशिक्षण लॉग",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 8,
+    "question_text": "Through which primary route can chemicals enter the human body at work? | कार्यस्थल पर रसायन मुख्य रूप से किस मार्ग से शरीर में प्रवेश कर सकते हैं?",
+    "options": [
+      {
+        "text": "Inhalation (breathing in gases, dust or vapours) / श्वास द्वारा (गैस, वाष्प या धूल सांस में जाना)",
+        "is_correct": true
+      },
+      {
+        "text": "Listening to workplace sounds / कार्यस्थल की आवाजें सुनकर",
+        "is_correct": false
+      },
+      {
+        "text": "Looking at chemical colours / रसायन के रंग को देखकर",
+        "is_correct": false
+      },
+      {
+        "text": "Reading the chemical brand name / रसायन का नाम पढ़कर",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 9,
+    "question_text": "What must workers wear when handling hazardous chemicals? | खतरनाक रसायनों को संभालते समय श्रमिकों को क्या पहनना अनिवार्य है?",
+    "options": [
+      {
+        "text": "Correct, chemical-resistant PPE as specified by the SDS / SDS में निर्धारित सही रासायनिक प्रतिरोधी सुरक्षा किट (PPE)",
+        "is_correct": true
+      },
+      {
+        "text": "Torn or damaged gloves / फटे या पुराने दस्ताने",
+        "is_correct": false
+      },
+      {
+        "text": "No PPE if working fast / यदि जल्दी में हों तो कोई सुरक्षा उपकरण नहीं",
+        "is_correct": false
+      },
+      {
+        "text": "Casual slippers or sandals / साधारण चप्पल या सैंडल",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 10,
+    "question_text": "Why should chemicals be properly segregated in storage? | भंडारण में रसायनों का पृथक्करण क्यों आवश्यक है?",
+    "options": [
+      {
+        "text": "To prevent dangerous and violent chemical reactions / खतरनाक व हिंसक रासायनिक प्रतिक्रियाओं को रोकने के लिए",
+        "is_correct": true
+      },
+      {
+        "text": "To reduce the number of container labels / कंटेनर लेबलों की संख्या घटाने के लिए",
+        "is_correct": false
+      },
+      {
+        "text": "To hide hazardous chemicals from view / खतरनाक रसायनों को नजरों से छिपाने के लिए",
+        "is_correct": false
+      },
+      {
+        "text": "To fill up storage shelves faster / अलमारियों को जल्दी भरने के लिए",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 11,
+    "question_text": "Which chemical classes must NEVER be stored together on the same shelf? | किन रासायनिक श्रेणियों को कभी भी एक ही शेल्फ पर एक साथ नहीं रखना चाहिए?",
+    "options": [
+      {
+        "text": "Acids and Alkalis (or Flammables and Oxidisers) / अम्ल और क्षार (या ज्वलनशील और ऑक्सीकारक)",
+        "is_correct": true
+      },
+      {
+        "text": "Identically labelled water testing bottles / समान लेबल वाली पानी परीक्षण बोतलें",
+        "is_correct": false
+      },
+      {
+        "text": "Clean and empty plastic storage trays / खाली साफ प्लास्टिक ट्रे",
+        "is_correct": false
+      },
+      {
+        "text": "Unopened packages of paper towels / पेपर टॉवल के नए पैकेट",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 12,
+    "question_text": "Where should chemicals NEVER be transferred or stored under any circumstances? | रसायनों को किसी भी परिस्थिति में किसमें स्थानांतरित या संग्रहित नहीं करना चाहिए?",
+    "options": [
+      {
+        "text": "Drinking water, soft drink or food containers / पीने के पानी, कोल्ड ड्रिंक या खाने-पीने के बर्तनों में",
+        "is_correct": true
+      },
+      {
+        "text": "Approved dedicated chemical containers / अधिकृत रासायनिक कंटेनरों में",
+        "is_correct": false
+      },
+      {
+        "text": "Properly labelled secondary drums / सही लेबल लगे सेकेंडरी ड्रमों में",
+        "is_correct": false
+      },
+      {
+        "text": "Compatible chemical containers / अनुकूल केमिकल बर्तनों में",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 13,
+    "question_text": "When is it permissible to mix two or more chemicals together? | दो या दो से अधिक रसायनों को आपस में मिलाने की अनुमति कब होती है?",
+    "options": [
+      {
+        "text": "Only when permitted by an approved Standard Operating Procedure (SOP) / केवल तभी जब स्वीकृत मानक कार्यप्रणाली (SOP) द्वारा अनुमोदित हो",
+        "is_correct": true
+      },
+      {
+        "text": "Whenever their colours look similar / जब भी उनके रंग एक जैसे दिखाई दें",
+        "is_correct": false
+      },
+      {
+        "text": "Whenever their smell is pleasant / जब उनकी गंध अच्छी लगे",
+        "is_correct": false
+      },
+      {
+        "text": "Whenever you are in a hurry to finish work / जब काम जल्दी खत्म करने की हड़बड़ी हो",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 14,
+    "question_text": "What is the very first action to take when a chemical spill occurs? | रासायनिक रिसाव होने पर सबसे पहली कार्रवाई क्या होनी चाहिए?",
+    "options": [
+      {
+        "text": "Stop the task, alert nearby workers, and assess the risk / काम तुरंत रोकें, साथियों को सतर्क करें और खतरे का आकलन करें",
+        "is_correct": true
+      },
+      {
+        "text": "Panic and run away without telling anyone / बिना किसी को बताए घबराकर भाग जाएं",
+        "is_correct": false
+      },
+      {
+        "text": "Touch the spilled liquid with bare hands / गिरे हुए तरल को नंगे हाथों से छूकर देखें",
+        "is_correct": false
+      },
+      {
+        "text": "Ignore it and continue regular work / इसे नजरअंदाज कर अपना सामान्य काम जारी रखें",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 15,
+    "question_text": "Who is authorised to clean up major or highly hazardous chemical spills? | बड़े या अत्यधिक खतरनाक रासायनिक रिसावों को साफ करने का अधिकार किसे है?",
+    "options": [
+      {
+        "text": "Trained emergency spill responders with proper equipment / उचित उपकरणों से लैस प्रशिक्षित आपातकालीन स्पिल रिस्पॉन्स टीम",
+        "is_correct": true
+      },
+      {
+        "text": "Any workplace visitor walking nearby / पास से गुजर रहा कोई भी आगंतुक",
+        "is_correct": false
+      },
+      {
+        "text": "Untrained new workers without PPE / बिना PPE वाले नए अप्रशिक्षित श्रमिक",
+        "is_correct": false
+      },
+      {
+        "text": "Office administrative staff / कार्यालय प्रशासनिक कर्मचारी",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 16,
+    "question_text": "What emergency equipment must be used immediately if a chemical splashes into the eyes? | आंखों में रासायनिक छींटे पड़ने पर तुरंत किस आपातकालीन उपकरण का उपयोग करना चाहिए?",
+    "options": [
+      {
+        "text": "Emergency eyewash station (flush eyes for 15-20 minutes) / आपातकालीन आईवॉश स्टेशन (15-20 मिनट लगातार धोएं)",
+        "is_correct": true
+      },
+      {
+        "text": "CO2 fire extinguisher / अग्निशामक यंत्र",
+        "is_correct": false
+      },
+      {
+        "text": "Mineral oil or grease / खनिज तेल या ग्रीस",
+        "is_correct": false
+      },
+      {
+        "text": "Dry cloth only without water / बिना पानी के केवल सूखा कपड़ा",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 17,
+    "question_text": "What should be done immediately if hazardous chemical contacts the skin? | त्वचा पर खतरनाक रसायन गिरने पर तुरंत क्या किया जाना चाहिए?",
+    "options": [
+      {
+        "text": "Flush with clean water under safety shower as per SDS (15-20 mins) / SDS अनुसार सेफ्टी शावर के नीचे 15-20 मिनट प्रचुर पानी से धोएं",
+        "is_correct": true
+      },
+      {
+        "text": "Apply another unknown solvent to neutralise it / बेअसर करने के लिए कोई अज्ञात रसायन लगाना",
+        "is_correct": false
+      },
+      {
+        "text": "Ignore it if there is no immediate pain / यदि तुरंत दर्द न हो तो नजरअंदाज कर देना",
+        "is_correct": false
+      },
+      {
+        "text": "Rub vigorously with dry paper / सूखे कागज से जोर-जोर से रगड़ना",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 18,
+    "question_text": "If a hazardous chemical is accidentally swallowed, what is the crucial first aid instruction? | यदि गलती से खतरनाक रसायन निगल लिया जाए, तो सबसे महत्वपूर्ण प्राथमिक चिकित्सा नियम क्या है?",
+    "options": [
+      {
+        "text": "Seek immediate medical help, provide SDS, and do NOT induce vomiting / तुरंत डॉक्टर बुलाएं, SDS दें और उल्टी करवाने की कोशिश न करें",
+        "is_correct": true
+      },
+      {
+        "text": "Always force the victim to vomit immediately / पीड़ित को तुरंत जबरन उल्टी करवाएं",
+        "is_correct": false
+      },
+      {
+        "text": "Give the victim alcohol or vinegar / पीड़ित को शराब या सिरका पिलाएं",
+        "is_correct": false
+      },
+      {
+        "text": "Hide the incident and tell no one / घटना को छिपाएं और किसी को न बताएं",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 19,
+    "question_text": "How should hazardous chemical waste be stored while awaiting disposal? | निपटान की प्रतीक्षा में खतरनाक रासायनिक अपशिष्ट को किसमें संग्रहित करना चाहिए?",
+    "options": [
+      {
+        "text": "In approved, closed, compatible containers with hazardous waste labels / लेबल लगे स्वीकृत, सीलबंद और अनुकूल अपशिष्ट ड्रमों में",
+        "is_correct": true
+      },
+      {
+        "text": "In open plastic buckets on the walkway / रास्ते में रखी खुली बाल्टियों में",
+        "is_correct": false
+      },
+      {
+        "text": "In empty beverage cans / खाली पेय पदार्थों के कैन में",
+        "is_correct": false
+      },
+      {
+        "text": "Directly on the open floor without containers / बिना बर्तन के खुले फर्श पर",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 20,
+    "question_text": "Where should chemical waste NEVER be disposed of under any circumstances? | रासायनिक अपशिष्ट को कभी भी कहाँ नहीं बहाया जाना चाहिए?",
+    "options": [
+      {
+        "text": "Sinks, stormwater drains, or open soil / सिंक, बरसाती नालियों, सीवर या खुली जमीन में",
+        "is_correct": true
+      },
+      {
+        "text": "Approved hazardous waste collection drums / स्वीकृत खतरनाक अपशिष्ट संग्रह ड्रमों में",
+        "is_correct": false
+      },
+      {
+        "text": "Licensed hazardous waste treatment facilities / अधिकृत खतरनाक अपशिष्ट शोधन केंद्रों में",
+        "is_correct": false
+      },
+      {
+        "text": "Secondary containment sump units / सेकेंडरी रोकथाम सम्प इकाइयों में",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 21,
+    "question_text": "What is the topmost, most effective step in the Waste Management Hierarchy? | अपशिष्ट प्रबंधन पदानुक्रम में सर्वोच्च और सबसे प्रभावी स्तर कौन सा है?",
+    "options": [
+      {
+        "text": "Reduction and prevention at source / स्रोत पर ही अपशिष्ट का निवारण और कमी करना",
+        "is_correct": true
+      },
+      {
+        "text": "Open burning of waste on site / कार्यस्थल पर खुले में आग लगाना",
+        "is_correct": false
+      },
+      {
+        "text": "Burial in an unlined landfill / खुली जमीन में कचरा गाड़ना",
+        "is_correct": false
+      },
+      {
+        "text": "Disposing into local waterways / स्थानीय जलस्रोतों में बहाना",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 22,
+    "question_text": "Who is responsible for environmental protection and spill prevention at the facility? | कार्यस्थल पर पर्यावरण संरक्षण और रिसाव की रोकथाम किसकी जिम्मेदारी है?",
+    "options": [
+      {
+        "text": "Everyone working at the workplace / कार्यस्थल पर काम करने वाले प्रत्येक व्यक्ति की",
+        "is_correct": true
+      },
+      {
+        "text": "Only the designated environmental officer / केवल पर्यावरण अधिकारी की",
+        "is_correct": false
+      },
+      {
+        "text": "Only external regulatory visitors / केवल बाहरी सरकारी निरीक्षकों की",
+        "is_correct": false
+      },
+      {
+        "text": "Nobody — pollution is completely unavoidable / किसी की नहीं — प्रदूषण रोका नहीं जा सकता",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 23,
+    "question_text": "What do routine chemical safety inspections help identify proactively? | नियमित रासायनिक सुरक्षा निरीक्षण क्या पहचानने में मदद करते हैं?",
+    "options": [
+      {
+        "text": "Hazards, leaks, damaged containers, and unsafe practices / खतरों, रिसावों, क्षतिग्रस्त कंटेनरों और असुरक्षित तौर-तरीकों की",
+        "is_correct": true
+      },
+      {
+        "text": "Canteen daily lunch menu / कैंटीन के भोजन के मेनू की",
+        "is_correct": false
+      },
+      {
+        "text": "Worker holiday schedules / श्रमिकों की छुट्टियों के कार्यक्रम की",
+        "is_correct": false
+      },
+      {
+        "text": "Company financial quarterly profit / कंपनी के तिमाही वित्तीय मुनाफे की",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 24,
+    "question_text": "What does a formal chemical safety audit evaluate? | एक औपचारिक रासायनिक सुरक्षा ऑडिट किसका मूल्यांकन करता है?",
+    "options": [
+      {
+        "text": "Effectiveness and compliance of the complete safety management system / संपूर्ण सुरक्षा प्रबंधन प्रणाली की प्रभावशीलता और कानूनी अनुपालन का",
+        "is_correct": true
+      },
+      {
+        "text": "Only whether a single drum has a clean label / केवल यह कि किसी एक ड्रम पर साफ लेबल है या नहीं",
+        "is_correct": false
+      },
+      {
+        "text": "Individual worker monthly salary / व्यक्तिगत कर्मचारी के मासिक वेतन का",
+        "is_correct": false
+      },
+      {
+        "text": "The brand of office furniture / कार्यालय के फर्नीचर के ब्रांड का",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 25,
+    "question_text": "What is a 'near miss' in chemical safety management? | रासायनिक सुरक्षा में 'नियर मिस' (संभावित दुर्घटना) का क्या अर्थ है?",
+    "options": [
+      {
+        "text": "An unplanned event that could have caused harm, but did not / ऐसी घटना जिससे नुकसान हो सकता था, लेकिन बाल-बाल बच गए",
+        "is_correct": true
+      },
+      {
+        "text": "A standard daily toolbox meeting / दैनिक टूलबॉक्स बैठक",
+        "is_correct": false
+      },
+      {
+        "text": "A scheduled safety training session / निर्धारित सुरक्षा प्रशिक्षण सत्र",
+        "is_correct": false
+      },
+      {
+        "text": "A clean chemical storage rack / साफ-सुथरा भंडारण रैक",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 26,
+    "question_text": "What should a corrective and preventive action (CAPA) primarily eliminate? | सुधारात्मक और निवारक कार्रवाई (CAPA) को मुख्य रूप से किसे समाप्त करना चाहिए?",
+    "options": [
+      {
+        "text": "The fundamental root cause of the incident / घटना या खतरे के मूल कारण को",
+        "is_correct": true
+      },
+      {
+        "text": "Physical evidence of the accident / दुर्घटना के भौतिक सबूतों को",
+        "is_correct": false
+      },
+      {
+        "text": "Container hazard warning labels / चेतावनी लेबलों को",
+        "is_correct": false
+      },
+      {
+        "text": "Personal protective equipment stocks / सुरक्षा उपकरणों के स्टॉक को",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 27,
+    "question_text": "What is the true objective of conducting an incident investigation? | किसी दुर्घटना या रिसाव की निष्पक्ष जांच का सच्चा उद्देश्य क्या है?",
+    "options": [
+      {
+        "text": "To identify root causes, learn lessons, and prevent recurrence / मूल कारणों की पहचान कर सीख लेना और भविष्य में पुनरावृत्ति रोकना",
+        "is_correct": true
+      },
+      {
+        "text": "To find someone to blame and punish / किसी व्यक्ति पर दोष मढ़ना और सजा देना",
+        "is_correct": false
+      },
+      {
+        "text": "To conceal hazardous findings from authorities / अधिकारियों से खतरों को छिपाना",
+        "is_correct": false
+      },
+      {
+        "text": "To increase insurance premiums / बीमा प्रीमियम बढ़ाना",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 28,
+    "question_text": "What does the continuous improvement cycle 'PDCA' stand for? | सतत सुधार प्रणाली में PDCA चक्र का क्या अर्थ है?",
+    "options": [
+      {
+        "text": "Plan - Do - Check - Act / प्लान - डू - चेक - एक्ट (योजना बनाएं, करें, जांचें, सुधारें)",
+        "is_correct": true
+      },
+      {
+        "text": "Push - Drive - Cut - Act / Push - Drive - Cut - Act",
+        "is_correct": false
+      },
+      {
+        "text": "Plan - Delay - Cancel - Approve / Plan - Delay - Cancel - Approve",
+        "is_correct": false
+      },
+      {
+        "text": "PPE - Dust - Control - Audit / PPE - Dust - Control - Audit",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 29,
+    "question_text": "What characterizes a truly strong workplace chemical safety culture? | कार्यस्थल पर एक सच्ची और मजबूत रासायनिक सुरक्षा संस्कृति की क्या पहचान है?",
+    "options": [
+      {
+        "text": "Everyone follows procedures, speaks up, and reports hazards freely / जहां सभी नियमों का पालन करते हैं और खतरों की बेझिझक सूचना देते हैं",
+        "is_correct": true
+      },
+      {
+        "text": "Chemical hazards are hidden to protect production targets / जहां उत्पादन के लिए खतरों को छिपाया जाता है",
+        "is_correct": false
+      },
+      {
+        "text": "PPE requirements are routinely bypassed / जहां PPE की अनदेखी करना सामान्य माना जाता है",
+        "is_correct": false
+      },
+      {
+        "text": "Workers receive no chemical safety training / जहां कर्मचारियों को कोई सुरक्षा प्रशिक्षण नहीं दिया जाता",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "q_num": 30,
+    "question_text": "What is the overarching final safety message of this course? | इस केमिकल सेफ्टी अवेयरनेस कोर्स का सर्वोच्च अंतिम सुरक्षा संदेश क्या है?",
+    "options": [
+      {
+        "text": "Stay safe, work safely, and return home safely to your family every day / सुरक्षित रहें, सुरक्षित काम करें और हर शाम सकुशल अपने परिवार के पास लौटें",
+        "is_correct": true
+      },
+      {
+        "text": "Rush tasks and take shortcuts whenever possible / काम में जल्दबाजी करें और जहां संभव हो शॉर्टकट अपनाएं",
+        "is_correct": false
+      },
+      {
+        "text": "Ignore container labels when time is limited / समय कम होने पर लेबलों को नजरअंदाज करें",
+        "is_correct": false
+      },
+      {
+        "text": "Bypass standard operating procedures for convenience / सुविधा के लिए सुरक्षा प्रक्रियाओं को छोड़ दें",
+        "is_correct": false
+      }
+    ]
+  }
+]

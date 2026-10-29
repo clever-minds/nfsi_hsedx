@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { apiDelete, apiGetFull, apiPost, apiPut, errorMessage } from '@/lib/api';
+import { apiDelete, apiGetFull, apiPost, apiPut, errorMessage, assetUrl } from '@/lib/api';
 import { fmtTanggal, fmtRelatif } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
 import PageHeader from '@/components/ui/PageHeader.vue';
@@ -161,9 +161,9 @@ function openEditModal(post: BlogPost) {
   showModal.value = true;
 }
 
-function onCoverUploaded(asset: { url?: string; path?: string }) {
-  if (asset.url) {
-    form.cover_image_url = asset.url;
+function onCoverUploaded(asset: { id: string; file_name: string; file_type: string; path_object_storage?: string }) {
+  if (asset.path_object_storage) {
+    form.cover_image_url = assetUrl(asset.path_object_storage);
   }
 }
 
@@ -181,7 +181,7 @@ async function loadPosts() {
 
     const res = await apiGetFull<BlogPost[]>('/blogs', params);
     posts.value = res.data ?? [];
-    total.value = res.meta?.total ?? posts.value.length;
+    total.value = (res.meta?.total as number) ?? posts.value.length;
   } catch (e: any) {
     error.value = errorMessage(e, 'Failed to load blog posts');
     posts.value = [];

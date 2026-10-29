@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { apiGet, assetUrl, errorMessage } from '@/lib/api';
@@ -159,18 +159,81 @@ function toggleSection(id: string) {
   openSections.value = new Set(openSections.value);
 }
 
-// Fitur Free Preview
+// Fitur Free Preview (1.5 Minute / 90 Seconds Limit)
+const PREVIEW_MAX_SECONDS = 90; // 1.5 minutes preview limit
 const previewContents = ref<any[]>([]);
 const previewLoading = ref(false);
 const previewError = ref('');
+const previewExpired = ref(false);
+const previewSecondsLeft = ref(PREVIEW_MAX_SECONDS);
+let previewInterval: any = null;
+
+function startPreviewTimer() {
+  stopPreviewTimer();
+  previewExpired.value = false;
+  previewSecondsLeft.value = PREVIEW_MAX_SECONDS;
+  previewInterval = setInterval(() => {
+    if (previewSecondsLeft.value > 0) {
+      previewSecondsLeft.value--;
+      if (previewSecondsLeft.value <= 0) {
+        previewExpired.value = true;
+        stopPreviewTimer();
+      }
+    }
+  }, 1000);
+}
+
+function stopPreviewTimer() {
+  if (previewInterval) {
+    clearInterval(previewInterval);
+    previewInterval = null;
+  }
+}
+
+function onVideoTimeUpdate(e: Event) {
+  const v = e.target as HTMLVideoElement;
+  if (!v) return;
+  if (v.currentTime >= PREVIEW_MAX_SECONDS) {
+    v.pause();
+    previewExpired.value = true;
+    stopPreviewTimer();
+  } else {
+    previewSecondsLeft.value = Math.max(0, Math.ceil(PREVIEW_MAX_SECONDS - v.currentTime));
+  }
+}
+
+function onVideoEnded() {
+  previewExpired.value = true;
+  stopPreviewTimer();
+}
+
+function formatPreviewTime(sec: number): string {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+function buyFromPreview() {
+  closePreview();
+  if (!auth.isAuthenticated) {
+    router.push({ path: '/register', query: { redirect: route.fullPath } });
+  } else {
+    openMethodPanel();
+  }
+}
+
 async function openPreview(lesson: Lesson) {
   if (!lesson.gratis_preview) return;
   previewLoading.value = true;
   previewError.value = '';
+  previewExpired.value = false;
   try {
     const res = await apiGet<any[]>(`/courses/public/${route.params.slug}/preview/${lesson.id}`);
     if (res && res.length > 0) {
       previewContents.value = res;
+      if (res[0]?.type === 'video') {
+        startPreviewTimer();
+      }
     } else {
       previewError.value = t('catalog.detail.noPreviewContent', 'No content available for preview.');
     }
@@ -180,16 +243,40 @@ async function openPreview(lesson: Lesson) {
     previewLoading.value = false;
   }
 }
+
 function closePreview() {
+  stopPreviewTimer();
   previewContents.value = [];
   previewError.value = '';
+  previewExpired.value = false;
+}
+
+function openHeroPreview() {
+  const promoUrl = (course.value?.meta as any)?.promo_video_url;
+  if (promoUrl) {
+    previewContents.value = [{
+      type: 'video',
+      url: promoUrl,
+    }];
+    startPreviewTimer();
+    return;
+  }
+  const allLessons = (course.value?.kurikulum ?? []).flatMap((s) => s.lessons ?? []);
+  const firstPreview = allLessons.find((l) => l.gratis_preview) ?? allLessons[0];
+  if (firstPreview) {
+    openPreview(firstPreview);
+  }
 }
 
 function youtubeEmbed(url?: string): string | null {
   if (!url) return null;
   const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
-  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+  return m ? `https://www.youtube.com/embed/${m[1]}?autoplay=1&end=90&rel=0&enablejsapi=1` : null;
 }
+
+onUnmounted(() => {
+  stopPreviewTimer();
+});
 
 const totalLesson = computed(() => (course.value?.kurikulum ?? []).reduce((a, s) => a + (s.lessons?.length ?? 0), 0));
 const totalJam = computed(() => fmtDurasiMenit(course.value?.total_duration_minutes ?? 0));
@@ -354,19 +441,23 @@ const TERMASUK = computed(() => [
       <template v-else-if="course">
         <!-- ── Kartu header course ─────────────────────────────────── -->
         <div class="card grid gap-6 rounded-2xl p-5 md:grid-cols-[minmax(0,22rem),1fr] md:p-6">
-          <div class="relative overflow-hidden rounded-xl">
+          <div
+            class="relative overflow-hidden rounded-xl cursor-pointer group"
+            @click="openHeroPreview"
+            :title="t('catalog.detail.preview', 'Preview')"
+          >
             <img
               v-if="course.meta?.thumbnail_url"
               :src="assetUrl(course.meta.thumbnail_url)"
               :alt="localizedTitle"
-              class="h-52 w-full object-cover md:h-full"
+              class="h-52 w-full object-cover md:h-full transition duration-300 group-hover:scale-105"
             />
             <div v-else class="grid h-52 place-items-center bg-gradient-to-br from-brand-400 to-brand-600 md:h-full">
               <Icon name="play-circle" :size="52" class="text-white/80" />
             </div>
-            <span class="absolute inset-0 grid place-items-center">
-              <span class="grid h-14 w-14 place-items-center rounded-full bg-white/90 text-brand-500 shadow-lg transition hover:scale-105">
-                <Icon name="play-circle" :size="30" />
+            <span class="absolute inset-0 grid place-items-center bg-black/10 transition group-hover:bg-black/25">
+              <span class="grid h-14 w-14 place-items-center rounded-full bg-white/95 text-brand-500 shadow-xl transition transform group-hover:scale-110">
+                <Icon name="play-circle" :size="32" />
               </span>
             </span>
           </div>
@@ -736,16 +827,82 @@ const TERMASUK = computed(() => [
   <!-- Preview Modal -->
   <div v-if="previewLoading || previewError || previewContents.length > 0" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 p-4 backdrop-blur-sm">
     <div class="relative w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-      <button @click="closePreview" class="absolute right-4 top-4 z-10 rounded-full bg-white/80 p-2 text-slate-500 hover:text-slate-800 shadow backdrop-blur-sm transition">
+      <button @click="closePreview" class="absolute right-4 top-4 z-20 rounded-full bg-white/80 p-2 text-slate-500 hover:text-slate-800 shadow backdrop-blur-sm transition">
         <Icon name="x" :size="24" />
       </button>
-      
-      <div class="flex aspect-video w-full flex-col items-center justify-center bg-slate-900 p-8 text-slate-400" :class="previewContents[0]?.type === 'text' ? 'bg-white text-slate-800 items-start justify-start overflow-auto' : ''">
+
+      <!-- Floating countdown timer indicator -->
+      <div
+        v-if="!previewLoading && !previewError && previewContents[0]?.type === 'video' && !previewExpired"
+        class="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full bg-slate-900/85 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md border border-white/20"
+      >
+        <span class="inline-block h-2 w-2 rounded-full bg-amber-400 animate-ping"></span>
+        <span v-if="currentLocale === 'hi'">
+          मुफ्त प्रीव्यू: {{ formatPreviewTime(previewSecondsLeft) }} शेष
+        </span>
+        <span v-else>
+          Free Preview: {{ formatPreviewTime(previewSecondsLeft) }} left
+        </span>
+      </div>
+
+      <div class="flex aspect-video w-full flex-col items-center justify-center bg-slate-900 p-8 text-slate-400 relative" :class="previewContents[0]?.type === 'text' ? 'bg-white text-slate-800 items-start justify-start overflow-auto' : ''">
         <div v-if="previewLoading" class="text-white flex flex-col items-center">
            <Icon name="loader" class="animate-spin mb-2" :size="32" />
            {{ t('common.state.loading') }}...
         </div>
         <div v-else-if="previewError" class="text-rose-500">{{ previewError }}</div>
+
+        <!-- ── 1.5 MINUTE PREVIEW EXPIRED OVERLAY ──────────────────────────── -->
+        <div
+          v-else-if="previewExpired"
+          class="relative z-10 flex flex-col items-center justify-center text-center max-w-lg px-6 py-6"
+        >
+          <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white shadow-xl shadow-amber-500/30">
+            <Icon name="lock" :size="32" />
+          </div>
+
+          <h3 class="text-xl md:text-2xl font-black text-white tracking-tight mb-2">
+            <template v-if="currentLocale === 'hi'">
+              मुफ्त प्रीव्यू समाप्त (1.5 मिनट)
+            </template>
+            <template v-else>
+              Free Preview Ended (1.5 Min)
+            </template>
+          </h3>
+
+          <p class="text-sm text-slate-300 leading-relaxed mb-6">
+            <template v-if="currentLocale === 'hi'">
+              आगे का पूरा वीडियो और संपूर्ण कोर्स (सभी 12 मॉड्यूल, 54 पाठ, क्विज़ व मान्यता प्राप्त सर्टिफिकेट) अनलॉक करने के लिए अभी कोर्स खरीदें।
+            </template>
+            <template v-else>
+              To watch the rest of this video and access all 12 modules, 54 lessons, quizzes, and verified certification, please enroll or buy the full course.
+            </template>
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-center gap-3 w-full justify-center">
+            <button
+              type="button"
+              @click="buyFromPreview"
+              class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 px-7 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 transition transform hover:scale-[1.02]"
+            >
+              <Icon name="shopping-cart" :size="18" />
+              <template v-if="currentLocale === 'hi'">
+                कोर्स अभी खरीदें <span v-if="course">({{ fmtHarga(course.price) }})</span>
+              </template>
+              <template v-else>
+                Buy Full Course <span v-if="course">({{ fmtHarga(course.price) }})</span>
+              </template>
+            </button>
+            <button
+              type="button"
+              @click="closePreview"
+              class="w-full sm:w-auto rounded-full bg-white/10 hover:bg-white/20 px-5 py-3 text-sm font-semibold text-slate-300 hover:text-white transition"
+            >
+              {{ currentLocale === 'hi' ? 'बाद में देखें' : 'Close' }}
+            </button>
+          </div>
+        </div>
+
         <template v-else-if="previewContents.length > 0">
           <template v-if="previewContents[0].type === 'video' && previewContents[0].url">
             <iframe
@@ -756,7 +913,15 @@ const TERMASUK = computed(() => [
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen
             ></iframe>
-            <video v-else :src="assetUrl(previewContents[0].url)" controls autoplay class="h-full w-full object-contain"></video>
+            <video
+              v-else
+              :src="assetUrl(previewContents[0].url)"
+              controls
+              autoplay
+              class="h-full w-full object-contain"
+              @timeupdate="onVideoTimeUpdate"
+              @ended="onVideoEnded"
+            ></video>
           </template>
           <div v-else-if="previewContents[0].type === 'text'" class="prose max-w-none text-slate-800" v-html="sanitizeHtml(previewContents[0].body)"></div>
           <iframe v-else-if="previewContents[0].type === 'pdf' && previewContents[0].url" :src="assetUrl(previewContents[0].url)" class="h-full w-full bg-slate-100"></iframe>

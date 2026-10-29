@@ -69,7 +69,7 @@ async function loadPosts() {
 
     const res = await apiGetFull<BlogPost[]>('/blogs/public', params);
     posts.value = res.data ?? [];
-    total.value = res.meta?.total ?? posts.value.length;
+    total.value = (res.meta?.total as number) ?? posts.value.length;
   } catch (e: any) {
     error.value = e?.message || 'Failed to load blog posts';
     posts.value = [];

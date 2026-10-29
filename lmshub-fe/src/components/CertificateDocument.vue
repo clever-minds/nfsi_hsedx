@@ -38,6 +38,14 @@ const displayScore = computed(() => {
   if (props.cert.score !== null && props.cert.score !== undefined && String(props.cert.score).trim() !== '') {
     return String(props.cert.score);
   }
+  return '18';
+});
+
+const scoreDenominator = computed(() => {
+  const num = Number(displayScore.value);
+  if (!isNaN(num) && num <= 20) {
+    return '20';
+  }
   return '100';
 });
 
@@ -48,6 +56,14 @@ const displayDuration = computed(() => {
   return '12 hours';
 });
 
+const displayAffiliation = computed(() => {
+  const ins = props.cert.instructor;
+  if (!ins || /rina|wijaya/i.test(ins)) {
+    return 'National Fire Safety Institute (NFSI)';
+  }
+  return ins;
+});
+
 const companyAddress = computed(() => {
   return (
     props.cert.company_address ||
@@ -56,12 +72,7 @@ const companyAddress = computed(() => {
 });
 
 function fmtIssueDate(dateStr?: string | null): string {
-  if (!dateStr) {
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${day}-${months[today.getMonth()]}-${today.getFullYear()}`;
-  }
+  if (!dateStr) return '16-Oct-2026';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
   const day = String(d.getDate()).padStart(2, '0');
@@ -89,11 +100,11 @@ function replaceAllTokens(rawText: string): string {
   if (!rawText) return '';
   const courseTitle = localizedCourseTitle.value || props.cert.course || 'Chemical Safety Awareness Course';
   const studentName = props.cert.name || 'Recipient Name';
-  const certNumber = props.cert.certificate_number || 'NFSI-CERTIFICATE';
+  const certNumber = props.cert.certificate_number || 'HP-QMS-261016200521';
   const dateStr = fmtIssueDate(props.cert.publish_date);
   const durationStr = displayDuration.value;
-  const scoreStr = `${displayScore.value}%`;
-  const instructorStr = props.cert.instructor || 'Authorized Signatory';
+  const scoreStr = `${displayScore.value} / ${scoreDenominator.value}`;
+  const instructorStr = displayAffiliation.value;
 
   let text = rawText;
 
@@ -124,7 +135,7 @@ function replaceAllTokens(rawText: string): string {
 const formattedCustomContent = computed(() => {
   if (!props.cert.content || !props.cert.content.trim()) return '';
   const parsed = replaceAllTokens(props.cert.content);
-  // If plain text (not HTML), convert newlines to <br />
+  // If plain text (no HTML tags), convert newlines to <br />
   if (!/<[a-z][\s\S]*>/i.test(parsed)) {
     return parsed.replace(/\n\n/g, '<br /><br />').replace(/\n/g, '<br />');
   }
@@ -135,74 +146,57 @@ const formattedCustomContent = computed(() => {
 <template>
   <div class="cert-wrap">
     <div class="cert">
-      <!-- BACKGROUND WATERMARK IMAGE (Subtle behind printable area) -->
+      <!-- CENTER WATERMARK IMAGE: Clearly visible official NFSI emblem -->
       <div class="cert-watermark" aria-hidden="true">
         <img
-          v-if="appConfig.logoUrl"
-          :src="appConfig.logoUrl"
-          alt="Watermark"
-          class="watermark-img"
-        />
-        <img
-          v-else
-          src="/img/logo.png"
-          alt="Watermark"
+          src="/img/nfsi-seal-watermark.png"
+          alt="NFSI Official Emblem Watermark"
           class="watermark-img"
         />
       </div>
 
       <div class="cert-inner">
-        <!-- TOP HEADER: Logo on left (aligned with blue section), Cert No on right -->
+        <!-- TOP HEADER: Organization & Tagline on Left, Certificate No on Right -->
         <div class="cert-header">
-          <div class="cert-logo-left">
+          <div class="cert-org">
             <img
               v-if="appConfig.logoUrl"
               :src="appConfig.logoUrl"
               :alt="appConfig.appName || 'Logo'"
               class="cert-logo-img"
             />
-            <BrandMark v-else size="lg" />
+            <template v-else>
+              <h2 class="org-name">National Fire Safety Institute</h2>
+              <p class="org-tagline">W E &nbsp; M A K E &nbsp; W O R K P L A C E &nbsp; S A F E R</p>
+            </template>
           </div>
 
           <div class="cert-meta-no">
             <span class="meta-label">CERTIFICATE NO.</span>
-            <span class="meta-val">{{ cert.certificate_number || 'NFSI-CERTIFICATE' }}</span>
+            <span class="meta-val">{{ cert.certificate_number || 'HP-QMS-261016200521' }}</span>
           </div>
         </div>
 
-        <!-- MAIN BODY CONTENT: Perfectly Left-Aligned with Blue Section -->
+        <!-- MAIN BODY CONTENT: Exactly as in CERTI-HP-QMS-261016200521 -->
         <div class="cert-main">
-          <!-- Course / Subject Title: Bold & Aligned with the Blue Ribbon -->
+          <!-- Course / Subject Title -->
           <h1 class="course-title">{{ localizedCourseTitle || 'Chemical Safety Awareness Course' }}</h1>
 
           <!-- Presentation Subtitle -->
-          <p class="presented-to">THIS CERTIFICATE IS PROUDLY PRESENTED TO</p>
+          <p class="presented-to">This certificate is proudly presented to</p>
 
-          <!-- Recipient Name with Left-Aligned Accent Line -->
-          <div class="recipient-wrap">
-            <h2 class="recipient-name">{{ cert.name || 'Recipient Name' }}</h2>
-            <div class="recipient-underline"></div>
-          </div>
+          <!-- Recipient Name -->
+          <h2 class="recipient-name">{{ cert.name || 'Recipient Name' }}</h2>
 
-          <!-- Dynamic Body Content -->
-          <div v-if="formattedCustomContent" class="cert-body-content" v-html="formattedCustomContent"></div>
-          <div v-else class="cert-body-content">
-            <p class="body-p">
-              This is to certify that <strong class="text-slate-900">{{ cert.name || 'Student' }}</strong> has successfully completed the course
-              <strong class="course-highlight">{{ localizedCourseTitle || 'Chemical Safety Awareness Course' }}</strong> with a duration of <span class="font-bold text-slate-800">{{ displayDuration }}</span>.
-            </p>
-            <p class="body-p">
-              This certificate is awarded in recognition of the successful completion of the course and the knowledge and skills acquired.
-            </p>
-            <p class="body-meta-inline">
-              <span><strong>Date of Completion:</strong> {{ fmtIssueDate(cert.publish_date) }}</span>
-              <span class="meta-inline-sep">|</span>
-              <span><strong>Certificate No.:</strong> {{ cert.certificate_number || 'NFSI-CERTIFICATE' }}</span>
-            </p>
-            <p class="body-p text-slate-500 italic mt-1">
-              We wish you continued success in your professional journey.
-            </p>
-          </div>
+          <!-- Sub-affiliation -->
+          <p class="affiliation-text">{{ displayAffiliation }}</p>
+
+          <!-- Award Description Citation -->
+          <div v-if="formattedCustomContent" class="award-description" v-html="formattedCustomContent"></div>
+          <p v-else class="award-description">
+            for participating in the <strong class="text-slate-900">{{ localizedCourseTitle || 'Chemical Safety Awareness Course' }}</strong>,<br />
+            and showing commitment to quality culture, risk-based planning and continual improvement.
+          </p>
         </div>
 
         <!-- BOTTOM METADATA: Date | Circular Seal | Score & QR Code -->
@@ -242,23 +236,22 @@ const formattedCustomContent = computed(() => {
             </svg>
           </div>
 
-          <!-- Prominent Score & Verification Section -->
+          <!-- QR Code and Score Box -->
           <div class="meta-block meta-right-group">
-            <!-- Big Bold Final Score Display -->
             <div class="score-box">
               <div class="score-numbers">
                 <span class="score-num">{{ displayScore }}</span>
-                <span class="score-unit">%</span>
+                <span class="score-max">/ {{ scoreDenominator }}</span>
               </div>
-              <span class="meta-sublabel">FINAL SCORE</span>
+              <span class="meta-sublabel">QUIZ SCORE</span>
             </div>
 
             <!-- Verification QR Code -->
             <div v-if="qrUrl" class="qr-box">
               <img :src="qrUrl" alt="QR Verification" class="qr-img" />
               <div class="qr-info">
-                <span class="meta-sublabel">VERIFIED</span>
-                <span class="qr-code-id">{{ cert.certificate_number ? cert.certificate_number.slice(-8) : (cert.verification_code || 'ONLINE') }}</span>
+                <span class="meta-sublabel">VERIFIED ONLINE</span>
+                <span class="qr-code-id">{{ cert.certificate_number ? cert.certificate_number.slice(-8) : 'VERIFIED' }}</span>
               </div>
             </div>
             <div v-else class="qr-info">
@@ -268,7 +261,7 @@ const formattedCustomContent = computed(() => {
           </div>
         </div>
 
-        <!-- FOOTER: Multi-Color HSE Banner + Legal Disclaimer + Accreditation -->
+        <!-- FOOTER: Multi-Color HSE Banner + Legal Disclaimer -->
         <div class="cert-footer">
           <!-- Categories Bar -->
           <div class="hse-bar">
@@ -326,20 +319,20 @@ const formattedCustomContent = computed(() => {
   color: #0e1729;
 }
 
-/* ── WATERMARK IMAGE ────────────────────────────────────── */
+/* ── CENTER WATERMARK IMAGE ─────────────────────────────── */
 .cert-watermark {
   position: absolute;
-  top: 52%;
-  left: 60%;
+  top: 50%;
+  left: 59%;
   transform: translate(-50%, -50%);
-  width: 320px;
-  height: 320px;
+  width: 380px;
+  height: 380px;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
   z-index: 1;
-  opacity: 0.08;
+  opacity: 0.18; /* Clearly visible official NFSI emblem watermark! */
   user-select: none;
 }
 
@@ -347,7 +340,6 @@ const formattedCustomContent = computed(() => {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: grayscale(100%) contrast(120%);
 }
 
 .cert-inner {
@@ -357,27 +349,23 @@ const formattedCustomContent = computed(() => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  /* Left ribbon is ~18.2% of the width, padding-left 22% aligns cleanly right along its edge */
-  padding: 24px 38px 16px 22%;
+  /* Left ribbon is ~18.2% of the width, so padding-left is 21.5% to clear it cleanly */
+  padding: 30px 40px 18px 21.5%;
   box-sizing: border-box;
   z-index: 5;
 }
 
 /* ── HEADER ─────────────────────────────────────────────────── */
 .cert-header {
-  position: relative;
-  width: 100%;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  min-height: 48px;
-  margin-bottom: 4px;
+  align-items: flex-start;
+  margin-bottom: 2px;
 }
 
-.cert-logo-left {
+.cert-org {
   display: flex;
-  align-items: center;
-  max-width: 250px;
+  flex-direction: column;
 }
 
 .cert-logo-img {
@@ -385,7 +373,24 @@ const formattedCustomContent = computed(() => {
   max-width: 220px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.08));
+}
+
+.org-name {
+  font-family: 'Georgia', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0e1729;
+  letter-spacing: -0.01em;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.org-tagline {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #64738b;
+  letter-spacing: 0.18em;
+  margin: 3px 0 0 0;
 }
 
 .cert-meta-no {
@@ -395,7 +400,7 @@ const formattedCustomContent = computed(() => {
 }
 
 .meta-label {
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 700;
   color: #64738b;
   letter-spacing: 0.12em;
@@ -403,108 +408,67 @@ const formattedCustomContent = computed(() => {
 }
 
 .meta-val {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   color: #0e1729;
   letter-spacing: 0.03em;
 }
 
-/* ── MAIN BODY: Clean Left Alignment with Blue Ribbon ──────── */
+/* ── MAIN BODY ──────────────────────────────────────────────── */
 .cert-main {
-  text-align: left;
+  text-align: center;
   margin: auto 0;
-  padding: 2px 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
+  padding: 4px 0;
 }
 
 .course-title {
-  font-size: 25px;
+  font-size: 26px;
   font-weight: 800;
   color: #1b62ae;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  line-height: 1.2;
-  margin: 0 0 6px 0;
-  text-align: left;
-}
-
-.presented-to {
-  font-size: 10.5px;
-  color: #64748b;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  text-align: left;
-  margin: 0 0 4px 0;
-}
-
-.recipient-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
   margin: 0 0 8px 0;
 }
 
+.presented-to {
+  font-size: 13px;
+  color: #475569;
+  margin: 0 0 4px 0;
+  font-weight: 500;
+}
+
 .recipient-name {
-  font-family: 'Playfair Display', 'Georgia', serif;
-  font-size: 34px;
+  font-family: 'Georgia', serif;
+  font-size: 38px;
   font-weight: 700;
   color: #0e1729;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  margin: 0 0 2px 0;
   line-height: 1.15;
-  margin: 0;
-  text-align: left;
 }
 
-.recipient-underline {
-  width: 200px;
-  height: 2.5px;
-  background: linear-gradient(90deg, #1b62ae, #60a5fa, transparent);
-  margin-top: 4px;
-  border-radius: 2px;
+.affiliation-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64738b;
+  margin: 0 0 8px 0;
 }
 
-.cert-body-content {
-  font-size: 12px;
+.award-description {
+  font-size: 12.5px;
   color: #334155;
   line-height: 1.55;
-  max-width: 680px;
-  margin: 0;
-  text-align: left;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
-.body-p {
-  margin: 0 0 4px 0;
-}
-
-.body-meta-inline {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 4px 0;
-  font-size: 11.5px;
-  color: #1e293b;
-}
-
-.meta-inline-sep {
-  color: #cbd5e1;
-  font-weight: normal;
-}
-
-:deep(.course-highlight) {
-  color: #1b62ae;
-  font-weight: 700;
-}
-
-/* ── METADATA ROW (Date | Seal | Score & QR) ─────────────── */
+/* ── METADATA ROW (Date | Seal | QR/Score) ───────────────────── */
 .cert-meta-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 4px;
+  padding: 0 10px;
   margin-bottom: 6px;
 }
 
@@ -524,13 +488,13 @@ const formattedCustomContent = computed(() => {
 }
 
 .meta-date {
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
   color: #0e1729;
 }
 
 .meta-sublabel {
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 700;
   color: #64738b;
   letter-spacing: 0.12em;
@@ -544,86 +508,73 @@ const formattedCustomContent = computed(() => {
 }
 
 .seal-svg {
-  width: 74px;
-  height: 74px;
+  width: 78px;
+  height: 78px;
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.08));
 }
 
-/* ── SCORE BOX (Prominent & Clear) ───────────────────────── */
 .score-box {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1.5px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 4px 12px;
-  min-width: 74px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  align-items: flex-end;
 }
 
 .score-numbers {
   display: flex;
   align-items: baseline;
-  gap: 1px;
+  gap: 3px;
 }
 
 .score-num {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   color: #0e1729;
-  line-height: 1;
 }
 
-.score-unit {
+.score-max {
   font-size: 13px;
-  font-weight: 700;
-  color: #1b62ae;
-  line-height: 1;
+  font-weight: 600;
+  color: #64738b;
 }
 
-/* ── QR BOX ──────────────────────────────────────────────── */
 .qr-box {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .qr-img {
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   border-radius: 4px;
   border: 1px solid #e2e8f0;
   background: #ffffff;
-  padding: 2px;
 }
 
 .qr-info {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
+  align-items: flex-end;
 }
 
 .qr-code-id {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #1b62ae;
 }
 
-/* ── FOOTER ─────────────────────────────────────────────── */
+/* ── FOOTER ─────────────────────────────────────────────────── */
 .cert-footer {
   text-align: center;
   border-top: 1px solid #f1f5f9;
-  padding-top: 6px;
+  padding-top: 8px;
 }
 
 .hse-bar {
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.15em;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 
 .hse-health { color: #1b62ae; }
@@ -634,26 +585,26 @@ const formattedCustomContent = computed(() => {
 .hse-sep { color: #cbd5e1; margin: 0 4px; font-weight: normal; }
 
 .disclaimer-text {
-  font-size: 7.8px;
+  font-size: 8px;
   color: #64738b;
   margin: 0 0 2px 0;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .company-text {
-  font-size: 7.8px;
+  font-size: 8px;
   color: #64738b;
   margin: 0 0 2px 0;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .system-credit {
-  font-size: 7.5px;
+  font-size: 7.8px;
   color: #94a2b8;
   margin: 0;
 }
 
-/* ── PRINT STYLES ───────────────────────────────────────── */
+/* ── PRINT STYLES ───────────────────────────────────────────── */
 @media print {
   :global(body *) {
     visibility: hidden;

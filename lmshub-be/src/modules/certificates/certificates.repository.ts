@@ -348,6 +348,7 @@ export interface VerificationResult {
   qr_code_url: string | null;
   publish_date: string | null;
   score?: string | number | null;
+  duration?: string | null;
   content?: string | null;
   status: 'valid' | 'cancelled' | 'tidak_ditemukan';
 }
@@ -362,12 +363,17 @@ export async function verifyByNomor(number: string): Promise<VerificationResult 
     qr_code_url: string | null;
     publish_date: string | null;
     score: string | null;
+    duration: string | null;
     content: string | null;
     is_revoked: boolean;
     status: string;
   }>(
     `SELECT u.name_lengkap AS name, c.title AS course, iu.name_lengkap AS instructor,
             cert.certificate_number, cert.verification_code, cert.qr_code_url, cert.publish_date,
+            CASE
+              WHEN c.total_duration_minutes > 0 THEN CONCAT(ROUND(c.total_duration_minutes / 60.0)::text, ' hours')
+              ELSE '12 hours'
+            END AS duration,
             COALESCE(cert.criteria_snapshot->'final_exam'->>'score_terbaik_persen', NULL) AS score,
             COALESCE(
               (SELECT layout->>'content' FROM certificate_templates WHERE id = cert.template_id),
@@ -394,6 +400,7 @@ export async function verifyByNomor(number: string): Promise<VerificationResult 
     qr_code_url: row.qr_code_url,
     publish_date: row.publish_date,
     score: row.score,
+    duration: row.duration,
     content: row.content,
     status: row.is_revoked ? 'cancelled' : row.status === 'publish' ? 'valid' : 'tidak_ditemukan',
   };
@@ -413,6 +420,7 @@ export interface CertificateDisplay {
   instructor: string | null;
   content: string | null;
   score?: string | number | null;
+  duration?: string | null;
 }
 
 /** Complete data for rendering the certificate design (name, course, instructor, QR, etc). */
@@ -421,6 +429,10 @@ export async function displayById(id: string): Promise<CertificateDisplay | null
     `SELECT cert.id, cert.user_id, cert.certificate_number, cert.verification_code, cert.qr_code_url,
             cert.status, cert.publish_date, cert.is_revoked,
             u.name_lengkap AS name, c.title AS course, iu.name_lengkap AS instructor,
+            CASE
+              WHEN c.total_duration_minutes > 0 THEN CONCAT(ROUND(c.total_duration_minutes / 60.0)::text, ' hours')
+              ELSE '12 hours'
+            END AS duration,
             COALESCE(cert.criteria_snapshot->'final_exam'->>'score_terbaik_persen', NULL) AS score,
             COALESCE(
               (SELECT layout->>'content' FROM certificate_templates WHERE id = cert.template_id),

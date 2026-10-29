@@ -16,6 +16,7 @@ export interface CertData {
   verify_url?: string | null;
   content?: string | null;
   score?: string | number | null;
+  duration?: string | null;
   company_address?: string | null;
 }
 
@@ -38,6 +39,13 @@ const displayScore = computed(() => {
     return String(props.cert.score);
   }
   return '100';
+});
+
+const displayDuration = computed(() => {
+  if (props.cert.duration && props.cert.duration.trim()) {
+    return props.cert.duration;
+  }
+  return '12 hours';
 });
 
 const companyAddress = computed(() => {
@@ -77,33 +85,57 @@ const qrUrl = computed(() => {
   return '';
 });
 
-const dynamicContent = computed(() => {
-  const courseTitle = localizedCourseTitle.value || props.cert.course || 'Safety Training Course';
+function replaceAllTokens(rawText: string): string {
+  if (!rawText) return '';
+  const courseTitle = localizedCourseTitle.value || props.cert.course || 'Chemical Safety Awareness Course';
   const studentName = props.cert.name || 'Recipient Name';
-  const certNumber = props.cert.certificate_number || '';
+  const certNumber = props.cert.certificate_number || 'NFSI-CERTIFICATE';
   const dateStr = fmtIssueDate(props.cert.publish_date);
+  const durationStr = displayDuration.value;
   const scoreStr = `${displayScore.value}%`;
-  const instructorStr = props.cert.instructor || '';
+  const instructorStr = props.cert.instructor || 'Authorized Signatory';
 
-  if (props.cert.content && props.cert.content.trim()) {
-    let text = props.cert.content;
-    text = text.replace(/\{\{\s*name\s*\}\}/gi, studentName);
-    text = text.replace(/\{\{\s*course\s*\}\}/gi, courseTitle);
-    text = text.replace(/\{\{\s*number\s*\}\}/gi, certNumber);
-    text = text.replace(/\{\{\s*date\s*\}\}/gi, dateStr);
-    text = text.replace(/\{\{\s*score\s*\}\}/gi, scoreStr);
-    text = text.replace(/\{\{\s*instructor\s*\}\}/gi, instructorStr);
-    return text;
+  let text = rawText;
+
+  // Replace {name}, {{name}}, :name, [name]
+  text = text.replace(/(\{1,2}|\[|:)\s*name\s*(\}{1,2}|\])?/gi, studentName);
+
+  // Replace {title}, {{title}}, {course}, {{course}}, :title, [title], [course]
+  text = text.replace(/(\{1,2}|\[|:)\s*(title|course)\s*(\}{1,2}|\])?/gi, courseTitle);
+
+  // Replace {duration}, {{duration}}, :duration, [duration]
+  text = text.replace(/(\{1,2}|\[|:)\s*duration\s*(\}{1,2}|\])?/gi, durationStr);
+
+  // Replace {date}, {{date}}, {publish_date}, {{publish_date}}, [date], :date
+  text = text.replace(/(\{1,2}|\[|:)\s*(date|publish_date|completion_date)\s*(\}{1,2}|\])?/gi, dateStr);
+
+  // Replace {number}, {{number}}, {certificate_number}, {{certificate_number}}, [number], :number
+  text = text.replace(/(\{1,2}|\[|:)\s*(number|certificate_number|cert_number)\s*(\}{1,2}|\])?/gi, certNumber);
+
+  // Replace {score}, {{score}}, [score], :score
+  text = text.replace(/(\{1,2}|\[|:)\s*score\s*(\}{1,2}|\])?/gi, scoreStr);
+
+  // Replace {instructor}, {{instructor}}, [instructor], :instructor
+  text = text.replace(/(\{1,2}|\[|:)\s*(instructor|signatory)\s*(\}{1,2}|\])?/gi, instructorStr);
+
+  return text;
+}
+
+const formattedCustomContent = computed(() => {
+  if (!props.cert.content || !props.cert.content.trim()) return '';
+  const parsed = replaceAllTokens(props.cert.content);
+  // If plain text (not HTML), convert newlines to <br />
+  if (!/<[a-z][\s\S]*>/i.test(parsed)) {
+    return parsed.replace(/\n\n/g, '<br /><br />').replace(/\n/g, '<br />');
   }
-
-  return `for successfully participating in and completing the <strong class="course-highlight">${courseTitle}</strong>, demonstrating professional knowledge with a score of <strong class="text-blue-700 font-bold">${scoreStr}</strong>, and showing commitment to workplace health, safety, risk-based planning and continual improvement standards.`;
+  return parsed;
 });
 </script>
 
 <template>
   <div class="cert-wrap">
     <div class="cert">
-      <!-- BACKGROUND WATERMARK IMAGE (Centered in printable body area) -->
+      <!-- BACKGROUND WATERMARK IMAGE (Subtle behind printable area) -->
       <div class="cert-watermark" aria-hidden="true">
         <img
           v-if="appConfig.logoUrl"
@@ -120,10 +152,9 @@ const dynamicContent = computed(() => {
       </div>
 
       <div class="cert-inner">
-        <!-- TOP HEADER: Centered Organization Logo & Top-Right Certificate No -->
+        <!-- TOP HEADER: Logo on left (aligned with blue section), Cert No on right -->
         <div class="cert-header">
-          <!-- Centered Organization Logo -->
-          <div class="cert-logo-center">
+          <div class="cert-logo-left">
             <img
               v-if="appConfig.logoUrl"
               :src="appConfig.logoUrl"
@@ -133,33 +164,45 @@ const dynamicContent = computed(() => {
             <BrandMark v-else size="lg" />
           </div>
 
-          <!-- Top-Right Certificate Number -->
           <div class="cert-meta-no">
             <span class="meta-label">CERTIFICATE NO.</span>
             <span class="meta-val">{{ cert.certificate_number || 'NFSI-CERTIFICATE' }}</span>
           </div>
         </div>
 
-        <!-- MAIN BODY CONTENT: Beautiful Centered Alignment -->
+        <!-- MAIN BODY CONTENT: Perfectly Left-Aligned with Blue Section -->
         <div class="cert-main">
-          <!-- Course / Subject Title -->
-          <h1 class="course-title">{{ localizedCourseTitle || 'CERTIFICATE OF ACHIEVEMENT' }}</h1>
+          <!-- Course / Subject Title: Bold & Aligned with the Blue Ribbon -->
+          <h1 class="course-title">{{ localizedCourseTitle || 'Chemical Safety Awareness Course' }}</h1>
 
-          <!-- Presentation Subtitle with decorative accent lines -->
-          <div class="presentation-divider">
-            <span class="divider-line"></span>
-            <span class="presented-to">THIS CERTIFICATE IS PROUDLY PRESENTED TO</span>
-            <span class="divider-line"></span>
-          </div>
+          <!-- Presentation Subtitle -->
+          <p class="presented-to">THIS CERTIFICATE IS PROUDLY PRESENTED TO</p>
 
-          <!-- Recipient Name with dynamic underline -->
+          <!-- Recipient Name with Left-Aligned Accent Line -->
           <div class="recipient-wrap">
             <h2 class="recipient-name">{{ cert.name || 'Recipient Name' }}</h2>
             <div class="recipient-underline"></div>
           </div>
 
-          <!-- Dynamic Award Description Citation -->
-          <div class="award-description" v-html="dynamicContent"></div>
+          <!-- Dynamic Body Content -->
+          <div v-if="formattedCustomContent" class="cert-body-content" v-html="formattedCustomContent"></div>
+          <div v-else class="cert-body-content">
+            <p class="body-p">
+              This is to certify that <strong class="text-slate-900">{{ cert.name || 'Student' }}</strong> has successfully completed the course
+              <strong class="course-highlight">{{ localizedCourseTitle || 'Chemical Safety Awareness Course' }}</strong> with a duration of <span class="font-bold text-slate-800">{{ displayDuration }}</span>.
+            </p>
+            <p class="body-p">
+              This certificate is awarded in recognition of the successful completion of the course and the knowledge and skills acquired.
+            </p>
+            <p class="body-meta-inline">
+              <span><strong>Date of Completion:</strong> {{ fmtIssueDate(cert.publish_date) }}</span>
+              <span class="meta-inline-sep">|</span>
+              <span><strong>Certificate No.:</strong> {{ cert.certificate_number || 'NFSI-CERTIFICATE' }}</span>
+            </p>
+            <p class="body-p text-slate-500 italic mt-1">
+              We wish you continued success in your professional journey.
+            </p>
+          </div>
         </div>
 
         <!-- BOTTOM METADATA: Date | Circular Seal | Score & QR Code -->
@@ -314,49 +357,45 @@ const dynamicContent = computed(() => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  /* Left ribbon is ~18.2% of the width, so padding-left is 21.5% to clear it cleanly */
-  padding: 24px 36px 16px 21.5%;
+  /* Left ribbon is ~18.2% of the width, padding-left 22% aligns cleanly right along its edge */
+  padding: 24px 38px 16px 22%;
   box-sizing: border-box;
   z-index: 5;
 }
 
-/* ── HEADER (Logo in Center, Certificate No in Top-Right) ─── */
+/* ── HEADER ─────────────────────────────────────────────────── */
 .cert-header {
   position: relative;
   width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  min-height: 52px;
+  min-height: 48px;
+  margin-bottom: 4px;
 }
 
-.cert-logo-center {
+.cert-logo-left {
   display: flex;
-  justify-content: center;
   align-items: center;
-  max-width: 260px;
-  margin: 0 auto;
+  max-width: 250px;
 }
 
 .cert-logo-img {
-  max-height: 52px;
-  max-width: 230px;
+  max-height: 48px;
+  max-width: 220px;
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.08));
 }
 
 .cert-meta-no {
-  position: absolute;
-  right: 0;
-  top: 2px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
 }
 
 .meta-label {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 700;
   color: #64738b;
   letter-spacing: 0.12em;
@@ -370,87 +409,93 @@ const dynamicContent = computed(() => {
   letter-spacing: 0.03em;
 }
 
-/* ── MAIN BODY (Centered, Prestigious Typography) ────────── */
+/* ── MAIN BODY: Clean Left Alignment with Blue Ribbon ──────── */
 .cert-main {
-  text-align: center;
+  text-align: left;
   margin: auto 0;
   padding: 2px 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
 }
 
 .course-title {
-  font-size: 23px;
+  font-size: 25px;
   font-weight: 800;
   color: #1b62ae;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  line-height: 1.25;
-  margin: 0 0 8px 0;
-  max-width: 640px;
-}
-
-.presentation-divider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  max-width: 500px;
-  margin-bottom: 6px;
-}
-
-.divider-line {
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+  margin: 0 0 6px 0;
+  text-align: left;
 }
 
 .presented-to {
-  font-size: 10px;
+  font-size: 10.5px;
   color: #64748b;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  text-align: left;
+  margin: 0 0 4px 0;
 }
 
 .recipient-wrap {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
-  align-items: center;
-  margin: 0 auto 8px auto;
+  align-items: flex-start;
+  margin: 0 0 8px 0;
 }
 
 .recipient-name {
   font-family: 'Playfair Display', 'Georgia', serif;
-  font-size: 35px;
+  font-size: 34px;
   font-weight: 700;
   color: #0e1729;
   letter-spacing: 0.02em;
   line-height: 1.15;
   margin: 0;
+  text-align: left;
 }
 
 .recipient-underline {
-  width: 85%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #1b62ae, transparent);
+  width: 200px;
+  height: 2.5px;
+  background: linear-gradient(90deg, #1b62ae, #60a5fa, transparent);
   margin-top: 4px;
   border-radius: 2px;
 }
 
-.award-description {
+.cert-body-content {
   font-size: 12px;
   color: #334155;
   line-height: 1.55;
-  max-width: 630px;
-  margin: 0 auto;
+  max-width: 680px;
+  margin: 0;
+  text-align: left;
+}
+
+.body-p {
+  margin: 0 0 4px 0;
+}
+
+.body-meta-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0;
+  font-size: 11.5px;
+  color: #1e293b;
+}
+
+.meta-inline-sep {
+  color: #cbd5e1;
+  font-weight: normal;
 }
 
 :deep(.course-highlight) {
-  color: #0f172a;
+  color: #1b62ae;
   font-weight: 700;
 }
 
@@ -459,7 +504,7 @@ const dynamicContent = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 8px;
+  padding: 0 4px;
   margin-bottom: 6px;
 }
 
@@ -499,8 +544,8 @@ const dynamicContent = computed(() => {
 }
 
 .seal-svg {
-  width: 76px;
-  height: 76px;
+  width: 74px;
+  height: 74px;
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.08));
 }
 
@@ -525,7 +570,7 @@ const dynamicContent = computed(() => {
 }
 
 .score-num {
-  font-size: 21px;
+  font-size: 20px;
   font-weight: 800;
   color: #0e1729;
   line-height: 1;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getLocalizedText } from '@/lib/course-localization';
 import { useAppConfigStore } from '@/stores/appConfig';
@@ -23,8 +23,21 @@ const props = defineProps<{ cert: CertData }>();
 const { t } = useI18n();
 const appConfig = useAppConfigStore();
 
+onMounted(() => {
+  if (!appConfig.ready) {
+    appConfig.bootstrap();
+  }
+});
+
 const localizedCourseTitle = computed(() => {
   return getLocalizedText(props.cert.course);
+});
+
+const displayScore = computed(() => {
+  if (props.cert.score !== null && props.cert.score !== undefined && String(props.cert.score).trim() !== '') {
+    return String(props.cert.score);
+  }
+  return '100';
 });
 
 const companyAddress = computed(() => {
@@ -69,7 +82,7 @@ const dynamicContent = computed(() => {
   const studentName = props.cert.name || 'Recipient Name';
   const certNumber = props.cert.certificate_number || '';
   const dateStr = fmtIssueDate(props.cert.publish_date);
-  const scoreStr = props.cert.score ? `${props.cert.score}%` : '';
+  const scoreStr = `${displayScore.value}%`;
   const instructorStr = props.cert.instructor || '';
 
   if (props.cert.content && props.cert.content.trim()) {
@@ -83,15 +96,31 @@ const dynamicContent = computed(() => {
     return text;
   }
 
-  return `for successfully participating in and completing the <strong class="course-highlight">${courseTitle}</strong>, demonstrating professional knowledge and commitment to workplace health, safety, risk-based planning and continual improvement standards.`;
+  return `for successfully participating in and completing the <strong class="course-highlight">${courseTitle}</strong>, demonstrating professional knowledge with a score of <strong class="text-blue-700 font-bold">${scoreStr}</strong>, and showing commitment to workplace health, safety, risk-based planning and continual improvement standards.`;
 });
 </script>
 
 <template>
   <div class="cert-wrap">
     <div class="cert">
+      <!-- BACKGROUND WATERMARK IMAGE (Centered in printable body area) -->
+      <div class="cert-watermark" aria-hidden="true">
+        <img
+          v-if="appConfig.logoUrl"
+          :src="appConfig.logoUrl"
+          alt="Watermark"
+          class="watermark-img"
+        />
+        <img
+          v-else
+          src="/img/logo.png"
+          alt="Watermark"
+          class="watermark-img"
+        />
+      </div>
+
       <div class="cert-inner">
-        <!-- TOP HEADER: Centered Organization Logo & Pinned Certificate No -->
+        <!-- TOP HEADER: Centered Organization Logo & Top-Right Certificate No -->
         <div class="cert-header">
           <!-- Centered Organization Logo -->
           <div class="cert-logo-center">
@@ -133,7 +162,7 @@ const dynamicContent = computed(() => {
           <div class="award-description" v-html="dynamicContent"></div>
         </div>
 
-        <!-- BOTTOM METADATA: Date | Circular Seal | QR Code & Score -->
+        <!-- BOTTOM METADATA: Date | Circular Seal | Score & QR Code -->
         <div class="cert-meta-row">
           <!-- Date of Issue -->
           <div class="meta-block text-left">
@@ -170,22 +199,24 @@ const dynamicContent = computed(() => {
             </svg>
           </div>
 
-          <!-- Verification QR Code and Score -->
-          <div class="meta-block text-right">
+          <!-- Prominent Score & Verification Section -->
+          <div class="meta-block meta-right-group">
+            <!-- Big Bold Final Score Display -->
+            <div class="score-box">
+              <div class="score-numbers">
+                <span class="score-num">{{ displayScore }}</span>
+                <span class="score-unit">%</span>
+              </div>
+              <span class="meta-sublabel">FINAL SCORE</span>
+            </div>
+
+            <!-- Verification QR Code -->
             <div v-if="qrUrl" class="qr-box">
               <img :src="qrUrl" alt="QR Verification" class="qr-img" />
               <div class="qr-info">
-                <span class="meta-sublabel">VERIFIED ONLINE</span>
-                <span class="qr-code-id">{{ cert.certificate_number ? cert.certificate_number.slice(-10) : (cert.verification_code || 'VERIFIED') }}</span>
-                <span v-if="cert.score" class="score-chip">Score: {{ cert.score }}%</span>
+                <span class="meta-sublabel">VERIFIED</span>
+                <span class="qr-code-id">{{ cert.certificate_number ? cert.certificate_number.slice(-8) : (cert.verification_code || 'ONLINE') }}</span>
               </div>
-            </div>
-            <div v-else-if="cert.score" class="score-box">
-              <div class="score-numbers">
-                <span class="score-num">{{ cert.score }}</span>
-                <span class="score-max">%</span>
-              </div>
-              <span class="meta-sublabel">FINAL SCORE</span>
             </div>
             <div v-else class="qr-info">
               <span class="meta-sublabel">VERIFIED ONLINE</span>
@@ -252,15 +283,41 @@ const dynamicContent = computed(() => {
   color: #0e1729;
 }
 
-.cert-inner {
+/* ── WATERMARK IMAGE ────────────────────────────────────── */
+.cert-watermark {
   position: absolute;
+  top: 52%;
+  left: 60%;
+  transform: translate(-50%, -50%);
+  width: 320px;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.08;
+  user-select: none;
+}
+
+.watermark-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: grayscale(100%) contrast(120%);
+}
+
+.cert-inner {
+  position: relative;
   inset: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   /* Left ribbon is ~18.2% of the width, so padding-left is 21.5% to clear it cleanly */
   padding: 24px 36px 16px 21.5%;
   box-sizing: border-box;
+  z-index: 5;
 }
 
 /* ── HEADER (Logo in Center, Certificate No in Top-Right) ─── */
@@ -397,7 +454,7 @@ const dynamicContent = computed(() => {
   font-weight: 700;
 }
 
-/* ── METADATA ROW (Date | Seal | QR/Score) ───────────────── */
+/* ── METADATA ROW (Date | Seal | Score & QR) ─────────────── */
 .cert-meta-row {
   display: flex;
   justify-content: space-between;
@@ -409,7 +466,16 @@ const dynamicContent = computed(() => {
 .meta-block {
   display: flex;
   flex-direction: column;
-  min-width: 140px;
+  min-width: 130px;
+}
+
+.meta-right-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 180px;
 }
 
 .meta-date {
@@ -438,67 +504,67 @@ const dynamicContent = computed(() => {
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.08));
 }
 
-.qr-box {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.qr-img {
-  width: 48px;
-  height: 48px;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-}
-
-.qr-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.qr-code-id {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #1b62ae;
-}
-
-.score-chip {
-  display: inline-block;
-  font-size: 9.5px;
-  font-weight: 700;
-  color: #047857;
-  background-color: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  padding: 1px 6px;
-  border-radius: 9999px;
-  margin-top: 2px;
-}
-
+/* ── SCORE BOX (Prominent & Clear) ───────────────────────── */
 .score-box {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 12px;
+  min-width: 74px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .score-numbers {
   display: flex;
   align-items: baseline;
-  gap: 2px;
+  gap: 1px;
 }
 
 .score-num {
-  font-size: 18px;
+  font-size: 21px;
   font-weight: 800;
   color: #0e1729;
+  line-height: 1;
 }
 
-.score-max {
-  font-size: 12px;
+.score-unit {
+  font-size: 13px;
   font-weight: 700;
-  color: #64738b;
+  color: #1b62ae;
+  line-height: 1;
+}
+
+/* ── QR BOX ──────────────────────────────────────────────── */
+.qr-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qr-img {
+  width: 46px;
+  height: 46px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 2px;
+}
+
+.qr-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.qr-code-id {
+  font-size: 10px;
+  font-weight: 700;
+  color: #1b62ae;
 }
 
 /* ── FOOTER ─────────────────────────────────────────────── */
@@ -568,6 +634,10 @@ const dynamicContent = computed(() => {
     box-shadow: none;
     border-radius: 0;
     page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .cert-watermark {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

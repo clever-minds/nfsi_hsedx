@@ -136,6 +136,14 @@ onMounted(load);
     <div class="grid gap-6 lg:grid-cols-3">
       <div class="lg:col-span-2">
         <DataTable :columns="columns" :rows="templates" :loading="loading" :empty="t('certificates.template.empty')">
+          <template #cell:name="{ row, value }">
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-slate-800">{{ value }}</span>
+              <span v-if="(row as CertificateTemplate).is_default" class="rounded bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                Default
+              </span>
+            </div>
+          </template>
           <template #cell:is_active="{ value }">
             <span :class="value ? 'text-emerald-600' : 'text-slate-400'">
               {{ value ? t('certificates.template.active') : t('certificates.template.inactive') }}

@@ -379,7 +379,8 @@ export async function verifyByNomor(number: string): Promise<VerificationResult 
               (SELECT layout->>'content' FROM certificate_templates WHERE id = cert.template_id),
               (SELECT layout->>'content' FROM certificate_templates WHERE course_id = cert.course_id AND is_active = true AND deleted_at IS NULL LIMIT 1),
               (SELECT layout->>'content' FROM certificate_templates WHERE category_id = c.category_id AND is_active = true AND deleted_at IS NULL LIMIT 1),
-              (SELECT layout->>'content' FROM certificate_templates WHERE is_default = true AND is_active = true AND deleted_at IS NULL LIMIT 1)
+              (SELECT layout->>'content' FROM certificate_templates WHERE is_default = true AND is_active = true AND deleted_at IS NULL LIMIT 1),
+              (SELECT layout->>'content' FROM certificate_templates WHERE is_active = true AND deleted_at IS NULL ORDER BY is_default DESC, updated_at DESC LIMIT 1)
             ) AS content,
             cert.is_revoked, cert.status
        FROM certificates cert
@@ -387,7 +388,7 @@ export async function verifyByNomor(number: string): Promise<VerificationResult 
        JOIN courses c ON c.id = cert.course_id
        LEFT JOIN instructor_profiles ip ON ip.id = c.instructor_id
        LEFT JOIN users iu ON iu.id = ip.user_id
-      WHERE cert.certificate_number = $1 AND cert.deleted_at IS NULL`,
+      WHERE (cert.certificate_number = $1 OR cert.verification_code = $1 OR UPPER(TRIM(cert.certificate_number)) = UPPER(TRIM($1))) AND cert.deleted_at IS NULL`,
     [number],
   );
   if (!row) return null;
@@ -438,7 +439,8 @@ export async function displayById(id: string): Promise<CertificateDisplay | null
               (SELECT layout->>'content' FROM certificate_templates WHERE id = cert.template_id),
               (SELECT layout->>'content' FROM certificate_templates WHERE course_id = cert.course_id AND is_active = true AND deleted_at IS NULL LIMIT 1),
               (SELECT layout->>'content' FROM certificate_templates WHERE category_id = c.category_id AND is_active = true AND deleted_at IS NULL LIMIT 1),
-              (SELECT layout->>'content' FROM certificate_templates WHERE is_default = true AND is_active = true AND deleted_at IS NULL LIMIT 1)
+              (SELECT layout->>'content' FROM certificate_templates WHERE is_default = true AND is_active = true AND deleted_at IS NULL LIMIT 1),
+              (SELECT layout->>'content' FROM certificate_templates WHERE is_active = true AND deleted_at IS NULL ORDER BY is_default DESC, updated_at DESC LIMIT 1)
             ) AS content
        FROM certificates cert
        JOIN users u ON u.id = cert.user_id

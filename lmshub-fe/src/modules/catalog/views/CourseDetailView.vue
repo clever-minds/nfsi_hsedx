@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { apiGet, assetUrl, errorMessage } from '@/lib/api';
@@ -166,18 +166,54 @@ const previewLoading = ref(false);
 const previewError = ref('');
 const previewExpired = ref(false);
 const previewSecondsLeft = ref(PREVIEW_MAX_SECONDS);
+const previewVideoEl = ref<HTMLVideoElement | null>(null);
+const previewLessonId = ref<string>('');
 let previewInterval: any = null;
 
-function startPreviewTimer() {
+function getPreviewStorageKeys(lessonId?: string) {
+  const lid = lessonId || previewLessonId.value || 'preview_active';
+  const cid = (course.value as any)?.id || (route.params.slug as string) || 'course';
+  return {
+    completedKey: `lmshub_preview_done_${cid}_${lid}`,
+    timeKey: `lmshub_preview_time_${cid}_${lid}`,
+  };
+}
+
+function savePreviewProgress() {
+  const { timeKey } = getPreviewStorageKeys();
+  try {
+    localStorage.setItem(timeKey, previewSecondsLeft.value.toString());
+  } catch {}
+}
+
+function onPreviewExpired() {
+  previewExpired.value = true;
+  previewSecondsLeft.value = 0;
   stopPreviewTimer();
-  previewExpired.value = false;
-  previewSecondsLeft.value = PREVIEW_MAX_SECONDS;
+  const { completedKey, timeKey } = getPreviewStorageKeys();
+  try {
+    localStorage.setItem(completedKey, 'true');
+    localStorage.setItem(timeKey, '0');
+  } catch {}
+  if (previewVideoEl.value) {
+    previewVideoEl.value.pause();
+  }
+}
+
+function startPreviewTimer() {
+  if (previewInterval) return;
+  if (previewExpired.value || previewSecondsLeft.value <= 0) return;
+
   previewInterval = setInterval(() => {
+    // Stop countdown if video element is paused!
+    if (previewVideoEl.value && previewVideoEl.value.paused) {
+      return;
+    }
     if (previewSecondsLeft.value > 0) {
       previewSecondsLeft.value--;
+      savePreviewProgress();
       if (previewSecondsLeft.value <= 0) {
-        previewExpired.value = true;
-        stopPreviewTimer();
+        onPreviewExpired();
       }
     }
   }, 1000);
@@ -190,21 +226,45 @@ function stopPreviewTimer() {
   }
 }
 
+function onVideoPlay() {
+  startPreviewTimer();
+}
+
+function onVideoPause() {
+  stopPreviewTimer();
+}
+
+function onVideoLoadedMetadata(e: Event) {
+  const v = e.target as HTMLVideoElement;
+  if (!v) return;
+  if (previewSecondsLeft.value < PREVIEW_MAX_SECONDS && previewSecondsLeft.value > 0) {
+    const resumeTime = PREVIEW_MAX_SECONDS - previewSecondsLeft.value;
+    if (v.duration && resumeTime < v.duration) {
+      v.currentTime = resumeTime;
+    }
+  }
+}
+
 function onVideoTimeUpdate(e: Event) {
   const v = e.target as HTMLVideoElement;
   if (!v) return;
+
   if (v.currentTime >= PREVIEW_MAX_SECONDS) {
-    v.pause();
-    previewExpired.value = true;
-    stopPreviewTimer();
-  } else {
-    previewSecondsLeft.value = Math.max(0, Math.ceil(PREVIEW_MAX_SECONDS - v.currentTime));
+    onPreviewExpired();
+    return;
+  }
+
+  const calculatedLeft = Math.max(0, Math.ceil(PREVIEW_MAX_SECONDS - v.currentTime));
+  previewSecondsLeft.value = Math.min(previewSecondsLeft.value, calculatedLeft);
+  savePreviewProgress();
+
+  if (previewSecondsLeft.value <= 0) {
+    onPreviewExpired();
   }
 }
 
 function onVideoEnded() {
-  previewExpired.value = true;
-  stopPreviewTimer();
+  onPreviewExpired();
 }
 
 function formatPreviewTime(sec: number): string {
@@ -222,44 +282,83 @@ function buyFromPreview() {
   }
 }
 
-const previewLang = ref<'en' | 'hi' | 'both'>(currentLocale() === 'hi' ? 'hi' : 'en');
-watch(() => currentLocale(), (newLoc) => {
-  previewLang.value = newLoc === 'hi' ? 'hi' : 'en';
+const previewLang = computed<'en' | 'hi'>(() => (currentLocale() === 'hi' ? 'hi' : 'en'));
+
+watch(() => currentLocale(), () => {
+  const v = previewVideoEl.value;
+  if (!v) return;
+  const prevTime = v.currentTime;
+  const wasPlaying = !v.paused;
+
+  nextTick(() => {
+    const newV = previewVideoEl.value;
+    if (newV) {
+      newV.currentTime = prevTime;
+      if (wasPlaying) {
+        newV.play().catch(() => {});
+      }
+    }
+  });
 });
 
 const previewActiveItem = computed(() => {
   if (!previewContents.value || previewContents.value.length === 0) return null;
-  // If user selected Hindi, check if there is a Hindi item (video or text)
-  if (previewLang.value === 'hi') {
-    const hiVideo = previewContents.value.find((c) => c.type === 'video' && c.url && c.language === 'hi');
+  const lang = previewLang.value;
+
+  if (lang === 'hi') {
+    const hiVideo = previewContents.value.find((c) => c.type === 'video' && c.url && (c.language === 'hi' || c.language === 'all'));
     if (hiVideo) return hiVideo;
-    const hiContent = previewContents.value.find((c) => c.language === 'hi');
+    const hiContent = previewContents.value.find((c) => c.language === 'hi' || c.language === 'all');
     if (hiContent) return hiContent;
-  } else if (previewLang.value === 'en') {
-    const enVideo = previewContents.value.find((c) => c.type === 'video' && c.url && c.language === 'en');
+  } else {
+    const enVideo = previewContents.value.find((c) => c.type === 'video' && c.url && (c.language === 'en' || c.language === 'all'));
     if (enVideo) return enVideo;
-    const enContent = previewContents.value.find((c) => c.language === 'en');
+    const enContent = previewContents.value.find((c) => c.language === 'en' || c.language === 'all');
     if (enContent) return enContent;
   }
-  // Otherwise any video with a valid url
+
+  // Fallback: any video with url
   const anyVideo = previewContents.value.find((c) => c.type === 'video' && c.url);
   if (anyVideo) return anyVideo;
+
   return previewContents.value[0];
 });
 
 async function openPreview(lesson: Lesson) {
   if (!lesson.gratis_preview) return;
+  previewLessonId.value = lesson.id;
+  const { completedKey, timeKey } = getPreviewStorageKeys(lesson.id);
+
+  // If already expired in past, immediately show preview ended overlay!
+  if (localStorage.getItem(completedKey) === 'true') {
+    previewContents.value = [{ type: 'video', url: '' }];
+    previewExpired.value = true;
+    previewSecondsLeft.value = 0;
+    return;
+  }
+
+  // Restore remaining time
+  const savedSec = localStorage.getItem(timeKey);
+  if (savedSec !== null) {
+    const sec = parseInt(savedSec, 10);
+    if (sec <= 0) {
+      previewContents.value = [{ type: 'video', url: '' }];
+      previewExpired.value = true;
+      previewSecondsLeft.value = 0;
+      return;
+    }
+    previewSecondsLeft.value = sec;
+  } else {
+    previewSecondsLeft.value = PREVIEW_MAX_SECONDS;
+  }
+
   previewLoading.value = true;
   previewError.value = '';
   previewExpired.value = false;
-  previewLang.value = currentLocale() === 'hi' ? 'hi' : 'en';
   try {
     const res = await apiGet<any[]>(`/courses/public/${route.params.slug}/preview/${lesson.id}`);
     if (res && res.length > 0) {
       previewContents.value = res;
-      if (res.some((c) => c.type === 'video' && c.url)) {
-        startPreviewTimer();
-      }
     } else {
       previewError.value = t('catalog.detail.noPreviewContent', 'No content available for preview.');
     }
@@ -272,19 +371,37 @@ async function openPreview(lesson: Lesson) {
 
 function closePreview() {
   stopPreviewTimer();
+  if (previewVideoEl.value) {
+    previewVideoEl.value.pause();
+  }
   previewContents.value = [];
   previewError.value = '';
-  previewExpired.value = false;
 }
 
 function openHeroPreview() {
   const promoUrl = (course.value as any)?.promo_video_url || (course.value?.meta as any)?.promo_video_url;
   if (promoUrl) {
+    previewLessonId.value = 'hero_promo';
+    const { completedKey, timeKey } = getPreviewStorageKeys('hero_promo');
+    if (localStorage.getItem(completedKey) === 'true') {
+      previewContents.value = [{ type: 'video', url: promoUrl }];
+      previewExpired.value = true;
+      previewSecondsLeft.value = 0;
+      return;
+    }
+    const savedSec = localStorage.getItem(timeKey);
+    const sec = savedSec !== null ? parseInt(savedSec, 10) : PREVIEW_MAX_SECONDS;
+    if (sec <= 0) {
+      previewContents.value = [{ type: 'video', url: promoUrl }];
+      previewExpired.value = true;
+      previewSecondsLeft.value = 0;
+      return;
+    }
+    previewSecondsLeft.value = sec;
     previewContents.value = [{
       type: 'video',
       url: promoUrl,
     }];
-    startPreviewTimer();
     return;
   }
   const allLessons = (course.value?.kurikulum ?? []).flatMap((s) => s.lessons ?? []);
@@ -869,36 +986,7 @@ const TERMASUK = computed(() => [
           </span>
         </div>
 
-        <!-- Language toggle pills -->
-        <div
-          v-if="!previewLoading && !previewError && !previewExpired"
-          class="inline-flex items-center gap-1 rounded-full bg-slate-900/85 p-1 text-xs font-semibold backdrop-blur-md border border-white/20 shadow-md"
-        >
-          <button
-            type="button"
-            class="rounded-full px-2.5 py-1 transition text-xs font-bold"
-            :class="previewLang === 'en' ? 'bg-blue-600 text-white shadow' : 'text-slate-300 hover:text-white'"
-            @click="previewLang = 'en'"
-          >
-            🇬🇧 English
-          </button>
-          <button
-            type="button"
-            class="rounded-full px-2.5 py-1 transition text-xs font-bold"
-            :class="previewLang === 'hi' ? 'bg-emerald-600 text-white shadow' : 'text-slate-300 hover:text-white'"
-            @click="previewLang = 'hi'"
-          >
-            🇮🇳 हिन्दी
-          </button>
-          <button
-            type="button"
-            class="rounded-full px-2.5 py-1 transition text-xs font-bold"
-            :class="previewLang === 'both' ? 'bg-white/25 text-white shadow' : 'text-slate-300 hover:text-white'"
-            @click="previewLang = 'both'"
-          >
-            🌐 Both
-          </button>
-        </div>
+
       </div>
 
       <div
@@ -968,6 +1056,7 @@ const TERMASUK = computed(() => [
           <template v-if="previewActiveItem.type === 'video' && previewActiveItem.url">
             <iframe
               v-if="youtubeEmbed(previewActiveItem.url)"
+              :key="'yt-' + (previewActiveItem.id || previewActiveItem.url) + '-' + previewLang"
               :src="youtubeEmbed(previewActiveItem.url)!"
               class="h-full w-full object-contain aspect-video"
               frameborder="0"
@@ -976,11 +1065,16 @@ const TERMASUK = computed(() => [
             ></iframe>
             <video
               v-else
+              ref="previewVideoEl"
+              :key="'vid-' + (previewActiveItem.id || previewActiveItem.url) + '-' + previewLang"
               :src="assetUrl(previewActiveItem.url)"
               controls
               autoplay
               playsinline
               class="h-full w-full object-contain bg-black"
+              @loadedmetadata="onVideoLoadedMetadata"
+              @play="onVideoPlay"
+              @pause="onVideoPause"
               @timeupdate="onVideoTimeUpdate"
               @ended="onVideoEnded"
             ></video>

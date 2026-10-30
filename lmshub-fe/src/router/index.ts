@@ -46,7 +46,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/modules/website/views/PublicBlogPostView.vue'),
       },
       {
-        path: 'certificates/:number',
+        path: 'certificates/:number?',
         name: 'verify-certificate',
         component: () => import('@/modules/catalog/views/PublicCertificateView.vue'),
       },

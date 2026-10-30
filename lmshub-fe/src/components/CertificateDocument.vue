@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted } from 'vue';
 import DOMPurify from 'dompurify';
-import QRCode from 'qrcode';
+import QRCode from '@/lib/qrcode-bundle.js';
 import { getLocalizedText } from '@/lib/course-localization';
 
 export interface CertData {

@@ -1,7 +1,7 @@
 import { pool } from '../core/db/pool';
 
 async function seed() {
-  console.log('Seeding initial blog posts...');
+  console.log('Seeding initial blog posts with 5-question quizzes...');
 
   const posts = [
     {
@@ -56,7 +56,7 @@ async function seed() {
             options: [
               'Use the nearest elevator immediately',
               'Evacuate calmly using designated exit routes and proceed to the assembly point',
-              'Wait at your workstation for a telephone confirmation',
+              'Wait at your workstation for telephone confirmation',
               'Gather all personal office belongings before leaving'
             ],
             correct_answer: 1
@@ -96,50 +96,6 @@ async function seed() {
           },
           {
             id: 'q5',
-            question: 'What fire classification covers fires involving flammable liquids such as gasoline, oil, and solvents?',
-            options: [
-              'Class A',
-              'Class B',
-              'Class C',
-              'Class D'
-            ],
-            correct_answer: 1
-          },
-          {
-            id: 'q6',
-            question: 'What fire classification involves ordinary combustible materials like wood, paper, and cloth?',
-            options: [
-              'Class A',
-              'Class B',
-              'Class C',
-              'Class K'
-            ],
-            correct_answer: 0
-          },
-          {
-            id: 'q7',
-            question: 'Why should elevators never be used during a fire evacuation?',
-            options: [
-              'Elevators move too slowly',
-              'Power may fail and trap occupants inside, or shafts can draw smoke and heat',
-              'Elevators are reserved exclusively for management',
-              'Elevators will trigger additional building alarms'
-            ],
-            correct_answer: 1
-          },
-          {
-            id: 'q8',
-            question: 'How often should emergency fire exit pathways and fire doors be kept clear of obstructions?',
-            options: [
-              'Only during scheduled safety audits',
-              'At all times (24/7) without exception',
-              'During working hours only',
-              'Only when the warehouse is full'
-            ],
-            correct_answer: 1
-          },
-          {
-            id: 'q9',
             question: 'What is the designated gathering location outside the facility during an evacuation called?',
             options: [
               'Safe Haven Area',
@@ -148,130 +104,9 @@ async function seed() {
               'Parking Lot Exit'
             ],
             correct_answer: 1
-          },
-          {
-            id: 'q10',
-            question: 'What is the primary role of a designated Fire Warden / Floor Marshal during an emergency?',
-            options: [
-              'Fight large structural fires alone',
-              'Assist in orderly evacuation, check areas, and report headcount at the assembly point',
-              'Protect company computers and sensitive paperwork',
-              'Lock all exit doors behind them'
-            ],
-            correct_answer: 1
-          },
-          {
-            id: 'q11',
-            question: 'If your clothing catches fire, what is the recommended immediate survival technique?',
-            options: [
-              'Run quickly to find water',
-              'Stop, Drop to the ground, and Roll to smother the flames',
-              'Fan the flames with a jacket',
-              'Stand upright and call for help'
-            ],
-            correct_answer: 1
-          },
-          {
-            id: 'q12',
-            question: 'When escaping through a smoke-filled hallway, what is the safest posture to take?',
-            options: [
-              'Walk upright with hands over your eyes',
-              'Crawl low on hands and knees where the air is cleaner and cooler',
-              'Run as fast as possible while holding your breath',
-              'Hide in an enclosed closet until rescued'
-            ],
-            correct_answer: 1
-          },
-          {
-            id: 'q13',
-            question: 'Before opening a closed door during a fire evacuation, what should you do first?',
-            options: [
-              'Kick the door open immediately',
-              'Check the door and handle with the back of your hand for heat',
-              'Look through the keyhole',
-              'Pull the door handle forcefully'
-            ],
-            correct_answer: 1
-          },
-          {
-            id: 'q14',
-            question: 'What three elements make up the traditional Fire Triangle?',
-            options: [
-              'Heat, Fuel, and Oxygen',
-              'Water, Carbon, and Smoke',
-              'Electricity, Air, and Pressure',
-              'Gas, Ignition, and Wind'
-            ],
-            correct_answer: 0
-          },
-          {
-            id: 'q15',
-            question: 'What minimum clearance distance must be maintained around electrical panels and fire extinguishers?',
-            options: [
-              'At least 3 feet (approx. 1 meter) of clear, unobstructed access',
-              'No clearance is necessary if items are labeled',
-              '6 inches',
-              'Only clearance from the ceiling is required'
-            ],
-            correct_answer: 0
-          },
-          {
-            id: 'q16',
-            question: 'What type of fire extinguisher is specifically designed for commercial kitchen cooking oil and grease fires?',
-            options: [
-              'Class A (Water)',
-              'Class K / Wet Chemical',
-              'Class B (Standard Dry Powder)',
-              'Class D (Metal)'
-            ],
-            correct_answer: 1
-          },
-          {
-            id: 'q17',
-            question: 'How frequently should industrial workplace fire evacuation drills be conducted at minimum?',
-            options: [
-              'Once every 5 years',
-              'At least every 6 to 12 months, as per safety regulations',
-              'Only when a new employee joins',
-              'Never, as drills disrupt production'
-            ],
-            correct_answer: 1
-          },
-          {
-            id: 'q18',
-            question: 'What should you do immediately if you discover a fire in your workplace?',
-            options: [
-              'Sound the nearest fire alarm and alert occupants, then call emergency services',
-              'Attempt to extinguish it regardless of fire size before telling anyone',
-              'Finish your current task before leaving',
-              'Send an email to HR reporting the hazard'
-            ],
-            correct_answer: 0
-          },
-          {
-            id: 'q19',
-            question: 'Why must fire doors never be propped open with wedges or doorstops?',
-            options: [
-              'They cause drafts and increase AC power bills',
-              'They are designed to compartmentalize and contain smoke, heat, and toxic gases',
-              'Propped doors violate noise ordinances',
-              'It wears out the door hinges prematurely'
-            ],
-            correct_answer: 1
-          },
-          {
-            id: 'q20',
-            question: 'What is the minimum score required on this 20-question assessment to earn your Certificate of Participation?',
-            options: [
-              '10 out of 20 (50%)',
-              '14 out of 20 (70%)',
-              '18 out of 20 (90%)',
-              '20 out of 20 (100%)'
-            ],
-            correct_answer: 1
           }
         ]
-      },
+      }
     },
     {
       title: 'Lockout/Tagout (LOTO): Preventing Hazardous Energy Releases',
@@ -310,6 +145,68 @@ async function seed() {
   <li><strong>Zero Energy Verification:</strong> Test controls to ensure no residual energy remains.</li>
 </ol>`,
       published_at: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(),
+      quiz_data: {
+        enabled: true,
+        title: 'Lockout/Tagout (LOTO) & Hazardous Energy Isolation Assessment',
+        passing_score: 70,
+        questions: [
+          {
+            id: 'q1',
+            question: 'What is the primary objective of a Lockout/Tagout (LOTO) program in industrial operations?',
+            options: [
+              'To speed up equipment maintenance turnaround times',
+              'To safeguard workers from unexpected startup or release of stored hazardous energy',
+              'To identify which employees are currently on the factory floor',
+              'To comply only with basic insurance inventory requirements'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q2',
+            question: 'Which of the following is considered a form of hazardous energy that must be isolated during LOTO?',
+            options: [
+              'Electrical energy only',
+              'Electrical, Pneumatic, Hydraulic, and Mechanical/Gravitational energy',
+              'Acoustic noise energy only',
+              'Ambient room temperature'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q3',
+            question: 'What is the critical final step of the LOTO sequence before servicing begins?',
+            options: [
+              'Immediately begin disassembling machine parts',
+              'Zero energy verification (testing controls and meters to ensure zero residual energy)',
+              'Removing all safety tags to keep the workspace clean',
+              'Notifying the shift supervisor via email'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q4',
+            question: 'Who is authorized to remove a safety lockout padlock applied to an energy isolating device?',
+            options: [
+              'Any co-worker who needs to use the machine',
+              'The authorized employee who applied the lock (or designated management following strict emergency protocol)',
+              'The janitorial or maintenance cleaning staff',
+              'Anyone with a master key or bolt cutter'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q5',
+            question: 'Why are safety tags used in conjunction with lockout padlocks?',
+            options: [
+              'To decorate the machinery',
+              'To clearly identify the authorized person, date, and reason for equipment isolation',
+              'To track equipment depreciated value',
+              'To bypass the need for physical padlocks'
+            ],
+            correct_answer: 1
+          }
+        ]
+      }
     },
     {
       title: 'Arc Flash & Electrical Safety in High-Voltage Environments: Dos and Don’ts',
@@ -323,7 +220,6 @@ async function seed() {
       content: `<h2>The Reality of Arc Flash & High-Voltage Electrocution</h2>
 <p>Working around energized high-voltage switchgear carries catastrophic risks. An <strong>Arc Flash</strong> is an explosive electrical release that can reach temperatures exceeding <strong>19,000°C (35,000°F)</strong>—hotter than the surface of the sun—instantly vaporizing copper conductors and emitting lethal pressure waves.</p>
 
-<!-- Flash Image / Arc Flash Explosion illustration -->
 <figure style="margin: 24px 0; border-radius: 12px; overflow: hidden; border: 2px solid #f59e0b; box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.2);">
   <img src="https://images.unsplash.com/photo-1517420704952-d9f39e95b43e?auto=format&fit=crop&w=1000&q=80" alt="High Voltage Electrical Arc Flash Explosion" style="width: 100%; height: 340px; object-fit: cover; display: block;" />
   <figcaption style="padding: 12px 16px; background: #fffbeb; font-size: 13px; font-weight: 700; color: #b45309; border-top: 1px solid #fde68a;">
@@ -343,6 +239,68 @@ async function seed() {
 <h3>Emergency Response for Arc Flash Incidents</h3>
 <p>If an arc blast or electrical contact occurs, <strong>never touch the victim directly</strong> with bare hands. Use an insulated fiberglass rescue hook, de-energize the upstream feeder immediately, call emergency services, and initiate CPR if the victim is unresponsive.</p>`,
       published_at: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
+      quiz_data: {
+        enabled: true,
+        title: 'Arc Flash & High-Voltage Electrical Safety Assessment',
+        passing_score: 70,
+        questions: [
+          {
+            id: 'q1',
+            question: 'What temperature can an electrical Arc Flash reach during an explosion?',
+            options: [
+              'Up to 500°C (932°F)',
+              'Up to 1,500°C (2,732°F)',
+              'Over 19,000°C (35,000°F) — hotter than the surface of the sun',
+              'Arc flashes do not generate intense heat'
+            ],
+            correct_answer: 2
+          },
+          {
+            id: 'q2',
+            question: 'What is the fundamental golden rule when working with electrical conductors and switchgear?',
+            options: [
+              'Assume all conductors are cold and safe if the breaker switch looks off',
+              'Always treat every electrical conductor as LIVE until tested, de-energized, and grounded',
+              'Rely solely on visual inspection without using voltage meters',
+              'Touch conductors with the back of your hand to check for current'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q3',
+            question: 'What specialized tool must be used to rescue a person who is in direct contact with an energized electrical source?',
+            options: [
+              'A wet cotton towel or rope',
+              'An insulated fiberglass rescue hook (shepherd\'s crook)',
+              'Your bare hands to pull them away quickly',
+              'A metal crowbar or copper rod'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q4',
+            question: 'What is the purpose of respecting the "Arc Flash Boundary" around high-voltage equipment?',
+            options: [
+              'To prevent unauthorized or unprotected personnel from entering the lethal burn zone',
+              'To maintain clean airflow into electrical ventilation ducts',
+              'To preserve parking space for electrical maintenance vehicles',
+              'To avoid dust accumulation on the floor'
+            ],
+            correct_answer: 0
+          },
+          {
+            id: 'q5',
+            question: 'Which personal protective equipment (PPE) is strictly required when performing energized high-voltage switching?',
+            options: [
+              'Standard cotton T-shirt and sunglasses',
+              'Rated Arc Flash face shield/suit, balaclava, and voltage-tested rubber insulating gloves (ASTM D120)',
+              'Only steel-toed leather boots',
+              'Metal jewelry and conductive safety glasses'
+            ],
+            correct_answer: 1
+          }
+        ]
+      }
     },
     {
       title: 'Chemical Spill Response & HAZMAT Safety: Emergency Management Protocols',
@@ -384,10 +342,72 @@ async function seed() {
 <h3>3. Decontamination and Eyewash Stations</h3>
 <p>Eyewash fountains and emergency body deluge showers must be tested weekly. In case of bodily contact, flush the affected area with clean water continuously for at least 15 minutes while seeking medical assistance.</p>`,
       published_at: new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString(),
-    },
+      quiz_data: {
+        enabled: true,
+        title: 'Chemical Spill Response & HAZMAT Safety Assessment',
+        passing_score: 70,
+        questions: [
+          {
+            id: 'q1',
+            question: 'In the "5 C\'s" chemical emergency spill response protocol, what does "Consult SDS" refer to?',
+            options: [
+              'Checking the Security Department Schedule',
+              'Reviewing the 16-section Safety Data Sheet (SDS) for chemical toxicity, PPE, and neutralization steps',
+              'Sending a Daily Safety Summary to management',
+              'Standard Delivery Service verification'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q2',
+            question: 'If hazardous chemicals accidentally splash into a worker\'s eyes, how long must they continuously flush them at the eyewash station?',
+            options: [
+              '30 seconds to 1 minute',
+              'At least 15 continuous minutes while seeking immediate medical assistance',
+              'Only until the burning sensation stops',
+              '2 to 3 minutes with cold water'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q3',
+            question: 'What is the primary purpose of deploying chemical absorbent booms and socks around floor drains during a spill?',
+            options: [
+              'To stop the hazardous liquid from entering waterways, sewers, and municipal drainage systems',
+              'To speed up evaporation of toxic chemical vapors',
+              'To clean the drain grates with solvent',
+              'To absorb sound vibrations from pumps'
+            ],
+            correct_answer: 0
+          },
+          {
+            id: 'q4',
+            question: 'Why should you NEVER approach an unknown chemical leak or spill without proper Personal Protective Equipment (PPE)?',
+            options: [
+              'It slows down the cleanup operation',
+              'Invisible toxic vapors, corrosive acids, or volatile solvents can cause fatal inhalation or skin burns',
+              'It violates office dress code rules',
+              'The spill might dry up before you get there'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q5',
+            question: 'How should contaminated absorbent pads, neutralizing agents, and chemical waste be disposed of?',
+            options: [
+              'Discarded into normal office trash cans',
+              'Poured down the storm drain with plenty of tap water',
+              'Sealed inside properly labeled yellow HAZMAT hazardous waste containers for certified disposal',
+              'Left in an open drum to dry out in the warehouse'
+            ],
+            correct_answer: 2
+          }
+        ]
+      }
+    }
   ];
 
-  for (const post of posts as any[]) {
+  for (const post of posts) {
     const check = await pool.query(`SELECT id FROM blog_posts WHERE slug = $1 AND deleted_at IS NULL`, [post.slug]);
     const quizJson = post.quiz_data ? JSON.stringify(post.quiz_data) : null;
     if (check.rows.length > 0) {
@@ -428,7 +448,7 @@ async function seed() {
     }
   }
 
-  console.log('Seeded blog posts successfully!');
+  console.log('Seeded blog posts with 5-question quizzes successfully!');
   process.exit(0);
 }
 

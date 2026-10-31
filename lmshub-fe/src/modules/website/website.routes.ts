@@ -24,9 +24,33 @@ export const websiteRoutes: RouteRecordRaw[] = [
     meta: { permission: 'content.view', title: 'Blog Posts' },
   },
   {
+    path: 'website/blogs/create',
+    name: 'website-blog-create',
+    component: () => import('@/modules/website/views/BlogEditorView.vue'),
+    meta: { permission: 'content.create', title: 'Create Blog Post' },
+  },
+  {
+    path: 'website/blogs/:id/edit',
+    name: 'website-blog-edit',
+    component: () => import('@/modules/website/views/BlogEditorView.vue'),
+    meta: { permission: 'content.update', title: 'Edit Blog Post' },
+  },
+  {
     path: 'blogs',
     name: 'admin-blogs',
     component: () => import('@/modules/website/views/BlogManagementView.vue'),
     meta: { permission: 'content.view', title: 'Blog Posts' },
+  },
+  {
+    path: 'blogs/create',
+    name: 'admin-blog-create',
+    component: () => import('@/modules/website/views/BlogEditorView.vue'),
+    meta: { permission: 'content.create', title: 'Create Blog Post' },
+  },
+  {
+    path: 'blogs/:id/edit',
+    name: 'admin-blog-edit',
+    component: () => import('@/modules/website/views/BlogEditorView.vue'),
+    meta: { permission: 'content.update', title: 'Edit Blog Post' },
   },
 ];

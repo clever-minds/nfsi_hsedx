@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { apiDelete, apiGetFull, apiPost, apiPut, errorMessage, assetUrl } from '@/lib/api';
-import { fmtTanggal, fmtRelatif } from '@/lib/format';
+import { apiDelete, apiGetFull, errorMessage } from '@/lib/api';
+import { fmtTanggal } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
 import PageHeader from '@/components/ui/PageHeader.vue';
-import RichTextEditor from '@/components/ui/RichTextEditor.vue';
-import MediaUploadButton from '@/modules/content/components/MediaUploadButton.vue';
 import Icon from '@/components/ui/Icon.vue';
 
 interface BlogPost {
@@ -20,7 +18,12 @@ interface BlogPost {
   category: string;
   tags: string[];
   status: 'draft' | 'published' | 'archived';
-  quiz_data?: any;
+  quiz_data?: {
+    enabled?: boolean;
+    title?: string;
+    passing_score?: number;
+    questions?: any[];
+  } | null;
   published_at: string | null;
   view_count: number;
   created_at: string;
@@ -42,67 +45,7 @@ const busy = ref(false);
 const filterStatus = ref<string>('');
 const filterCategory = ref<string>('');
 const filterSearch = ref<string>('');
-
-// Form state
-const showModal = ref(false);
-const editingId = ref<string | null>(null);
-const formSaving = ref(false);
-const formError = ref('');
-const slugAuto = ref(true);
-const customCategoryMode = ref(false);
-const summaryRichMode = ref(false);
 const dbCategories = ref<string[]>([]);
-
-interface QuizQuestionForm {
-  id?: string;
-  question: string;
-  options: string[];
-  correct_answer: number;
-}
-
-const form = reactive({
-  title: '',
-  slug: '',
-  summary: '',
-  content: '',
-  cover_image_url: '',
-  author_name: '',
-  category: 'Industrial Safety',
-  tagsString: '',
-  status: 'published' as BlogPost['status'],
-  quiz_enabled: false,
-  quiz_title: '',
-  quiz_passing_score: 70,
-  quiz_questions: [] as QuizQuestionForm[],
-});
-
-function addQuizQuestion() {
-  form.quiz_questions.push({
-    id: 'q_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-    question: '',
-    options: ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
-    correct_answer: 0,
-  });
-}
-
-function removeQuizQuestion(index: number) {
-  form.quiz_questions.splice(index, 1);
-}
-
-function addQuizOption(qIdx: number) {
-  if (form.quiz_questions[qIdx].options.length < 6) {
-    form.quiz_questions[qIdx].options.push('Option ' + (form.quiz_questions[qIdx].options.length + 1));
-  }
-}
-
-function removeQuizOption(qIdx: number, optIdx: number) {
-  if (form.quiz_questions[qIdx].options.length > 2) {
-    form.quiz_questions[qIdx].options.splice(optIdx, 1);
-    if (form.quiz_questions[qIdx].correct_answer >= form.quiz_questions[qIdx].options.length) {
-      form.quiz_questions[qIdx].correct_answer = 0;
-    }
-  }
-}
 
 const DEFAULT_CATEGORIES = [
   'Industrial Safety',
@@ -123,25 +66,6 @@ const allCategories = computed(() => {
   return Array.from(merged);
 });
 
-async function loadCategories() {
-  try {
-    const res = await apiGetFull<string[]>('/blogs/categories');
-    if (res?.data && Array.isArray(res.data)) {
-      dbCategories.value = res.data;
-    }
-  } catch {}
-}
-
-function onCategorySelectChange(e: Event) {
-  const val = (e.target as HTMLSelectElement).value;
-  if (val === '__custom__') {
-    customCategoryMode.value = true;
-    form.category = '';
-  } else {
-    form.category = val;
-  }
-}
-
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / limit)));
 
 function showNotice(msg: string) {
@@ -149,71 +73,13 @@ function showNotice(msg: string) {
   setTimeout(() => (notice.value = ''), 3500);
 }
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 200);
-}
-
-function onTitleInput() {
-  if (slugAuto.value) {
-    form.slug = slugify(form.title);
-  }
-}
-
-function openCreateModal() {
-  editingId.value = null;
-  formError.value = '';
-  slugAuto.value = true;
-  customCategoryMode.value = false;
-  summaryRichMode.value = false;
-  form.title = '';
-  form.slug = '';
-  form.summary = '';
-  form.content = '';
-  form.cover_image_url = '';
-  form.author_name = auth.user?.name_lengkap || 'NFSI Faculty';
-  form.category = 'Industrial Safety';
-  form.tagsString = 'Safety, NFSI';
-  form.status = 'published';
-  form.quiz_enabled = false;
-  form.quiz_title = '';
-  form.quiz_passing_score = 70;
-  form.quiz_questions = [];
-  showModal.value = true;
-}
-
-function openEditModal(post: BlogPost) {
-  editingId.value = post.id;
-  formError.value = '';
-  slugAuto.value = false;
-  form.title = post.title;
-  form.slug = post.slug;
-  form.summary = post.summary || '';
-  summaryRichMode.value = Boolean(form.summary && /<[a-z][\s\S]*>/i.test(form.summary));
-  form.content = post.content || '';
-  form.cover_image_url = post.cover_image_url || '';
-  form.author_name = post.author_name || '';
-  form.category = post.category || 'Industrial Safety';
-  customCategoryMode.value = !allCategories.value.includes(form.category);
-  form.tagsString = Array.isArray(post.tags) ? post.tags.join(', ') : '';
-  form.status = (post.status as any) || 'draft';
-  const qd = (post as any).quiz_data;
-  form.quiz_enabled = Boolean(qd?.enabled);
-  form.quiz_title = qd?.title || '';
-  form.quiz_passing_score = qd?.passing_score ?? 70;
-  form.quiz_questions = Array.isArray(qd?.questions) ? JSON.parse(JSON.stringify(qd.questions)) : [];
-  showModal.value = true;
-}
-
-function onCoverUploaded(asset: { id: string; file_name: string; file_type: string; path_object_storage?: string }) {
-  if (asset.path_object_storage) {
-    form.cover_image_url = assetUrl(asset.path_object_storage);
-  }
+async function loadCategories() {
+  try {
+    const res = await apiGetFull<string[]>('/blogs/categories');
+    if (res?.data && Array.isArray(res.data)) {
+      dbCategories.value = res.data;
+    }
+  } catch {}
 }
 
 async function loadPosts() {
@@ -236,69 +102,6 @@ async function loadPosts() {
     posts.value = [];
   } finally {
     loading.value = false;
-  }
-}
-
-async function savePost() {
-  formError.value = '';
-  if (!form.title.trim()) {
-    formError.value = 'Article title is required';
-    return;
-  }
-  if (!form.slug.trim()) {
-    formError.value = 'URL slug is required';
-    return;
-  }
-  if (!form.content.trim()) {
-    formError.value = 'Article content cannot be empty';
-    return;
-  }
-
-  const tags = form.tagsString
-    .split(',')
-    .map((t) => t.trim())
-    .filter(Boolean);
-
-  const quizData = form.quiz_enabled ? {
-    enabled: true,
-    title: form.quiz_title.trim() || (form.title.trim() + ' — Knowledge Check'),
-    passing_score: Number(form.quiz_passing_score) || 70,
-    questions: form.quiz_questions.map((q, idx) => ({
-      id: q.id || ('q_' + idx),
-      question: q.question.trim(),
-      options: q.options.map((o) => o.trim()).filter(Boolean),
-      correct_answer: Number(q.correct_answer || 0),
-    })).filter((q) => q.question && q.options.length >= 2),
-  } : null;
-
-  const payload = {
-    title: form.title.trim(),
-    slug: form.slug.trim(),
-    summary: form.summary.trim() || null,
-    content: form.content.trim(),
-    cover_image_url: form.cover_image_url.trim() || null,
-    author_name: form.author_name.trim() || null,
-    category: form.category.trim() || 'General',
-    tags,
-    status: form.status,
-    quiz_data: quizData,
-  };
-
-  formSaving.value = true;
-  try {
-    if (editingId.value) {
-      await apiPut(`/blogs/${editingId.value}`, payload);
-      showNotice('Blog post updated successfully!');
-    } else {
-      await apiPost('/blogs', payload);
-      showNotice('Blog post created and saved successfully!');
-    }
-    showModal.value = false;
-    await loadPosts();
-  } catch (e: any) {
-    formError.value = errorMessage(e, 'Failed to save blog post');
-  } finally {
-    formSaving.value = false;
   }
 }
 
@@ -329,15 +132,14 @@ onMounted(() => {
       description="Create, edit, view, and manage articles and educational posts displayed on your website."
     >
       <template #actions>
-        <button
+        <RouterLink
           v-if="auth.can('content.create')"
-          type="button"
-          class="btn-primary flex items-center gap-2"
-          @click="openCreateModal"
+          to="/d/blogs/create"
+          class="btn-primary flex items-center gap-2 shadow-xs"
         >
           <Icon name="plus" :size="16" />
           <span>New Article</span>
-        </button>
+        </RouterLink>
       </template>
     </PageHeader>
 
@@ -399,7 +201,7 @@ onMounted(() => {
           <Icon name="book-open" :size="24" />
         </div>
         <p class="font-medium text-slate-700">No blog posts found</p>
-        <p class="text-xs text-slate-400 mt-1">Click "New Article" to publish your first post!</p>
+        <p class="text-xs text-slate-400 mt-1">Click "New Article" to write and publish your first post!</p>
       </div>
 
       <div v-else class="overflow-x-auto">
@@ -408,6 +210,7 @@ onMounted(() => {
             <tr>
               <th class="px-4 py-3">Article</th>
               <th class="px-4 py-3">Category</th>
+              <th class="px-4 py-3">Quiz & Cert</th>
               <th class="px-4 py-3">Author</th>
               <th class="px-4 py-3">Status</th>
               <th class="px-4 py-3">Views</th>
@@ -446,6 +249,20 @@ onMounted(() => {
               <td class="px-4 py-3">
                 <span class="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-700">
                   {{ post.category || 'General' }}
+                </span>
+              </td>
+
+              <!-- Quiz & Cert Badge -->
+              <td class="px-4 py-3">
+                <span
+                  v-if="post.quiz_data?.enabled"
+                  class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200"
+                >
+                  <span>🎓</span>
+                  <span>Quiz ({{ post.quiz_data.questions?.length || 0 }} Qs)</span>
+                </span>
+                <span v-else class="text-[11px] text-slate-400">
+                  None
                 </span>
               </td>
 
@@ -491,14 +308,13 @@ onMounted(() => {
                   >
                     <Icon name="external-link" :size="13" />
                   </a>
-                  <button
+                  <RouterLink
                     v-if="auth.can('content.update')"
-                    type="button"
-                    class="btn-outline px-2 py-1 text-slate-700"
-                    @click="openEditModal(post)"
+                    :to="`/d/blogs/${post.id}/edit`"
+                    class="btn-outline px-2.5 py-1 text-slate-700 hover:text-brand-600 hover:border-brand-300 font-medium"
                   >
                     Edit
-                  </button>
+                  </RouterLink>
                   <button
                     v-if="auth.can('content.delete')"
                     type="button"
@@ -523,341 +339,6 @@ onMounted(() => {
         <div class="flex gap-1.5">
           <button class="btn-outline btn-sm" :disabled="page <= 1" @click="page--; loadPosts()">Previous</button>
           <button class="btn-outline btn-sm" :disabled="page >= totalPages" @click="page++; loadPosts()">Next</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Create / Edit Modal -->
-    <div
-      v-if="showModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm overflow-y-auto"
-      @click.self="showModal = false"
-    >
-      <div class="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl my-8 max-h-[90vh] flex flex-col">
-        <!-- Modal Header -->
-        <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-          <h2 class="text-lg font-bold text-slate-900">
-            {{ editingId ? 'Edit Article' : 'Create New Article' }}
-          </h2>
-          <button
-            type="button"
-            class="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
-            @click="showModal = false"
-          >
-            <Icon name="x" :size="20" />
-          </button>
-        </div>
-
-        <!-- Modal Body (Scrollable) -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-4">
-          <div v-if="formError" class="alert-error">
-            {{ formError }}
-          </div>
-
-          <!-- Title -->
-          <div>
-            <label class="label font-medium">Article Title *</label>
-            <input
-              v-model="form.title"
-              type="text"
-              class="input text-base font-semibold"
-              placeholder="e.g. 10 Essential Workplace Fire Safety Protocols"
-              @input="onTitleInput"
-            />
-          </div>
-
-          <!-- Slug -->
-          <div>
-            <div class="flex items-center justify-between">
-              <label class="label font-medium mb-0">URL Slug *</label>
-              <button
-                type="button"
-                class="text-[11px] text-brand-600 hover:underline"
-                @click="slugAuto = !slugAuto; onTitleInput()"
-              >
-                {{ slugAuto ? 'Edit Manually' : 'Auto-Generate' }}
-              </button>
-            </div>
-            <div class="mt-1 flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-500 focus-within:border-brand-500 focus-within:bg-white">
-              <span>/blog/</span>
-              <input
-                v-model="form.slug"
-                type="text"
-                class="flex-1 bg-transparent font-mono outline-none text-slate-800"
-                placeholder="article-slug"
-              />
-            </div>
-          </div>
-
-          <!-- Category & Status -->
-          <div class="grid gap-4 sm:grid-cols-2">
-            <div>
-              <div class="flex items-center justify-between">
-                <label class="label font-medium mb-0">Category</label>
-                <button
-                  type="button"
-                  class="text-[11px] font-semibold text-brand-600 hover:underline"
-                  @click="customCategoryMode = !customCategoryMode; if (!customCategoryMode && !form.category) form.category = 'Industrial Safety'"
-                >
-                  {{ customCategoryMode ? '← Choose from list' : '+ Type custom category' }}
-                </button>
-              </div>
-              <div v-if="!customCategoryMode" class="mt-1">
-                <select class="input font-medium" :value="form.category" @change="onCategorySelectChange">
-                  <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
-                  <option value="__custom__">+ Enter New Custom Category...</option>
-                </select>
-              </div>
-              <div v-else class="mt-1">
-                <input
-                  v-model="form.category"
-                  type="text"
-                  class="input font-medium"
-                  placeholder="e.g. Industrial Safety, Construction Safety"
-                  autofocus
-                />
-              </div>
-            </div>
-
-            <div>
-              <label class="label font-medium">Publication Status</label>
-              <select v-model="form.status" class="input font-semibold">
-                <option value="published">🟢 Published (Live on Website)</option>
-                <option value="draft">🟡 Draft (Hidden from Website)</option>
-                <option value="archived">⚪ Archived</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Author & Cover Image URL -->
-          <div class="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label class="label font-medium">Author Name</label>
-              <input
-                v-model="form.author_name"
-                type="text"
-                class="input"
-                placeholder="e.g. NFSI Faculty / Dr. Sharma"
-              />
-            </div>
-
-            <div>
-              <label class="label font-medium">Tags (comma-separated)</label>
-              <input
-                v-model="form.tagsString"
-                type="text"
-                class="input"
-                placeholder="Fire Safety, OSHA, Training"
-              />
-            </div>
-          </div>
-
-          <!-- Cover Image -->
-          <div>
-            <label class="label font-medium">Cover Image URL</label>
-            <div class="flex items-center gap-2">
-              <input
-                v-model="form.cover_image_url"
-                type="url"
-                class="input flex-1"
-                placeholder="https://images.unsplash.com/... or uploaded file"
-              />
-              <MediaUploadButton
-                v-can="'content.create'"
-                accept="image/*"
-                label="Upload"
-                @uploaded="onCoverUploaded"
-              />
-            </div>
-            <div v-if="form.cover_image_url" class="mt-2 h-24 w-40 overflow-hidden rounded border border-slate-200">
-              <img :src="form.cover_image_url" class="h-full w-full object-cover" />
-            </div>
-          </div>
-
-          <!-- Summary / Excerpt -->
-          <div>
-            <div class="flex items-center justify-between">
-              <label class="label font-medium mb-0">Short Summary / Excerpt (Optional)</label>
-              <button
-                type="button"
-                class="text-[11px] font-semibold text-brand-600 hover:underline flex items-center gap-1"
-                @click="summaryRichMode = !summaryRichMode"
-              >
-                <span>{{ summaryRichMode ? '← Simple Text Box' : '🛠️ Open Tool Editor' }}</span>
-              </button>
-            </div>
-            <div v-if="summaryRichMode" class="mt-1">
-              <RichTextEditor v-model="form.summary" />
-            </div>
-            <div v-else class="mt-1">
-              <textarea
-                v-model="form.summary"
-                rows="2"
-                class="input text-xs"
-                placeholder="A brief 1-2 sentence overview to show on the blog listing cards... (Right-click to open tool editor)"
-                @contextmenu.prevent="summaryRichMode = true"
-              ></textarea>
-            </div>
-          </div>
-
-          <!-- Full Content Editor -->
-          <div>
-            <label class="label font-medium">Article Content *</label>
-            <RichTextEditor v-model="form.content" />
-          </div>
-
-          <!-- Quiz & Verified Certificate Section -->
-          <div class="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2.5">
-                <span class="text-xl">🎓</span>
-                <div>
-                  <h4 class="text-sm font-bold text-slate-900">Article Quiz & Verified Certificate</h4>
-                  <p class="text-xs text-slate-500">Readers who pass this quiz will receive an official Verified Certificate sent directly to their email with PDF attachment.</p>
-                </div>
-              </div>
-              <label class="relative inline-flex cursor-pointer items-center">
-                <input type="checkbox" v-model="form.quiz_enabled" class="sr-only peer" />
-                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-              </label>
-            </div>
-
-            <!-- Quiz Questions Builder -->
-            <div v-if="form.quiz_enabled" class="mt-4 space-y-4 pt-3 border-t border-emerald-200/60">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label class="label text-xs font-semibold">Quiz Title</label>
-                  <input
-                    v-model="form.quiz_title"
-                    type="text"
-                    class="input text-xs"
-                    placeholder="e.g. Safety Knowledge Check"
-                  />
-                </div>
-                <div>
-                  <label class="label text-xs font-semibold">Passing Score (%)</label>
-                  <input
-                    v-model.number="form.quiz_passing_score"
-                    type="number"
-                    min="1"
-                    max="100"
-                    class="input text-xs"
-                    placeholder="70"
-                  />
-                </div>
-              </div>
-
-              <!-- Questions List -->
-              <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold uppercase tracking-wider text-slate-600">
-                    Questions ({{ form.quiz_questions.length }})
-                  </span>
-                  <button
-                    type="button"
-                    class="btn-sm text-xs font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-3 py-1 rounded-lg transition"
-                    @click="addQuizQuestion"
-                  >
-                    + Add Question
-                  </button>
-                </div>
-
-                <div v-if="form.quiz_questions.length === 0" class="text-center py-6 border-2 border-dashed border-emerald-200 rounded-xl bg-white/60">
-                  <p class="text-xs text-slate-500">No questions added yet. Click "+ Add Question" to attach quiz questions.</p>
-                </div>
-
-                <div
-                  v-for="(q, qIdx) in form.quiz_questions"
-                  :key="qIdx"
-                  class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs space-y-2.5"
-                >
-                  <div class="flex items-start justify-between gap-2">
-                    <span class="grid h-6 w-6 place-items-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-800 shrink-0">
-                      {{ qIdx + 1 }}
-                    </span>
-                    <input
-                      v-model="q.question"
-                      type="text"
-                      class="input text-xs flex-1"
-                      :placeholder="'Question ' + (qIdx + 1) + ' text...'"
-                    />
-                    <button
-                      type="button"
-                      class="text-rose-500 hover:text-rose-700 text-xs px-2 py-1"
-                      title="Delete Question"
-                      @click="removeQuizQuestion(qIdx)"
-                    >
-                      Delete
-                    </button>
-                  </div>
-
-                  <!-- Options list -->
-                  <div class="pl-8 space-y-2">
-                    <div class="text-[11px] font-semibold text-slate-400">Select the radio button for the correct answer:</div>
-                    <div
-                      v-for="(opt, optIdx) in q.options"
-                      :key="optIdx"
-                      class="flex items-center gap-2"
-                    >
-                      <input
-                        type="radio"
-                        :name="'correct_' + qIdx"
-                        :value="optIdx"
-                        v-model="q.correct_answer"
-                        class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                        title="Mark as correct answer"
-                      />
-                      <input
-                        v-model="q.options[optIdx]"
-                        type="text"
-                        class="input text-xs flex-1 py-1"
-                        :placeholder="'Option ' + (optIdx + 1)"
-                      />
-                      <button
-                        v-if="q.options.length > 2"
-                        type="button"
-                        class="text-slate-400 hover:text-rose-500 text-xs px-1"
-                        title="Remove Option"
-                        @click="removeQuizOption(qIdx, optIdx)"
-                      >
-                        ×
-                      </button>
-                    </div>
-
-                    <button
-                      v-if="q.options.length < 6"
-                      type="button"
-                      class="text-[11px] font-semibold text-emerald-600 hover:underline"
-                      @click="addQuizOption(qIdx)"
-                    >
-                      + Add Option
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-4 bg-slate-50 rounded-b-2xl">
-          <button
-            type="button"
-            class="btn-outline btn-sm"
-            :disabled="formSaving"
-            @click="showModal = false"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="btn-primary btn-sm px-5"
-            :disabled="formSaving"
-            @click="savePost"
-          >
-            <span v-if="formSaving">Saving...</span>
-            <span v-else>{{ editingId ? 'Update Article' : 'Publish Article' }}</span>
-          </button>
         </div>
       </div>
     </div>

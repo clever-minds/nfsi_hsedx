@@ -31,8 +31,12 @@ const { t } = useI18n();
 const auth = useAuthStore();
 
 const formName = ref('');
+const formOrg = ref('');
+const formMobile = ref('');
 const formEmail = ref('');
+const formConsent = ref(false);
 const selectedAnswers = ref<Record<string, number>>({});
+const quizStep = ref<'info' | 'questions' | 'result'>('info');
 const submittingQuiz = ref(false);
 const quizError = ref('');
 const quizResult = ref<{
@@ -46,6 +50,18 @@ const quizResult = ref<{
   message: string;
 } | null>(null);
 
+const hasQuiz = computed(() => {
+  const qData = (post.value as any)?.quiz_data;
+  return Boolean(qData?.enabled && qData?.questions && qData.questions.length > 0);
+});
+
+const quizData = computed(() => (post.value as any)?.quiz_data);
+const totalQuizQuestions = computed(() => quizData.value?.questions?.length || 0);
+const passingScore = computed(() => quizData.value?.passing_score || 70);
+const requiredCorrectCount = computed(() => {
+  return Math.ceil((totalQuizQuestions.value * passingScore.value) / 100);
+});
+
 watch(
   () => auth.user,
   (user) => {
@@ -57,17 +73,46 @@ watch(
   { immediate: true },
 );
 
+function goToQuizStep() {
+  quizError.value = '';
+  if (!formName.value.trim()) {
+    quizError.value = 'Please enter your Full Name as it should appear on your certificate.';
+    return;
+  }
+  if (!formEmail.value.trim() || !/^\S+@\S+\.\S+$/.test(formEmail.value.trim())) {
+    quizError.value = 'Please enter a valid Email ID to receive your certificate.';
+    return;
+  }
+  if (!formConsent.value) {
+    quizError.value = 'Please confirm that you have read and agree to the participation consent.';
+    return;
+  }
+  quizStep.value = 'questions';
+}
+
+function goToInfoStep() {
+  quizError.value = '';
+  quizStep.value = 'info';
+}
+
 async function handleQuizSubmit() {
   quizError.value = '';
   if (!formName.value.trim()) {
     quizError.value = 'Please enter your full name for the certificate.';
+    quizStep.value = 'info';
     return;
   }
   if (!formEmail.value.trim() || !/^\S+@\S+\.\S+$/.test(formEmail.value.trim())) {
     quizError.value = 'Please enter a valid email address to receive your certificate.';
+    quizStep.value = 'info';
     return;
   }
-  const questions = (post.value as any)?.quiz_data?.questions || [];
+  if (!formConsent.value) {
+    quizError.value = 'Participation consent is required to receive certificate.';
+    quizStep.value = 'info';
+    return;
+  }
+  const questions = quizData.value?.questions || [];
   const unanswered = questions.some((q: any, idx: number) => {
     const key = q.id || ('q_' + idx);
     return selectedAnswers.value[key] === undefined;
@@ -81,10 +126,14 @@ async function handleQuizSubmit() {
   try {
     const res = await apiPost<any>('/blogs/public/' + slug.value + '/quiz/submit', {
       name: formName.value.trim(),
+      organization: formOrg.value.trim() || 'Individual',
+      mobile_number: formMobile.value.trim() || null,
       email: formEmail.value.trim().toLowerCase(),
+      consent: true,
       answers: selectedAnswers.value,
     });
     quizResult.value = res.data;
+    quizStep.value = 'result';
   } catch (err: any) {
     quizError.value = err?.message || 'Failed to submit quiz. Please try again.';
   } finally {
@@ -96,6 +145,7 @@ function retakeQuiz() {
   quizResult.value = null;
   selectedAnswers.value = {};
   quizError.value = '';
+  quizStep.value = 'questions';
 }
 
 const slug = computed(() => route.params.slug as string);
@@ -512,6 +562,320 @@ onBeforeUnmount(() => {
                 class="prose prose-slate max-w-none text-slate-800 text-[15px] sm:text-base prose-headings:font-extrabold prose-h2:text-2xl prose-h2:border-b prose-h2:border-slate-100 prose-h2:pb-2.5 prose-h2:mt-8 prose-h3:text-lg prose-h3:mt-6 prose-p:leading-relaxed prose-li:my-1.5 prose-img:rounded-xl prose-img:shadow-md"
                 v-html="sanitizeHtml(post.content)"
               ></div>
+            </div>
+
+            <!-- ── INTERACTIVE BLOG QUIZ & CERTIFICATE OF PARTICIPATION WIZARD ── -->
+            <div v-if="hasQuiz" class="mt-12 rounded-2xl border-2 border-brand-200/90 bg-gradient-to-b from-white to-slate-50/60 p-6 sm:p-8 shadow-md">
+              <!-- Wizard Header -->
+              <div class="border-b border-slate-200/80 pb-5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div class="flex items-center gap-2.5">
+                    <span class="grid h-10 w-10 place-items-center rounded-xl bg-blue-900 text-white shadow-sm font-bold text-lg">
+                      🎓
+                    </span>
+                    <div>
+                      <span class="rounded bg-blue-50 border border-blue-200 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-blue-900">
+                        Official Awareness Assessment
+                      </span>
+                      <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-0.5">
+                        {{ quizData?.title || 'Knowledge Assessment & Participation Certificate' }}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <!-- Step Indicator Pills -->
+                  <div class="flex items-center gap-2 text-xs font-bold">
+                    <span
+                      class="px-3 py-1 rounded-full transition"
+                      :class="quizStep === 'info' ? 'bg-blue-900 text-white shadow-sm' : 'bg-slate-100 text-slate-500'"
+                    >
+                      1. Info &amp; Consent
+                    </span>
+                    <span class="text-slate-300">&rarr;</span>
+                    <span
+                      class="px-3 py-1 rounded-full transition"
+                      :class="quizStep === 'questions' ? 'bg-blue-900 text-white shadow-sm' : 'bg-slate-100 text-slate-500'"
+                    >
+                      2. Quiz
+                    </span>
+                    <span class="text-slate-300">&rarr;</span>
+                    <span
+                      class="px-3 py-1 rounded-full transition"
+                      :class="quizStep === 'result' ? 'bg-blue-900 text-white shadow-sm' : 'bg-slate-100 text-slate-500'"
+                    >
+                      3. Certificate
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Error Banner -->
+              <div v-if="quizError" class="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-800 flex items-start gap-2.5">
+                <Icon name="alert-triangle" :size="18" class="text-rose-600 shrink-0 mt-0.5" />
+                <span class="flex-1">{{ quizError }}</span>
+              </div>
+
+              <!-- ════════ STEP 1: PARTICIPANT INFORMATION & CONSENT ════════ -->
+              <div v-if="quizStep === 'info'" class="mt-6 space-y-6">
+                <!-- Info Notice Box -->
+                <div class="rounded-xl border border-blue-200 bg-blue-50/80 p-4 sm:p-5 text-blue-950">
+                  <h4 class="text-sm font-bold flex items-center gap-2">
+                    <Icon name="info" :size="16" class="text-blue-700" />
+                    <span>Participant Information &amp; Consent</span>
+                  </h4>
+                  <p class="mt-1.5 text-xs sm:text-[13px] leading-relaxed text-blue-900/90">
+                    Your Full Name and Organization will be printed on the certificate, and the certificate will be emailed to the Email ID you enter. Score <strong>{{ requiredCorrectCount }} out of {{ totalQuizQuestions }}</strong> ({{ passingScore }}%) or more to receive the certificate.
+                  </p>
+                </div>
+
+                <!-- Field 1: Full Name -->
+                <div class="space-y-1.5">
+                  <label class="block text-xs sm:text-sm font-bold text-slate-900">
+                    1. Full Name <span class="text-rose-500">*</span>
+                  </label>
+                  <p class="text-xs text-slate-500">
+                    This name will be printed on your certificate. Please check the spelling before submitting.
+                  </p>
+                  <input
+                    type="text"
+                    v-model="formName"
+                    placeholder="Enter your answer"
+                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition shadow-2xs"
+                  />
+                </div>
+
+                <!-- Field 2: Organization / Company -->
+                <div class="space-y-1.5">
+                  <label class="block text-xs sm:text-sm font-bold text-slate-900">
+                    2. Organization / Company
+                  </label>
+                  <p class="text-xs text-slate-500">
+                    This organization name will be printed on your certificate below your name. If you are not employed, write Individual or your institute name.
+                  </p>
+                  <input
+                    type="text"
+                    v-model="formOrg"
+                    placeholder="Enter your answer"
+                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition shadow-2xs"
+                  />
+                </div>
+
+                <!-- Field 3: Mobile Number (optional) -->
+                <div class="space-y-1.5">
+                  <label class="block text-xs sm:text-sm font-bold text-slate-900">
+                    3. Mobile Number (optional)
+                  </label>
+                  <input
+                    type="tel"
+                    v-model="formMobile"
+                    placeholder="Enter your answer"
+                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition shadow-2xs"
+                  />
+                </div>
+
+                <!-- Field 4: Email ID -->
+                <div class="space-y-1.5">
+                  <label class="block text-xs sm:text-sm font-bold text-slate-900">
+                    4. Email ID <span class="text-rose-500">*</span>
+                  </label>
+                  <p class="text-xs text-slate-500">
+                    Your certificate will be sent to this email address. Please double-check it - if the email ID is wrong, the certificate cannot be delivered.
+                  </p>
+                  <input
+                    type="email"
+                    v-model="formEmail"
+                    placeholder="Please enter an email"
+                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition shadow-2xs"
+                  />
+                </div>
+
+                <!-- Field 5: Participation Consent -->
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                  <div class="text-xs sm:text-[13px] font-semibold text-slate-800 leading-relaxed">
+                    <strong>5. Participation consent:</strong> I voluntarily participate and authorize Himaya Prevention Private Limited to use my name and email address to send my quiz result and Certificate of Participation. I understand this activity is for awareness only and is not authorization, competency evidence, training certification or a qualification.
+                  </div>
+                  <label class="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-slate-900 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      v-model="formConsent"
+                      class="h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-600 cursor-pointer"
+                    />
+                    <span>I have read and agree</span>
+                  </label>
+                </div>
+
+                <!-- Action Button -->
+                <div class="pt-2 flex justify-end">
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-xl bg-blue-900 px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-blue-800 transition active:scale-95"
+                    @click="goToQuizStep"
+                  >
+                    <span>Next &rarr;</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- ════════ STEP 2: QUIZ SECTION ════════ -->
+              <div v-else-if="quizStep === 'questions'" class="mt-6 space-y-6">
+                <div class="flex items-center justify-between gap-3 bg-slate-100/80 rounded-xl px-4 py-2.5 text-xs text-slate-600">
+                  <span class="font-bold text-slate-800">
+                    Participant: {{ formName }} <span v-if="formOrg">({{ formOrg }})</span>
+                  </span>
+                  <button
+                    type="button"
+                    class="text-blue-900 font-bold hover:underline"
+                    @click="goToInfoStep"
+                  >
+                    Edit Details
+                  </button>
+                </div>
+
+                <div class="space-y-6">
+                  <div
+                    v-for="(q, idx) in quizData?.questions || []"
+                    :key="q.id || idx"
+                    class="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs"
+                  >
+                    <div class="flex items-start gap-3">
+                      <span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-blue-100 text-xs font-black text-blue-900">
+                        {{ idx + 1 }}
+                      </span>
+                      <div class="min-w-0 flex-1">
+                        <h4 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">
+                          {{ q.question }}
+                        </h4>
+
+                        <div class="mt-3.5 space-y-2">
+                          <label
+                            v-for="(opt, optIdx) in q.options"
+                            :key="optIdx"
+                            class="flex items-center gap-3 rounded-xl border p-3 text-xs sm:text-sm cursor-pointer transition select-none"
+                            :class="selectedAnswers[q.id || ('q_' + idx)] === optIdx ? 'border-blue-600 bg-blue-50/70 text-blue-950 font-bold shadow-2xs' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+                          >
+                            <input
+                              type="radio"
+                              :name="'q_' + (q.id || idx)"
+                              :value="optIdx"
+                              v-model="selectedAnswers[q.id || ('q_' + idx)]"
+                              class="h-4 w-4 text-blue-900 focus:ring-blue-600 cursor-pointer"
+                            />
+                            <span>{{ opt }}</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Footer Navigation Buttons -->
+                <div class="pt-4 flex items-center justify-between gap-3 border-t border-slate-200">
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                    @click="goToInfoStep"
+                  >
+                    <span>&larr; Back to Information</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-xl bg-blue-900 px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-blue-800 transition active:scale-95 disabled:opacity-50"
+                    :disabled="submittingQuiz"
+                    @click="handleQuizSubmit"
+                  >
+                    <Icon v-if="submittingQuiz" name="loader" :size="16" class="animate-spin" />
+                    <span>{{ submittingQuiz ? 'Submitting & Evaluating...' : 'Submit Quiz & Receive Certificate' }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- ════════ STEP 3: RESULT SCREEN ════════ -->
+              <div v-else-if="quizStep === 'result' && quizResult" class="mt-6">
+                <!-- Passed State -->
+                <div v-if="quizResult.passed" class="rounded-2xl border-2 border-emerald-300 bg-emerald-50/80 p-6 sm:p-8 text-center">
+                  <div class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-600 text-white shadow-md text-2xl mb-3">
+                    ✓
+                  </div>
+                  <span class="rounded-full bg-emerald-100 border border-emerald-300 px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-emerald-800">
+                    Passed Successfully
+                  </span>
+                  <h3 class="mt-3 text-xl sm:text-2xl font-black text-slate-900">
+                    Congratulations, {{ formName }}!
+                  </h3>
+                  <p class="mt-2 text-xs sm:text-sm text-slate-600 max-w-md mx-auto">
+                    You scored <strong class="text-emerald-700">{{ quizResult.score }}%</strong> ({{ quizResult.correct_count }}/{{ quizResult.total_questions }} correct). The required score was {{ quizResult.passing_score }}%.
+                  </p>
+
+                  <div class="mt-5 rounded-xl border border-emerald-200 bg-white p-4 max-w-lg mx-auto text-left text-xs sm:text-sm space-y-2 shadow-2xs">
+                    <div class="flex items-center justify-between py-1 border-b border-slate-100">
+                      <span class="text-slate-500">Certificate ID:</span>
+                      <span class="font-mono font-bold text-blue-950">{{ quizResult.certificate_number }}</span>
+                    </div>
+                    <div class="flex items-center justify-between py-1 border-b border-slate-100">
+                      <span class="text-slate-500">Delivered To:</span>
+                      <span class="font-semibold text-slate-800">{{ formEmail }}</span>
+                    </div>
+                    <div class="flex items-center justify-between py-1">
+                      <span class="text-slate-500">Issued By:</span>
+                      <span class="font-semibold text-blue-900">Himaya Prevention Private Limited</span>
+                    </div>
+                  </div>
+
+                  <p class="mt-4 text-xs font-semibold text-emerald-800">
+                    📧 An email with your official Certificate of Participation (PDF attached) has been sent to {{ formEmail }}.
+                  </p>
+
+                  <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+                    <a
+                      v-if="quizResult.verify_url"
+                      :href="quizResult.verify_url"
+                      target="_blank"
+                      class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-emerald-700 transition"
+                    >
+                      <span>View &amp; Verify Certificate Online</span>
+                      <span>&nearr;</span>
+                    </a>
+
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                      @click="retakeQuiz"
+                    >
+                      <span>Retake Assessment</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Failed State -->
+                <div v-else class="rounded-2xl border-2 border-amber-300 bg-amber-50/80 p-6 sm:p-8 text-center">
+                  <div class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-amber-500 text-white shadow-md text-2xl mb-3">
+                    !
+                  </div>
+                  <span class="rounded-full bg-amber-100 border border-amber-300 px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-amber-800">
+                    Passing Score Not Met
+                  </span>
+                  <h3 class="mt-3 text-xl font-black text-slate-900">
+                    Keep Learning, {{ formName }}!
+                  </h3>
+                  <p class="mt-2 text-xs sm:text-sm text-slate-600 max-w-md mx-auto">
+                    You scored <strong class="text-amber-800">{{ quizResult.score }}%</strong> ({{ quizResult.correct_count }}/{{ quizResult.total_questions }} correct). The required score is {{ quizResult.passing_score }}%.
+                  </p>
+                  <p class="mt-2 text-xs text-slate-500">
+                    Please review the article above and try the questions again to earn your Certificate of Participation.
+                  </p>
+
+                  <div class="mt-6 flex justify-center">
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-2 rounded-xl bg-blue-900 px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-blue-800 transition"
+                      @click="retakeQuiz"
+                    >
+                      <span>Review Article &amp; Retake Quiz &rarr;</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Tags -->

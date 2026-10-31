@@ -46,7 +46,12 @@ export const updateBlogSchema = z.object({
 
 export const submitBlogQuizSchema = z.object({
   name: z.string().min(2, 'Full name is required').max(150),
+  organization: z.string().max(200).optional().default('Individual'),
+  mobile_number: z.string().max(30).optional().nullable(),
   email: z.string().email('Valid email is required').max(150),
+  consent: z.boolean().refine((val) => val === true, {
+    message: 'Participation consent is required to receive certificate',
+  }),
   answers: z.record(z.string(), z.number().int().min(0)),
 });
 

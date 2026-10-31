@@ -17,9 +17,19 @@ export interface CertData {
   duration?: string | null;
   content?: string | null;
   score?: string | number | null;
+  organization?: string | null;
+  template?: string | null;
 }
 
 const props = defineProps<{ cert: CertData }>();
+
+const isParticipation = computed(() => {
+  return props.cert.template === 'participation' || /participation/i.test(props.cert.content || '');
+});
+
+const displayOrganization = computed(() => {
+  return props.cert.organization && props.cert.organization.trim() ? props.cert.organization.trim() : 'Individual';
+});
 
 const localizedCourseTitle = computed(() => {
   return getLocalizedText(props.cert.course);
@@ -155,7 +165,71 @@ const formattedCustomContent = computed(() => {
 
 <template>
   <div class="cert-outer-wrapper">
-    <div class="certificate" id="printable-certificate">
+    <!-- ── PARTICIPATION CERTIFICATE (BLOG QUIZ / AWARENESS) ── -->
+    <div v-if="isParticipation" class="certificate cert-participation" id="printable-certificate">
+      <div class="part-content">
+        <div class="part-header-authority">
+          HIMAYA PREVENTION PRIVATE LIMITED
+        </div>
+        <div class="part-presented-to">
+          THIS IS PROUDLY PRESENTED TO
+        </div>
+        <div class="part-name">
+          {{ cert.name || 'Participant Name' }}
+        </div>
+        <div class="part-name-divider"></div>
+        <div class="part-org">
+          {{ displayOrganization }}
+        </div>
+        <p class="part-statement">
+          for actively participating and demonstrating safety awareness in
+        </p>
+        <p class="part-title">
+          {{ localizedCourseTitle || cert.course || 'Safety Awareness Assessment' }}
+        </p>
+        <p class="part-disclaimer">
+          This certificate is issued for awareness purposes only by Himaya Prevention Private Limited and does not constitute formal authorization, competency evidence, training certification or a qualification.
+        </p>
+      </div>
+
+      <!-- Right QR Code -->
+      <div class="part-qr-section">
+        <a :href="verificationPageUrl" target="_blank" class="qr-action-link" title="Click or Scan to Verify Certificate">
+          <img v-if="qrUrl" :src="qrUrl" alt="Verification QR Code" class="part-qr-image" />
+          <div class="part-qr-badge">
+            <span>SCAN TO VERIFY</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Left Bottom Metadata -->
+      <div class="part-bottom-meta">
+        <div class="part-meta-line">
+          <strong>Date of Issue:</strong> {{ fmtIssueDate(cert.publish_date) }}
+        </div>
+        <div class="part-meta-line">
+          <strong>Certificate ID:</strong> <span class="font-mono text-slate-900 font-bold">{{ cert.certificate_number || 'CERT-PART-01' }}</span>
+        </div>
+        <div class="part-meta-status">
+          VERIFIED PARTICIPATION RECORD
+        </div>
+      </div>
+
+      <!-- Center Signature -->
+      <div class="part-signature-section">
+        <div class="part-sig-line"></div>
+        <div class="part-sig-name">Himaya Prevention Pvt. Ltd.</div>
+        <div class="part-sig-title">Authorized Signatory</div>
+      </div>
+
+      <!-- Footer Notice -->
+      <div class="part-footer-notice">
+        Verify certificate authenticity online at {{ verificationPageUrl }}
+      </div>
+    </div>
+
+    <!-- ── STANDARD COURSE CERTIFICATE ── -->
+    <div v-else class="certificate" id="printable-certificate">
       <!-- 1. TOP-LEFT: GREEN VERIFIED HEADINGS -->
       <div class="verified">
         VERIFIED
@@ -512,6 +586,185 @@ const formattedCustomContent = computed(() => {
   text-align: right;
   letter-spacing: 0.2px;
   max-width: 450px;
+}
+
+/* ── PARTICIPATION CERTIFICATE STYLES ──────────────────────────────── */
+.certificate.cert-participation {
+  position: relative;
+  width: 1024px;
+  min-width: 1024px;
+  height: 723px;
+  min-height: 723px;
+  background-image: url('/img/certificate-participation.jpg');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.part-content {
+  position: absolute;
+  left: 215px;
+  right: 40px;
+  top: 52px;
+  text-align: center;
+}
+
+.part-header-authority {
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: #1e3a8a;
+  letter-spacing: 0.8px;
+}
+
+.part-presented-to {
+  margin-top: 18px;
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 1.5px;
+}
+
+.part-name {
+  margin-top: 16px;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 34px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.part-name-divider {
+  width: 320px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #cbd5e1, #94a3b8, #cbd5e1, transparent);
+  margin: 10px auto 12px auto;
+}
+
+.part-org {
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #334155;
+  letter-spacing: 0.3px;
+}
+
+.part-statement {
+  margin-top: 22px;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13px;
+  color: #475569;
+}
+
+.part-title {
+  margin-top: 10px;
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.3;
+}
+
+.part-disclaimer {
+  margin-top: 20px;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 9.5px;
+  color: #64748b;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.part-bottom-meta {
+  position: absolute;
+  left: 235px;
+  bottom: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 11px;
+  color: #334155;
+}
+
+.part-meta-status {
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #15803d;
+  letter-spacing: 0.5px;
+}
+
+.part-signature-section {
+  position: absolute;
+  left: 510px;
+  bottom: 60px;
+  width: 220px;
+  text-align: center;
+}
+
+.part-sig-line {
+  width: 180px;
+  height: 1px;
+  background-color: #cbd5e1;
+  margin: 0 auto 8px auto;
+}
+
+.part-sig-name {
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.part-sig-title {
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.part-qr-section {
+  position: absolute;
+  right: 55px;
+  bottom: 50px;
+  text-align: center;
+}
+
+.part-qr-image {
+  width: 95px;
+  height: 95px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.part-qr-badge {
+  margin-top: 4px;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #1e3a8a;
+  letter-spacing: 0.5px;
+}
+
+.part-footer-notice {
+  position: absolute;
+  left: 215px;
+  right: 40px;
+  bottom: 16px;
+  text-align: center;
+  font-size: 9px;
+  color: #94a3b8;
 }
 
 /* ── PRINT STYLES FOR FLAWLESS A4 LANDSCAPE PRINTING ───────────────── */

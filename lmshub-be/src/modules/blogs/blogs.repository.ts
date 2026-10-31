@@ -225,6 +225,8 @@ export async function createBlogCertificate(data: {
   qr_code_url: string;
   score: number;
   publish_date: Date;
+  organization?: string;
+  mobile_number?: string | null;
 }) {
   const row = await queryOne<{ id: string; certificate_number: string }>(
     `INSERT INTO certificates (
@@ -244,7 +246,13 @@ export async function createBlogCertificate(data: {
       data.verification_code,
       data.qr_code_url,
       data.publish_date,
-      JSON.stringify({ quiz: { score_percent: data.score, completed_at: data.publish_date.toISOString() } }),
+      JSON.stringify({
+        quiz: { score_percent: data.score, completed_at: data.publish_date.toISOString() },
+        organization: data.organization || 'Individual',
+        mobile_number: data.mobile_number || null,
+        template: 'participation',
+        consent_agreed: true,
+      }),
     ],
   );
   return row;

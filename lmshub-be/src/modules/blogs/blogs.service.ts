@@ -183,6 +183,7 @@ export async function submitBlogQuiz(slug: string, input: SubmitBlogQuizInput) {
   });
 
   // Record certificate in database
+  const userOrg = input.organization?.trim() || 'Individual';
   await repo.createBlogCertificate({
     blog_id: post.id,
     recipient_name: input.name.trim(),
@@ -192,6 +193,8 @@ export async function submitBlogQuiz(slug: string, input: SubmitBlogQuizInput) {
     qr_code_url: verifyUrl,
     score,
     publish_date: now,
+    organization: userOrg,
+    mobile_number: input.mobile_number?.trim() || null,
   });
 
   // Generate PDF attachment buffer
@@ -205,6 +208,8 @@ export async function submitBlogQuiz(slug: string, input: SubmitBlogQuizInput) {
       duration: 'Self-Paced Assessment',
       instructor: 'Dr. Chiragkumar Makwana',
       verifyUrl,
+      template: 'participation',
+      organization: userOrg,
     });
   } catch (err) {
     console.error('Failed to generate certificate PDF attachment:', err);
@@ -213,21 +218,29 @@ export async function submitBlogQuiz(slug: string, input: SubmitBlogQuizInput) {
   // Compose and send email
   const emailHtml = `
   <div style="font-family: Arial, Helvetica, sans-serif; max-width: 620px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
-    <div style="background: linear-gradient(135deg, #15803d 0%, #166534 100%); padding: 28px 24px; text-align: center; color: #ffffff;">
+    <div style="background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); padding: 28px 24px; text-align: center; color: #ffffff;">
       <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: 0.5px;">Congratulations, ${input.name.trim()}!</h1>
-      <p style="margin: 8px 0 0; font-size: 15px; opacity: 0.95;">You have successfully passed the Safety Knowledge Quiz</p>
+      <p style="margin: 8px 0 0; font-size: 15px; opacity: 0.95;">Here is your Certificate of Participation</p>
     </div>
 
     <div style="padding: 28px 24px; color: #334155; line-height: 1.6;">
       <p style="font-size: 15px; margin: 0 0 16px;">
-        We are pleased to inform you that you achieved a score of <strong>${score}%</strong> on the assessment for:
+        Thank you for participating in our safety awareness assessment. You achieved a passing score of <strong>${score}%</strong> for:
       </p>
       
-      <div style="background-color: #f8fafc; border-left: 4px solid #16a34a; padding: 14px 18px; border-radius: 4px; margin-bottom: 20px;">
+      <div style="background-color: #f8fafc; border-left: 4px solid #1e40af; padding: 14px 18px; border-radius: 4px; margin-bottom: 20px;">
         <h3 style="margin: 0; color: #0f172a; font-size: 16px;">${post.title}</h3>
       </div>
 
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px;">
+        <tr>
+          <td style="padding: 8px 0; color: #64748b; width: 40%;">Participant Name:</td>
+          <td style="padding: 8px 0; font-weight: bold; color: #0f172a;">${input.name.trim()}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #64748b;">Organization / Company:</td>
+          <td style="padding: 8px 0; font-weight: bold; color: #0f172a;">${userOrg}</td>
+        </tr>
         <tr>
           <td style="padding: 8px 0; color: #64748b;">Certificate ID:</td>
           <td style="padding: 8px 0; font-weight: bold; color: #0f172a; font-family: monospace; font-size: 15px;">${certCode}</td>
@@ -237,25 +250,29 @@ export async function submitBlogQuiz(slug: string, input: SubmitBlogQuizInput) {
           <td style="padding: 8px 0; font-weight: bold; color: #0f172a;">${dateFormatted}</td>
         </tr>
         <tr>
-          <td style="padding: 8px 0; color: #64748b;">Recognition:</td>
-          <td style="padding: 8px 0; font-weight: 600; color: #15803d;">Recognized by DISH, Govt. Of Gujarat</td>
+          <td style="padding: 8px 0; color: #64748b;">Issued By:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #1e40af;">Himaya Prevention Private Limited</td>
         </tr>
       </table>
 
       <div style="text-align: center; margin: 28px 0 16px;">
-        <a href="${verifyUrl}" style="background-color: #16a34a; color: #ffffff; text-decoration: none; padding: 13px 28px; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block;">
+        <a href="${verifyUrl}" style="background-color: #1e40af; color: #ffffff; text-decoration: none; padding: 13px 28px; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block;">
           View & Verify Certificate Online
         </a>
       </div>
 
       <p style="font-size: 13px; color: #64748b; text-align: center; margin: 0 0 20px;">
-        Your official certificate PDF is also attached to this email.
+        Your official Certificate of Participation (PDF) is attached to this email.
       </p>
+
+      <div style="background-color: #f1f5f9; padding: 12px; border-radius: 6px; font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 20px;">
+        <em>Disclaimer: This activity is for safety awareness only and is not authorization, competency evidence, training certification or a qualification.</em>
+      </div>
 
       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
 
       <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: 0;">
-        National Fire Safety Institute (NFSI) & HSEdx<br />
+        Himaya Prevention Private Limited &amp; NFSI<br />
         Vadodara, Gujarat, India
       </p>
     </div>
@@ -264,12 +281,12 @@ export async function submitBlogQuiz(slug: string, input: SubmitBlogQuizInput) {
 
   sendMail({
     to: input.email.trim(),
-    subject: `Your Verified Certificate: ${post.title} (ID: ${certCode})`,
+    subject: `Certificate of Participation: ${post.title} (ID: ${certCode})`,
     html: emailHtml,
     attachments: pdfBuffer
       ? [
           {
-            filename: `Certificate-${certCode}.pdf`,
+            filename: `Certificate-of-Participation-${certCode}.pdf`,
             content: pdfBuffer,
             contentType: 'application/pdf',
           },

@@ -350,6 +350,8 @@ export interface VerificationResult {
   score?: string | number | null;
   duration?: string | null;
   content?: string | null;
+  organization?: string | null;
+  template?: string | null;
   status: 'valid' | 'cancelled' | 'tidak_ditemukan';
 }
 
@@ -365,6 +367,8 @@ export async function verifyByNomor(number: string): Promise<VerificationResult 
     score: string | null;
     duration: string | null;
     content: string | null;
+    organization: string | null;
+    template: string | null;
     is_revoked: boolean;
     status: string;
   }>(
@@ -375,6 +379,8 @@ export async function verifyByNomor(number: string): Promise<VerificationResult 
               ELSE '12 hours'
             END AS duration,
             COALESCE(cert.criteria_snapshot->'final_exam'->>'score_terbaik_persen', NULL) AS score,
+            COALESCE(cert.criteria_snapshot->>'organization', NULL) AS organization,
+            COALESCE(cert.criteria_snapshot->>'template', CASE WHEN cert.blog_id IS NOT NULL THEN 'participation' ELSE 'default' END) AS template,
             COALESCE(
               (SELECT layout->>'content' FROM certificate_templates WHERE id = cert.template_id),
               (SELECT layout->>'content' FROM certificate_templates WHERE course_id = cert.course_id AND is_active = true AND deleted_at IS NULL LIMIT 1),
@@ -404,6 +410,8 @@ export async function verifyByNomor(number: string): Promise<VerificationResult 
     score: row.score,
     duration: row.duration,
     content: row.content,
+    organization: row.organization,
+    template: row.template,
     status: row.is_revoked ? 'cancelled' : row.status === 'publish' ? 'valid' : 'tidak_ditemukan',
   };
 }
@@ -423,6 +431,8 @@ export interface CertificateDisplay {
   content: string | null;
   score?: string | number | null;
   duration?: string | null;
+  organization?: string | null;
+  template?: string | null;
 }
 
 /** Complete data for rendering the certificate design (name, course, instructor, QR, etc). */
@@ -436,6 +446,8 @@ export async function displayById(id: string): Promise<CertificateDisplay | null
               ELSE '12 hours'
             END AS duration,
             COALESCE(cert.criteria_snapshot->'final_exam'->>'score_terbaik_persen', NULL) AS score,
+            COALESCE(cert.criteria_snapshot->>'organization', NULL) AS organization,
+            COALESCE(cert.criteria_snapshot->>'template', CASE WHEN cert.blog_id IS NOT NULL THEN 'participation' ELSE 'default' END) AS template,
             COALESCE(
               (SELECT layout->>'content' FROM certificate_templates WHERE id = cert.template_id),
               (SELECT layout->>'content' FROM certificate_templates WHERE course_id = cert.course_id AND is_active = true AND deleted_at IS NULL LIMIT 1),

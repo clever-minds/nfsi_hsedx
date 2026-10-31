@@ -1,3 +1,4 @@
+import { generateCertificatePdf } from './certificate-pdf';
 import { Request, Response } from 'express';
 import { ok, created, noContent } from '../../core/http/envelope';
 import { parsePage, pageMeta } from '../../core/http/pagination';
@@ -69,6 +70,37 @@ export async function renderCert(req: Request, res: Response) {
 
 export async function verify(req: Request, res: Response) {
   return ok(res, await service.verify(req.params.number));
+}
+
+export async function downloadPdf(req: Request, res: Response) {
+  const number = req.params.number;
+  const cert = await service.verify(number);
+  if (!cert || cert.status !== 'valid') {
+    return res.status(404).send('Certificate not found or invalid');
+  }
+
+  const now = new Date(cert.publish_date || Date.now());
+  const dateFormatted = now.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  const pdfBuffer = generateCertificatePdf({
+    studentName: cert.name,
+    courseTitle: cert.course,
+    certNumber: cert.certificate_number,
+    completionDate: dateFormatted,
+    duration: cert.duration || 'Self-Paced Assessment',
+    instructor: cert.instructor || 'Dr. Chiragkumar Makwana',
+    verifyUrl: cert.qr_code_url || undefined,
+    template: (cert.template as any) || 'participation',
+    organization: cert.organization || 'Individual',
+  });
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="Certificate-${cert.certificate_number}.pdf"`);
+  return res.send(pdfBuffer);
 }
 
 export async function listTemplates(req: Request, res: Response) {

@@ -146,14 +146,27 @@ export async function submitBlogQuiz(slug: string, input: SubmitBlogQuizInput) {
   const totalQuestions = quiz.questions.length;
   let correctCount = 0;
 
-  quiz.questions.forEach((q, idx) => {
-    const qKey = q.id || `q_${idx}`;
+  const review = quiz.questions.map((q, idx) => {
+    const qKey = q.id || `q_${idx + 1}`;
     const userSelected = input.answers[qKey] ?? input.answers[String(idx)];
-    if (userSelected !== undefined && Number(userSelected) === Number(q.correct_answer)) {
+    const selectedIdx = userSelected !== undefined && userSelected !== null ? Number(userSelected) : null;
+    const isCorrect = selectedIdx !== null && selectedIdx === Number(q.correct_answer);
+    if (isCorrect) {
       correctCount++;
     }
+    return {
+      id: qKey,
+      question: q.question,
+      options: q.options,
+      selected_answer: selectedIdx,
+      selected_option_text: selectedIdx !== null ? (q.options[selectedIdx] || null) : null,
+      correct_answer: Number(q.correct_answer),
+      correct_option_text: q.options[Number(q.correct_answer)] || null,
+      is_correct: isCorrect,
+    };
   });
 
+  const incorrectCount = totalQuestions - correctCount;
   const score = Math.round((correctCount / totalQuestions) * 100);
   const passingScore = quiz.passing_score ?? 70;
   const passed = score >= passingScore;
@@ -165,7 +178,9 @@ export async function submitBlogQuiz(slug: string, input: SubmitBlogQuizInput) {
       passing_score: passingScore,
       total_questions: totalQuestions,
       correct_count: correctCount,
-      message: `You scored ${score}%. The required passing score is ${passingScore}%. Please review the article and try again!`,
+      incorrect_count: incorrectCount,
+      review,
+      message: `You scored ${score}%. The required passing score is ${passingScore}%. Please review the questions below and try again!`,
     };
   }
 
@@ -279,22 +294,29 @@ export async function submitBlogQuiz(slug: string, input: SubmitBlogQuizInput) {
   </div>
   `;
 
-  sendMail({
-    to: input.email.trim(),
-    subject: `Certificate of Participation: ${post.title} (ID: ${certCode})`,
-    html: emailHtml,
-    attachments: pdfBuffer
-      ? [
-          {
-            filename: `Certificate-of-Participation-${certCode}.pdf`,
-            content: pdfBuffer,
-            contentType: 'application/pdf',
-          },
-        ]
-      : undefined,
-  }).catch((err) => {
+  let emailSent = false;
+  try {
+    const mailRes = await sendMail({
+      to: input.email.trim(),
+      subject: `Certificate of Participation: ${post.title} (ID: ${certCode})`,
+      html: emailHtml,
+      attachments: pdfBuffer
+        ? [
+            {
+              filename: `Certificate-of-Participation-${certCode}.pdf`,
+              content: pdfBuffer,
+              contentType: 'application/pdf',
+            },
+          ]
+        : undefined,
+    });
+    emailSent = Boolean(mailRes?.sent);
+  } catch (err) {
     console.error('Failed to send certificate email:', err);
-  });
+    emailSent = false;
+  }
+
+  const downloadUrl = `/api/v1/public/certificates/${encodeURIComponent(certCode)}/download`;
 
   return {
     passed: true,
@@ -302,8 +324,12 @@ export async function submitBlogQuiz(slug: string, input: SubmitBlogQuizInput) {
     passing_score: passingScore,
     total_questions: totalQuestions,
     correct_count: correctCount,
+    incorrect_count: incorrectCount,
+    review,
+    email_sent: emailSent,
     certificate_number: certCode,
     verify_url: verifyUrl,
-    message: `Congratulations ${input.name.trim()}! You scored ${score}%. Your verified certificate has been created and sent to ${input.email}.`,
+    download_url: downloadUrl,
+    message: `Congratulations ${input.name.trim()}! You scored ${score}%. Your Certificate of Participation is ready.`,
   };
 }

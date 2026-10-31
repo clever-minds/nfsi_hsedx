@@ -20,6 +20,7 @@ export const certificatesRouter = Router();
 
 // PUBLIC — verifikasi keaslian certificate, tanpa requireAuth, tanpa membocorkan data pribadi
 certificatesRouter.get('/public/certificates/verify/:number', asyncHandler(ctrl.verify));
+certificatesRouter.get('/public/certificates/:number/download', asyncHandler(ctrl.downloadPdf));
 
 // ── Certificate ──────────────────────────────────────────────
 certificatesRouter.get('/certificates', requireAuth(), requirePermission('certificate', 'view'), asyncHandler(ctrl.list));

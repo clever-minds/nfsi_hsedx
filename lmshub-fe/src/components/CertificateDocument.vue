@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted } from 'vue';
 import DOMPurify from 'dompurify';
+// @ts-ignore
 import QRCode from '@/lib/qrcode-bundle.js';
 import { getLocalizedText } from '@/lib/course-localization';
 
@@ -67,10 +68,10 @@ async function generateQrCode() {
   try {
     localQrDataUrl.value = await QRCode.toDataURL(url, {
       margin: 1,
-      width: 160,
+      width: 140,
       errorCorrectionLevel: 'M',
       color: {
-        dark: '#0f172a',
+        dark: '#000000',
         light: '#ffffff',
       },
     });
@@ -107,25 +108,25 @@ function replaceAllTokens(rawText: string): string {
 
   let text = rawText;
 
-  // Replace {name}, {{name}}, :name, [name], {student_name}, {{student_name}}
-  text = text.replace(/(\{\{|\{|\b\:|\[)\s*(name|student_name)\s*(\}\}|\}|\]|\b)/gi, `<strong class="cert-dyn-name font-bold">${studentName}</strong>`);
+  // Replace {name}, {{name}}, :name, [name], {student_name}
+  text = text.replace(/(\{\{|\{|\b\:|\[)\s*(name|student_name)\s*(\}\}|\}|\]|\b)/gi, `<strong class="cert-dyn-name">${studentName}</strong>`);
 
-  // Replace {title}, {{title}}, {course}, {{course}}, :title, [title], [course], {course_title}, {course_name}
-  text = text.replace(/(\{\{|\{|\b\:|\[)\s*(title|course|course_title|course_name)\s*(\}\}|\}|\]|\b)/gi, `<strong class="cert-dyn-course font-bold">${courseTitle}</strong>`);
+  // Replace {title}, {{title}}, {course}, {{course}}, :title, [title], [course]
+  text = text.replace(/(\{\{|\{|\b\:|\[)\s*(title|course|course_title|course_name)\s*(\}\}|\}|\]|\b)/gi, `<strong class="cert-dyn-course">${courseTitle}</strong>`);
 
-  // Replace {duration}, {{duration}}, :duration, [duration], {course_duration}
+  // Replace {duration}, {{duration}}, :duration, [duration]
   text = text.replace(/(\{\{|\{|\b\:|\[)\s*(duration|course_duration)\s*(\}\}|\}|\]|\b)/gi, `<strong class="cert-dyn-meta">${durationStr}</strong>`);
 
-  // Replace {date}, {{date}}, {publish_date}, {{publish_date}}, [date], :date, {completion_date}, {issue_date}
+  // Replace {date}, {{date}}, {publish_date}, [date], :date
   text = text.replace(/(\{\{|\{|\b\:|\[)\s*(date|publish_date|completion_date|issue_date)\s*(\}\}|\}|\]|\b)/gi, `<strong class="cert-dyn-meta">${dateStr}</strong>`);
 
-  // Replace {certificate_code}, {number}, {{number}}, {certificate_number}, {{certificate_number}}, [number], {cert_number}
+  // Replace {certificate_code}, {number}, {{number}}
   text = text.replace(/(\{\{|\{|\b\:|\[)\s*(certificate_code|number|certificate_number|cert_number)\s*(\}\}|\}|\]|\b)/gi, `<strong class="cert-dyn-meta">${certNumber}</strong>`);
 
-  // Replace {score}, {{score}}, [score]
+  // Replace {score}
   text = text.replace(/(\{\{|\{|\b\:|\[)\s*score\s*(\}\}|\}|\]|\b)/gi, `<strong class="cert-dyn-meta">${scoreStr}</strong>`);
 
-  // Replace {instructor}, {{instructor}}, [instructor], {signatory}
+  // Replace {instructor}
   text = text.replace(/(\{\{|\{|\b\:|\[)\s*(instructor|signatory|instructor_name)\s*(\}\}|\}|\]|\b)/gi, `<strong class="cert-dyn-meta">${instructorStr}</strong>`);
 
   return text;
@@ -142,46 +143,51 @@ const formattedCustomContent = computed(() => {
       .map(p => `<p>${p.replace(/\n/g, '<br />')}</p>`)
       .join('');
   }
+
+  // Normalize separate <p> tags so consecutive lines match design-4
+  html = html
+    .replace(/<\/p>\s*<p>\s*(has successfully completed)/gi, '<br />$1')
+    .replace(/<\/p>\s*<p>\s*(<strong>Date of Completion:<\/strong>|Date of Completion:)/gi, '<br />$1');
+
   return DOMPurify.sanitize(html);
 });
 </script>
 
 <template>
   <div class="cert-outer-wrapper">
-    <div class="cert-card-container" id="printable-certificate">
+    <div class="certificate" id="printable-certificate">
       <!-- 1. TOP-LEFT: GREEN VERIFIED HEADINGS -->
-      <div class="cert-verified-header">
-        <h1 class="verified-main-title">VERIFIED</h1>
-        <h2 class="verified-sub-title">CERTIFICATE OF ACHIEVEMENT</h2>
+      <div class="verified">
+        VERIFIED
+        <span>CERTIFICATE OF ACHIEVEMENT</span>
       </div>
 
       <!-- 2. MAIN BODY CONTENT (LEFT SIDE) -->
-      <div class="cert-body-left">
+      <div class="left-content">
         <!-- If dynamic template content is configured, display it with all shortcodes parsed -->
         <div v-if="formattedCustomContent" class="cert-dynamic-content" v-html="formattedCustomContent"></div>
 
-        <!-- Default structured layout matching design-4 when template content is empty -->
+        <!-- Default structured layout matching design-4 image -->
         <template v-else>
           <p class="cert-intro">This is to inform that</p>
           
           <p class="cert-student-name">
-            Mr. / Mrs. / Ms. <strong>{{ cert.name || 'Parth Soni' }}</strong>
+            Mr. / Mrs. / Ms. <strong>{{ cert.name || 'Parth Soni' }}</strong><br />
+            has successfully completed the certification course titled
           </p>
 
-          <p class="cert-completion-lead">has successfully completed the certification course titled</p>
-
-          <div class="cert-course-title-box">
-            <span class="cert-course-name">{{ localizedCourseTitle || cert.course || 'Safety Title Course' }}</span>
-          </div>
+          <p class="cert-course-title">
+            <strong>{{ localizedCourseTitle || cert.course || 'Safety Title Course' }}</strong>
+          </p>
 
           <p class="cert-standards-text">
             The participant has fulfilled all the requirements and standards of the course and is hereby awarded this certificate as a mark of achievement.
           </p>
 
-          <div class="cert-meta-info">
-            <p class="meta-item"><strong>Course Duration:</strong> {{ displayDuration }}</p>
-            <p class="meta-item"><strong>Date of Completion:</strong> {{ fmtIssueDate(cert.publish_date) }}</p>
-          </div>
+          <p class="cert-meta-info">
+            <strong>Course Duration:</strong> {{ displayDuration }}<br />
+            <strong>Date of Completion:</strong> {{ fmtIssueDate(cert.publish_date) }}
+          </p>
 
           <p class="cert-recognition-closing">
             This certificate is issued in recognition of the successful completion of the above-mentioned course.
@@ -190,7 +196,7 @@ const formattedCustomContent = computed(() => {
       </div>
 
       <!-- 3. RIGHT SIDE: SCANNABLE QR CODE -->
-      <div class="cert-qr-section">
+      <div class="right-content">
         <a :href="verificationPageUrl" target="_blank" class="qr-action-link" title="Click or Scan to Verify Certificate">
           <img v-if="qrUrl" :src="qrUrl" alt="Verification QR Code" class="qr-image" />
           <div class="qr-scan-badge">
@@ -200,21 +206,21 @@ const formattedCustomContent = computed(() => {
       </div>
 
       <!-- 4. BOTTOM-RIGHT: AUTHORISED SIGNATURE -->
-      <div class="cert-signature-section">
-        <div class="sig-authority-name">{{ displayInstructor }}</div>
-        <div class="sig-authority-label">Authorised Signature</div>
+      <div class="signature-section">
+        <div class="sig-name">{{ displayInstructor }}</div>
+        <div class="sig-title">Authorised Signature</div>
       </div>
 
-      <!-- 5. BOTTOM BAR: FOOTER METADATA & RECOGNITION (ALIGNED WITH HSEDX LOGO) -->
-      <div class="cert-footer-bar">
-        <div class="cert-footer-left">
-          <span class="cert-footer-badge">VERIFIED CERTIFICATE</span>
-          <div class="cert-footer-id-group">
-            <span class="cert-footer-id-label">VALID CERTIFICATE ID</span>
-            <span class="cert-footer-id-val">{{ cert.certificate_number || 'CERT-13-H0T92K' }}</span>
+      <!-- 5. BOTTOM BAR: FOOTER METADATA & RECOGNITION -->
+      <div class="bottom-bar">
+        <div class="bottom-left">
+          <span class="cert-badge-text">VERIFIED CERTIFICATE</span>
+          <div class="cert-id-group">
+            <span class="cert-id-label">VALID CERTIFICATE ID</span>
+            <span class="cert-id-val">{{ cert.certificate_number || 'CERT-13-H0T92K' }}</span>
           </div>
         </div>
-        <div class="cert-footer-right">
+        <div class="bottom-right">
           <span>Recognized by Directorate of Industrial, Safety & Health (DISH), Govt. Of Gujarat</span>
         </div>
       </div>
@@ -233,74 +239,67 @@ const formattedCustomContent = computed(() => {
   background-color: transparent;
 }
 
-/* Certificate main frame: Exact 1600x1067 proportion (1100px x 733px) */
-.cert-card-container {
+/* Certificate container matching original 1100px x 620px (1.77:1 aspect ratio) */
+.certificate {
   position: relative;
   width: 1100px;
   min-width: 1100px;
-  height: 733px;
+  height: 620px;
+  min-height: 620px;
   background-image: url('/img/design-4.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-color: #ffffff;
-  border-radius: 4px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15);
+  padding: 40px 50px;
   box-sizing: border-box;
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
-  color: #1e293b;
-  overflow: hidden;
+  color: #000000;
+  border-radius: 4px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   user-select: text;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ── 1. TOP-LEFT GREEN HEADINGS ─────────────────────────────────────── */
-.cert-verified-header {
-  position: absolute;
-  top: 42px;
-  left: 60px;
-  z-index: 5;
-  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
-}
-
-.verified-main-title {
-  font-size: 38px;
-  font-weight: 800;
-  color: #16a34a; /* Vibrant emerald green matching reference */
-  letter-spacing: 1.5px;
+.verified {
+  color: #29c531;
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: 2px;
   line-height: 1;
   margin: 0;
 }
 
-.verified-sub-title {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #16a34a;
-  letter-spacing: 1.5px;
-  margin: 5px 0 0 0;
+.verified span {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #29c531;
+  margin-top: 5px;
 }
 
 /* ── 2. MAIN BODY (LEFT SIDE) ───────────────────────────────────────── */
-.cert-body-left {
-  position: absolute;
-  top: 114px;
-  left: 60px;
-  width: 630px;
-  z-index: 5;
+.left-content {
+  width: 58%;
+  max-width: 560px;
+  margin-top: 28px;
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
-  color: #1e293b;
+  color: #000000;
 }
 
-/* DYNAMIC CONTENT STYLING (From Template) */
+/* Dynamic content parsed from template */
 .cert-dynamic-content {
   font-size: 13.5px;
-  color: #334155;
-  line-height: 1.5;
-  max-width: 620px;
+  line-height: 1.45;
+  color: #000000;
 }
 
 .cert-dynamic-content :deep(p) {
-  margin: 0 0 7px 0;
-  line-height: 1.5;
+  margin: 0 0 14px 0;
+  line-height: 1.45;
+  color: #000000;
 }
 
 .cert-dynamic-content :deep(p:last-child) {
@@ -308,102 +307,94 @@ const formattedCustomContent = computed(() => {
 }
 
 .cert-dynamic-content :deep(.cert-dyn-name) {
-  font-size: 16.5px;
-  font-weight: 800;
-  color: #0f172a;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #000000;
 }
 
-.cert-dynamic-content :deep(.cert-dyn-course) {
-  font-size: 20px;
-  font-weight: 800;
-  color: #0f172a;
-  display: inline-block;
-  margin: 3px 0 6px 0;
+.cert-dynamic-content :deep(.cert-dyn-course),
+.cert-dynamic-content :deep(.cert-course-title) {
+  font-size: 19px;
+  font-weight: 700;
+  color: #000000;
+  display: block;
+  margin: 10px 0 14px 0;
   line-height: 1.3;
 }
 
 .cert-dynamic-content :deep(.cert-dyn-meta) {
   font-weight: 700;
-  color: #0f172a;
+  color: #000000;
 }
 
-/* DEFAULT STRUCTURED FALLBACK */
+/* Default structured fallback (identical styling and gaps) */
 .cert-intro {
   font-size: 13.5px;
-  color: #334155;
-  margin: 0 0 6px 0;
+  color: #000000;
+  margin: 0 0 14px 0;
+  line-height: 1.45;
 }
 
 .cert-student-name {
-  font-size: 14px;
-  color: #334155;
-  margin: 0 0 8px 0;
+  font-size: 13.5px;
+  color: #000000;
+  line-height: 1.45;
+  margin: 0 0 14px 0;
 }
 
 .cert-student-name strong {
-  font-size: 16.5px;
-  font-weight: 800;
-  color: #0f172a;
-  margin-left: 4px;
-}
-
-.cert-completion-lead {
   font-size: 13.5px;
-  color: #334155;
-  margin: 0 0 6px 0;
+  font-weight: 700;
+  color: #000000;
 }
 
-.cert-course-title-box {
-  margin: 4px 0 10px 0;
+.cert-course-title {
+  margin: 10px 0 14px 0;
 }
 
-.cert-course-name {
-  font-size: 20px;
-  font-weight: 800;
-  color: #0f172a;
+.cert-course-title strong {
+  font-size: 19px;
+  font-weight: 700;
+  color: #000000;
   line-height: 1.3;
-  display: inline-block;
+  display: block;
 }
 
 .cert-standards-text {
   font-size: 13px;
-  color: #334155;
-  line-height: 1.5;
-  margin: 0 0 12px 0;
-  max-width: 600px;
+  color: #000000;
+  line-height: 1.45;
+  margin: 0 0 14px 0;
+  max-width: 540px;
 }
 
 .cert-meta-info {
-  margin: 0 0 12px 0;
-}
-
-.meta-item {
   font-size: 13px;
-  color: #1e293b;
-  margin: 0 0 3px 0;
+  color: #000000;
+  line-height: 1.5;
+  margin: 0 0 14px 0;
 }
 
-.meta-item strong {
+.cert-meta-info strong {
   font-weight: 700;
-  color: #0f172a;
+  color: #000000;
 }
 
 .cert-recognition-closing {
-  font-size: 12.5px;
-  color: #475569;
+  font-size: 13px;
+  color: #000000;
   line-height: 1.45;
   margin: 0;
-  max-width: 600px;
+  max-width: 540px;
 }
 
 /* ── 3. RIGHT SIDE: QR CODE ─────────────────────────────────────────── */
-.cert-qr-section {
+.right-content {
   position: absolute;
-  top: 220px;
+  top: 175px;
   right: 120px;
   text-align: center;
   z-index: 5;
-  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
 }
 
 .qr-action-link {
@@ -417,59 +408,60 @@ const formattedCustomContent = computed(() => {
   width: 120px;
   height: 120px;
   background-color: #ffffff;
-  padding: 4px;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  padding: 3px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   display: block;
 }
 
 .qr-scan-badge {
-  margin-top: 6px;
+  margin-top: 5px;
 }
 
 .qr-scan-text {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 700;
   color: #16a34a;
   letter-spacing: 0.8px;
   background-color: #f0fdf4;
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: 9999px;
   border: 1px solid #bbf7d0;
   display: inline-block;
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
 }
 
-/* ── 4. BOTTOM-RIGHT: SIGNATURE ─────────────────────────────────────── */
-.cert-signature-section {
+/* ── 4. BOTTOM-RIGHT: AUTHORISED SIGNATURE ─────────────────────────── */
+.signature-section {
   position: absolute;
-  bottom: 125px;
-  right: 60px;
+  bottom: 80px;
+  right: 70px;
   text-align: center;
   width: 250px;
   z-index: 5;
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
 }
 
-.sig-authority-name {
+.sig-name {
   font-size: 14.5px;
-  font-weight: 800;
-  color: #0f172a;
-  margin-bottom: 3px;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 2px;
 }
 
-.sig-authority-label {
+.sig-title {
   font-size: 12px;
-  color: #475569;
-  font-weight: 500;
+  color: #333333;
+  font-weight: normal;
 }
 
 /* ── 5. BOTTOM BAR: FOOTER METADATA & RECOGNITION ──────────────────── */
-.cert-footer-bar {
+.bottom-bar {
   position: absolute;
-  bottom: 74px;
-  left: 195px;
-  right: 60px;
+  bottom: 20px;
+  left: 170px;
+  right: 50px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -477,48 +469,49 @@ const formattedCustomContent = computed(() => {
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
 }
 
-.cert-footer-left {
+.bottom-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
 }
 
-.cert-footer-badge {
-  font-size: 10.5px;
+.cert-badge-text {
+  font-size: 9.5px;
   font-weight: 700;
-  color: #475569;
+  color: #555555;
   letter-spacing: 0.8px;
   text-transform: uppercase;
 }
 
-.cert-footer-id-group {
+.cert-id-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-.cert-footer-id-label {
-  font-size: 10.5px;
+.cert-id-label {
+  font-size: 9.5px;
   font-weight: 700;
-  color: #475569;
+  color: #555555;
   letter-spacing: 0.8px;
   text-transform: uppercase;
 }
 
-.cert-footer-id-val {
+.cert-id-val {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
-  font-weight: 800;
-  color: #0f172a;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #000000;
   letter-spacing: 0.5px;
 }
 
-.cert-footer-right {
-  font-size: 10px;
+.bottom-right {
+  font-size: 9.5px;
   font-weight: 600;
-  color: #334155;
+  color: #444444;
   text-align: right;
   letter-spacing: 0.2px;
+  max-width: 450px;
 }
 
 /* ── PRINT STYLES FOR FLAWLESS A4 LANDSCAPE PRINTING ───────────────── */
@@ -551,11 +544,12 @@ const formattedCustomContent = computed(() => {
     overflow: visible !important;
   }
 
-  .cert-card-container {
+  .certificate {
     width: 297mm !important;
     min-width: 297mm !important;
     height: 198mm !important;
     max-height: 210mm !important;
+    margin: 0 !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     page-break-inside: avoid;

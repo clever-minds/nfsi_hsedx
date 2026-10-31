@@ -45,6 +45,233 @@ async function seed() {
 <h3>3. Evacuation Drills and Emergency Exits</h3>
 <p>Ensure that all emergency exit paths are clearly illuminated, free from obstructions, and equipped with panic bars. Regular evacuation drills should be held bi-annually, with designated assembly points and roll-call coordinators.</p>`,
       published_at: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
+      quiz_data: {
+        enabled: true,
+        title: 'Workplace Fire Safety & Emergency Preparedness Assessment',
+        passing_score: 70,
+        questions: [
+          {
+            id: 'q1',
+            question: 'What is the primary action to take when the building fire alarm sounds?',
+            options: [
+              'Use the nearest elevator immediately',
+              'Evacuate calmly using designated exit routes and proceed to the assembly point',
+              'Wait at your workstation for a telephone confirmation',
+              'Gather all personal office belongings before leaving'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q2',
+            question: 'What does the \'P\' stand for in the PASS technique for using a fire extinguisher?',
+            options: [
+              'Push the handle',
+              'Pull the pin',
+              'Point at the flames',
+              'Press the base'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q3',
+            question: 'What does the complete acronym PASS stand for when operating a fire extinguisher?',
+            options: [
+              'Pull, Aim, Squeeze, Sweep',
+              'Push, Alert, Spray, Stop',
+              'Point, Activate, Soak, Secure',
+              'Prepare, Alarm, Stand, Sweep'
+            ],
+            correct_answer: 0
+          },
+          {
+            id: 'q4',
+            question: 'Which type of fire extinguisher is safest for energized electrical equipment fires?',
+            options: [
+              'Water (Class A)',
+              'Carbon Dioxide (CO2) or Dry Chemical Powder (DCP)',
+              'Wet Chemical (Class K)',
+              'Foam Extinguisher'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q5',
+            question: 'What fire classification covers fires involving flammable liquids such as gasoline, oil, and solvents?',
+            options: [
+              'Class A',
+              'Class B',
+              'Class C',
+              'Class D'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q6',
+            question: 'What fire classification involves ordinary combustible materials like wood, paper, and cloth?',
+            options: [
+              'Class A',
+              'Class B',
+              'Class C',
+              'Class K'
+            ],
+            correct_answer: 0
+          },
+          {
+            id: 'q7',
+            question: 'Why should elevators never be used during a fire evacuation?',
+            options: [
+              'Elevators move too slowly',
+              'Power may fail and trap occupants inside, or shafts can draw smoke and heat',
+              'Elevators are reserved exclusively for management',
+              'Elevators will trigger additional building alarms'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q8',
+            question: 'How often should emergency fire exit pathways and fire doors be kept clear of obstructions?',
+            options: [
+              'Only during scheduled safety audits',
+              'At all times (24/7) without exception',
+              'During working hours only',
+              'Only when the warehouse is full'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q9',
+            question: 'What is the designated gathering location outside the facility during an evacuation called?',
+            options: [
+              'Safe Haven Area',
+              'Emergency Assembly Point (Muster Point)',
+              'Loading Dock Zone',
+              'Parking Lot Exit'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q10',
+            question: 'What is the primary role of a designated Fire Warden / Floor Marshal during an emergency?',
+            options: [
+              'Fight large structural fires alone',
+              'Assist in orderly evacuation, check areas, and report headcount at the assembly point',
+              'Protect company computers and sensitive paperwork',
+              'Lock all exit doors behind them'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q11',
+            question: 'If your clothing catches fire, what is the recommended immediate survival technique?',
+            options: [
+              'Run quickly to find water',
+              'Stop, Drop to the ground, and Roll to smother the flames',
+              'Fan the flames with a jacket',
+              'Stand upright and call for help'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q12',
+            question: 'When escaping through a smoke-filled hallway, what is the safest posture to take?',
+            options: [
+              'Walk upright with hands over your eyes',
+              'Crawl low on hands and knees where the air is cleaner and cooler',
+              'Run as fast as possible while holding your breath',
+              'Hide in an enclosed closet until rescued'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q13',
+            question: 'Before opening a closed door during a fire evacuation, what should you do first?',
+            options: [
+              'Kick the door open immediately',
+              'Check the door and handle with the back of your hand for heat',
+              'Look through the keyhole',
+              'Pull the door handle forcefully'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q14',
+            question: 'What three elements make up the traditional Fire Triangle?',
+            options: [
+              'Heat, Fuel, and Oxygen',
+              'Water, Carbon, and Smoke',
+              'Electricity, Air, and Pressure',
+              'Gas, Ignition, and Wind'
+            ],
+            correct_answer: 0
+          },
+          {
+            id: 'q15',
+            question: 'What minimum clearance distance must be maintained around electrical panels and fire extinguishers?',
+            options: [
+              'At least 3 feet (approx. 1 meter) of clear, unobstructed access',
+              'No clearance is necessary if items are labeled',
+              '6 inches',
+              'Only clearance from the ceiling is required'
+            ],
+            correct_answer: 0
+          },
+          {
+            id: 'q16',
+            question: 'What type of fire extinguisher is specifically designed for commercial kitchen cooking oil and grease fires?',
+            options: [
+              'Class A (Water)',
+              'Class K / Wet Chemical',
+              'Class B (Standard Dry Powder)',
+              'Class D (Metal)'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q17',
+            question: 'How frequently should industrial workplace fire evacuation drills be conducted at minimum?',
+            options: [
+              'Once every 5 years',
+              'At least every 6 to 12 months, as per safety regulations',
+              'Only when a new employee joins',
+              'Never, as drills disrupt production'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q18',
+            question: 'What should you do immediately if you discover a fire in your workplace?',
+            options: [
+              'Sound the nearest fire alarm and alert occupants, then call emergency services',
+              'Attempt to extinguish it regardless of fire size before telling anyone',
+              'Finish your current task before leaving',
+              'Send an email to HR reporting the hazard'
+            ],
+            correct_answer: 0
+          },
+          {
+            id: 'q19',
+            question: 'Why must fire doors never be propped open with wedges or doorstops?',
+            options: [
+              'They cause drafts and increase AC power bills',
+              'They are designed to compartmentalize and contain smoke, heat, and toxic gases',
+              'Propped doors violate noise ordinances',
+              'It wears out the door hinges prematurely'
+            ],
+            correct_answer: 1
+          },
+          {
+            id: 'q20',
+            question: 'What is the minimum score required on this 20-question assessment to earn your Certificate of Participation?',
+            options: [
+              '10 out of 20 (50%)',
+              '14 out of 20 (70%)',
+              '18 out of 20 (90%)',
+              '20 out of 20 (100%)'
+            ],
+            correct_answer: 1
+          }
+        ]
+      },
     },
     {
       title: 'Lockout/Tagout (LOTO): Preventing Hazardous Energy Releases',
@@ -160,11 +387,12 @@ async function seed() {
     },
   ];
 
-  for (const post of posts) {
+  for (const post of posts as any[]) {
     const check = await pool.query(`SELECT id FROM blog_posts WHERE slug = $1 AND deleted_at IS NULL`, [post.slug]);
+    const quizJson = post.quiz_data ? JSON.stringify(post.quiz_data) : null;
     if (check.rows.length > 0) {
       await pool.query(
-        `UPDATE blog_posts SET title = $1, summary = $2, content = $3, cover_image_url = $4, author_name = $5, category = $6, tags = $7, status = $8, published_at = $9 WHERE id = $10`,
+        `UPDATE blog_posts SET title = $1, summary = $2, content = $3, cover_image_url = $4, author_name = $5, category = $6, tags = $7, status = $8, published_at = $9, quiz_data = $10 WHERE id = $11`,
         [
           post.title,
           post.summary,
@@ -175,13 +403,14 @@ async function seed() {
           JSON.stringify(post.tags),
           post.status,
           post.published_at,
+          quizJson,
           check.rows[0].id,
         ],
       );
     } else {
       await pool.query(
-        `INSERT INTO blog_posts (title, slug, summary, content, cover_image_url, author_name, category, tags, status, published_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        `INSERT INTO blog_posts (title, slug, summary, content, cover_image_url, author_name, category, tags, status, published_at, quiz_data)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
         [
           post.title,
           post.slug,
@@ -193,6 +422,7 @@ async function seed() {
           JSON.stringify(post.tags),
           post.status,
           post.published_at,
+          quizJson,
         ],
       );
     }

@@ -38,3 +38,4 @@ export async function down(pgm: MigrationBuilder): Promise<void> {
       DROP COLUMN IF EXISTS quiz_data;
   `);
 }
+

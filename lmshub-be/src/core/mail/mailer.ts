@@ -3,11 +3,19 @@ import { env, isProd } from '../config/env';
 import { logger } from '../logger/logger';
 import { getSetting, getSettingBool, getSettingInt } from '../settings/settings';
 
+export interface MailAttachment {
+  filename: string;
+  content?: Buffer | string;
+  path?: string;
+  contentType?: string;
+}
+
 export interface MailInput {
   to: string;
   subject: string;
   html: string;
   text?: string;
+  attachments?: MailAttachment[];
 }
 
 interface SmtpConfig {
@@ -71,6 +79,7 @@ export async function sendMail(input: MailInput): Promise<{ sent: boolean }> {
       subject: input.subject,
       html: input.html,
       text: input.text,
+      attachments: input.attachments,
     });
     return { sent: true };
   } catch (err) {

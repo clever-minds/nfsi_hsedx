@@ -2,7 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { apiGetFull } from '@/lib/api';
+import { apiGetFull, apiPost } from '@/lib/api';
+import { useAuthStore } from '@/stores/auth';
 import { fmtTanggal } from '@/lib/format';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { setMetaTags, resetMetaTags } from '@/lib/seo';
@@ -27,6 +28,75 @@ interface BlogPost {
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
+const auth = useAuthStore();
+
+const formName = ref('');
+const formEmail = ref('');
+const selectedAnswers = ref<Record<string, number>>({});
+const submittingQuiz = ref(false);
+const quizError = ref('');
+const quizResult = ref<{
+  passed: boolean;
+  score: number;
+  passing_score: number;
+  total_questions: number;
+  correct_count: number;
+  certificate_number?: string;
+  verify_url?: string;
+  message: string;
+} | null>(null);
+
+watch(
+  () => auth.user,
+  (user) => {
+    if (user) {
+      if (!formName.value) formName.value = user.name_lengkap || '';
+      if (!formEmail.value) formEmail.value = user.email || '';
+    }
+  },
+  { immediate: true },
+);
+
+async function handleQuizSubmit() {
+  quizError.value = '';
+  if (!formName.value.trim()) {
+    quizError.value = 'Please enter your full name for the certificate.';
+    return;
+  }
+  if (!formEmail.value.trim() || !/^\S+@\S+\.\S+$/.test(formEmail.value.trim())) {
+    quizError.value = 'Please enter a valid email address to receive your certificate.';
+    return;
+  }
+  const questions = (post.value as any)?.quiz_data?.questions || [];
+  const unanswered = questions.some((q: any, idx: number) => {
+    const key = q.id || ('q_' + idx);
+    return selectedAnswers.value[key] === undefined;
+  });
+  if (unanswered) {
+    quizError.value = 'Please answer all questions before submitting.';
+    return;
+  }
+
+  submittingQuiz.value = true;
+  try {
+    const res = await apiPost<any>('/blogs/public/' + slug.value + '/quiz/submit', {
+      name: formName.value.trim(),
+      email: formEmail.value.trim().toLowerCase(),
+      answers: selectedAnswers.value,
+    });
+    quizResult.value = res.data;
+  } catch (err: any) {
+    quizError.value = err?.message || 'Failed to submit quiz. Please try again.';
+  } finally {
+    submittingQuiz.value = false;
+  }
+}
+
+function retakeQuiz() {
+  quizResult.value = null;
+  selectedAnswers.value = {};
+  quizError.value = '';
+}
 
 const slug = computed(() => route.params.slug as string);
 const post = ref<BlogPost | null>(null);

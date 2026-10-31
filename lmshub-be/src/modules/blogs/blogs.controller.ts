@@ -3,7 +3,7 @@ import { ok, created } from '../../core/http/envelope';
 import { AppError } from '../../core/http/AppError';
 import { validated } from '../../core/validation/validate';
 import * as service from './blogs.service';
-import { CreateBlogInput, ListBlogQuery, UpdateBlogInput } from './blogs.validation';
+import { CreateBlogInput, ListBlogQuery, SubmitBlogQuizInput, UpdateBlogInput } from './blogs.validation';
 
 const auth = (req: Request) => {
   if (!req.auth) throw AppError.unauthorized();
@@ -33,6 +33,12 @@ export async function getPublicDetail(req: Request, res: Response) {
 export async function listCategories(_req: Request, res: Response) {
   const categories = await service.listCategories();
   return ok(res, categories);
+}
+
+export async function submitQuiz(req: Request, res: Response) {
+  const input = validated<SubmitBlogQuizInput>(req);
+  const result = await service.submitBlogQuiz(req.params.slug, input);
+  return ok(res, result);
 }
 
 export async function listAdmin(req: Request, res: Response) {

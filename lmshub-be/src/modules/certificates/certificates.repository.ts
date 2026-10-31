@@ -368,7 +368,7 @@ export async function verifyByNomor(number: string): Promise<VerificationResult 
     is_revoked: boolean;
     status: string;
   }>(
-    `SELECT u.name_lengkap AS name, c.title AS course, iu.name_lengkap AS instructor,
+    `SELECT COALESCE(u.name_lengkap, cert.recipient_name, 'Certificate Recipient') AS name, COALESCE(c.title, bp.title, 'Safety Certification') AS course, COALESCE(iu.name_lengkap, 'Dr. Chiragkumar Makwana') AS instructor,
             cert.certificate_number, cert.verification_code, cert.qr_code_url, cert.publish_date,
             CASE
               WHEN c.total_duration_minutes > 0 THEN CONCAT(ROUND(c.total_duration_minutes / 60.0)::text, ' hours')
@@ -384,8 +384,9 @@ export async function verifyByNomor(number: string): Promise<VerificationResult 
             ) AS content,
             cert.is_revoked, cert.status
        FROM certificates cert
-       JOIN users u ON u.id = cert.user_id
-       JOIN courses c ON c.id = cert.course_id
+       LEFT JOIN users u ON u.id = cert.user_id
+       LEFT JOIN courses c ON c.id = cert.course_id
+       LEFT JOIN blog_posts bp ON bp.id = cert.blog_id
        LEFT JOIN instructor_profiles ip ON ip.id = c.instructor_id
        LEFT JOIN users iu ON iu.id = ip.user_id
       WHERE (cert.certificate_number = $1 OR cert.verification_code = $1 OR UPPER(TRIM(cert.certificate_number)) = UPPER(TRIM($1))) AND cert.deleted_at IS NULL`,
@@ -443,8 +444,9 @@ export async function displayById(id: string): Promise<CertificateDisplay | null
               (SELECT layout->>'content' FROM certificate_templates WHERE is_active = true AND deleted_at IS NULL ORDER BY is_default DESC, updated_at DESC LIMIT 1)
             ) AS content
        FROM certificates cert
-       JOIN users u ON u.id = cert.user_id
-       JOIN courses c ON c.id = cert.course_id
+       LEFT JOIN users u ON u.id = cert.user_id
+       LEFT JOIN courses c ON c.id = cert.course_id
+       LEFT JOIN blog_posts bp ON bp.id = cert.blog_id
        LEFT JOIN instructor_profiles ip ON ip.id = c.instructor_id
        LEFT JOIN users iu ON iu.id = ip.user_id
       WHERE cert.id = $1 AND cert.deleted_at IS NULL`,

@@ -1,5 +1,19 @@
 import { query, queryOne } from '../../core/db/pool';
 
+export interface BlogQuizQuestion {
+  id?: string;
+  question: string;
+  options: string[];
+  correct_answer?: number;
+}
+
+export interface BlogQuizData {
+  enabled: boolean;
+  title?: string;
+  passing_score: number;
+  questions: BlogQuizQuestion[];
+}
+
 export interface BlogPostRow {
   id: string;
   title: string;
@@ -14,9 +28,12 @@ export interface BlogPostRow {
   status: string;
   published_at: string | null;
   view_count: number;
+  quiz_data?: BlogQuizData | null;
   created_at: string;
   updated_at: string;
 }
+
+const SELECT_FIELDS = `id, title, slug, summary, content, cover_image_url, author_id, author_name, category, tags, status, published_at, view_count, quiz_data, created_at, updated_at`;
 
 export async function listPublicBlogs(params: {
   page: number;
@@ -48,7 +65,7 @@ export async function listPublicBlogs(params: {
   values.push(params.limit, offset);
 
   const rows = await query<BlogPostRow>(
-    `SELECT id, title, slug, summary, content, cover_image_url, author_id, author_name, category, tags, status, published_at, view_count, created_at, updated_at
+    `SELECT ${SELECT_FIELDS}
        FROM blog_posts
       WHERE ${whereClause}
       ORDER BY COALESCE(published_at, created_at) DESC
@@ -61,7 +78,7 @@ export async function listPublicBlogs(params: {
 
 export async function findPublicBlogBySlug(slug: string): Promise<BlogPostRow | null> {
   const row = await queryOne<BlogPostRow>(
-    `SELECT id, title, slug, summary, content, cover_image_url, author_id, author_name, category, tags, status, published_at, view_count, created_at, updated_at
+    `SELECT ${SELECT_FIELDS}
        FROM blog_posts
       WHERE slug = $1 AND deleted_at IS NULL AND status = 'published'`,
     [slug],
@@ -111,7 +128,7 @@ export async function listAdminBlogs(params: {
   values.push(params.limit, offset);
 
   const rows = await query<BlogPostRow>(
-    `SELECT id, title, slug, summary, content, cover_image_url, author_id, author_name, category, tags, status, published_at, view_count, created_at, updated_at
+    `SELECT ${SELECT_FIELDS}
        FROM blog_posts
       WHERE ${whereClause}
       ORDER BY created_at DESC
@@ -124,7 +141,7 @@ export async function listAdminBlogs(params: {
 
 export async function findBlogById(id: string): Promise<BlogPostRow | null> {
   return queryOne<BlogPostRow>(
-    `SELECT id, title, slug, summary, content, cover_image_url, author_id, author_name, category, tags, status, published_at, view_count, created_at, updated_at
+    `SELECT ${SELECT_FIELDS}
        FROM blog_posts
       WHERE id = $1 AND deleted_at IS NULL`,
     [id],
@@ -156,11 +173,12 @@ export async function insertBlog(data: {
   tags: string[];
   status: string;
   published_at: string | null;
+  quiz_data?: BlogQuizData | null;
 }): Promise<BlogPostRow> {
   const row = await queryOne<BlogPostRow>(
-    `INSERT INTO blog_posts (title, slug, summary, content, cover_image_url, author_id, author_name, category, tags, status, published_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-     RETURNING id, title, slug, summary, content, cover_image_url, author_id, author_name, category, tags, status, published_at, view_count, created_at, updated_at`,
+    `INSERT INTO blog_posts (title, slug, summary, content, cover_image_url, author_id, author_name, category, tags, status, published_at, quiz_data)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+     RETURNING ${SELECT_FIELDS}`,
     [
       data.title,
       data.slug,
@@ -173,6 +191,7 @@ export async function insertBlog(data: {
       JSON.stringify(data.tags || []),
       data.status,
       data.published_at,
+      data.quiz_data ? JSON.stringify(data.quiz_data) : null,
     ],
   );
   return row!;
@@ -181,8 +200,9 @@ export async function insertBlog(data: {
 export async function updateBlog(id: string, fields: Record<string, unknown>): Promise<void> {
   const keys = Object.keys(fields);
   if (!keys.length) return;
-  const set = keys.map((k, i) => `${k} = $${i + 2}`).join(', ');
-  await query(`UPDATE blog_posts SET ${set} WHERE id = $1`, [id, ...keys.map((k) => fields[k])]);
+  const set = keys.map((k, i) => `${k} = $${i + 2}${k === 'quiz_data' || k === 'tags' ? '::jsonb' : ''}`).join(', ');
+  const values = keys.map((k) => (k === 'quiz_data' || k === 'tags' ? JSON.stringify(fields[k]) : fields[k]));
+  await query(`UPDATE blog_posts SET ${set} WHERE id = $1`, [id, ...values]);
 }
 
 export async function softDeleteBlog(id: string): Promise<void> {
@@ -194,4 +214,38 @@ export async function listCategories(): Promise<string[]> {
     `SELECT DISTINCT category FROM blog_posts WHERE deleted_at IS NULL AND category IS NOT NULL ORDER BY category ASC`,
   );
   return rows.map((r) => r.category);
+}
+
+export async function createBlogCertificate(data: {
+  blog_id: string;
+  recipient_name: string;
+  recipient_email: string;
+  certificate_number: string;
+  verification_code: string;
+  qr_code_url: string;
+  score: number;
+  publish_date: Date;
+}) {
+  const row = await queryOne<{ id: string; certificate_number: string }>(
+    `INSERT INTO certificates (
+       blog_id, recipient_name, recipient_email, certificate_number,
+       verification_code, qr_code_url, status, publish_date,
+       criteria_snapshot, is_revoked
+     ) VALUES (
+       $1, $2, $3, $4,
+       $5, $6, 'publish', $7,
+       $8, false
+     ) RETURNING id, certificate_number`,
+    [
+      data.blog_id,
+      data.recipient_name,
+      data.recipient_email,
+      data.certificate_number,
+      data.verification_code,
+      data.qr_code_url,
+      data.publish_date,
+      JSON.stringify({ quiz: { score_percent: data.score, completed_at: data.publish_date.toISOString() } }),
+    ],
+  );
+  return row;
 }

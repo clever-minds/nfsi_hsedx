@@ -20,6 +20,7 @@ interface BlogPost {
   category: string;
   tags: string[];
   status: 'draft' | 'published' | 'archived';
+  quiz_data?: any;
   published_at: string | null;
   view_count: number;
   created_at: string;
@@ -52,6 +53,13 @@ const customCategoryMode = ref(false);
 const summaryRichMode = ref(false);
 const dbCategories = ref<string[]>([]);
 
+interface QuizQuestionForm {
+  id?: string;
+  question: string;
+  options: string[];
+  correct_answer: number;
+}
+
 const form = reactive({
   title: '',
   slug: '',
@@ -62,7 +70,39 @@ const form = reactive({
   category: 'Industrial Safety',
   tagsString: '',
   status: 'published' as BlogPost['status'],
+  quiz_enabled: false,
+  quiz_title: '',
+  quiz_passing_score: 70,
+  quiz_questions: [] as QuizQuestionForm[],
 });
+
+function addQuizQuestion() {
+  form.quiz_questions.push({
+    id: 'q_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    question: '',
+    options: ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
+    correct_answer: 0,
+  });
+}
+
+function removeQuizQuestion(index: number) {
+  form.quiz_questions.splice(index, 1);
+}
+
+function addQuizOption(qIdx: number) {
+  if (form.quiz_questions[qIdx].options.length < 6) {
+    form.quiz_questions[qIdx].options.push('Option ' + (form.quiz_questions[qIdx].options.length + 1));
+  }
+}
+
+function removeQuizOption(qIdx: number, optIdx: number) {
+  if (form.quiz_questions[qIdx].options.length > 2) {
+    form.quiz_questions[qIdx].options.splice(optIdx, 1);
+    if (form.quiz_questions[qIdx].correct_answer >= form.quiz_questions[qIdx].options.length) {
+      form.quiz_questions[qIdx].correct_answer = 0;
+    }
+  }
+}
 
 const DEFAULT_CATEGORIES = [
   'Industrial Safety',
@@ -140,6 +180,10 @@ function openCreateModal() {
   form.category = 'Industrial Safety';
   form.tagsString = 'Safety, NFSI';
   form.status = 'published';
+  form.quiz_enabled = false;
+  form.quiz_title = '';
+  form.quiz_passing_score = 70;
+  form.quiz_questions = [];
   showModal.value = true;
 }
 
@@ -158,6 +202,11 @@ function openEditModal(post: BlogPost) {
   customCategoryMode.value = !allCategories.value.includes(form.category);
   form.tagsString = Array.isArray(post.tags) ? post.tags.join(', ') : '';
   form.status = (post.status as any) || 'draft';
+  const qd = (post as any).quiz_data;
+  form.quiz_enabled = Boolean(qd?.enabled);
+  form.quiz_title = qd?.title || '';
+  form.quiz_passing_score = qd?.passing_score ?? 70;
+  form.quiz_questions = Array.isArray(qd?.questions) ? JSON.parse(JSON.stringify(qd.questions)) : [];
   showModal.value = true;
 }
 
@@ -210,6 +259,18 @@ async function savePost() {
     .map((t) => t.trim())
     .filter(Boolean);
 
+  const quizData = form.quiz_enabled ? {
+    enabled: true,
+    title: form.quiz_title.trim() || (form.title.trim() + ' — Knowledge Check'),
+    passing_score: Number(form.quiz_passing_score) || 70,
+    questions: form.quiz_questions.map((q, idx) => ({
+      id: q.id || ('q_' + idx),
+      question: q.question.trim(),
+      options: q.options.map((o) => o.trim()).filter(Boolean),
+      correct_answer: Number(q.correct_answer || 0),
+    })).filter((q) => q.question && q.options.length >= 2),
+  } : null;
+
   const payload = {
     title: form.title.trim(),
     slug: form.slug.trim(),
@@ -220,6 +281,7 @@ async function savePost() {
     category: form.category.trim() || 'General',
     tags,
     status: form.status,
+    quiz_data: quizData,
   };
 
   formSaving.value = true;
@@ -642,6 +704,138 @@ onMounted(() => {
           <div>
             <label class="label font-medium">Article Content *</label>
             <RichTextEditor v-model="form.content" />
+          </div>
+
+          <!-- Quiz & Verified Certificate Section -->
+          <div class="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="text-xl">🎓</span>
+                <div>
+                  <h4 class="text-sm font-bold text-slate-900">Article Quiz & Verified Certificate</h4>
+                  <p class="text-xs text-slate-500">Readers who pass this quiz will receive an official Verified Certificate sent directly to their email with PDF attachment.</p>
+                </div>
+              </div>
+              <label class="relative inline-flex cursor-pointer items-center">
+                <input type="checkbox" v-model="form.quiz_enabled" class="sr-only peer" />
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+              </label>
+            </div>
+
+            <!-- Quiz Questions Builder -->
+            <div v-if="form.quiz_enabled" class="mt-4 space-y-4 pt-3 border-t border-emerald-200/60">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="label text-xs font-semibold">Quiz Title</label>
+                  <input
+                    v-model="form.quiz_title"
+                    type="text"
+                    class="input text-xs"
+                    placeholder="e.g. Safety Knowledge Check"
+                  />
+                </div>
+                <div>
+                  <label class="label text-xs font-semibold">Passing Score (%)</label>
+                  <input
+                    v-model.number="form.quiz_passing_score"
+                    type="number"
+                    min="1"
+                    max="100"
+                    class="input text-xs"
+                    placeholder="70"
+                  />
+                </div>
+              </div>
+
+              <!-- Questions List -->
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold uppercase tracking-wider text-slate-600">
+                    Questions ({{ form.quiz_questions.length }})
+                  </span>
+                  <button
+                    type="button"
+                    class="btn-sm text-xs font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-3 py-1 rounded-lg transition"
+                    @click="addQuizQuestion"
+                  >
+                    + Add Question
+                  </button>
+                </div>
+
+                <div v-if="form.quiz_questions.length === 0" class="text-center py-6 border-2 border-dashed border-emerald-200 rounded-xl bg-white/60">
+                  <p class="text-xs text-slate-500">No questions added yet. Click "+ Add Question" to attach quiz questions.</p>
+                </div>
+
+                <div
+                  v-for="(q, qIdx) in form.quiz_questions"
+                  :key="qIdx"
+                  class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs space-y-2.5"
+                >
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="grid h-6 w-6 place-items-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-800 shrink-0">
+                      {{ qIdx + 1 }}
+                    </span>
+                    <input
+                      v-model="q.question"
+                      type="text"
+                      class="input text-xs flex-1"
+                      :placeholder="'Question ' + (qIdx + 1) + ' text...'"
+                    />
+                    <button
+                      type="button"
+                      class="text-rose-500 hover:text-rose-700 text-xs px-2 py-1"
+                      title="Delete Question"
+                      @click="removeQuizQuestion(qIdx)"
+                    >
+                      Delete
+                    </button>
+                  </div>
+
+                  <!-- Options list -->
+                  <div class="pl-8 space-y-2">
+                    <div class="text-[11px] font-semibold text-slate-400">Select the radio button for the correct answer:</div>
+                    <div
+                      v-for="(opt, optIdx) in q.options"
+                      :key="optIdx"
+                      class="flex items-center gap-2"
+                    >
+                      <input
+                        type="radio"
+                        :name="'correct_' + qIdx"
+                        :value="optIdx"
+                        v-model="q.correct_answer"
+                        class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                        title="Mark as correct answer"
+                      />
+                      <input
+                        v-model="q.options[optIdx]"
+                        type="text"
+                        class="input text-xs flex-1 py-1"
+                        :placeholder="'Option ' + (optIdx + 1)"
+                      />
+                      <button
+                        v-if="q.options.length > 2"
+                        type="button"
+                        class="text-slate-400 hover:text-rose-500 text-xs px-1"
+                        title="Remove Option"
+                        @click="removeQuizOption(qIdx, optIdx)"
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    <button
+                      v-if="q.options.length < 6"
+                      type="button"
+                      class="text-[11px] font-semibold text-emerald-600 hover:underline"
+                      @click="addQuizOption(qIdx)"
+                    >
+                      + Add Option
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
